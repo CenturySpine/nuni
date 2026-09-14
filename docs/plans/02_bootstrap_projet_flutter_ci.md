@@ -73,6 +73,11 @@ Plan 01 terminé.
       notion technique en une phrase la première fois qu'elle apparaît ; une suggestion par
       question, argumentée par la technique et l'état de l'art, jamais par une préférence ;
       annoncer ce qui a été fait, ce qui ne l'a pas été et pourquoi, sans hedging ;
+    - pas de contournement par défaut : quand une action échoue faute de droits, de
+      configuration ou de prérequis, demander d'abord au PO de faire l'action nécessaire pour
+      procéder proprement (élévation, réglage système, création d'un compte ou d'un jeton) ;
+      un contournement n'est mis en œuvre que si cette voie échoue, et il est alors documenté
+      comme tel dans le plan concerné ;
     - ancien dépôt LsgScores (`C:\Users\bruno\repos\LsgSessionsScores`, app Android de
       référence ; la web app `web-guest` ne fait pas foi) : consultable en **lecture seule**,
       uniquement pour instruire une question avant de la poser au PO (comprendre le comportement

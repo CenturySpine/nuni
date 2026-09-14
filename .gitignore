@@ -1,0 +1,49 @@
+# --- Secrets et configuration locale ---
+env/*.json
+!env/example.json
+*.local
+.env
+.env.*
+
+# --- Flutter / Dart ---
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+*.g.dart.bak
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock.bak
+
+# FVM : garder .fvmrc (version épinglée), ignorer le SDK lié localement
+.fvm/
+
+# --- Node (CLIs Supabase et Vercel en devDependencies) ---
+node_modules/
+npm-debug.log*
+
+# --- Vercel ---
+.vercel/
+
+# --- Supabase CLI ---
+supabase/.temp/
+supabase/.branches/
+
+# --- IDE ---
+.idea/
+*.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Divers ---
+*.log
+*.swp

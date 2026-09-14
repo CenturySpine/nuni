@@ -25,15 +25,25 @@ Le dépôt `C:\Users\bruno\repos\nuni` est un clone vide (aucun commit, branche 
 - Vercel CLI via npm global.
 - Éditeur : VS Code avec l'extension Flutter (optionnel, mais recommandé pour le debug web).
 
-## Journal d'exécution (2026-09-14)
+## Journal d'exécution (2026-09-14 → 2026-09-15)
 
 - Les installeurs winget de Git, GitHub CLI et Node exigent l'élévation administrateur, que le
-  terminal de Claude ne peut pas valider : ils ont été lancés par le PO dans un PowerShell
-  administrateur. Résultat : Git 2.55.0, GitHub CLI 2.100.0, Node 24.19.0 (npm 11.17.0).
-- FVM absent de winget → binaire GitHub 4.3.1 dans `%LOCALAPPDATA%\fvm\bin`.
-- Vercel CLI 59.17.0 installé par `npm install -g vercel` (sans élévation).
-- Chrome 153 déjà présent.
-- PATH utilisateur complété : `%APPDATA%\npm`, `%LOCALAPPDATA%\fvm\bin`, `%USERPROFILE%\fvm\default\bin`.
+  terminal de Claude ne peut pas valider : lancés par le PO dans un PowerShell administrateur.
+  Résultat réel : Git 2.55.0, GitHub CLI 2.100.0, Node 24.19.0 (npm 11.17.0).
+- FVM absent de winget (la 4e commande n'a rien installé).
+- Réglages faits par le PO : stratégie d'exécution PowerShell `RemoteSigned` (CurrentUser),
+  Mode développeur Windows activé (requis par les liens symboliques de FVM), `gh auth login`
+  (CenturySpine), `npx supabase login`.
+- Constat important : le terminal de Claude s'exécute dans un bac à sable. Les écritures dans le
+  profil utilisateur (`AppData`, `%USERPROFILE%\fvm`) y sont isolées et n'atteignent pas le
+  système du PO ; les écritures dans le dépôt et dans le registre (PATH utilisateur) sont
+  réelles. Conséquence : l'installation de Vercel CLI (`npm install -g`), du binaire FVM et de
+  Flutter (`fvm install stable`) faite depuis ce terminal n'existe pas sur le poste, bien que
+  `flutter doctor` et une compilation web de test aient réussi dans le bac à sable. Vérifié par le
+  PO avec `Test-Path` depuis son propre terminal.
+- PATH utilisateur (réel) complété : `%APPDATA%\npm`, `%LOCALAPPDATA%\fvm\bin`,
+  `%USERPROFILE%\fvm\default\bin`.
+- Reste à faire hors bac à sable : Vercel CLI, FVM, Flutter stable, `flutter doctor`, app de test.
 
 ## Étapes
 
