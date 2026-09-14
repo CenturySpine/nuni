@@ -43,7 +43,12 @@ Le dépôt `C:\Users\bruno\repos\nuni` est un clone vide (aucun commit, branche 
   PO avec `Test-Path` depuis son propre terminal.
 - PATH utilisateur (réel) complété : `%APPDATA%\npm`, `%LOCALAPPDATA%\fvm\bin`,
   `%USERPROFILE%\fvm\default\bin`.
-- Reste à faire hors bac à sable : Vercel CLI, FVM, Flutter stable, `flutter doctor`, app de test.
+- 2026-09-15 : le PO a installé depuis son terminal Vercel CLI 59.17.0 (`npm install -g vercel`), le
+  binaire FVM 4.3.1, Flutter 3.47.4 stable (`fvm install stable --setup`, `fvm global stable`), et fait
+  `vercel login`. `flutter doctor -v` réel archivé dans `docs/reference/flutter_doctor.txt` :
+  Flutter et Chrome verts, Android et Visual Studio en croix (hors périmètre web).
+- **Étape 1 close le 2026-09-15.** Le critère `flutter run -d chrome` sera constaté à l'étape 2 sur
+  le vrai squelette plutôt que sur une app de test.
 
 ## Étapes
 

@@ -59,7 +59,8 @@ Plan 01 terminé.
    artefact.
 9. Premier commit et push sur `main` ; protection de branche légère (PR obligatoire, CI verte)
    via `gh api` ou l'interface GitHub.
-10. `AGENTS.md` à la racine : instructions pour les assistants de code (convention multi-outils),
+10. `AGENTS.md` à la racine (créé par anticipation le 2026-09-15 à la demande du PO ; à compléter à
+    cette étape avec les commandes réelles) : instructions pour les assistants de code (convention multi-outils),
     et `CLAUDE.md` réduit à une ligne d'import `@AGENTS.md` pour que Claude Code lise le même
     fichier. Contenu prévu, court et factuel :
     - ce qu'est NUNI en trois lignes, et le renvoi vers `docs/plans/00_plan_ensemble.md`,
