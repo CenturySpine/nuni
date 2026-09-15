@@ -8,7 +8,7 @@ Statut : ☐ ouverte · ☑ tranchée (réponse notée en dessous).
 
 ## Palette et design (étape 4)
 
-**Q1 ☐ — Une palette de 3 couleurs suffit-elle ?**
+**Q1 ☑ — Une palette de 3 couleurs suffit-elle ?** (tranchée avec Q1b)
 Réponse technique : 3 couleurs suffisent comme *entrée*, à condition que ce soient les trois rôles
 suivants : **fond**, **accent** (boutons, liens, sélection), **texte**. Tout le reste est dérivé
 mécaniquement, sans nouvelle teinte : cartouches = fond légèrement teinté par l'accent, bordures et
