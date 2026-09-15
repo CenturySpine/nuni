@@ -103,8 +103,9 @@ restant triviale.
   tant que `sessions.status = draft` (équipes figées au démarrage, Q15). `played_holes` : lecture
   par les membres ; écriture par le propriétaire.
 - `session_members` : lecture par les membres ; insertion de soi-même via RPC `join_session` ;
-  suppression de soi-même tant que la session est en `draft` ; le propriétaire peut retirer un
-  membre à tout moment.
+  insertion d'un autre utilisateur par le propriétaire tant que la session est en `draft`
+  ("Ajouter un participant", plan 07, H Q26) ; suppression de soi-même tant que la session est en
+  `draft` ; le propriétaire peut retirer un membre à tout moment.
 - `scores` : lecture par les membres ; écriture (Q8 tranchée) par le propriétaire ou un
   co-organisateur de la session pour toute équipe, et par un membre pour l'équipe à laquelle il
   est rattaché (`session_members.team_id`).
@@ -124,9 +125,10 @@ restant triviale.
   son absence est traitée comme une erreur interne.
 - `create_session(payload jsonb)` → session en `draft` avec équipes facultatives (plan 07). Toute
   composition d'équipe (création, ajout) refuse un joueur dont `user_id` est nul (Q24).
-- `start_session(session_id)` → propriétaire seulement, `status = draft`, au moins une équipe,
-  aucun membre du pool non affecté (H Q25, erreur listant les noms), rattache chaque membre à
-  l'équipe de son joueur, passe en `live` avec `started_at`.
+- `start_session(session_id)` → propriétaire seulement, `status = draft`. Session individuelle :
+  crée une équipe par participant (au moins un). Session en équipe : au moins une équipe, aucun
+  participant non affecté (Q25, erreur listant les noms). Puis rattache chaque membre à l'équipe
+  de son joueur et passe en `live` avec `started_at`.
 - Plus de `set_my_team` : le joueur ne choisit jamais son équipe (Q15).
 - `delete_my_account()` → purge ordonnée des données de l'utilisateur puis suppression du compte
   auth (via `auth.admin` dans une Edge Function, ou fonction SQL `security definer` supprimant

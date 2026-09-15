@@ -17,10 +17,16 @@ Plans 05 et 06 (géolocalisation partagée).
   **salle d'attente** `/session/:id` (même route que l'écran en direct, plan 08, qui affiche la
   salle tant que `status = draft`). La composition des équipes se fait dans la salle d'attente,
   à l'avance (cas 1) ou après l'arrivée des joueurs (cas 2).
-- Salle d'attente (organisateur) : code et bouton "Inviter" (plan 09), liste du pool (membres
-  arrivés sans équipe, mise à jour en temps réel), équipes composées, composeur d'équipes, bouton
-  "Démarrer". Pour un membre : "En attente du démarrage par X", son équipe si elle existe, les
-  autres membres présents.
+- Salle d'attente (organisateur) : code et bouton "Inviter" (plan 09), liste des participants
+  (membres arrivés d'eux-mêmes ou ajoutés par l'organisateur, mise à jour en temps réel), bouton
+  "Ajouter un participant" (recherche dans les joueurs liés, Q24 ; H Q26 : l'ajout crée un membre
+  comme si la personne avait rejoint), puis selon le type de session (PO, 2026-09-15) :
+  - **individuel** : rien d'autre, 1 joueur = 1 équipe ; "Démarrer" crée automatiquement une
+    équipe par participant, l'organisateur ne compose rien ;
+  - **équipe** : composeur d'équipes (manuel ou aléatoire) depuis les participants, équipes
+    composées affichées, "Démarrer" quand tout le monde est placé (Q25).
+  Pour un membre : "En attente du démarrage par X", son équipe si elle existe, les autres
+  participants présents.
 - Ville : au chargement, position → géocodage inverse (H Q11 : BigDataCloud client, sans clé) →
   champ "Ville" pré-rempli, modifiable, à confirmer. Si la position est refusée, champ vide
   facultatif. La position de création est stockée sur la session (utile pour l'historique et pour
@@ -33,16 +39,17 @@ Plans 05 et 06 (géolocalisation partagée).
   défaut.
 - Météo : appel Open‑Meteo (sans clé, CORS ouvert) à la création si la position est connue ;
   stockée en `weather` (température, vent, code). Échec silencieux.
-- Équipes (composeur, dans la salle d'attente) :
-  - liste de joueurs = d'abord le pool de la session (joueurs des membres arrivés), puis tous
-    les joueurs liés à un utilisateur (toute personne connectée au moins une fois, Q24), avec
-    recherche par nom et les joueurs récents en tête (ceux des dernières sessions de
+- Équipes (composeur, dans la salle d'attente, **mode équipe seulement**) :
+  - liste de joueurs = les participants de la session (pool) ; "Ajouter un participant" cherche
+    dans tous les joueurs liés à un utilisateur (toute personne connectée au moins une fois, Q24),
+    avec recherche par nom et les joueurs récents en tête (ceux des dernières sessions de
     l'organisateur) ;
   - **pas de création de joueur à la volée** (Q24, PO 2026-09-15) : une personne absente de la
     liste doit se connecter une fois à l'app ; les joueurs importés de LsgScores sans compte ne
     sont pas proposés ;
-  - mode manuel : sélection puis "former une équipe" (1 joueur en individuel, 2 en équipe, Q5
-    tranchée : table de jointure, la taille est une règle applicative) ;
+  - mode manuel : sélection puis "former une équipe" (2 joueurs, Q5 tranchée : table de
+    jointure, la taille est une règle applicative ; en individuel la taille est 1 et les équipes
+    sont créées par le démarrage) ;
   - mode aléatoire : sélection d'un nombre pair ≥ 4, tirage par paires, résultat modifiable ;
   - un joueur n'appartient qu'à une équipe ; suppression d'une équipe libère ses joueurs ;
   - modifications (ajouter, retirer, supprimer une équipe, retirer un membre du pool) possibles
@@ -51,9 +58,10 @@ Plans 05 et 06 (géolocalisation partagée).
 - Création : RPC `create_session(payload jsonb)` insère `sessions` (status `draft`), les équipes
   déjà composées le cas échéant (`teams`, `team_players`) et `session_members` (créateur = `owner`,
   rattaché à l'équipe de son joueur si elle existe), en une transaction.
-- Démarrage : RPC `start_session(session_id)` : au moins une équipe, aucun membre du pool non
-  affecté (H Q25, message nommant les personnes), `status = live`, `started_at = now`, rattache
-  chaque membre à l'équipe de son joueur. Les membres voient l'écran passer en direct par
+- Démarrage : RPC `start_session(session_id)` : en individuel, crée une équipe par participant
+  (au moins un participant) ; en équipe, exige au moins une équipe et aucun participant non
+  affecté (Q25, message nommant les personnes). Puis `status = live`, `started_at = now`, chaque
+  membre rattaché à l'équipe de son joueur. Les membres voient l'écran passer en direct par
   l'événement temps réel sur `sessions`.
 - Q9 tranchée : plusieurs sessions en direct par utilisateur autorisées ; aucune contrainte
   d'unicité en base, l'accueil liste "mes sessions en direct".
@@ -76,12 +84,14 @@ Plans 05 et 06 (géolocalisation partagée).
 ## Critères d'acceptation
 
 - Créer une session à 4 joueurs et la démarrer prend moins de 60 s sur téléphone.
-- Cas 2 (plan 09) : trois arrivants apparaissent dans le pool sans rafraîchir ; un tirage
-  aléatoire les répartit ; le démarrage est refusé tant qu'un arrivant reste non affecté.
+- Cas 2 (plan 09), mode équipe : trois arrivants apparaissent dans la salle sans rafraîchir ; un
+  tirage aléatoire les répartit ; le démarrage est refusé tant qu'un arrivant reste non affecté.
+- Mode individuel : quatre participants, aucun écran d'équipe ; "Démarrer" produit quatre équipes
+  d'une personne et l'écran en direct les affiche.
 - Refus du réseau au moment de "Démarrer" : aucune session partielle en base, message clair,
   nouvel essai possible sans ressaisie.
 - La ville détectée correspond à la commune réelle sur trois positions de test.
 
 ## Questions PO liées
 
-Q5, Q9, Q11, Q15, Q24, Q25 (tranchées).
+Q5, Q9, Q11, Q15, Q24, Q25 (tranchées), Q26 (hypothèse).

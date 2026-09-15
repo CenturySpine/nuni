@@ -34,6 +34,10 @@ l'ensemble des membres qui ont rejoint sans être encore dans une équipe.
   pas l'app ; l'organisateur ou un coéquipier saisit les scores pour eux (Q8). Un joueur dont
   l'équipe existe peut rejoindre après le démarrage (cas 1) ; il retrouve alors la saisie.
 - Plus de choix d'équipe par le joueur, plus de mode spectateur.
+- Session **individuelle** (PO, 2026-09-15) : aucune équipe n'existe avant le démarrage (elles sont
+  créées par "Démarrer", une par participant) ; jusque-là tout le monde peut rejoindre (cas 2) ;
+  après, le cas 3 s'applique à qui n'est pas participant. Le cas 1 en individuel = l'organisateur
+  a ajouté la personne comme participant à l'avance (H Q26).
 - Q24 (PO 2026-09-15) : pas de joueur sans compte ; toute personne se connecte au moins une fois,
   ce qui crée sa fiche joueur ; l'organisateur compose ensuite avec ces fiches, que la personne
   se reconnecte ou non.
