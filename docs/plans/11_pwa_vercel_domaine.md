@@ -23,9 +23,12 @@ Plan 02 (premiers commits). Projet Vercel à créer après ces commits.
   de prévisualisation sur ce projet (choix du PO, 2026-09-15). État du déploiement remonté sur
   le commit GitHub (lisible sans accès à Vercel via l'API publique GitHub, `commits/main/status`).
   Incident du premier build : annulé par la règle `ignoreCommand` (commit de documentation seule) ;
-  règle retirée le jour même. `ignoreCommand` sert désormais à une seule chose : ne construire que
-  la production (`[ "$VERCEL_ENV" != "production" ]`, forme documentée par Vercel), parce que
-  Vercel construisait aussi la branche de session `claude/...` en prévisualisation à chaque push. Option écartée : GitHub Actions + `vercel
+  règle retirée le jour même. Second essai d'`ignoreCommand` pour ne construire que la production
+  (`[ "$VERCEL_ENV" != "production" ]`, Vercel construisant aussi la branche de session
+  `claude/...` en prévisualisation) : sur le commit `73ddaf1`, GitHub n'a reçu que "Canceled by
+  Ignored Build Step" et jamais "Deployment has completed" ; impossible de savoir depuis la session
+  si la production a été construite. Règle retirée en attendant la lecture de la liste des
+  déploiements par le PO ; si la production de `73ddaf1` apparaît "Ready", la règle est remise. Option écartée : GitHub Actions + `vercel
   deploy --prebuilt` (mise en place le matin, retirée le jour même : jeton, secrets et projet
   hors Git en plus, pour un gain de 2 à 3 min par build).
 - `vercel.json` : `rewrites` de toutes les routes vers `/index.html` (routage côté client),

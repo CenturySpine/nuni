@@ -223,8 +223,8 @@ projet, seule `main` est déployée, en production sur `nuni.centuryspine.org`. 
 les commits de documentation" (`ignoreCommand`) a annulé le tout premier build (le dernier commit
 ne touchait que `docs/`) et pouvait faire sauter un déploiement quand un push mêle code et
 documentation : retirée, chaque push sur `main` construit. Vercel construisant aussi la branche de
-session `claude/...` en prévisualisation, `ignoreCommand` ne sert plus qu'à ne construire que la
-production. Premier déploiement en ligne le 2026-09-15 sur `nuni.centuryspine.org`, build 2 min 21 s.
+session `claude/...` en prévisualisation, un `ignoreCommand` "production seulement" a été essayé
+puis retiré le temps de vérifier qu'il ne bloque pas la production (plan 11). Premier déploiement en ligne le 2026-09-15 sur `nuni.centuryspine.org`, build 2 min 21 s.
 
 **Q22 ☑ — Moteur de rendu CanvasKit : servi depuis le site (`--no-web-resources-cdn`) ou depuis
 le serveur Google par défaut ?**

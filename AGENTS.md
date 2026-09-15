@@ -94,8 +94,11 @@ GitHub Actions (Q17).
   `lib/features/<feature>/{data,domain,ui}`, `lib/shared/` (widgets communs), `test/` en miroir.
 - État : Riverpod (`riverpod_generator`). Navigation : `go_router`. Modèles : `freezed` +
   `json_serializable`. Backend : `supabase_flutter`.
-- Commentaires et identifiants de code en anglais. Documentation et échanges avec le PO en
-  français.
+- Langues, règle stricte (PO, 2026-09-15) : **tout ce qui est technique est en anglais** : code,
+  identifiants, commentaires, messages de commit, noms de fichiers et de branches, scripts,
+  configuration, journaux, textes d'erreur techniques, `README.md`. **Seuls restent en français** :
+  les plans et documents de `docs/` (`docs/DEV.md` compris) et les échanges avec le PO. Les
+  chaînes visibles par l'utilisateur existent dans les deux langues (ARB).
 - Chaînes visibles par l'utilisateur : toujours dans les fichiers ARB `app_en.arb` et `app_fr.arb`,
   jamais en dur. Une fonctionnalité n'est terminée que si ses chaînes existent dans les deux
   langues.

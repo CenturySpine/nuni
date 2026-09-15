@@ -4,7 +4,6 @@
   "installCommand": "",
   "buildCommand": "bash tool/vercel_build.sh",
   "outputDirectory": "build/web",
-  "ignoreCommand": "[ \"$VERCEL_ENV\" != \"production\" ]",
   "rewrites": [
     {
       "source": "/(.*)",
