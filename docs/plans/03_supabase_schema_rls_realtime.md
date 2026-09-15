@@ -125,21 +125,14 @@ restant triviale.
 
 1. Projet Supabase `nuni` déjà créé. Fait par le PO le 2026-09-15 (Q20) : client Google "Nuni
    PWA" avec l'URI de redirection `https://zlxfmovibepgdmxacbpj.supabase.co/auth/v1/callback`,
-   fournisseur Google activé dans Supabase avec identifiant et secret. **Reste, par le PO** :
-   - Google Cloud → Google Auth Platform → Branding : nom d'application "NUNI", e-mail
-     d'assistance, domaine autorisé `centuryspine.org`, liens Règles de confidentialité
-     `https://nuni.centuryspine.org/privacy` et Conditions d'utilisation
-     `https://nuni.centuryspine.org/legal` (pages livrées au plan 04 ; Google n'en vérifie pas le
-     contenu à la saisie). But : c'est ce que voient les joueurs sur l'écran "Se connecter avec
-     Google".
-   - Google Auth Platform → Audience : type Externe, puis **Publier l'application** (statut "En
-     production"). But : en statut "Test", seuls les comptes listés à la main comme testeurs
-     peuvent se connecter, tout autre joueur est refusé. Avec les seules portées de base (e-mail,
-     profil), la publication ne demande aucune vérification Google.
-   - Supabase → Authentication → URL Configuration : Site URL `https://nuni.centuryspine.org`,
-     Redirect URLs `https://nuni.centuryspine.org/**` et `http://localhost:3000/**`. But : sans
-     cela, Supabase refuse de renvoyer l'utilisateur vers l'app après la connexion. En local,
-     l'app est lancée sur un port fixe (`--web-port 3000`) pour que cette URL reste valable.
+   fournisseur Google activé dans Supabase avec identifiant et secret. Terminé le même jour par
+   le PO : écran de consentement (Branding : nom "Nuni - Street Golf Scoring App", e-mail
+   d'assistance, page d'accueil `https://nuni.centuryspine.org`, confidentialité `/privacy`,
+   conditions `/legal`, domaine autorisé `centuryspine.org`, pas de logo pour éviter la validation
+   Google), Audience publiée "En production", type Externe (portées de base seulement, aucune
+   validation requise) ; Supabase URL Configuration : Site URL `https://nuni.centuryspine.org`,
+   Redirect URLs `https://nuni.centuryspine.org/**` et `http://localhost:3000/**` (en local, l'app
+   est lancée avec `--web-port 3000`). Les pages `/privacy` et `/legal` sont livrées au plan 04.
 2. `npx supabase init`, `npx supabase link --project-ref zlxfmovibepgdmxacbpj`.
 3. Migrations, une par thème, dans l'ordre : extensions et enums → tables → index (GiST,
    `sessions.code`, `session_members.user_id`) → fonctions utilitaires → RLS → RPC → triggers →
