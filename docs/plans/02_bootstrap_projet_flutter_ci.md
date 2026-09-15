@@ -165,7 +165,7 @@ par empreinte SHA-256, même version que le poste du PO) sur la branche
   `docs/reference/plan02_home.png`).
 - [x] Le workflow GitHub Actions est passé vert sur `main` (run n° 2, 3 min 9 s) avant d'être
   retiré. Le script `tool/vercel_build.sh` a été exécuté de bout en bout dans le conteneur de la
-  session (analyse, tests, build). Le premier build chez Vercel est constaté au plan 11, étape 1.
+  session (analyse, tests, build). Premier build Vercel vert le 2026-09-15 (plan 11, étape 1).
 - [x] Aucun secret dans l'historique git.
 
 ## Questions PO liées

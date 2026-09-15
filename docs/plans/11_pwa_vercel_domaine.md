@@ -75,7 +75,12 @@ Plan 02 (premiers commits). Projet Vercel à créer après ces commits.
    - Prévenir Claude quand un build est vert ou quand un build échoue (copier les 40 dernières
      lignes du "Build Logs" du déploiement).
 
-   **1b. Claude ensuite** : vérification de la page d'accueil sur `https://nuni.centuryspine.org`
+   Premier build vert le 2026-09-15 à 08:15 UTC sur le commit `99b33b1` (état "Deployment has
+   completed" remonté sur GitHub), juste après le retrait de la règle `ignoreCommand`.
+
+   **1b. Claude ensuite** (la session Claude Code web ne peut joindre ni `*.vercel.app` ni
+   `nuni.centuryspine.org`, réseau filtré : la vérification visuelle est faite par le PO, ou par
+   Claude depuis le poste du PO) : vérification de la page d'accueil sur `https://nuni.centuryspine.org`
    (page, titre, icônes, `version.json`), état du commit sur GitHub. Relever la région du projet
    Vercel (PO : Settings → General → Region, ou l'en-tête `x-vercel-id` d'une réponse) et la
    reporter dans la page Mentions légales (Q21).
