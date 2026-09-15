@@ -17,13 +17,15 @@ Plan 02 (premiers commits). Projet Vercel à créer après ces commits.
   `npm install`, vérifié dans le code source du builder Vercel : une commande vide saute
   l'étape), `buildCommand: bash tool/vercel_build.sh`, `outputDirectory: build/web`. Le script installe
   la version Flutter de `.fvmrc` (clone superficiel du tag, retéléchargé à chaque build faute de
-  cache, compter 3 à 6 min), écrit `env/prod.json` depuis les variables d'environnement Vercel
+  cache ; mesuré le 2026-09-15 : 2 min 21 s au total), écrit `env/prod.json` depuis les variables d'environnement Vercel
   `SUPABASE_URL` et `SUPABASE_ANON_KEY`, puis `pub get`, `analyze --fatal-infos`, `test`, `build
   web --release --no-web-resources-cdn`. `main` = production sur `nuni.centuryspine.org` ; pas
   de prévisualisation sur ce projet (choix du PO, 2026-09-15). État du déploiement remonté sur
   le commit GitHub (lisible sans accès à Vercel via l'API publique GitHub, `commits/main/status`).
   Incident du premier build : annulé par la règle `ignoreCommand` (commit de documentation seule) ;
-  règle retirée le jour même. Option écartée : GitHub Actions + `vercel
+  règle retirée le jour même. `ignoreCommand` sert désormais à une seule chose : ne construire que
+  la production (`[ "$VERCEL_ENV" != "production" ]`, forme documentée par Vercel), parce que
+  Vercel construisait aussi la branche de session `claude/...` en prévisualisation à chaque push. Option écartée : GitHub Actions + `vercel
   deploy --prebuilt` (mise en place le matin, retirée le jour même : jeton, secrets et projet
   hors Git en plus, pour un gain de 2 à 3 min par build).
 - `vercel.json` : `rewrites` de toutes les routes vers `/index.html` (routage côté client),
@@ -68,22 +70,20 @@ Plan 02 (premiers commits). Projet Vercel à créer après ces commits.
    - Deploy. Le premier build dure 3 à 6 min (téléchargement de Flutter). Puis Settings → Git :
      Production Branch = `main` (défaut).
    - Fait le 2026-09-15 (projet créé, variables saisies).
-   - Domaine, **par le PO** (Claude n'a pas accès à vercel.com ni au registrar) : Settings →
-     Domains → ajouter `nuni.centuryspine.org`, puis chez le registrar un enregistrement CNAME
-     `nuni` vers la valeur indiquée par Vercel (`cname.vercel-dns.com` en général), comme pour
-     Planerz et Ridgegear. Vercel active HTTPS seul une fois le CNAME propagé.
-   - Prévenir Claude quand un build est vert ou quand un build échoue (copier les 40 dernières
-     lignes du "Build Logs" du déploiement).
+   - Domaine : déjà en place le 2026-09-15 (`nuni.centuryspine.org` ajouté par le PO, HTTPS actif,
+     page d'accueil constatée par le PO dans Firefox et Chrome, capture d'écran).
+   - Prévenir Claude quand un build échoue (copier les 40 dernières lignes du "Build Logs" du
+     déploiement).
 
    Premier build vert le 2026-09-15 à 08:15 UTC sur le commit `99b33b1` (état "Deployment has
    completed" remonté sur GitHub), juste après le retrait de la règle `ignoreCommand`.
 
    **1b. Claude ensuite** (la session Claude Code web ne peut joindre ni `*.vercel.app` ni
    `nuni.centuryspine.org`, réseau filtré : la vérification visuelle est faite par le PO, ou par
-   Claude depuis le poste du PO) : vérification de la page d'accueil sur `https://nuni.centuryspine.org`
-   (page, titre, icônes, `version.json`), état du commit sur GitHub. Relever la région du projet
-   Vercel (PO : Settings → General → Region, ou l'en-tête `x-vercel-id` d'une réponse) et la
-   reporter dans la page Mentions légales (Q21).
+   Claude depuis le poste du PO) : page d'accueil constatée par le PO le 2026-09-15 sur
+   `https://nuni.centuryspine.org` (titre, icône dans l'onglet). Coquille déployée : première
+   partie du plan 11 terminée. La région du projet Vercel est relevée au plan 04 avec les pages
+   légales (Q21).
 2. Ajouter l'URL de production aux redirections autorisées de Supabase Auth (plan 03).
 3. Fin de projet : icônes et manifest définitifs, bandeau de mise à jour, mesure Lighthouse (PWA
    installable, performance mobile), vérification que `/privacy`, `/legal` et `/about` répondent
