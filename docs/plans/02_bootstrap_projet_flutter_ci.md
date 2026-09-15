@@ -109,6 +109,9 @@ Plan 01 terminé.
 
 ## Journal d'exécution (2026-09-15)
 
+**Étape 2 close le 2026-09-15** : squelette sur `main`, build Vercel vert, site en ligne sur
+nuni.centuryspine.org, lancement local validé par le PO. AGENTS.md relu et à jour.
+
 Réalisé depuis la session Claude Code web (conteneur Linux, Flutter 3.47.4 téléchargé et vérifié
 par empreinte SHA-256, même version que le poste du PO) sur la branche
 `claude/github-actions-vercel-flutter-ed5oji`.
@@ -160,7 +163,8 @@ par empreinte SHA-256, même version que le poste du PO) sur la branche
 
 ## Critères d'acceptation
 
-- [ ] `flutter run -d chrome` affiche la page d'accueil provisoire sur le poste du PO. But : vérifier
+- [x] `flutter run -d chrome` affiche la page d'accueil provisoire sur le poste du PO (validé par
+  le PO le 2026-09-15 au soir). But : vérifier
   que le poste sait faire tourner le projet en local (Flutter épinglé, dépendances, fichier
   `env/dev.json`), prérequis pour voir une fonctionnalité avant son déploiement. Dans le conteneur,
   la page construite a été servie et capturée (`docs/reference/plan02_home.png`).

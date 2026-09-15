@@ -23,8 +23,8 @@ liées. Les questions sont centralisées dans [QUESTIONS_PO.md](../QUESTIONS_PO.
 
 | # | Étape | Plan détaillé | Résultat attendu |
 |---|-------|---------------|------------------|
-| 1 | Outillage du poste de travail | [01_outillage_poste.md](01_outillage_poste.md) | git, Flutter, Node, CLIs GitHub / Supabase / Vercel opérationnels ; `flutter doctor` OK pour le web |
-| 2 | Bootstrap du projet Flutter web + dépôt + CI | [02_bootstrap_projet_flutter_ci.md](02_bootstrap_projet_flutter_ci.md) | Squelette Flutter web committé sur `main`, `AGENTS.md`, build Vercel (`vercel.json` + script : analyze + test + build web), push direct sur `main` sans PR, premiers commits techniques permettant de relier le projet Vercel au dépôt |
+| 1 ✅ | Outillage du poste de travail | [01_outillage_poste.md](01_outillage_poste.md) | git, Flutter, Node, CLIs GitHub / Supabase / Vercel opérationnels ; `flutter doctor` OK pour le web |
+| 2 ✅ | Bootstrap du projet Flutter web + dépôt + CI | [02_bootstrap_projet_flutter_ci.md](02_bootstrap_projet_flutter_ci.md) | Squelette Flutter web committé sur `main`, `AGENTS.md`, build Vercel (`vercel.json` + script : analyze + test + build web), push direct sur `main` sans PR, premiers commits techniques permettant de relier le projet Vercel au dépôt |
 | 3 | Backend Supabase : projet, schéma, RLS, RPC, stockage, temps réel | [03_supabase_schema_rls_realtime.md](03_supabase_schema_rls_realtime.md) | Projet Supabase `nuni`, migrations versionnées dans le dépôt, schéma cible appliqué, politiques testées |
 | 4 | Socle applicatif : design system minimal, i18n, navigation | [04_socle_design_i18n_navigation.md](04_socle_design_i18n_navigation.md) | Thème unique (palette réduite), EN/FR, coquille de navigation, composants de base |
 | 5 | Authentification, profil, joueur lié | [05_auth_profil_joueur.md](05_auth_profil_joueur.md) | Connexion Google (redirect PWA), onboarding "mon joueur", édition profil, déconnexion, suppression de compte |
