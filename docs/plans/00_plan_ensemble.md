@@ -50,8 +50,8 @@ liées. Les questions sont centralisées dans [QUESTIONS_PO.md](../QUESTIONS_PO.
 
 ## Jalons de validation avec le product owner
 
-1. Fin d'étape 3 : validation du modèle de données et des règles d'accès (point de non-retour le
-   plus coûteux à changer ensuite).
+1. ☑ Fin d'étape 3 : validation du modèle de données et des règles d'accès (point de non-retour le
+   plus coûteux à changer ensuite). Validé par le PO le 2026-09-15.
 2. Fin d'étape 4 : validation visuelle du thème et de la navigation sur téléphone.
 3. Fin d'étape 8 : première session réelle jouée avec plusieurs téléphones.
 4. Fin d'étape 12 : mise en service.
