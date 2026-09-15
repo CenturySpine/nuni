@@ -211,6 +211,22 @@ test, build, déploiement) déclenché par tout push ; `main` déploie en produc
 branches en prévisualisation avec l'URL dans le résumé du job ; le projet Vercel n'est pas relié
 à GitHub, il n'exécute aucun build. Plans 02 et 11 mis à jour.
 
+**Q22 ☐ — Moteur de rendu CanvasKit : servi depuis le site (`--no-web-resources-cdn`) ou depuis
+le serveur Google par défaut ?**
+Contexte : par défaut, un site Flutter charge à chaque lancement son moteur de rendu (CanvasKit,
+un fichier de 5,4 Mo mesuré sur ce build, compressé à la volée par l'hébergeur et mis en cache par le navigateur ensuite) depuis `www.gstatic.com`,
+un serveur de Google. Constaté le 2026-09-15 : si ce serveur est inaccessible (réseau filtré,
+hors ligne), la page reste blanche. Une copie du moteur est de toute façon produite dans
+`build/web/canvaskit/`.
+Suggestion : servir la copie locale (`flutter build web --no-web-resources-cdn`). Conséquences
+d'usage : l'app démarre dès que le site est joignable, sans dépendre d'un tiers ; le service
+worker peut la mettre en cache pour un usage hors ligne (PWA) ; aucune requête vers Google au
+lancement, ce qui simplifie la page Confidentialité (Q21). Coût : le premier chargement vient de
+Vercel au lieu du réseau de Google, différence imperceptible pour quelques Mo. Appliquée comme
+hypothèse dans la CI et `docs/DEV.md` depuis le plan 02. La police par défaut (Roboto) est
+téléchargée de la même façon depuis Google ; la décision d'embarquer une police relève du
+plan 04 (design system) et sera posée là.
+
 **Q18 ☐ — Mise à jour de l'app : remplacer le blocage au démarrage par un bandeau "nouvelle
 version disponible, recharger" ?**
 Suggestion : oui. Sur une PWA le service worker télécharge la nouvelle version en arrière-plan ;

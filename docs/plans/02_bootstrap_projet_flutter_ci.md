@@ -106,6 +106,43 @@ Plan 01 terminé.
     Le fichier est relu et mis à jour à la fin de chaque étape du plan d'ensemble.
 11. Créer une release "v0.0.0-bootstrap" (tag) pour marquer le point de départ.
 
+## Journal d'exécution (2026-09-15)
+
+Réalisé depuis la session Claude Code web (conteneur Linux, Flutter 3.47.4 téléchargé et vérifié
+par empreinte SHA-256, même version que le poste du PO) sur la branche
+`claude/github-actions-vercel-flutter-ed5oji`.
+
+- Squelette généré par `flutter create --platforms web --org org.centuryspine --project-name
+  nuni`, seuls `web/`, `.metadata` et la base de `pubspec.yaml` / `analysis_options.yaml` sont
+  repris ; le code de démo n'entre pas dans le dépôt.
+- `.fvmrc` épingle `3.47.4` (et non `stable`, pour que la CI et le poste compilent la même
+  version). Sur le poste : `fvm install` lit ce fichier.
+- Dépendances de la liste ci-dessus ajoutées par `flutter pub add` (versions résolues dans
+  `pubspec.lock`, committé), plus `cupertino_icons` (police d'icônes attendue par une dépendance,
+  sinon avertissement au build).
+- Traductions dès le départ : `l10n.yaml`, `lib/l10n/app_en.arb` et `app_fr.arb`, code généré
+  dans `lib/l10n/generated/` par `flutter pub get` (dossier ignoré par git).
+- Palette : `lib/core/theme/palettes.dart` avec 03-B active ; les quatre autres variantes viables
+  sont ajoutées au plan 04. Thème provisoire `lib/core/theme/app_theme.dart`.
+- Page d'accueil provisoire `lib/features/home/ui/home_page.dart`, routeur `go_router` à une
+  route, `ProviderScope` Riverpod dans `main.dart`.
+- `analysis_options.yaml` : `flutter_lints` + modes stricts de l'analyseur + `prefer_single_quotes`.
+  Test de fumée `test/app_test.dart`.
+- CI `.github/workflows/ci.yml` : un job, tout push hors docs, `pub get`, `dart format
+  --set-exit-if-changed`, `analyze --fatal-infos`, `test`, `build web --release` avec
+  `env/prod.json` écrit depuis les secrets (vides jusqu'au plan 11).
+- `package.json` + `package-lock.json` : `supabase` 2.117.0 et `vercel` 59.17.0 épinglés.
+- Vérifié dans le conteneur : format OK, `analyze --fatal-infos` sans remarque, test vert,
+  `build web --release` en 61 s, `build/web/version.json` = `0.1.0+1`.
+- Constat au premier affichage du site construit (servi en local, Chromium sans accès à Google) :
+  page blanche, parce que le build charge par défaut le moteur de rendu CanvasKit depuis
+  `www.gstatic.com`. Corrigé par `--no-web-resources-cdn` (CanvasKit servi depuis le site,
+  copie déjà présente dans `build/web/canvaskit/`), question Q22 ouverte avec cette hypothèse
+  appliquée. Capture après correction : `docs/reference/plan02_home.png`.
+- Étape 9 adaptée : premier push sur la branche de session, fusion dans `main` par le PO (les
+  branches `claude/...` ne poussent pas sur `main`). Étape 11 (tag `v0.0.0-bootstrap`) : à poser
+  par le PO sur le commit de fusion dans `main`.
+
 ## Livrables
 
 - Dépôt avec squelette, CI verte, tag de départ, `AGENTS.md` (+ `CLAUDE.md` qui l'importe).
@@ -114,9 +151,11 @@ Plan 01 terminé.
 
 ## Critères d'acceptation
 
-- `flutter run -d chrome` affiche la page d'accueil provisoire.
-- Le workflow CI passe sur `main`.
-- Aucun secret dans l'historique git.
+- [ ] `flutter run -d chrome` affiche la page d'accueil provisoire (à constater par le PO sur son
+  poste ; dans le conteneur, la page construite a été servie et capturée, voir
+  `docs/reference/plan02_home.png`).
+- [ ] Le workflow CI passe sur `main` (passe sur la branche de session, à constater après fusion).
+- [x] Aucun secret dans l'historique git.
 
 ## Questions PO liées
 

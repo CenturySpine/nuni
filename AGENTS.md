@@ -63,21 +63,24 @@ Documents de référence, à lire avant d'agir :
 
 ## Commandes
 
-Le projet Flutter n'est pas encore créé (étape 2). Commandes prévues, à confirmer à cette étape :
+Détail dans `docs/DEV.md`. Flutter 3.47.4 stable épinglé par `.fvmrc`.
 
 ```powershell
-fvm use stable                                    # dans le dépôt, épingle la version (.fvmrc)
+fvm install                                       # installe la version de .fvmrc
+fvm flutter pub get                               # dépendances + génération l10n
 fvm flutter run -d chrome --dart-define-from-file=env/dev.json
-dart run build_runner build -d                    # génération freezed / riverpod / json
-fvm flutter analyze
+fvm dart run build_runner build -d                # génération freezed / riverpod / json
+fvm dart format lib test
+fvm flutter analyze --fatal-infos
 fvm flutter test
-fvm flutter build web --release
+fvm flutter build web --release --no-web-resources-cdn --dart-define-from-file=env/prod.json
 npx supabase db push                              # migrations vers le projet nuni
 npx supabase db diff -f <nom>                     # nouvelle migration depuis les changements
 ```
 
 Environnement : `env/dev.json` et `env/prod.json` (ignorés par git) contiennent `SUPABASE_URL`
-et `SUPABASE_ANON_KEY` ; `env/example.json` est le gabarit committé.
+et `SUPABASE_ANON_KEY` ; `env/example.json` est le gabarit committé. La CI (`ci.yml`) enchaîne
+`pub get`, format, analyze, test, build web à chaque push.
 
 ## Conventions de code
 

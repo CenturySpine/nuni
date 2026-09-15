@@ -1,0 +1,17 @@
+# Default Flutter lint set (plan 02). `flutter analyze --fatal-infos` runs in CI,
+# so every info-level lint blocks the build.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - lib/l10n/generated/**
+    - web/**
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+linter:
+  rules:
+    prefer_single_quotes: true

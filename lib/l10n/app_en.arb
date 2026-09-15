@@ -1,0 +1,7 @@
+{
+  "@@locale": "en",
+  "appTitle": "NUNI",
+  "@appTitle": {"description": "Application name shown in the browser tab and on the home page."},
+  "tagline": "Never Up, Never In",
+  "@tagline": {"description": "Motto under the application name. Kept in English in every language."}
+}

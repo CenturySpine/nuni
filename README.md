@@ -7,8 +7,10 @@ Hébergement cible : https://nuni.centuryspine.org (Vercel).
 
 ## État
 
-Phase de planification. Aucune implémentation n'est démarrée tant que les plans ne sont pas validés
-par le product owner.
+Étape 2 (squelette Flutter web et CI) réalisée. Les étapes suivantes s'enchaînent dans l'ordre du
+plan d'ensemble, chacune après validation de son plan par le product owner.
+
+Développer en local : [docs/DEV.md](docs/DEV.md).
 
 ## Documents
 

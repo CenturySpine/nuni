@@ -17,6 +17,9 @@ coverage/
 .flutter-plugins-dependencies
 pubspec.lock.bak
 
+# Localisations generees par `flutter pub get` (l10n.yaml)
+lib/l10n/generated/
+
 # FVM : garder .fvmrc (version épinglée), ignorer le SDK lié localement
 .fvm/
 

@@ -1,0 +1,36 @@
+{
+  "name": "NUNI",
+  "short_name": "NUNI",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#E9E6E7",
+  "theme_color": "#E9E6E7",
+  "description": "Never Up, Never In: collaborative street golf session scoring.",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icons/Icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/Icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/Icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/Icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "lang": "fr"
+}
