@@ -41,11 +41,13 @@ Documents de référence, à lire avant d'agir :
    installé sur le poste à partir d'une vérification faite depuis ce terminal ; demander au PO de
    vérifier ou d'installer depuis le sien. Recharger le PATH depuis le registre avant d'appeler
    git, gh, node, npx.
-7. **Branche `main` par défaut, pas de pull request.** Le PO travaille seul et de façon
-   incrémentale : on committe et on pousse directement sur `main`, petits pas, souvent. Une
-   branche n'est créée que si le PO le demande explicitement. Quand l'outil impose une branche de
-   session (`claude/...`), on y pousse puis on la fusionne dans `main` en avance rapide et on
-   pousse `main` en fin de tâche, sans ouvrir de PR. Aucune protection de branche (Q17).
+7. **`main` uniquement, pas de branche, pas de pull request.** Le PO travaille seul et de façon
+   incrémentale : on committe et on pousse directement sur `main`, petits pas, souvent. Aucune
+   autre branche n'est poussée sur GitHub, sauf demande explicite du PO. Si l'outil (Claude Code
+   web) impose une branche de session `claude/...`, on ne la pousse pas ; si elle a été créée
+   malgré tout, on la supprime sur GitHub une fois `main` à jour. Raison : Vercel construit
+   chaque branche poussée, et une branche parallèle ne sert à rien à une personne seule.
+   Aucune protection de branche (Q17).
 
 ## Ton des échanges avec le PO
 
@@ -58,6 +60,10 @@ Documents de référence, à lire avant d'agir :
   vérification n'a pas pu être faite, le dire en premier.
 - Terminer chaque message par la liste des points en attente du PO, indépendants les uns des
   autres, sans en redemander un déjà tranché.
+- **Toute demande adressée au PO énonce son objectif.** Quand l'assistant demande au PO de faire
+  quelque chose (commande, réglage, vérification, réponse), il dit toujours à quoi cela sert : ce
+  que cela permet ou vérifie, et ce qui se passe si ce n'est pas fait. Une demande sans but
+  explicite est interdite.
 - **Aucun "point à vérifier" laissé en suspens.** Trois cas seulement, et la formulation dit
   lequel : (a) l'assistant peut vérifier lui-même, alors il vérifie avant d'écrire et rapporte le
   résultat et sa source ; (b) la vérification exige un prérequis du PO (droit, jeton, réglage,

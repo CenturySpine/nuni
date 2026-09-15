@@ -160,9 +160,10 @@ par empreinte SHA-256, même version que le poste du PO) sur la branche
 
 ## Critères d'acceptation
 
-- [ ] `flutter run -d chrome` affiche la page d'accueil provisoire (à constater par le PO sur son
-  poste ; dans le conteneur, la page construite a été servie et capturée, voir
-  `docs/reference/plan02_home.png`).
+- [ ] `flutter run -d chrome` affiche la page d'accueil provisoire sur le poste du PO. But : vérifier
+  que le poste sait faire tourner le projet en local (Flutter épinglé, dépendances, fichier
+  `env/dev.json`), prérequis pour voir une fonctionnalité avant son déploiement. Dans le conteneur,
+  la page construite a été servie et capturée (`docs/reference/plan02_home.png`).
 - [x] Le workflow GitHub Actions est passé vert sur `main` (run n° 2, 3 min 9 s) avant d'être
   retiré. Le script `tool/vercel_build.sh` a été exécuté de bout en bout dans le conteneur de la
   session (analyse, tests, build). Premier build Vercel vert le 2026-09-15 (plan 11, étape 1).

@@ -27,8 +27,9 @@ Plan 02 (premiers commits). Projet Vercel à créer après ces commits.
   (`[ "$VERCEL_ENV" != "production" ]`, Vercel construisant aussi la branche de session
   `claude/...` en prévisualisation) : sur le commit `73ddaf1`, GitHub n'a reçu que "Canceled by
   Ignored Build Step" et jamais "Deployment has completed" ; impossible de savoir depuis la session
-  si la production a été construite. Règle retirée en attendant la lecture de la liste des
-  déploiements par le PO ; si la production de `73ddaf1` apparaît "Ready", la règle est remise. Option écartée : GitHub Actions + `vercel
+  si la production a été construite. Règle retirée. Décision du PO (2026-09-15) : plus aucune
+  branche poussée en dehors de `main` (AGENTS.md, règle 7), donc plus de build de prévisualisation
+  et plus besoin de cette règle ; la branche de session a été supprimée sur GitHub. Option écartée : GitHub Actions + `vercel
   deploy --prebuilt` (mise en place le matin, retirée le jour même : jeton, secrets et projet
   hors Git en plus, pour un gain de 2 à 3 min par build).
 - `vercel.json` : `rewrites` de toutes les routes vers `/index.html` (routage côté client),
