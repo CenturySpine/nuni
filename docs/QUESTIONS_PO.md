@@ -67,6 +67,8 @@ Réponse PO (2026-09-14) : colonne retenue. L'exigence de fond est la séparatio
 "joueur" et "utilisateur", qui est conservée : `players` reste une table indépendante de
 `profiles`, un joueur peut exister sans utilisateur, et `players.user_id uuid null unique`
 matérialise le lien. Plus de table `user_player_link`.
+Révision (2026-09-15, Q24) : tout joueur créé par l'app est lié dès sa création (trigger à
+l'inscription) ; `user_id` ne reste nul que pour les joueurs importés de LsgScores.
 
 **Q5 ☑ — Composition des équipes : 1 ou 2 joueurs fixes (comme avant) ou table de jointure
 `team_players` sans limite technique ?**
@@ -200,7 +202,7 @@ les absents : l'organisateur ou un coéquipier saisit leurs scores. Plus de choi
 joueur, plus de spectateur. Conséquence : la création (plan 07) ne démarre plus la session ; une
 phase de préparation avec salle d'attente existe entre création et démarrage.
 
-**Q24 ☐ — Les joueurs sans compte, créés à la volée par l'organisateur, restent-ils possibles ?**
+**Q24 ☑ — Les joueurs sans compte, créés à la volée par l'organisateur, restent-ils possibles ?**
 Contexte : le PO définit les joueurs comme "les utilisateurs qui se sont connectés au moins une
 fois", mais précise aussi que certains ne veulent pas utiliser l'app et que leurs scores sont
 saisis par d'autres. Une personne qui n'ouvre jamais l'app n'a pas de fiche joueur si seule la
@@ -209,13 +211,24 @@ Suggestion : conserver la création à la volée (plan 07, "+ Ajouter Marie"), d
 modèle (Q4 : `players.user_id` nullable). Elle couvre les personnes sans app et l'import des anciens
 joueurs (plan 13). Si la personne se connecte plus tard, l'onboarding lui propose "c'est moi" sur
 sa fiche (plan 05), donc pas de doublon. Appliquée comme hypothèse.
+Réponse PO (2026-09-15) : **non**, suggestion écartée. La réclamation d'une fiche créée par un
+tiers ne passe pas à l'échelle, laisse des fiches fantômes et permet de ne jamais utiliser l'app.
+Règle : toute personne doit se connecter au moins une fois ; cette connexion crée son profil et sa
+fiche joueur. Ensuite l'organisateur utilise cette fiche pour composer ses sessions, même si la
+personne ne se reconnecte jamais. Radical mais simple ; une évolution sera étudiée si des
+personnes refusent totalement l'app. Conséquences : plus de création de joueur à la volée (plan
+07), plus d'onboarding "Qui es-tu ?" ni de "c'est moi" (plan 05) ; profil et joueur sont créés
+ensemble par la base à l'inscription ; `players.user_id` ne reste nul que pour les joueurs importés
+de LsgScores (plan 13), qui ne sont pas sélectionnables dans une nouvelle session.
 
-**Q25 ☐ — Au démarrage, que faire d'un membre du pool qui n'est dans aucune équipe ?**
+**Q25 ☑ — Au démarrage, que faire d'un membre du pool qui n'est dans aucune équipe ?**
 Contexte : cas 2 du plan 09, l'organisateur démarre alors qu'un arrivant n'a pas été placé.
 Suggestion : le démarrage est refusé tant qu'un membre du pool n'est pas affecté, avec un message
 qui le nomme ; l'organisateur l'affecte ou le retire, en un geste. Alternative : le laisser
 membre sans équipe, en lecture seule ; écartée parce qu'elle réintroduit un "spectateur" que le PO
 vient de supprimer. Appliquée comme hypothèse.
+Réponse PO (2026-09-15) : suggestion retenue, blocage du démarrage ; pas de spectateur ni de
+joueur orphelin.
 
 ## Exports et photos (étape 10)
 

@@ -34,10 +34,13 @@ Plans 05 et 06 (géolocalisation partagée).
 - Météo : appel Open‑Meteo (sans clé, CORS ouvert) à la création si la position est connue ;
   stockée en `weather` (température, vent, code). Échec silencieux.
 - Équipes (composeur, dans la salle d'attente) :
-  - liste de joueurs = d'abord le pool de la session (joueurs liés des membres arrivés), puis tous
-    les joueurs du référentiel partagé, avec recherche par nom et les joueurs récents en tête
-    (ceux des dernières sessions de l'utilisateur) ;
-  - **créer un joueur à la volée** depuis la barre de recherche ("+ Ajouter Marie") (H Q24) ;
+  - liste de joueurs = d'abord le pool de la session (joueurs des membres arrivés), puis tous
+    les joueurs liés à un utilisateur (toute personne connectée au moins une fois, Q24), avec
+    recherche par nom et les joueurs récents en tête (ceux des dernières sessions de
+    l'organisateur) ;
+  - **pas de création de joueur à la volée** (Q24, PO 2026-09-15) : une personne absente de la
+    liste doit se connecter une fois à l'app ; les joueurs importés de LsgScores sans compte ne
+    sont pas proposés ;
   - mode manuel : sélection puis "former une équipe" (1 joueur en individuel, 2 en équipe, Q5
     tranchée : table de jointure, la taille est une règle applicative) ;
   - mode aléatoire : sélection d'un nombre pair ≥ 4, tirage par paires, résultat modifiable ;
@@ -68,11 +71,11 @@ Plans 05 et 06 (géolocalisation partagée).
 
 ## Livrables
 
-- Écran de création, salle d'attente, RPC de création et de démarrage, joueurs à la volée.
+- Écran de création, salle d'attente, RPC de création et de démarrage.
 
 ## Critères d'acceptation
 
-- Créer une session à 4 joueurs dont un nouveau, et la démarrer, prend moins de 60 s sur téléphone.
+- Créer une session à 4 joueurs et la démarrer prend moins de 60 s sur téléphone.
 - Cas 2 (plan 09) : trois arrivants apparaissent dans le pool sans rafraîchir ; un tirage
   aléatoire les répartit ; le démarrage est refusé tant qu'un arrivant reste non affecté.
 - Refus du réseau au moment de "Démarrer" : aucune session partielle en base, message clair,
@@ -81,4 +84,4 @@ Plans 05 et 06 (géolocalisation partagée).
 
 ## Questions PO liées
 
-Q5, Q9, Q11, Q15 (tranchée), Q24, Q25 (hypothèses).
+Q5, Q9, Q11, Q15, Q24, Q25 (tranchées).

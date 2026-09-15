@@ -29,10 +29,13 @@ Plan 02 (le CLI Supabase est une dépendance npm du dépôt).
   `scores.strokes` est renommée `scores.value` : coups dans les trois premiers modes, points en
   mode Libre.
 - Q4 tranchée : lien utilisateur ↔ joueur par colonne `players.user_id` (nullable, unique), pas de
-  table de lien. Les notions restent séparées : un joueur existe sans utilisateur.
+  table de lien. Q24 (PO 2026-09-15) : tout joueur créé par l'app est lié dès sa création ; un
+  joueur sans utilisateur n'existe que par l'import LsgScores (plan 13) et n'est pas sélectionnable
+  dans une nouvelle session.
 - Q5 tranchée : équipes via table de jointure `team_players` ; la taille (1 en individuel, 2 en
   équipe) est une règle applicative, vérifiée aussi par la RPC de création.
-- Auth : profil créé par trigger sur `auth.users` (plus de "ensureUserRow" côté client).
+- Auth : profil **et joueur lié** créés par trigger sur `auth.users` (plus de "ensureUserRow"
+  côté client, plus d'onboarding).
 - Temps réel : abonnement `postgres_changes` filtré par `session_id` (et non plus un flux sur la
   table entière), tables ajoutées à la publication `supabase_realtime`. Le calcul des scores et
   du classement reste en Dart (pur, testé) : la base ne stocke que les coups.
@@ -87,11 +90,10 @@ restant triviale.
 ## Règles d'accès (RLS) cibles
 
 - `profiles` : lecture par tout utilisateur authentifié ; écriture par soi-même.
-- `players` : lecture par tout authentifié (référentiel partagé) ; insertion par tout authentifié ;
-  modification par le créateur ou par l'utilisateur lié (`user_id = auth.uid()`) ; réclamer un
-  joueur ("c'est moi") = mise à jour de `user_id` autorisée seulement si la colonne est nulle et
-  si je n'ai pas déjà un joueur ; suppression par le créateur si le joueur n'est lié à personne et
-  n'apparaît dans aucune équipe.
+- `players` : lecture par tout authentifié (référentiel partagé) ; **aucune insertion cliente**
+  (création par le trigger d'inscription, ou par l'import du plan 13) ; modification par
+  l'utilisateur lié (`user_id = auth.uid()`) seulement ; pas de réclamation (Q24) ; pas de
+  suppression cliente (la suppression de compte passe par `delete_my_account`).
 - `holes` : lecture si `visibility = public` ou propriétaire, ou (H Q13) si le trou a été joué dans
   une session dont je suis membre ; écriture propriétaire.
 - `sessions` : lecture par les membres ; insertion par l'auteur ; modification et suppression par
@@ -118,9 +120,10 @@ restant triviale.
   `completed` → erreur `session_unavailable` ; déjà membre → retourne la session ; aucune équipe
   → insère le membre dans le pool (`team_id null`, rôle `player`) ; mon joueur lié dans une équipe
   → insère le membre rattaché à cette équipe ; équipes existantes sans mon joueur → erreur
-  `not_in_team`, rien n'est inséré. Exige un joueur lié (`players.user_id = auth.uid()`), sinon
-  erreur `no_player`.
-- `create_session(payload jsonb)` → session en `draft` avec équipes facultatives (plan 07).
+  `not_in_team`, rien n'est inséré. Le joueur lié existe toujours (créé à l'inscription, Q24) ;
+  son absence est traitée comme une erreur interne.
+- `create_session(payload jsonb)` → session en `draft` avec équipes facultatives (plan 07). Toute
+  composition d'équipe (création, ajout) refuse un joueur dont `user_id` est nul (Q24).
 - `start_session(session_id)` → propriétaire seulement, `status = draft`, au moins une équipe,
   aucun membre du pool non affecté (H Q25, erreur listant les noms), rattache chaque membre à
   l'équipe de son joueur, passe en `live` avec `started_at`.
@@ -128,7 +131,8 @@ restant triviale.
 - `delete_my_account()` → purge ordonnée des données de l'utilisateur puis suppression du compte
   auth (via `auth.admin` dans une Edge Function, ou fonction SQL `security definer` supprimant
   `auth.users` — à choisir à l'implémentation ; l'Edge Function est la voie documentée).
-- Triggers : création de profil à l'inscription, `updated_at`, génération du `code` de session,
+- Triggers : création du profil et du joueur lié à l'inscription, `updated_at`, génération du
+  `code` de session,
   garde "une seule équipe par membre".
 
 ## Étapes

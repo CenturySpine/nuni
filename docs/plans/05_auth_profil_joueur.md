@@ -18,15 +18,13 @@ Plans 03 et 04.
   Il n'existe pas d'option "meilleure" garantie : Google Identity Services (One Tap) donnerait un
   bouton natif plus élégant mais ajoute une configuration et un échange de jeton supplémentaires,
   sans gain fonctionnel. Recommandation ferme : garder Supabase OAuth.
-- Profil (`profiles`) créé par trigger base à l'inscription (display name, avatar Google).
-- Onboarding : au premier lancement, si l'utilisateur n'a pas de joueur lié, écran "Qui es-tu ?" :
-  soit **créer mon joueur** (nom pré-rempli avec le nom Google, avatar Google proposé), soit **c'est
-  moi** dans la liste des joueurs existants non liés (cas des joueurs créés par un autre
-  utilisateur lors d'une session, avant que la personne ne s'inscrive). Plus de sélection de ville.
-- L'onboarding n'est **pas différé** (révision du 2026-09-15, Q15) : rejoindre une session exige
-  un joueur lié, donc un utilisateur qui arrive par `/join/CODE` sans joueur passe d'abord par
-  "Qui es-tu ?" puis revient sur le lien. Le bandeau "Tu n'as pas encore de joueur" reste sur
-  l'accueil pour celui qui a fermé l'onboarding sans le terminer.
+- Profil (`profiles`) **et joueur lié** (`players`, `user_id = id du profil`) créés ensemble par
+  trigger base à l'inscription, avec le nom d'affichage et l'avatar Google (Q24, PO 2026-09-15).
+- Plus d'écran d'onboarding "Qui es-tu ?", plus de "c'est moi" (Q24) : une personne existe comme
+  joueur dès sa première connexion, et seulement ainsi. Plus de sélection de ville. Le nom et
+  l'avatar se corrigent dans le profil.
+- Rejoindre une session exige un joueur lié (Q15) : toujours vrai, puisqu'il est créé à
+  l'inscription.
 - Profil : nom d'affichage, avatar (photo : voir plan 06 pour le composant d'upload partagé),
   langue. Le joueur lié reprend le nom et l'avatar du profil (synchronisation à la sauvegarde).
 - Suppression de compte : appel de `delete_my_account` (Edge Function, plan 03), puis déconnexion
@@ -43,20 +41,21 @@ Plans 03 et 04.
    branchée sur l'état d'auth, écran de transition pendant la restauration de session (évite le
    "flash" du login observé dans l'ancienne app).
 3. `features/profile/` : repository `profiles` et `players` (lecture du joueur lié par
-   `players.user_id = auth.uid()`), écran d'onboarding, écran profil, page réglages complétée (déconnexion,
+   `players.user_id = auth.uid()`), écran profil, page réglages complétée (déconnexion,
    suppression de compte avec double confirmation).
 4. Gestion des erreurs : bandeau standard pour "hors ligne", "session expirée", erreurs RLS.
-5. Tests : unitaires sur les repositories (mocks du client), widget sur le login et l'onboarding.
+5. Tests : unitaires sur les repositories (mocks du client), widget sur le login et le profil.
 
 ## Livrables
 
-- Connexion, onboarding, profil, réglages compte.
+- Connexion, profil et joueur lié automatiques, réglages compte.
 
 ## Critères d'acceptation
 
 - Connexion depuis Chrome desktop, Chrome Android et Safari iOS (PWA installée) : retour sur l'app
   avec session persistée après fermeture et réouverture.
-- Un joueur créé par quelqu'un d'autre peut être réclamé ("c'est moi") une seule fois.
+- À la première connexion, le joueur lié existe déjà avec le nom Google ; le renommer dans le
+  profil se reflète partout.
 - La suppression de compte laisse la base cohérente (tests RLS du plan 03 étendus).
 
 ## Questions PO liées

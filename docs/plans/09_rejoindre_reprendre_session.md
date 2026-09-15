@@ -34,10 +34,11 @@ l'ensemble des membres qui ont rejoint sans être encore dans une équipe.
   pas l'app ; l'organisateur ou un coéquipier saisit les scores pour eux (Q8). Un joueur dont
   l'équipe existe peut rejoindre après le démarrage (cas 1) ; il retrouve alors la saisie.
 - Plus de choix d'équipe par le joueur, plus de mode spectateur.
-- H (Q24) : les joueurs sans compte, créés à la volée par l'organisateur, restent possibles ;
-  une personne qui se connecte plus tard réclame sa fiche ("c'est moi", plan 05).
-- H (Q25) : au démarrage, un membre du pool non affecté à une équipe bloque le démarrage avec
-  un message qui le nomme ; l'organisateur l'affecte ou le retire.
+- Q24 (PO 2026-09-15) : pas de joueur sans compte ; toute personne se connecte au moins une fois,
+  ce qui crée sa fiche joueur ; l'organisateur compose ensuite avec ces fiches, que la personne
+  se reconnecte ou non.
+- Q25 (PO 2026-09-15) : au démarrage, un membre du pool non affecté à une équipe bloque le
+  démarrage avec un message qui le nomme ; l'organisateur l'affecte ou le retire.
 
 ## Décisions retenues
 
@@ -49,15 +50,13 @@ l'ensemble des membres qui ont rejoint sans être encore dans une équipe.
 - Q14 (PO 2026-09-15) : pas de scanner intégré ; l'appareil photo natif lit le QR et ouvre la
   PWA. L'accueil propose "Rejoindre avec un code" pour la saisie manuelle.
 - Route `/join/:code` :
-  1. non connecté : mémoriser le code (localStorage), aller au login, revenir sur `/join/:code` ;
-  2. connecté sans joueur lié : onboarding "Qui es-tu ?" (créer mon joueur ou "c'est moi"), puis
-     retour sur `/join/:code` (plan 05 : l'onboarding n'est plus différé, rejoindre exige un
-     joueur lié) ;
-  3. appel de la RPC `join_session(code)` qui applique les trois cas : session introuvable ou
+  1. non connecté : mémoriser le code (localStorage), aller au login (la première connexion crée
+     profil et joueur, plan 05), revenir sur `/join/:code` ;
+  2. appel de la RPC `join_session(code)` qui applique les trois cas : session introuvable ou
      terminée → message et retour à l'accueil ; cas 3 → message "demande à l'organisateur de
      t'ajouter" et retour à l'accueil ; cas 1 → membre rattaché à son équipe ; cas 2 → membre
      dans le pool ;
-  4. navigation vers `/session/:id` : salle d'attente si la session est en préparation (plan 07),
+  3. navigation vers `/session/:id` : salle d'attente si la session est en préparation (plan 07),
      écran en direct sinon (plan 08). Rejoindre une session déjà rejointe est sans effet.
 - Reprise : l'accueil liste "Mes sessions en cours" (`session_members` join `sessions.status in
   (draft, live)`), avec rôle, état et date, et "Reprendre". Aucun état de participation dans le
@@ -70,7 +69,7 @@ l'ensemble des membres qui ont rejoint sans être encore dans une équipe.
 ## Étapes
 
 1. Paquets : `qr_flutter`, `share_plus`.
-2. `features/join/` : page `/join/:code` (les quatre étapes ci-dessus, messages des refus), écran
+2. `features/join/` : page `/join/:code` (les trois étapes ci-dessus, messages des refus), écran
    "Inviter", saisie manuelle de code.
 3. Accueil : sections "Mes sessions en cours", "Créer", "Rejoindre", "Dernières sessions".
 4. Tests : parcours join dans les trois cas (mocks de la RPC), génération du lien, validation du
@@ -82,8 +81,9 @@ l'ensemble des membres qui ont rejoint sans être encore dans une équipe.
 
 ## Critères d'acceptation
 
-- Cas 1 : un téléphone jamais connecté scanne le QR, se connecte avec Google, fait son onboarding
-  et arrive sur la session rattaché à la bonne équipe, sans autre action.
+- Cas 1 : un téléphone jamais connecté scanne le QR, se connecte avec Google et arrive sur la
+  session rattaché à la bonne équipe, sans autre action (son joueur ayant été créé par une
+  connexion antérieure et placé par l'organisateur).
 - Cas 2 : trois téléphones rejoignent une session sans équipe ; l'organisateur les voit arriver
   dans le pool en temps réel, compose les équipes et démarre ; chacun voit l'écran en direct.
 - Cas 3 : un utilisateur absent des équipes est refusé avec le message attendu ; après ajout par
@@ -92,4 +92,4 @@ l'ensemble des membres qui ont rejoint sans être encore dans une équipe.
 
 ## Questions PO liées
 
-Q14, Q15 (tranchées), Q24, Q25 (hypothèses).
+Q14, Q15, Q24, Q25 (tranchées).
