@@ -164,6 +164,8 @@ par empreinte SHA-256, même version que le poste du PO) sur la branche
   que le poste sait faire tourner le projet en local (Flutter épinglé, dépendances, fichier
   `env/dev.json`), prérequis pour voir une fonctionnalité avant son déploiement. Dans le conteneur,
   la page construite a été servie et capturée (`docs/reference/plan02_home.png`).
+  À faire sur le poste perso (plan 01 terminé) ; un poste vierge exigerait d'abord Git, FVM et
+  `fvm install` (plan 01, étapes 1 et 3). Le plan 02 reste ouvert jusque-là (PO, 2026-09-15).
 - [x] Le workflow GitHub Actions est passé vert sur `main` (run n° 2, 3 min 9 s) avant d'être
   retiré. Le script `tool/vercel_build.sh` a été exécuté de bout en bout dans le conteneur de la
   session (analyse, tests, build). Premier build Vercel vert le 2026-09-15 (plan 11, étape 1).
