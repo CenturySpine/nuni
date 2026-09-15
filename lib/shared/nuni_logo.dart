@@ -5,6 +5,10 @@ import '../core/theme/logo_colors.dart';
 /// The NUNI logo: "NU" over "NI", same construction as `web/icons/nuni_logo.svg`
 /// (block letters built from shapes, no font, so it renders identically and
 /// scales losslessly). Q23: colours are fixed, not palette-dependent.
+///
+/// Always shown on its icon tile (off-white background, rounded corners) so
+/// it reads the same wherever it appears in the app as it does as the PWA
+/// icon on the home screen -- never the bare glyph on the page background.
 class NuniLogo extends StatelessWidget {
   const NuniLogo({super.key, this.size = 64});
 
@@ -12,10 +16,20 @@ class NuniLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    // Proportions match the padding baked into web/icons/Icon-192.png.
+    final glyphSize = size * 0.64;
+    return Container(
       width: size,
       height: size,
-      child: CustomPaint(painter: _NuniLogoPainter(), size: Size(size, size)),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: nuniLogoBackground,
+        borderRadius: BorderRadius.circular(size * 0.2),
+      ),
+      child: CustomPaint(
+        painter: _NuniLogoPainter(),
+        size: Size(glyphSize, glyphSize),
+      ),
     );
   }
 }

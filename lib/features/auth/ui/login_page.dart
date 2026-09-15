@@ -28,8 +28,7 @@ class LoginPage extends StatelessWidget {
                 children: [
                   const Spacer(),
                   const NuniLogo(size: 96),
-                  const SizedBox(height: 16),
-                  Text(l10n.appTitle, style: textTheme.headlineMedium),
+                  const SizedBox(height: 8),
                   Text(l10n.tagline, style: textTheme.titleLarge),
                   const SizedBox(height: 32),
                   FilledButton.icon(
