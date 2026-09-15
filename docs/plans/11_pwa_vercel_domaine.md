@@ -15,13 +15,15 @@ Plan 02 (premiers commits). Projet Vercel à créer après ces commits.
 - Q17 (revirement PO 2026-09-15) : **Vercel compile et déploie**, projet Vercel relié au dépôt
   GitHub `CenturySpine/nuni`. `vercel.json` : `framework: null`, `installCommand: ""` (pas de
   `npm install`, vérifié dans le code source du builder Vercel : une commande vide saute
-  l'étape), `buildCommand: bash tool/vercel_build.sh`, `outputDirectory: build/web`,
-  `ignoreCommand` qui saute le build quand seul `docs/` ou des `.md` changent. Le script installe
+  l'étape), `buildCommand: bash tool/vercel_build.sh`, `outputDirectory: build/web`. Le script installe
   la version Flutter de `.fvmrc` (clone superficiel du tag, retéléchargé à chaque build faute de
   cache, compter 3 à 6 min), écrit `env/prod.json` depuis les variables d'environnement Vercel
   `SUPABASE_URL` et `SUPABASE_ANON_KEY`, puis `pub get`, `analyze --fatal-infos`, `test`, `build
-  web --release --no-web-resources-cdn`. `main` = production, autres branches = prévisualisation,
-  état du déploiement remonté sur le commit GitHub. Option écartée : GitHub Actions + `vercel
+  web --release --no-web-resources-cdn`. `main` = production sur `nuni.centuryspine.org` ; pas
+  de prévisualisation sur ce projet (choix du PO, 2026-09-15). État du déploiement remonté sur
+  le commit GitHub (lisible sans accès à Vercel via l'API publique GitHub, `commits/main/status`).
+  Incident du premier build : annulé par la règle `ignoreCommand` (commit de documentation seule) ;
+  règle retirée le jour même. Option écartée : GitHub Actions + `vercel
   deploy --prebuilt` (mise en place le matin, retirée le jour même : jeton, secrets et projet
   hors Git en plus, pour un gain de 2 à 3 min par build).
 - `vercel.json` : `rewrites` de toutes les routes vers `/index.html` (routage côté client),
@@ -65,13 +67,18 @@ Plan 02 (premiers commits). Projet Vercel à créer après ces commits.
      Elles peuvent être ajoutées après le premier build, qui passera avec des valeurs vides.
    - Deploy. Le premier build dure 3 à 6 min (téléchargement de Flutter). Puis Settings → Git :
      Production Branch = `main` (défaut).
-   - Prévenir Claude : URL `*.vercel.app` obtenue, et durée du premier build affichée par Vercel.
+   - Fait le 2026-09-15 (projet créé, variables saisies).
+   - Domaine, **par le PO** (Claude n'a pas accès à vercel.com ni au registrar) : Settings →
+     Domains → ajouter `nuni.centuryspine.org`, puis chez le registrar un enregistrement CNAME
+     `nuni` vers la valeur indiquée par Vercel (`cname.vercel-dns.com` en général), comme pour
+     Planerz et Ridgegear. Vercel active HTTPS seul une fois le CNAME propagé.
+   - Prévenir Claude quand un build est vert ou quand un build échoue (copier les 40 dernières
+     lignes du "Build Logs" du déploiement).
 
-   **1b. Claude ensuite** : vérification de la page d'accueil sur l'URL `*.vercel.app` et de la
-   coche verte sur le commit GitHub, puis ajout du domaine `nuni.centuryspine.org` dans le
-   projet (Settings → Domains ; le CNAME chez le registrar est saisi par le PO avec la valeur
-   indiquée par Vercel), vérification HTTPS. Relever la région du projet Vercel et la reporter
-   dans la page Mentions légales (Q21).
+   **1b. Claude ensuite** : vérification de la page d'accueil sur `https://nuni.centuryspine.org`
+   (page, titre, icônes, `version.json`), état du commit sur GitHub. Relever la région du projet
+   Vercel (PO : Settings → General → Region, ou l'en-tête `x-vercel-id` d'une réponse) et la
+   reporter dans la page Mentions légales (Q21).
 2. Ajouter l'URL de production aux redirections autorisées de Supabase Auth (plan 03).
 3. Fin de projet : icônes et manifest définitifs, bandeau de mise à jour, mesure Lighthouse (PWA
    installable, performance mobile), vérification que `/privacy`, `/legal` et `/about` répondent

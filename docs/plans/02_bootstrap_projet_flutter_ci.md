@@ -37,8 +37,8 @@ Plan 01 terminé.
 - Build et déploiement (Q17, revirement PO du 2026-09-15) : **Vercel compile**, relié au dépôt
   GitHub. `vercel.json` + `tool/vercel_build.sh` (installe la version Flutter de `.fvmrc`, puis
   `pub get`, `analyze --fatal-infos`, `test`, `build web --release`). Aucun workflow GitHub
-  Actions (celui du 2026-09-15 matin a été retiré le jour même). Les modifications limitées à
-  `docs/**` et aux `*.md` ne déclenchent pas de build (`ignoreCommand`).
+  Actions (celui du 2026-09-15 matin a été retiré le jour même). Chaque push sur `main`
+  construit (la règle qui ignorait les commits de documentation a été retirée, voir Q17).
 - Pas de protection de branche, pas de PR obligatoire (Q17) : le PO pousse directement sur `main` ;
   la coche rouge du workflow et la notification GitHub sont le seul garde-fou. Les branches
   `claude/...` se fusionnent librement (bouton GitHub ou fusion locale).
@@ -61,7 +61,7 @@ Plan 01 terminé.
    icônes provisoires (le logo définitif arrive au plan 11).
 6. Page d'accueil provisoire "NUNI — Never Up, Never In" (sert de preuve de déploiement).
 7. `analysis_options.yaml` (flutter_lints), un test widget de fumée.
-8. `vercel.json` et `tool/vercel_build.sh` : à chaque push (hors `docs/**` et `*.md`), Vercel
+8. `vercel.json` et `tool/vercel_build.sh` : à chaque push sur `main`, Vercel
    installe Flutter puis enchaîne `pub get`, analyze, test, build web. La liaison du projet Vercel
    au dépôt est faite par le PO au plan 11, étape 1.
 9. Premier commit et push sur `main`. Aucune protection de branche (Q17).

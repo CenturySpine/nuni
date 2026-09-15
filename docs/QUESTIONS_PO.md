@@ -214,10 +214,15 @@ Revirement PO (2026-09-15, après lecture des actions à faire pour Vercel au pl
 compile lui-même**, projet Vercel relié au dépôt GitHub, comme sur ses autres projets Flutter.
 GitHub Actions supprimé (workflow retiré, plus de jeton ni de secrets GitHub). Mise en œuvre :
 `vercel.json` (commande de build `tool/vercel_build.sh`, dossier de sortie `build/web`, pas
-d'installation npm, réécritures et en-têtes, build ignoré si seul `docs/` ou des `.md` changent)
+d'installation npm, réécritures et en-têtes)
 et script qui installe la version Flutter de `.fvmrc`, puis enchaîne analyse, tests et build ;
 un commit cassé n'est donc pas déployé (confirmé par le PO le 2026-09-15). `main` en production, toute autre branche en prévisualisation, coche verte
 ou rouge remontée sur le commit GitHub par Vercel. Reste vrai : push direct sur `main`, pas de PR.
+Complément (2026-09-15, après création du projet par le PO) : pas de prévisualisation sur ce
+projet, seule `main` est déployée, en production sur `nuni.centuryspine.org`. La règle "ignorer
+les commits de documentation" (`ignoreCommand`) a annulé le tout premier build (le dernier commit
+ne touchait que `docs/`) et pouvait faire sauter un déploiement quand un push mêle code et
+documentation : retirée, chaque push sur `main` construit.
 
 **Q22 ☑ — Moteur de rendu CanvasKit : servi depuis le site (`--no-web-resources-cdn`) ou depuis
 le serveur Google par défaut ?**

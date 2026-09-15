@@ -40,11 +40,10 @@ Les chaînes visibles sont dans `lib/l10n/app_en.arb` (référence, avec les des
 
 ## Build et déploiement
 
-Vercel est relié au dépôt GitHub. À chaque push (sauf changements limités à `docs/` et aux
-fichiers `.md`), il exécute `tool/vercel_build.sh` d'après `vercel.json` : installation de la
+Vercel est relié au dépôt GitHub. À chaque push sur `main`, il exécute `tool/vercel_build.sh` d'après `vercel.json` : installation de la
 version Flutter de `.fvmrc`, `pub get`, analyze, test, build web. Un commit qui casse l'analyse ou
-un test n'est pas déployé et le commit GitHub porte une coche rouge. `main` va en production,
-toute autre branche obtient une URL de prévisualisation. `SUPABASE_URL` et `SUPABASE_ANON_KEY`
+un test n'est pas déployé et le commit GitHub porte une coche rouge. `main` va en production sur
+`nuni.centuryspine.org` ; pas de prévisualisation sur ce projet. `SUPABASE_URL` et `SUPABASE_ANON_KEY`
 sont des variables d'environnement du projet Vercel. Pas de GitHub Actions.
 
 Reproduire le build Vercel en local (Linux, macOS ou Git Bash) : `bash tool/vercel_build.sh`,
