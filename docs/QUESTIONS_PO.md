@@ -177,7 +177,8 @@ avant confirmation. Alternative : Nominatim (OpenStreetMap), gratuit mais politi
 Suggestion : point de départ obligatoire (saisi "à ma position" ou déplaçable sur une carte),
 cible facultative pour plus tard. Le rayon de proximité ne s'applique qu'au départ.
 
-**Q13 ☐ — Un trou privé est-il visible des autres membres d'une session où il a été joué ?**
+**Q13 ☑ — Un trou privé est-il visible des autres membres d'une session où il a été joué ?**
+Réponse PO (2026-09-15) : suggestion retenue, oui en lecture seule.
 Suggestion : oui, en lecture seule, sinon les cartes de trous joués et les exports des autres
 membres afficheraient "trou inconnu".
 

@@ -1,0 +1,111 @@
+-- Tables for the NUNI schema (plan 03).
+-- legacy_id columns prepare the LsgScores import (plan 13): nullable, unique, unused until then.
+
+create table profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  display_name text not null,
+  avatar_url text,
+  locale text not null default 'fr',
+  created_at timestamptz not null default now()
+);
+
+create table players (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  avatar_url text,
+  created_by uuid not null references profiles (id),
+  user_id uuid unique references profiles (id),
+  legacy_id bigint unique,
+  created_at timestamptz not null default now()
+);
+
+create table holes (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references profiles (id),
+  name text not null,
+  description text,
+  par int not null default 3,
+  distance_m int,
+  start geography(point, 4326) not null,
+  photo_start_path text,
+  photo_end_path text,
+  visibility hole_visibility not null default 'private',
+  legacy_id bigint unique,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table sessions (
+  id uuid primary key default gen_random_uuid(),
+  code text not null unique,
+  owner_id uuid not null references profiles (id),
+  status session_status not null default 'draft',
+  kind session_kind not null,
+  scoring_mode scoring_mode not null,
+  ranking_direction ranking_direction not null,
+  city text,
+  zone text,
+  location geography(point, 4326),
+  started_at timestamptz,
+  ended_at timestamptz,
+  weather jsonb,
+  comment text,
+  cover_photo_id uuid,
+  legacy_id bigint unique,
+  created_at timestamptz not null default now()
+);
+
+create table teams (
+  id uuid primary key default gen_random_uuid(),
+  session_id uuid not null references sessions (id) on delete cascade,
+  position int not null,
+  legacy_id bigint unique,
+  unique (session_id, position)
+);
+
+create table team_players (
+  team_id uuid not null references teams (id) on delete cascade,
+  player_id uuid not null references players (id),
+  primary key (team_id, player_id)
+);
+
+create table session_members (
+  session_id uuid not null references sessions (id) on delete cascade,
+  user_id uuid not null references profiles (id),
+  team_id uuid references teams (id) on delete set null,
+  role member_role not null default 'player',
+  joined_at timestamptz not null default now(),
+  primary key (session_id, user_id)
+);
+
+create table played_holes (
+  id uuid primary key default gen_random_uuid(),
+  session_id uuid not null references sessions (id) on delete cascade,
+  hole_id uuid not null references holes (id),
+  game_mode game_mode not null,
+  position int not null,
+  legacy_id bigint unique,
+  created_at timestamptz not null default now(),
+  unique (session_id, position)
+);
+
+create table scores (
+  played_hole_id uuid not null references played_holes (id) on delete cascade,
+  team_id uuid not null references teams (id) on delete cascade,
+  value int not null check (value between 0 and 20),
+  updated_by uuid references profiles (id),
+  updated_at timestamptz not null default now(),
+  primary key (played_hole_id, team_id)
+);
+
+create table session_photos (
+  id uuid primary key default gen_random_uuid(),
+  session_id uuid not null references sessions (id) on delete cascade,
+  storage_path text not null,
+  uploaded_by uuid references profiles (id),
+  created_at timestamptz not null default now()
+);
+
+alter table sessions
+  add constraint sessions_cover_photo_id_fkey
+  foreign key (cover_photo_id) references session_photos (id) on delete set null;

@@ -48,6 +48,16 @@ Documents de référence, à lire avant d'agir :
    malgré tout, on la supprime sur GitHub une fois `main` à jour. Raison : Vercel construit
    chaque branche poussée, et une branche parallèle ne sert à rien à une personne seule.
    Aucune protection de branche (Q17).
+8. **Migrations Supabase avant la première mise en service.** Tant que `main` n'a pas été mis en
+   service, `supabase/migrations` n'est pas un historique à préserver mais le schéma courant :
+   aucune donnée en base n'est vitale, ce sont toujours des données de test. Un changement de
+   schéma, RLS, RPC, trigger, etc. modifie directement le fichier thématique existant concerné,
+   n'ajoute pas de nouveau fichier. Comme le CLI Supabase suit les migrations déjà appliquées par
+   nom de fichier (pas par contenu), éditer un fichier déjà poussé sans le rejouer désynchronise
+   le projet distant : il faut reconstruire le schéma distant depuis zéro (procédure dans
+   `docs/DEV.md`). **Toujours prévenir le PO avant de lancer cette reconstruction**, même si elle
+   est sans risque à ce stade. Après la mise en service, on repasse en migrations additives
+   normales (plus jamais d'édition d'un fichier déjà appliqué en production).
 
 ## Ton des échanges avec le PO
 

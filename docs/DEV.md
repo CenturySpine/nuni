@@ -48,3 +48,36 @@ sont des variables d'environnement du projet Vercel. Pas de GitHub Actions.
 
 Reproduire le build Vercel en local (Linux, macOS ou Git Bash) : `bash tool/vercel_build.sh`,
 avec `FLUTTER_DIR` pointant sur un SDK déjà installé pour éviter le téléchargement.
+
+## Supabase : modifier le schéma avant la première mise en service
+
+Règle (AGENTS.md, point 8) : tant que `main` n'a pas été mis en service, `supabase/migrations`
+n'est pas un historique à préserver mais le schéma courant. Un changement modifie directement le
+fichier thématique existant (`..._tables.sql`, `..._rls.sql`, etc.), sans ajouter de nouveau
+fichier. Le CLI suit les migrations déjà appliquées par nom de fichier, pas par contenu : éditer
+un fichier déjà poussé sans le rejouer désynchronise le projet distant du dépôt. Il faut donc
+reconstruire le schéma distant depuis zéro à chaque changement — **toujours prévenir le PO avant
+de le faire**, même si c'est sans risque tant qu'aucune donnée réelle n'existe.
+
+Procédure (projet distant `nuni`, pas de Docker local) :
+
+```powershell
+# 1. Supprimer les objets créés par les migrations (tables, types, fonctions, politiques de
+#    stockage). Ne touche pas aux droits Supabase sur le schéma "public" lui-même, ni aux
+#    buckets (leur suppression directe en SQL est bloquée par Supabase ; les recréer est sans
+#    effet grâce à "on conflict do nothing").
+npx supabase db query --linked -f chemin/vers/reset.sql
+
+# 2. Vider l'historique des migrations pour que le CLI les rejoue toutes.
+npx supabase db query --linked "delete from supabase_migrations.schema_migrations where version like '2026%';"
+
+# 3. Repousser les fichiers modifiés depuis zéro.
+npx supabase db push
+```
+
+Le contenu de `reset.sql` (liste des `drop table/function/type ... cascade` et `drop policy on
+storage.objects`) se déduit des fichiers de migration au moment du changement ; il n'est pas
+committé (fichier de travail temporaire).
+
+Après la mise en service, cette procédure disparaît : les migrations redeviennent additives, plus
+jamais d'édition d'un fichier déjà appliqué en production.
