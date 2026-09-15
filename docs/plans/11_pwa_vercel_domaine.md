@@ -20,6 +20,13 @@ Plan 02 (premiers commits). Projet Vercel à créer après ces commits.
   `vercel link` et **n'est pas relié au dépôt GitHub** : Vercel n'exécute aucun build, il héberge.
   Le build lit `SUPABASE_URL` et `SUPABASE_ANON_KEY` depuis les secrets GitHub (Q2) ; la clé anon
   n'est pas un secret au sens strict (elle est embarquée dans le site), c'est RLS qui protège.
+  Vérifié le 2026-09-15 dans le code source public du CLI Vercel : sans framework ni commande de
+  build, avec un dossier de sortie `build/web` non vide, `vercel build` empaquette ce dossier tel
+  quel (`@vercel/static`, `packages/fs-detectors/src/detect-builders.ts`) sans rien compiler ; les
+  variables `VERCEL_ORG_ID` et `VERCEL_PROJECT_ID` remplacent le fichier de liaison
+  `.vercel/project.json` (`packages/cli/src/util/projects/link.ts`), donc pas de `vercel link`
+  dans le workflow. `vercel.json` porte `"framework": null` et `"outputDirectory": "build/web"`
+  pour que ces réglages soient versionnés et non seulement saisis dans l'interface Vercel.
 - Option écartée mais documentée : faire compiler Flutter par Vercel (commande de build qui
   télécharge Flutter). Éprouvée, sans jeton ni workflow, mais 3 à 6 min de plus par build et
   dépendante de l'image Vercel. Repli possible sans toucher au code de l'app.

@@ -35,9 +35,9 @@ Plan 01 terminé.
 - Configuration par environnement : `--dart-define-from-file` (`env/dev.json`, `env/prod.json`),
   fichiers ignorés par git, gabarit `env/example.json` committé.
 - CI GitHub Actions **minimale** (Q17, PO 2026-09-15) : un seul workflow `ci.yml`, un seul job,
-  déclenché par tout push (toutes branches), avec `subosito/flutter-action` (version lue dans
-  `.fvmrc` ; si l'action ne sait pas lire ce fichier, la lire dans `pubspec.yaml`, à vérifier ici),
-  étapes `pub get`, `analyze`, `test`, `build web --release`. Pas d'artefact : le déploiement
+  déclenché par tout push (toutes branches), avec `subosito/flutter-action@v2` et
+  `flutter-version-file: .fvmrc` (lecture de `.fvmrc` prise en charge par l'action, vérifié le
+  2026-09-15 dans son README), étapes `pub get`, `analyze`, `test`, `build web --release`. Pas d'artefact : le déploiement
   Vercel (plan 11) est ajouté à ce même job juste après ce plan. Annulation automatique d'un run
   remplacé par un push plus récent sur la même branche (`concurrency`). Les modifications limitées
   à `docs/**` et aux `*.md` ne déclenchent pas le workflow.

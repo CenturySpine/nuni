@@ -53,6 +53,13 @@ Documents de référence, à lire avant d'agir :
   vérification n'a pas pu être faite, le dire en premier.
 - Terminer chaque message par la liste des points en attente du PO, indépendants les uns des
   autres, sans en redemander un déjà tranché.
+- **Aucun "point à vérifier" laissé en suspens.** Trois cas seulement, et la formulation dit
+  lequel : (a) l'assistant peut vérifier lui-même, alors il vérifie avant d'écrire et rapporte le
+  résultat et sa source ; (b) la vérification exige un prérequis du PO (droit, jeton, réglage,
+  action sur son poste), alors il demande ce prérequis explicitement, en disant ce qu'il vérifiera
+  ensuite ; (c) c'est une décision du PO, alors c'est une question, avec un point d'interrogation,
+  dans la liste des points en attente. Une phrase dont le lecteur ne sait pas si c'est une
+  question ou une affirmation, ni qui doit agir, est interdite.
 
 ## Commandes
 
