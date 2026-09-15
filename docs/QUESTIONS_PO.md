@@ -211,7 +211,7 @@ test, build, déploiement) déclenché par tout push ; `main` déploie en produc
 branches en prévisualisation avec l'URL dans le résumé du job ; le projet Vercel n'est pas relié
 à GitHub, il n'exécute aucun build. Plans 02 et 11 mis à jour.
 
-**Q22 ☐ — Moteur de rendu CanvasKit : servi depuis le site (`--no-web-resources-cdn`) ou depuis
+**Q22 ☑ — Moteur de rendu CanvasKit : servi depuis le site (`--no-web-resources-cdn`) ou depuis
 le serveur Google par défaut ?**
 Contexte : par défaut, un site Flutter charge à chaque lancement son moteur de rendu (CanvasKit,
 un fichier de 5,4 Mo mesuré sur ce build, compressé à la volée par l'hébergeur et mis en cache par le navigateur ensuite) depuis `www.gstatic.com`,
@@ -226,6 +226,24 @@ Vercel au lieu du réseau de Google, différence imperceptible pour quelques Mo.
 hypothèse dans la CI et `docs/DEV.md` depuis le plan 02. La police par défaut (Roboto) est
 téléchargée de la même façon depuis Google ; la décision d'embarquer une police relève du
 plan 04 (design system) et sera posée là.
+Réponse PO (2026-09-15) : ne tranche pas faute d'éléments ; s'en remet à l'argument technique.
+Décision : suggestion appliquée (moteur servi depuis le site). En termes d'usage : sans cette
+option, un joueur dont le téléphone ne joint pas les serveurs de Google (réseau d'entreprise
+filtré, hors ligne) voit une page blanche ; avec, l'app démarre dès que nuni.centuryspine.org
+répond, et pourra démarrer hors ligne une fois installée. Aucun inconvénient identifié.
+
+**Q23 ☑ — Logo et icône de l'application.**
+Décision PO (2026-09-15) : le logo est constitué des quatre lettres NUNI en majuscules, empilées
+sur deux lignes, "NU" au-dessus de "NI". Les deux blocs ont la même largeur et la même hauteur et
+sont alignés. "NU" et "NI" ont chacun leur couleur, génériques, compatibles avec n'importe quelle
+palette. L'icône est un fond uni aux tailles standard avec ce logo centré. Pas d'autre dessin.
+Réalisation (plan 02, 2026-09-15) : logo dessiné en formes géométriques dans
+`web/icons/nuni_logo.svg` (aucune police, donc rendu identique partout et redimensionnable sans
+perte), icônes PWA 192/512 et variantes "maskable" (Android découpe l'icône en cercle : le logo
+est réduit pour rester dans la zone sûre), favicon. Aperçu : `docs/design/nuni_logo_preview.png`.
+Hypothèse à valider : couleurs charbon `#2B2B2B` pour "NU" et gris `#8A8A8A` pour "NI", fond
+d'icône blanc cassé `#F5F5F5`, trois valeurs modifiables dans le SVG. Le logo dans l'app (écran de
+connexion, en-tête) est un widget Flutter de même construction, plan 04.
 
 **Q18 ☐ — Mise à jour de l'app : remplacer le blocage au démarrage par un bandeau "nouvelle
 version disponible, recharger" ?**

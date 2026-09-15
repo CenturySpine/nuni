@@ -41,6 +41,11 @@ Documents de référence, à lire avant d'agir :
    installé sur le poste à partir d'une vérification faite depuis ce terminal ; demander au PO de
    vérifier ou d'installer depuis le sien. Recharger le PATH depuis le registre avant d'appeler
    git, gh, node, npx.
+7. **Branche `main` par défaut, pas de pull request.** Le PO travaille seul et de façon
+   incrémentale : on committe et on pousse directement sur `main`, petits pas, souvent. Une
+   branche n'est créée que si le PO le demande explicitement. Quand l'outil impose une branche de
+   session (`claude/...`), on y pousse puis on la fusionne dans `main` en avance rapide et on
+   pousse `main` en fin de tâche, sans ouvrir de PR. Aucune protection de branche (Q17).
 
 ## Ton des échanges avec le PO
 

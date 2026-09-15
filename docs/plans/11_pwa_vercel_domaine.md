@@ -37,8 +37,8 @@ Plan 02 (premiers commits). Projet Vercel à créer après ces commits.
   registrar (comme les autres apps du domaine).
 - Manifest : nom "NUNI", nom court "NUNI", description "Never Up, Never In", `display:
   standalone`, orientation portrait, couleur de thème = fond de la palette, icônes 192/512 et
-  maskable générées à partir du logo "tee" actuel (extrait de l'ancien dépôt), icône Apple touch
-  et balises meta iOS dans `index.html`.
+  maskable générées depuis le logo NUNI (Q23, `web/icons/nuni_logo.svg`, faites au plan 02),
+  icône Apple touch et balises meta iOS dans `index.html`.
 - H (Q18) : mise à jour douce. Le service worker Flutter précharge la nouvelle version ; l'app
   compare périodiquement `version.json` (généré par Flutter à chaque build, contient
   `build_number`) et affiche un bandeau "Nouvelle version disponible — Recharger". Version affichée
@@ -56,11 +56,31 @@ Plan 02 (premiers commits). Projet Vercel à créer après ces commits.
 
 ## Étapes
 
-1. Après le plan 02 : `vercel link` (crée le projet, type "Other", pas de build command, dossier
-   de sortie `build/web`, sans liaison Git), récupérer les identifiants, secrets GitHub, étapes de
-   déploiement ajoutées au job de `ci.yml`, `vercel.json`, premier déploiement de la coquille,
-   ajout du domaine et du CNAME, vérification HTTPS. Relever la région du projet Vercel et la
-   reporter dans la page Mentions légales (Q21).
+1. **Quand : maintenant, dès que `main` contient le plan 02** (fait le 2026-09-15). Deux parties.
+
+   **1a. À faire par le PO lui-même (demande explicite du 2026-09-15, Claude ne le fait pas en
+   automatique)**, depuis son terminal, dans le dépôt :
+   - `vercel project add nuni` : crée le projet Vercel `nuni`, **sans le relier au dépôt GitHub**
+     (c'est GitHub Actions qui livre ; si Vercel était relié à GitHub, il tenterait lui aussi un
+     build à chaque push et échouerait faute de Flutter).
+   - `vercel link --yes --project nuni` : écrit `.vercel/project.json` (ignoré par git) qui
+     contient `orgId` et `projectId`.
+   - Sur vercel.com, Account Settings → Tokens : créer un jeton nommé `nuni-github-actions`,
+     portée limitée au compte, expiration au choix. Le jeton s'affiche une seule fois.
+   - Sur github.com, dépôt `nuni` → Settings → Secrets and variables → Actions → New repository
+     secret, cinq secrets : `VERCEL_TOKEN` (le jeton), `VERCEL_ORG_ID` et `VERCEL_PROJECT_ID`
+     (les deux valeurs de `.vercel/project.json`), `SUPABASE_URL` et `SUPABASE_ANON_KEY` (Q2,
+     tableau de bord Supabase → Project Settings → API).
+   - Prévenir Claude que c'est fait. Aucune de ces valeurs ne doit être collée dans une
+     conversation ni dans le dépôt.
+
+   **1b. Claude ensuite** : `vercel.json` (`framework: null`, `outputDirectory: build/web`,
+   réécritures et en-têtes de cache), étapes `vercel pull` / `vercel build` / `vercel deploy
+   --prebuilt` ajoutées au job de `ci.yml` (`--prod` sur `main`, prévisualisation ailleurs),
+   push sur `main`, vérification du premier déploiement sur l'URL `*.vercel.app`, puis ajout du
+   domaine `nuni.centuryspine.org` (le CNAME chez le registrar est fait par le PO, valeur
+   fournie par Vercel), vérification HTTPS. Relever la région du projet Vercel et la reporter
+   dans la page Mentions légales (Q21).
 2. Ajouter l'URL de production aux redirections autorisées de Supabase Auth (plan 03).
 3. Fin de projet : icônes et manifest définitifs, bandeau de mise à jour, mesure Lighthouse (PWA
    installable, performance mobile), vérification que `/privacy`, `/legal` et `/about` répondent

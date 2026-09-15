@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="NUNI">
+  <!-- NUNI logo: "NU" stacked over "NI", block letters built from shapes (no font). -->
+  <g fill="#2B2B2B"><rect x="24.00" y="16.00" width="7.00" height="30.00"/><polygon points="24.00,16.00 31.83,16.00 46.00,46.00 38.17,46.00"/><rect x="39.00" y="16.00" width="7.00" height="30.00"/><path d="M54.00 16.00 V35.00 A11.00 11.00 0 0 0 76.00 35.00 V16.00 H69.00 V35.00 A4.00 4.00 0 0 1 61.00 35.00 V16.00 Z"/></g>
+  <g fill="#8A8A8A"><rect x="24.00" y="54.00" width="7.00" height="30.00"/><polygon points="24.00,54.00 31.83,54.00 46.00,84.00 38.17,84.00"/><rect x="39.00" y="54.00" width="7.00" height="30.00"/><rect x="61.50" y="54.00" width="7.00" height="30.00"/></g>
+</svg>

@@ -139,9 +139,14 @@ par empreinte SHA-256, même version que le poste du PO) sur la branche
   `www.gstatic.com`. Corrigé par `--no-web-resources-cdn` (CanvasKit servi depuis le site,
   copie déjà présente dans `build/web/canvaskit/`), question Q22 ouverte avec cette hypothèse
   appliquée. Capture après correction : `docs/reference/plan02_home.png`.
+- Icônes : le logo NUNI décidé le 2026-09-15 (Q23) remplace les icônes Flutter par défaut dès ce
+  plan : `web/icons/nuni_logo.svg` (source), PNG 192/512, maskable, favicon, rendus par Chromium
+  depuis le SVG. Aperçu `docs/design/nuni_logo_preview.png`.
 - Étape 9 adaptée : premier push sur la branche de session, fusion dans `main` par le PO (les
   branches `claude/...` ne poussent pas sur `main`). Étape 11 (tag `v0.0.0-bootstrap`) : à poser
-  par le PO sur le commit de fusion dans `main`.
+  par le PO sur le commit de fusion dans `main`. Révision du 2026-09-15 : le PO demande que tout
+  soit fusionné dans `main` par Claude, sans PR (règle 7 d'AGENTS.md) ; fusion en avance rapide
+  et tag posés par Claude.
 
 ## Livrables
 

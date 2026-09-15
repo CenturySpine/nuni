@@ -12,6 +12,11 @@ Plan 02. Peut se dérouler en parallèle du plan 03.
 
 ## Décisions retenues
 
+- Logo (Q23) : widget `NuniLogo` reproduisant `web/icons/nuni_logo.svg` ("NU" sur "NI", blocs
+  de même largeur et hauteur, deux couleurs neutres), utilisé sur l'écran de connexion et
+  l'en-tête. Construction en formes Flutter (CustomPainter) ou rendu du SVG via `flutter_svg` :
+  à choisir ici selon la simplicité, le SVG restant la source unique.
+
 - Un seul thème clair. Pas de mode sombre (sauf demande ultérieure).
 - Q1 et Q1b tranchées : cinq variantes de palette documentées dans `docs/design/PALETTE.md`
   (01-A, 01-B, 02-A, 02-B, 03-B) sont définies dans `core/theme/palettes.dart`, chacune avec ses
