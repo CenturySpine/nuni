@@ -13,6 +13,22 @@ alter table played_holes enable row level security;
 alter table scores enable row level security;
 alter table session_photos enable row level security;
 
+-- Table privileges: RLS only filters rows, it doesn't grant the underlying operation. Supabase's
+-- default "grant to anon/authenticated/service_role" only applies to objects created by specific
+-- roles (verified: tables created by our migration role got none of it, confirmed by running the
+-- app's own queries impersonated as authenticated and hitting "permission denied"). No table
+-- grants anything to anon: the app requires sign-in throughout.
+grant select, update on profiles to authenticated;
+grant select, update on players to authenticated;
+grant select, insert, update, delete on holes to authenticated;
+grant select, insert, update, delete on sessions to authenticated;
+grant select, insert, update, delete on teams to authenticated;
+grant select, insert, update, delete on team_players to authenticated;
+grant select, insert, update, delete on session_members to authenticated;
+grant select, insert, update, delete on played_holes to authenticated;
+grant select, insert, update, delete on scores to authenticated;
+grant select, insert, update, delete on session_photos to authenticated;
+
 -- profiles: read by any authenticated user, write by self. No client insert/delete
 -- (created by the on_auth_user_created trigger, removed by delete_my_account).
 create policy "profiles_select" on profiles for select to authenticated
@@ -173,7 +189,7 @@ create policy "scores_member_own_team_insert" on scores for insert to authentica
       join session_members sm on sm.session_id = ph.session_id
       where ph.id = played_hole_id
         and sm.user_id = (select auth.uid())
-        and sm.team_id = team_id
+        and sm.team_id = scores.team_id
     )
   );
 
@@ -184,7 +200,7 @@ create policy "scores_member_own_team_update" on scores for update to authentica
       join session_members sm on sm.session_id = ph.session_id
       where ph.id = played_hole_id
         and sm.user_id = (select auth.uid())
-        and sm.team_id = team_id
+        and sm.team_id = scores.team_id
     )
   )
   with check (
@@ -193,7 +209,7 @@ create policy "scores_member_own_team_update" on scores for update to authentica
       join session_members sm on sm.session_id = ph.session_id
       where ph.id = played_hole_id
         and sm.user_id = (select auth.uid())
-        and sm.team_id = team_id
+        and sm.team_id = scores.team_id
     )
   );
 
