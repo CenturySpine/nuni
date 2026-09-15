@@ -19,7 +19,7 @@ Plans 05 et 06 (géolocalisation partagée).
   à l'avance (cas 1) ou après l'arrivée des joueurs (cas 2).
 - Salle d'attente (organisateur) : code et bouton "Inviter" (plan 09), liste des participants
   (membres arrivés d'eux-mêmes ou ajoutés par l'organisateur, mise à jour en temps réel), bouton
-  "Ajouter un participant" (recherche dans les joueurs liés, Q24 ; H Q26 : l'ajout crée un membre
+  "Ajouter un participant" (recherche dans les joueurs liés, Q24 ; Q26 : l'ajout crée un membre
   comme si la personne avait rejoint), puis selon le type de session (PO, 2026-09-15) :
   - **individuel** : rien d'autre, 1 joueur = 1 équipe ; "Démarrer" crée automatiquement une
     équipe par participant, l'organisateur ne compose rien ;
@@ -94,4 +94,4 @@ Plans 05 et 06 (géolocalisation partagée).
 
 ## Questions PO liées
 
-Q5, Q9, Q11, Q15, Q24, Q25 (tranchées), Q26 (hypothèse).
+Q5, Q9, Q11, Q15, Q24, Q25, Q26 (tranchées).

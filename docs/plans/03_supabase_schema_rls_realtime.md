@@ -104,7 +104,7 @@ restant triviale.
   par les membres ; écriture par le propriétaire.
 - `session_members` : lecture par les membres ; insertion de soi-même via RPC `join_session` ;
   insertion d'un autre utilisateur par le propriétaire tant que la session est en `draft`
-  ("Ajouter un participant", plan 07, H Q26) ; suppression de soi-même tant que la session est en
+  ("Ajouter un participant", plan 07, Q26) ; suppression de soi-même tant que la session est en
   `draft` ; le propriétaire peut retirer un membre à tout moment.
 - `scores` : lecture par les membres ; écriture (Q8 tranchée) par le propriétaire ou un
   co-organisateur de la session pour toute équipe, et par un membre pour l'équipe à laquelle il

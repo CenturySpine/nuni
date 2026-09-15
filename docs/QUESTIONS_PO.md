@@ -230,7 +230,7 @@ vient de supprimer. Appliquée comme hypothèse.
 Réponse PO (2026-09-15) : suggestion retenue, blocage du démarrage ; pas de spectateur ni de
 joueur orphelin.
 
-**Q26 ☐ — Comment l'organisateur prépare-t-il une session à l'avance (cas 1) en individuel, où
+**Q26 ☑ — Comment l'organisateur prépare-t-il une session à l'avance (cas 1) en individuel, où
 aucune équipe n'existe avant le démarrage ?**
 Contexte : PO (2026-09-15), en individuel 1 joueur = 1 équipe, pas de composition, "Démarrer"
 crée les équipes. Le cas 1 du plan 09 suppose pourtant que l'organisateur puisse préparer la
@@ -240,6 +240,7 @@ session, qui ajoute la personne comme membre exactement comme si elle avait rejo
 individuel c'est la seule action de préparation ; en équipe, le composeur travaille ensuite sur
 ces participants. Une seule notion (participant) pour les deux types, une seule liste à
 l'écran. Appliquée comme hypothèse.
+Réponse PO (2026-09-15) : suggestion retenue.
 
 ## Exports et photos (étape 10)
 
