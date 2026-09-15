@@ -34,8 +34,16 @@ Plan 01 terminé.
   simple), `dart format` en pré-commit via un hook léger ou simplement en CI.
 - Configuration par environnement : `--dart-define-from-file` (`env/dev.json`, `env/prod.json`),
   fichiers ignorés par git, gabarit `env/example.json` committé.
-- CI GitHub Actions : `subosito/flutter-action` (lit `.fvmrc`), étapes `pub get`, `analyze`,
-  `test`, `build web --release`, artefact `build/web`. Déploiement Vercel ajouté au plan 11.
+- CI GitHub Actions **minimale** (Q17, PO 2026-09-15) : un seul workflow `ci.yml`, un seul job,
+  déclenché par tout push (toutes branches), avec `subosito/flutter-action` (version lue dans
+  `.fvmrc` ; si l'action ne sait pas lire ce fichier, la lire dans `pubspec.yaml`, à vérifier ici),
+  étapes `pub get`, `analyze`, `test`, `build web --release`. Pas d'artefact : le déploiement
+  Vercel (plan 11) est ajouté à ce même job juste après ce plan. Annulation automatique d'un run
+  remplacé par un push plus récent sur la même branche (`concurrency`). Les modifications limitées
+  à `docs/**` et aux `*.md` ne déclenchent pas le workflow.
+- Pas de protection de branche, pas de PR obligatoire (Q17) : le PO pousse directement sur `main` ;
+  la coche rouge du workflow et la notification GitHub sont le seul garde-fou. Les branches
+  `claude/...` se fusionnent librement (bouton GitHub ou fusion locale).
 
 ## Étapes
 
@@ -55,10 +63,9 @@ Plan 01 terminé.
    icônes provisoires (le logo définitif arrive au plan 11).
 6. Page d'accueil provisoire "NUNI — Never Up, Never In" (sert de preuve de déploiement).
 7. `analysis_options.yaml` (flutter_lints), un test widget de fumée.
-8. Workflow `.github/workflows/ci.yml` : sur push `main` et PR → analyze, test, build web, upload
-   artefact.
-9. Premier commit et push sur `main` ; protection de branche légère (PR obligatoire, CI verte)
-   via `gh api` ou l'interface GitHub.
+8. Workflow `.github/workflows/ci.yml` : sur tout push (hors `docs/**` et `*.md`) → `pub get`,
+   analyze, test, build web. Le déploiement est ajouté au plan 11, étape 1.
+9. Premier commit et push sur `main`. Aucune protection de branche (Q17).
 10. `AGENTS.md` à la racine (créé par anticipation le 2026-09-15 à la demande du PO ; à compléter à
     cette étape avec les commandes réelles) : instructions pour les assistants de code (convention multi-outils),
     et `CLAUDE.md` réduit à une ligne d'import `@AGENTS.md` pour que Claude Code lise le même
@@ -113,5 +120,5 @@ Plan 01 terminé.
 
 ## Questions PO liées
 
-Aucune bloquante. Q17 (mode de build Vercel) est traitée au plan 11 mais influence la présence
-d'un job de déploiement dans `ci.yml`.
+Aucune. Q17 est tranchée (2026-09-15) : Actions compile, Vercel héberge, push direct sur `main`.
+Le déploiement s'ajoute au job de `ci.yml` au plan 11, étape 1.

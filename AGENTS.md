@@ -102,9 +102,11 @@ et `SUPABASE_ANON_KEY` ; `env/example.json` est le gabarit committé.
   session.
 - Écrire dans l'ancien dépôt LsgScores.
 - Commit ou push sans que le PO l'ait demandé ou accordé.
+- Protection de branche ou PR obligatoire sur `main` (Q17) : le PO pousse directement sur `main`.
 
 ## Définition de "terminé"
 
-`fvm flutter analyze` sans avertissement, tests verts, CI verte, chaînes traduites EN et FR,
+`fvm flutter analyze` sans avertissement, tests verts, workflow `ci.yml` vert sur le commit (GitHub
+Actions compile et livre à Vercel, Q17), chaînes traduites EN et FR,
 critères d'acceptation du plan de l'étape cochés, plan et `QUESTIONS_PO.md` à jour, ce fichier
 relu.

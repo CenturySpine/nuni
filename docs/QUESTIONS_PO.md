@@ -194,12 +194,22 @@ résultats" est immédiate et lisible, la version "sur photo" reprend le rendu a
 
 ## Hébergement et mise à jour (étape 11)
 
-**Q17 ☐ — Construction du site : GitHub Actions puis déploiement Vercel "prebuilt", ou construction
-directement chez Vercel ?**
-Suggestion : GitHub Actions (Flutter y est disponible via une action officielle) puis `vercel deploy
---prebuilt`. L'image de build Vercel ne contient pas Flutter ; l'y installer à chaque build est
-possible mais lent et fragile. Avec Actions, analyse, tests et build sont au même endroit, et un
-déploiement de prévisualisation par PR reste possible.
+**Q17 ☑ — Construction du site : GitHub Actions puis déploiement Vercel "prebuilt", ou construction
+directement chez Vercel ? Pull request obligatoire ou push direct sur `main` ?**
+Suggestion initiale : GitHub Actions (Flutter y est disponible via une action officielle) puis
+`vercel deploy --prebuilt`, avec protection de branche et PR obligatoire.
+Rectificatif (2026-09-15) : la question mélangeait deux décisions indépendantes, qui compile (Vercel
+ou Actions) et comment on arrive sur `main` (PR ou push direct). Faire compiler Flutter par Vercel
+est un mécanisme éprouvé (le PO l'a utilisé sur d'autres projets) ; son vrai coût est le temps de
+build, Flutter étant retéléchargé à chaque fois, pas la fragilité. Les deux options acceptent le
+push direct et remontent une coche verte ou rouge sur GitHub.
+Réponse PO (2026-09-15) : **GitHub Actions minimal puis livraison à Vercel**, retenu aussi pour
+voir ce que donne une CI sur ce projet. **Pas de PR obligatoire ni de protection de branche** : le
+PO pousse directement sur `main` la plupart du temps ; les branches `claude/...` se fusionnent
+librement (bouton GitHub ou fusion locale). Conséquences : un seul workflow `ci.yml` (analyze,
+test, build, déploiement) déclenché par tout push ; `main` déploie en production, les autres
+branches en prévisualisation avec l'URL dans le résumé du job ; le projet Vercel n'est pas relié
+à GitHub, il n'exécute aucun build. Plans 02 et 11 mis à jour.
 
 **Q18 ☐ — Mise à jour de l'app : remplacer le blocage au démarrage par un bandeau "nouvelle
 version disponible, recharger" ?**

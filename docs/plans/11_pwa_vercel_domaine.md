@@ -12,9 +12,17 @@ Plan 02 (premiers commits). Projet Vercel à créer après ces commits.
 
 ## Décisions retenues
 
-- H (Q17) : build dans GitHub Actions (`subosito/flutter-action`) puis `vercel deploy --prebuilt
-  --prod` avec les secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`. Prévisualisation par
-  PR : même job sans `--prod`, URL commentée sur la PR. Vercel n'exécute aucun build.
+- Q17 (PO 2026-09-15) : build dans GitHub Actions (`subosito/flutter-action`) puis livraison à
+  Vercel dans le même job de `ci.yml` : `vercel pull`, `vercel build`, `vercel deploy --prebuilt`
+  avec les secrets GitHub `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`. Sur `main` :
+  `--prod`. Sur toute autre branche : prévisualisation (sans `--prod`), URL écrite dans le résumé
+  du job GitHub, pas de commentaire de PR (pas de PR obligatoire). Le projet Vercel est créé par
+  `vercel link` et **n'est pas relié au dépôt GitHub** : Vercel n'exécute aucun build, il héberge.
+  Le build lit `SUPABASE_URL` et `SUPABASE_ANON_KEY` depuis les secrets GitHub (Q2) ; la clé anon
+  n'est pas un secret au sens strict (elle est embarquée dans le site), c'est RLS qui protège.
+- Option écartée mais documentée : faire compiler Flutter par Vercel (commande de build qui
+  télécharge Flutter). Éprouvée, sans jeton ni workflow, mais 3 à 6 min de plus par build et
+  dépendante de l'image Vercel. Repli possible sans toucher au code de l'app.
 - `vercel.json` : `rewrites` de toutes les routes vers `/index.html` (routage côté client),
   en-têtes `Cache-Control: no-cache` sur `index.html`, `flutter_service_worker.js`, `version.json`
   et `manifest.json` ; cache long sur les assets versionnés.
@@ -41,10 +49,11 @@ Plan 02 (premiers commits). Projet Vercel à créer après ces commits.
 
 ## Étapes
 
-1. Après le plan 02 : `vercel link` (crée le projet, type "Other", pas de build command), récupérer
-   les identifiants, secrets GitHub, job de déploiement dans `ci.yml`, `vercel.json`, premier
-   déploiement de la coquille, ajout du domaine et du CNAME, vérification HTTPS. Relever la
-   région du projet Vercel et la reporter dans la page Mentions légales (Q21).
+1. Après le plan 02 : `vercel link` (crée le projet, type "Other", pas de build command, dossier
+   de sortie `build/web`, sans liaison Git), récupérer les identifiants, secrets GitHub, étapes de
+   déploiement ajoutées au job de `ci.yml`, `vercel.json`, premier déploiement de la coquille,
+   ajout du domaine et du CNAME, vérification HTTPS. Relever la région du projet Vercel et la
+   reporter dans la page Mentions légales (Q21).
 2. Ajouter l'URL de production aux redirections autorisées de Supabase Auth (plan 03).
 3. Fin de projet : icônes et manifest définitifs, bandeau de mise à jour, mesure Lighthouse (PWA
    installable, performance mobile), vérification que `/privacy`, `/legal` et `/about` répondent
