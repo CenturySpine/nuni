@@ -46,7 +46,7 @@ Suggestion : nouveau projet. Isolation totale de l'ancienne app (qui reste utili
 transition), migrations propres versionnées dans le dépôt, aucune contrainte héritée.
 Réponse PO (2026-09-14) : nouveau projet, déjà créé. URL `https://zlxfmovibepgdmxacbpj.supabase.co`,
 référence `zlxfmovibepgdmxacbpj`. La clé anon sera fournie hors dépôt (fichier `env/*.json`
-ignoré par git et secrets GitHub Actions).
+ignoré par git et variables d'environnement du projet Vercel, Q17).
 
 **Q3 ☑ — Faut-il reprendre les anciennes données (trous, sessions passées) ?**
 Suggestion initiale : pas de reprise automatique au démarrage, décision différée.
@@ -210,6 +210,15 @@ librement (bouton GitHub ou fusion locale). Conséquences : un seul workflow `ci
 test, build, déploiement) déclenché par tout push ; `main` déploie en production, les autres
 branches en prévisualisation avec l'URL dans le résumé du job ; le projet Vercel n'est pas relié
 à GitHub, il n'exécute aucun build. Plans 02 et 11 mis à jour.
+Revirement PO (2026-09-15, après lecture des actions à faire pour Vercel au plan 11) : **Vercel
+compile lui-même**, projet Vercel relié au dépôt GitHub, comme sur ses autres projets Flutter.
+GitHub Actions supprimé (workflow retiré, plus de jeton ni de secrets GitHub). Mise en œuvre :
+`vercel.json` (commande de build `tool/vercel_build.sh`, dossier de sortie `build/web`, pas
+d'installation npm, réécritures et en-têtes, build ignoré si seul `docs/` ou des `.md` changent)
+et script qui installe la version Flutter de `.fvmrc`, puis enchaîne analyse, tests et build ;
+un commit cassé n'est donc pas déployé (hypothèse : retirer deux lignes du script si le PO ne
+veut que le build). `main` en production, toute autre branche en prévisualisation, coche verte
+ou rouge remontée sur le commit GitHub par Vercel. Reste vrai : push direct sur `main`, pas de PR.
 
 **Q22 ☑ — Moteur de rendu CanvasKit : servi depuis le site (`--no-web-resources-cdn`) ou depuis
 le serveur Google par défaut ?**
@@ -223,7 +232,7 @@ d'usage : l'app démarre dès que le site est joignable, sans dépendre d'un tie
 worker peut la mettre en cache pour un usage hors ligne (PWA) ; aucune requête vers Google au
 lancement, ce qui simplifie la page Confidentialité (Q21). Coût : le premier chargement vient de
 Vercel au lieu du réseau de Google, différence imperceptible pour quelques Mo. Appliquée comme
-hypothèse dans la CI et `docs/DEV.md` depuis le plan 02. La police par défaut (Roboto) est
+hypothèse dans le script de build Vercel et `docs/DEV.md` depuis le plan 02. La police par défaut (Roboto) est
 téléchargée de la même façon depuis Google ; la décision d'embarquer une police relève du
 plan 04 (design system) et sera posée là.
 Réponse PO (2026-09-15) : ne tranche pas faute d'éléments ; s'en remet à l'argument technique.

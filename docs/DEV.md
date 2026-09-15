@@ -38,9 +38,14 @@ Les chaînes visibles sont dans `lib/l10n/app_en.arb` (référence, avec les des
 `lib/l10n/app_fr.arb`. Le code Dart est généré dans `lib/l10n/generated/` par `flutter pub get`
 (dossier ignoré par git). Une chaîne ajoutée dans un seul fichier fait échouer l'analyse.
 
-## Intégration continue
+## Build et déploiement
 
-`.github/workflows/ci.yml` s'exécute à chaque push (sauf changements limités à `docs/` et aux
-fichiers `.md`) : `pub get`, format, analyze, test, build web. Les secrets `SUPABASE_URL` et
-`SUPABASE_ANON_KEY` sont vides tant que le plan 11 ne les a pas enregistrés ; le build passe quand
-même. Le déploiement Vercel s'ajoute à ce job au plan 11.
+Vercel est relié au dépôt GitHub. À chaque push (sauf changements limités à `docs/` et aux
+fichiers `.md`), il exécute `tool/vercel_build.sh` d'après `vercel.json` : installation de la
+version Flutter de `.fvmrc`, `pub get`, analyze, test, build web. Un commit qui casse l'analyse ou
+un test n'est pas déployé et le commit GitHub porte une coche rouge. `main` va en production,
+toute autre branche obtient une URL de prévisualisation. `SUPABASE_URL` et `SUPABASE_ANON_KEY`
+sont des variables d'environnement du projet Vercel. Pas de GitHub Actions.
+
+Reproduire le build Vercel en local (Linux, macOS ou Git Bash) : `bash tool/vercel_build.sh`,
+avec `FLUTTER_DIR` pointant sur un SDK déjà installé pour éviter le téléchargement.

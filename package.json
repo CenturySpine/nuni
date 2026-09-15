@@ -1,9 +1,8 @@
 {
   "name": "nuni",
   "private": true,
-  "description": "Node CLIs pinned for reproducible `npx supabase` and `npx vercel` (no Node code in the app).",
+  "description": "Pins the Supabase CLI for reproducible `npx supabase` (no Node code in the app).",
   "devDependencies": {
-    "supabase": "2.117.0",
-    "vercel": "59.17.0"
+    "supabase": "2.117.0"
   }
 }

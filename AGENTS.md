@@ -84,8 +84,9 @@ npx supabase db diff -f <nom>                     # nouvelle migration depuis le
 ```
 
 Environnement : `env/dev.json` et `env/prod.json` (ignorés par git) contiennent `SUPABASE_URL`
-et `SUPABASE_ANON_KEY` ; `env/example.json` est le gabarit committé. La CI (`ci.yml`) enchaîne
-`pub get`, format, analyze, test, build web à chaque push.
+et `SUPABASE_ANON_KEY` ; `env/example.json` est le gabarit committé. À chaque push, Vercel
+exécute `tool/vercel_build.sh` (installe Flutter, `pub get`, analyze, test, build web) ; pas de
+GitHub Actions (Q17).
 
 ## Conventions de code
 
@@ -121,7 +122,7 @@ et `SUPABASE_ANON_KEY` ; `env/example.json` est le gabarit committé. La CI (`ci
 
 ## Définition de "terminé"
 
-`fvm flutter analyze` sans avertissement, tests verts, workflow `ci.yml` vert sur le commit (GitHub
-Actions compile et livre à Vercel, Q17), chaînes traduites EN et FR,
+`fvm flutter analyze` sans avertissement, tests verts, build Vercel vert sur le commit (Vercel
+compile, Q17), chaînes traduites EN et FR,
 critères d'acceptation du plan de l'étape cochés, plan et `QUESTIONS_PO.md` à jour, ce fichier
 relu.
