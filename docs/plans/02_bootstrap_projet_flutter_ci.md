@@ -154,7 +154,9 @@ par empreinte SHA-256, même version que le poste du PO) sur la branche
 - [ ] `flutter run -d chrome` affiche la page d'accueil provisoire (à constater par le PO sur son
   poste ; dans le conteneur, la page construite a été servie et capturée, voir
   `docs/reference/plan02_home.png`).
-- [ ] Le workflow CI passe sur `main` (passe sur la branche de session, à constater après fusion).
+- [x] Le workflow CI passe : run n° 1 vert sur la branche de session en 3 min 15 s
+  (https://github.com/CenturySpine/nuni/actions/runs/34936093556), dont 65 s d'installation de
+  Flutter sans cache ; il passera sur `main` à la fusion.
 - [x] Aucun secret dans l'historique git.
 
 ## Questions PO liées
