@@ -23,9 +23,10 @@ Plans 03 et 04.
   soit **créer mon joueur** (nom pré-rempli avec le nom Google, avatar Google proposé), soit **c'est
   moi** dans la liste des joueurs existants non liés (cas des joueurs créés par un autre
   utilisateur lors d'une session, avant que la personne ne s'inscrive). Plus de sélection de ville.
-- L'onboarding peut être **différé** : un utilisateur qui arrive par un lien `/join/CODE` doit
-  pouvoir rejoindre d'abord et se rattacher ensuite ; le bandeau "Tu n'as pas encore de joueur"
-  reste visible sur l'accueil tant que le lien n'est pas fait.
+- L'onboarding n'est **pas différé** (révision du 2026-09-15, Q15) : rejoindre une session exige
+  un joueur lié, donc un utilisateur qui arrive par `/join/CODE` sans joueur passe d'abord par
+  "Qui es-tu ?" puis revient sur le lien. Le bandeau "Tu n'as pas encore de joueur" reste sur
+  l'accueil pour celui qui a fermé l'onboarding sans le terminer.
 - Profil : nom d'affichage, avatar (photo : voir plan 06 pour le composant d'upload partagé),
   langue. Le joueur lié reprend le nom et l'avatar du profil (synchronisation à la sauvegarde).
 - Suppression de compte : appel de `delete_my_account` (Edge Function, plan 03), puis déconnexion

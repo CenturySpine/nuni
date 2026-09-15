@@ -24,7 +24,10 @@ Plans 03 (temps réel, RLS), 06, 07.
   selon `ranking_direction` en Libre (Q7b), sinon points décroissants puis coups croissants ;
   positions ex æquo affichées à égalité. L'en-tête affiche le mode et, en Libre, le sens du
   classement.
-- Écran `/session/:id` (membre) :
+- Écran `/session/:id` : tant que `status = draft`, il affiche la salle d'attente du plan 07 ;
+  l'événement temps réel sur `sessions` (passage à `live`) bascule vers l'écran en direct sans
+  rechargement. Équipes figées après le démarrage (Q15).
+- Écran `/session/:id` en direct (membre) :
   - en-tête : ville · zone · date, mode de scoring (info), bouton "Inviter" (code, lien, QR :
     plan 09) ;
   - carte de classement repliable (leader en résumé), avertissement "scores incomplets" ;

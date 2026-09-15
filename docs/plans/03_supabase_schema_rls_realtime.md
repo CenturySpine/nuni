@@ -59,8 +59,9 @@ sessions            id uuid PK, code text unique (6 car. A-Z0-9, généré), own
                     comment text null, cover_photo_id uuid null, created_at
 teams               id uuid PK, session_id → sessions (cascade), position int
 team_players        team_id → teams (cascade), player_id → players, PK(team_id, player_id)
-session_members     session_id → sessions (cascade), user_id → profiles, team_id → teams null,
-                    role member_role (owner|player|viewer), joined_at, PK(session_id, user_id)
+session_members     session_id → sessions (cascade), user_id → profiles, team_id → teams null
+                    (null = dans le pool, pas encore affecté ; Q15), role member_role
+                    (owner|player), joined_at, PK(session_id, user_id)
 played_holes        id uuid PK, session_id → sessions (cascade), hole_id → holes, game_mode
                     game_mode, position int, created_at, unique(session_id, position)
 scores              played_hole_id → played_holes (cascade), team_id → teams (cascade),
@@ -96,10 +97,12 @@ restant triviale.
 - `sessions` : lecture par les membres ; insertion par l'auteur ; modification et suppression par
   le propriétaire. La découverte par code passe par une fonction (voir RPC), pas par un SELECT
   ouvert.
-- `teams`, `team_players`, `played_holes` : lecture par les membres de la session ; écriture par le
-  propriétaire de la session.
-- `session_members` : lecture par les membres ; insertion de soi-même via RPC ; le propriétaire
-  peut retirer un membre.
+- `teams`, `team_players` : lecture par les membres de la session ; écriture par le propriétaire
+  tant que `sessions.status = draft` (équipes figées au démarrage, Q15). `played_holes` : lecture
+  par les membres ; écriture par le propriétaire.
+- `session_members` : lecture par les membres ; insertion de soi-même via RPC `join_session` ;
+  suppression de soi-même tant que la session est en `draft` ; le propriétaire peut retirer un
+  membre à tout moment.
 - `scores` : lecture par les membres ; écriture (Q8 tranchée) par le propriétaire ou un
   co-organisateur de la session pour toute équipe, et par un membre pour l'équipe à laquelle il
   est rattaché (`session_members.team_id`).
@@ -111,10 +114,17 @@ restant triviale.
 
 - `holes_nearby(lat, lng, radius_m)` → trous publics + mes trous privés dans le rayon, avec la
   distance, triés par distance (index GiST sur `start`).
-- `join_session(code)` → vérifie que la session existe et n'est pas terminée, insère le membre
-  (rôle `player`), rattache automatiquement à l'équipe contenant mon joueur lié, retourne la
-  session.
-- `set_my_team(session_id, team_id)` → rattachement manuel (règle de taille d'équipe vérifiée).
+- `join_session(code)` → applique les trois cas de Q15 (plan 09) : session introuvable ou
+  `completed` → erreur `session_unavailable` ; déjà membre → retourne la session ; aucune équipe
+  → insère le membre dans le pool (`team_id null`, rôle `player`) ; mon joueur lié dans une équipe
+  → insère le membre rattaché à cette équipe ; équipes existantes sans mon joueur → erreur
+  `not_in_team`, rien n'est inséré. Exige un joueur lié (`players.user_id = auth.uid()`), sinon
+  erreur `no_player`.
+- `create_session(payload jsonb)` → session en `draft` avec équipes facultatives (plan 07).
+- `start_session(session_id)` → propriétaire seulement, `status = draft`, au moins une équipe,
+  aucun membre du pool non affecté (H Q25, erreur listant les noms), rattache chaque membre à
+  l'équipe de son joueur, passe en `live` avec `started_at`.
+- Plus de `set_my_team` : le joueur ne choisit jamais son équipe (Q15).
 - `delete_my_account()` → purge ordonnée des données de l'utilisateur puis suppression du compte
   auth (via `auth.admin` dans une Edge Function, ou fonction SQL `security definer` supprimant
   `auth.users` — à choisir à l'implémentation ; l'Edge Function est la voie documentée).

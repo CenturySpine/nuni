@@ -187,10 +187,35 @@ l'appareil photo natif de tout téléphone l'ouvre directement dans la PWA. Un c
 caractères) saisissable à la main couvre le reste. Un scanner intégré reste ajoutable plus tard.
 Réponse PO (2026-09-15) : pas de scanner dans l'app, on se repose sur l'appareil photo du téléphone.
 
-**Q15 ☐ — Que voit un utilisateur qui rejoint une session sans avoir de joueur dans une équipe ?**
-Suggestion : il choisit une équipe existante à rejoindre (son joueur y est ajouté si la règle de
-taille le permet) ou reste "spectateur" avec lecture seule. Le créateur peut aussi ajouter des
-joueurs après le démarrage.
+**Q15 ☑ — Que voit un utilisateur qui rejoint une session sans avoir de joueur dans une équipe ?**
+Suggestion initiale : il choisit une équipe existante ou reste "spectateur" ; le créateur peut
+ajouter des joueurs après le démarrage.
+Réponse PO (2026-09-15) : suggestion écartée, métier simplifié en trois cas (détail au plan 09).
+Cas 1 : équipes préparées à l'avance, l'utilisateur dont le joueur figure dans une équipe est
+rattaché sans rien faire. Cas 2 : aucune équipe, tout le monde rejoint un pool, l'organisateur
+compose les équipes (manuellement ou aléatoirement) puis démarre. Cas 3 : des équipes existent et
+le joueur n'y figure pas, rejoindre est refusé ; il demande à l'organisateur de l'ajouter. Jusqu'au
+démarrage, l'organisateur retire membres, joueurs et équipes à volonté. Le démarrage n'attend pas
+les absents : l'organisateur ou un coéquipier saisit leurs scores. Plus de choix d'équipe par le
+joueur, plus de spectateur. Conséquence : la création (plan 07) ne démarre plus la session ; une
+phase de préparation avec salle d'attente existe entre création et démarrage.
+
+**Q24 ☐ — Les joueurs sans compte, créés à la volée par l'organisateur, restent-ils possibles ?**
+Contexte : le PO définit les joueurs comme "les utilisateurs qui se sont connectés au moins une
+fois", mais précise aussi que certains ne veulent pas utiliser l'app et que leurs scores sont
+saisis par d'autres. Une personne qui n'ouvre jamais l'app n'a pas de fiche joueur si seule la
+connexion en crée une.
+Suggestion : conserver la création à la volée (plan 07, "+ Ajouter Marie"), déjà prévue par le
+modèle (Q4 : `players.user_id` nullable). Elle couvre les personnes sans app et l'import des anciens
+joueurs (plan 13). Si la personne se connecte plus tard, l'onboarding lui propose "c'est moi" sur
+sa fiche (plan 05), donc pas de doublon. Appliquée comme hypothèse.
+
+**Q25 ☐ — Au démarrage, que faire d'un membre du pool qui n'est dans aucune équipe ?**
+Contexte : cas 2 du plan 09, l'organisateur démarre alors qu'un arrivant n'a pas été placé.
+Suggestion : le démarrage est refusé tant qu'un membre du pool n'est pas affecté, avec un message
+qui le nomme ; l'organisateur l'affecte ou le retire, en un geste. Alternative : le laisser
+membre sans équipe, en lecture seule ; écartée parce qu'elle réintroduit un "spectateur" que le PO
+vient de supprimer. Appliquée comme hypothèse.
 
 ## Exports et photos (étape 10)
 
