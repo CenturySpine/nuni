@@ -44,7 +44,7 @@ Plan 02 (premiers commits). Projet Vercel à créer après ces commits.
   standalone`, orientation portrait, couleur de thème = fond de la palette, icônes 192/512 et
   maskable générées depuis le logo NUNI (Q23, `web/icons/nuni_logo.svg`, faites au plan 02),
   icône Apple touch et balises meta iOS dans `index.html`.
-- H (Q18) : mise à jour douce. Le service worker Flutter précharge la nouvelle version ; l'app
+- Q18 (PO 2026-09-15) : mise à jour douce. Le service worker Flutter précharge la nouvelle version ; l'app
   compare périodiquement `version.json` (généré par Flutter à chaque build, contient
   `build_number`) et affiche un bandeau "Nouvelle version disponible — Recharger". Version affichée
   dans les réglages. Plus de blocage ni de table `app_versions`.

@@ -17,7 +17,7 @@ Plans 05, 07, 08.
 - Écran "Inviter" (depuis la session en direct) : code en grand, bouton "Copier le lien", bouton
   "Partager" (API Web Share via `share_plus`, repli copie), QR code généré localement avec
   `qr_flutter` encodant le lien.
-- H (Q14) : pas de scanner intégré ; l'appareil photo natif lit le QR et ouvre la PWA. L'accueil
+- Q14 (PO 2026-09-15) : pas de scanner intégré ; l'appareil photo natif lit le QR et ouvre la PWA. L'accueil
   propose "Rejoindre avec un code" pour la saisie manuelle.
 - Route `/join/:code` :
   1. non connecté : mémoriser le code (localStorage), aller au login, revenir sur `/join/:code` ;

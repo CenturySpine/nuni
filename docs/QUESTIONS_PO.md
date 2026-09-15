@@ -181,10 +181,11 @@ membres afficheraient "trou inconnu".
 
 ## Rejoindre une session (étape 9)
 
-**Q14 ☐ — Faut-il un scanner QR intégré à l'app ?**
+**Q14 ☑ — Faut-il un scanner QR intégré à l'app ?**
 Suggestion : non au départ. Le QR code encode un lien `https://nuni.centuryspine.org/join/CODE` ;
 l'appareil photo natif de tout téléphone l'ouvre directement dans la PWA. Un code court (6
 caractères) saisissable à la main couvre le reste. Un scanner intégré reste ajoutable plus tard.
+Réponse PO (2026-09-15) : pas de scanner dans l'app, on se repose sur l'appareil photo du téléphone.
 
 **Q15 ☐ — Que voit un utilisateur qui rejoint une session sans avoir de joueur dans une équipe ?**
 Suggestion : il choisit une équipe existante à rejoindre (son joueur y est ajouté si la règle de
@@ -267,10 +268,11 @@ d'icône blanc cassé `#F5F5F5`, trois valeurs modifiables dans le SVG. Réponse
 couleurs validées pour commencer. Le logo dans l'app (écran de
 connexion, en-tête) est un widget Flutter de même construction, plan 04.
 
-**Q18 ☐ — Mise à jour de l'app : remplacer le blocage au démarrage par un bandeau "nouvelle
+**Q18 ☑ — Mise à jour de l'app : remplacer le blocage au démarrage par un bandeau "nouvelle
 version disponible, recharger" ?**
 Suggestion : oui. Sur une PWA le service worker télécharge la nouvelle version en arrière-plan ;
 bloquer l'utilisateur n'a plus de justification. La table `app_versions` disparaît.
+Réponse PO (2026-09-15) : suggestion retenue.
 
 ## Outillage (étape 1)
 
