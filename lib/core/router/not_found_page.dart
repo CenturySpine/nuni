@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../theme/phosphor_icons.dart';
+
 import '../../l10n/generated/app_localizations.dart';
 import '../../shared/nuni_empty_state.dart';
 
@@ -13,7 +15,7 @@ class NotFoundPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notFoundTitle)),
       body: NuniEmptyState(
-        icon: Icons.signpost_outlined,
+        icon: PhosphorIcons.signpost,
         message: l10n.notFoundMessage,
         action: FilledButton(
           onPressed: () => context.go('/'),

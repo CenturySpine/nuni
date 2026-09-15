@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../core/theme/phosphor_icons.dart';
+
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../core/l10n/locale_controller.dart';
@@ -20,9 +23,9 @@ class SettingsPage extends ConsumerWidget {
       body: ListView(
         children: [
           ListTile(
-            leading: const Icon(Icons.person_outline),
+            leading: const Icon(PhosphorIcons.userCircle),
             title: Text(l10n.profileTitle),
-            trailing: const Icon(Icons.chevron_right),
+            trailing: const Icon(PhosphorIcons.caretRight),
             onTap: () => context.push('/profile'),
           ),
           const Divider(),

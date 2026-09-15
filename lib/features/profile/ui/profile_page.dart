@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/phosphor_icons.dart';
+
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_empty_state.dart';
 
@@ -13,7 +15,7 @@ class ProfilePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.profileTitle)),
       body: NuniEmptyState(
-        icon: Icons.person_outline,
+        icon: PhosphorIcons.userCircle,
         message: l10n.profileComingSoon,
       ),
     );

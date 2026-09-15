@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../core/theme/phosphor_icons.dart';
+
 /// Placeholder for an empty list ("no live sessions", "no holes nearby", ...).
 class NuniEmptyState extends StatelessWidget {
   const NuniEmptyState({
     super.key,
     required this.message,
-    this.icon = Icons.inbox_outlined,
+    this.icon = PhosphorIcons.tray,
     this.action,
   });
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/phosphor_icons.dart';
+
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_empty_state.dart';
 
@@ -11,7 +13,7 @@ class HolesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NuniEmptyState(
-      icon: Icons.golf_course_outlined,
+      icon: PhosphorIcons.golf,
       message: AppLocalizations.of(context)!.holesComingSoon,
     );
   }

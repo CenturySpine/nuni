@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/theme/phosphor_icons.dart';
+
 /// Inline error banner (failed load, offline write refused, ...), with an
 /// optional retry action.
 class NuniErrorBanner extends StatelessWidget {
@@ -21,7 +23,7 @@ class NuniErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline, color: scheme.error),
+          Icon(PhosphorIcons.warningCircle, color: scheme.error),
           const SizedBox(width: 8),
           Expanded(
             child: Text(message, style: TextStyle(color: scheme.error)),
@@ -29,7 +31,7 @@ class NuniErrorBanner extends StatelessWidget {
           if (onRetry != null)
             IconButton(
               onPressed: onRetry,
-              icon: Icon(Icons.refresh, color: scheme.error),
+              icon: Icon(PhosphorIcons.arrowClockwise, color: scheme.error),
             ),
         ],
       ),

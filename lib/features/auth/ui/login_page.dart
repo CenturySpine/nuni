@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/phosphor_icons.dart';
+
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_legal_footer.dart';
 import '../../../shared/nuni_logo.dart';
@@ -32,7 +34,7 @@ class LoginPage extends StatelessWidget {
                   const SizedBox(height: 32),
                   FilledButton.icon(
                     onPressed: null,
-                    icon: const Icon(Icons.login),
+                    icon: const Icon(PhosphorIcons.googleLogo),
                     label: Text(l10n.loginSignInWithGoogle),
                   ),
                   const Spacer(),

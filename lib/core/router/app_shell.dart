@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../theme/phosphor_icons.dart';
+
 import '../../l10n/generated/app_localizations.dart';
 
 /// Bottom-bar shell for the three top-level destinations (Home, Holes,
@@ -23,7 +25,7 @@ class AppShell extends StatelessWidget {
             tooltip: l10n.settingsTitle,
             icon: const CircleAvatar(
               radius: 16,
-              child: Icon(Icons.person_outline, size: 18),
+              child: Icon(PhosphorIcons.userCircle, size: 18),
             ),
             onPressed: () => context.push('/settings'),
           ),
@@ -38,18 +40,18 @@ class AppShell extends StatelessWidget {
         ),
         destinations: [
           NavigationDestination(
-            icon: const Icon(Icons.home_outlined),
-            selectedIcon: const Icon(Icons.home),
+            icon: const Icon(PhosphorIcons.house),
+            selectedIcon: const Icon(PhosphorIcons.houseFill),
             label: l10n.navHome,
           ),
           NavigationDestination(
-            icon: const Icon(Icons.golf_course_outlined),
-            selectedIcon: const Icon(Icons.golf_course),
+            icon: const Icon(PhosphorIcons.golf),
+            selectedIcon: const Icon(PhosphorIcons.golfFill),
             label: l10n.navHoles,
           ),
           NavigationDestination(
-            icon: const Icon(Icons.history_outlined),
-            selectedIcon: const Icon(Icons.history),
+            icon: const Icon(PhosphorIcons.clockCounterClockwise),
+            selectedIcon: const Icon(PhosphorIcons.clockCounterClockwiseFill),
             label: l10n.navHistory,
           ),
         ],

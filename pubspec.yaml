@@ -38,3 +38,13 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  fonts:
+    # Phosphor Icons (MIT, phosphoricons.com), vendored directly: the
+    # `phosphor_flutter` package subclasses IconData, which current Flutter
+    # forbids (IconData is a `final class`) -- see lib/core/theme/phosphor_icons.dart.
+    - family: PhosphorRegular
+      fonts:
+        - asset: assets/fonts/Phosphor.ttf
+    - family: PhosphorFill
+      fonts:
+        - asset: assets/fonts/Phosphor-Fill.ttf

@@ -12,6 +12,7 @@
   "navHistory": "History",
   "@navHistory": {"description": "Bottom navigation: past sessions."},
 
+  "homeComingSoon": "Your live sessions, plus create and join, are coming in a future update.",
   "holesComingSoon": "Holes are coming in a future update.",
   "historyComingSoon": "History is coming in a future update.",
 
