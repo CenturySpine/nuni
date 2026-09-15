@@ -127,6 +127,12 @@ Réponse PO (2026-09-14) : client dédié à NUNI. À créer par le PO dans la c
 (type "Application Web", origine `https://nuni.centuryspine.org`, URI de redirection
 `https://zlxfmovibepgdmxacbpj.supabase.co/auth/v1/callback`), puis saisir l'identifiant et le
 secret dans Supabase. Prérequis de l'étape 5, à faire au plus tard pendant l'étape 3.
+Réalisation PO (2026-09-15) : projet Google Cloud `nuni`, client OAuth "Nuni PWA" (type
+Application Web) avec pour seule URI de redirection le callback Supabase, identifiant et secret
+saisis dans Supabase, fournisseur Google activé. Pas d'origine JavaScript déclarée : inutile en
+flux de redirection via Supabase (plan 05), seul le flux "One Tap", non retenu, en aurait besoin.
+Reste, côté Google (Branding et Audience de l'écran de consentement) et côté Supabase (URL
+Configuration) : détaillé au plan 03, étape 1.
 Contexte : Supabase Auth a besoin d'un identifiant et d'un secret de client OAuth Google (console
 Google Cloud). Le nouveau projet Supabase `nuni` doit soit être ajouté aux URL de redirection
 autorisées du client existant (`https://zlxfmovibepgdmxacbpj.supabase.co/auth/v1/callback`),
