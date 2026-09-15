@@ -146,7 +146,10 @@ par empreinte SHA-256, même version que le poste du PO) sur la branche
   branches `claude/...` ne poussent pas sur `main`). Étape 11 (tag `v0.0.0-bootstrap`) : à poser
   par le PO sur le commit de fusion dans `main`. Révision du 2026-09-15 : le PO demande que tout
   soit fusionné dans `main` par Claude, sans PR (règle 7 d'AGENTS.md) ; fusion en avance rapide
-  et tag posés par Claude.
+  faite et poussée le 2026-09-15. Le push du tag est refusé (HTTP 403 : les droits git de la
+  session web couvrent les branches, pas les tags) ; pas de contournement, le PO pose le tag
+  depuis son poste : `git tag -a v0.0.0-bootstrap 7d71a25 -m "Point de depart"` puis
+  `git push origin v0.0.0-bootstrap`.
 
 ## Livrables
 
@@ -159,9 +162,9 @@ par empreinte SHA-256, même version que le poste du PO) sur la branche
 - [ ] `flutter run -d chrome` affiche la page d'accueil provisoire (à constater par le PO sur son
   poste ; dans le conteneur, la page construite a été servie et capturée, voir
   `docs/reference/plan02_home.png`).
-- [x] Le workflow CI passe : run n° 1 vert sur la branche de session en 3 min 15 s
-  (https://github.com/CenturySpine/nuni/actions/runs/34936093556), dont 65 s d'installation de
-  Flutter sans cache ; il passera sur `main` à la fusion.
+- [x] Le workflow CI passe sur `main` : run n° 2 vert en 3 min 9 s
+  (https://github.com/CenturySpine/nuni/actions/runs/34938213796), après le run n° 1 vert sur la
+  branche de session (65 s d'installation de Flutter sans cache).
 - [x] Aucun secret dans l'historique git.
 
 ## Questions PO liées
