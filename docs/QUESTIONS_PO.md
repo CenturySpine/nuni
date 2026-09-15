@@ -216,8 +216,7 @@ GitHub Actions supprimé (workflow retiré, plus de jeton ni de secrets GitHub).
 `vercel.json` (commande de build `tool/vercel_build.sh`, dossier de sortie `build/web`, pas
 d'installation npm, réécritures et en-têtes, build ignoré si seul `docs/` ou des `.md` changent)
 et script qui installe la version Flutter de `.fvmrc`, puis enchaîne analyse, tests et build ;
-un commit cassé n'est donc pas déployé (hypothèse : retirer deux lignes du script si le PO ne
-veut que le build). `main` en production, toute autre branche en prévisualisation, coche verte
+un commit cassé n'est donc pas déployé (confirmé par le PO le 2026-09-15). `main` en production, toute autre branche en prévisualisation, coche verte
 ou rouge remontée sur le commit GitHub par Vercel. Reste vrai : push direct sur `main`, pas de PR.
 
 **Q22 ☑ — Moteur de rendu CanvasKit : servi depuis le site (`--no-web-resources-cdn`) ou depuis
@@ -251,7 +250,8 @@ Réalisation (plan 02, 2026-09-15) : logo dessiné en formes géométriques dans
 perte), icônes PWA 192/512 et variantes "maskable" (Android découpe l'icône en cercle : le logo
 est réduit pour rester dans la zone sûre), favicon. Aperçu : `docs/design/nuni_logo_preview.png`.
 Hypothèse à valider : couleurs charbon `#2B2B2B` pour "NU" et gris `#8A8A8A` pour "NI", fond
-d'icône blanc cassé `#F5F5F5`, trois valeurs modifiables dans le SVG. Le logo dans l'app (écran de
+d'icône blanc cassé `#F5F5F5`, trois valeurs modifiables dans le SVG. Réponse PO (2026-09-15) :
+couleurs validées pour commencer. Le logo dans l'app (écran de
 connexion, en-tête) est un widget Flutter de même construction, plan 04.
 
 **Q18 ☐ — Mise à jour de l'app : remplacer le blocage au démarrage par un bandeau "nouvelle

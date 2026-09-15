@@ -103,7 +103,9 @@ Plan 01 terminé.
     - définition de "terminé" : `analyze` sans avertissement, tests verts, CI verte, chaînes
       traduites dans les deux langues.
     Le fichier est relu et mis à jour à la fin de chaque étape du plan d'ensemble.
-11. Créer une release "v0.0.0-bootstrap" (tag) pour marquer le point de départ.
+11. ~~Créer une release "v0.0.0-bootstrap" (tag)~~ Retirée le 2026-09-15 : sans valeur pour une
+    personne seule sur un historique linéaire ; les tags commencent à la mise en service (plan
+    12), un par version publiée.
 
 ## Journal d'exécution (2026-09-15)
 
@@ -147,14 +149,12 @@ par empreinte SHA-256, même version que le poste du PO) sur la branche
   branches `claude/...` ne poussent pas sur `main`). Étape 11 (tag `v0.0.0-bootstrap`) : à poser
   par le PO sur le commit de fusion dans `main`. Révision du 2026-09-15 : le PO demande que tout
   soit fusionné dans `main` par Claude, sans PR (règle 7 d'AGENTS.md) ; fusion en avance rapide
-  faite et poussée le 2026-09-15. Le push du tag est refusé (HTTP 403 : les droits git de la
-  session web couvrent les branches, pas les tags) ; pas de contournement, le PO pose le tag
-  depuis son poste : `git tag -a v0.0.0-bootstrap 7d71a25 -m "Point de depart"` puis
-  `git push origin v0.0.0-bootstrap`.
+  faite et poussée le 2026-09-15. Tag abandonné (étape 11) ; au passage, constaté que les droits
+  git de la session web couvrent les branches, pas les tags (HTTP 403).
 
 ## Livrables
 
-- Dépôt avec squelette, CI verte, tag de départ, `AGENTS.md` (+ `CLAUDE.md` qui l'importe).
+- Dépôt avec squelette, build Vercel vert, `AGENTS.md` (+ `CLAUDE.md` qui l'importe).
 - `docs/DEV.md` : comment lancer en local (`flutter run -d chrome --dart-define-from-file=env/dev.json`),
   générer le code (`dart run build_runner build -d`), lancer les tests.
 

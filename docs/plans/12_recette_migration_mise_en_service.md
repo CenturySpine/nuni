@@ -11,6 +11,10 @@ Plans 05 à 11 livrés.
 
 ## Décisions retenues
 
+- Versions : à chaque mise en service, la version de `pubspec.yaml` est incrémentée et un tag git
+  `vX.Y.Z` identique est posé sur le commit déployé (décision du 2026-09-15, en remplacement du
+  tag de départ du plan 02). C'est la version affichée dans les réglages de l'app.
+
 - Recette sur téléphones réels (au moins un Android Chrome et un iPhone Safari), en extérieur,
   avec 3 à 4 personnes. Scénarios écrits dans `docs/recette/scenarios.md` et cochés à chaque
   passe.
