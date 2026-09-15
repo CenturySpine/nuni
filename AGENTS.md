@@ -79,7 +79,7 @@ Détail dans `docs/DEV.md`. Flutter 3.47.4 stable épinglé par `.fvmrc`.
 ```powershell
 fvm install                                       # installe la version de .fvmrc
 fvm flutter pub get                               # dépendances + génération l10n
-fvm flutter run -d chrome --dart-define-from-file=env/dev.json
+fvm flutter run -d chrome --web-port 3000 --dart-define-from-file=env/dev.json   # port fixe (retour auth)
 fvm dart run build_runner build -d                # génération freezed / riverpod / json
 fvm dart format lib test
 fvm flutter analyze --fatal-infos

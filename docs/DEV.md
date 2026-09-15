@@ -16,7 +16,7 @@ Copy-Item env/example.json env/dev.json   # puis renseigner SUPABASE_URL et SUPA
 ## Au quotidien
 
 ```powershell
-fvm flutter run -d chrome --dart-define-from-file=env/dev.json   # lancer dans Chrome
+fvm flutter run -d chrome --web-port 3000 --dart-define-from-file=env/dev.json   # port fixe : URL de retour Google/Supabase
 fvm dart run build_runner build -d                               # régénérer freezed / riverpod / json
 fvm dart format lib test                                         # formater (la CI refuse un fichier non formaté)
 fvm flutter analyze --fatal-infos                                # aucune remarque tolérée

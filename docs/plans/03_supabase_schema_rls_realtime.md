@@ -16,9 +16,14 @@ Plan 02 (le CLI Supabase est une dépendance npm du dépôt).
 - Q2 tranchée : projet Supabase `nuni` déjà créé, URL `https://zlxfmovibepgdmxacbpj.supabase.co`,
   référence de projet `zlxfmovibepgdmxacbpj` (à utiliser pour `npx supabase link`), région
   West EU (Paris).
-- Migrations gérées par `npx supabase db diff` / `db push`, dossier `supabase/migrations`.
-  Développement local possible avec `npx supabase start` (Docker) mais non obligatoire ; le
-  développement direct contre le projet distant est accepté pour un projet solo.
+- Migrations écrites à la main en SQL dans `supabase/migrations`, appliquées par `npx supabase
+  db push`. Développement local possible avec `npx supabase start` (Docker) mais non obligatoire ;
+  le développement direct contre le projet distant est accepté pour un projet solo.
+- **Mode d'exécution (vérifié le 2026-09-15)** : la session Claude Code web ne joint ni l'API
+  Supabase ni la base (réseau filtré). Claude écrit migrations, seed et tests dans le dépôt et
+  pousse sur `main` ; le PO les applique depuis son poste (`npx supabase db push`, puis `npx
+  supabase test db --linked`) et colle la sortie en cas d'erreur. But de chaque demande : appliquer
+  le schéma et prouver les règles d'accès sur le vrai projet.
 - Extensions : `postgis` (proximité des trous), `pgcrypto` (codes de session).
 - Q6 tranchée : modes de scoring et modes de jeu = énumérations Postgres (`scoring_mode`,
   `game_mode`) miroir des enums Dart ; libellés traduits dans l'app. Pas de table `scoring_modes`.
@@ -48,7 +53,7 @@ Plan 02 (le CLI Supabase est une dépendance npm du dépôt).
 ```
 profiles            id uuid PK = auth.users.id, display_name, avatar_url, locale text, created_at
 players             id uuid PK, name text, avatar_url, created_by uuid → profiles,
-                    user_id uuid null unique → profiles ("ce joueur, c'est moi"), created_at
+                    user_id uuid null unique → profiles (nul = importé de LsgScores, Q24), created_at
 holes               id uuid PK, owner_id uuid → profiles, name, description, par int (défaut 3),
                     distance_m int null, start geography(Point,4326) NOT NULL,
                     photo_start_path, photo_end_path, visibility hole_visibility (public|private),
@@ -149,16 +154,18 @@ restant triviale.
    validation requise) ; Supabase URL Configuration : Site URL `https://nuni.centuryspine.org`,
    Redirect URLs `https://nuni.centuryspine.org/**` et `http://localhost:3000/**` (en local, l'app
    est lancée avec `--web-port 3000`). Les pages `/privacy` et `/legal` sont livrées au plan 04.
-2. `npx supabase init`, `npx supabase link --project-ref zlxfmovibepgdmxacbpj`.
+2. **PO** : `npx supabase init` puis `npx supabase link --project-ref zlxfmovibepgdmxacbpj` dans
+   le dépôt (crée `supabase/config.toml`, à committer, et la liaison locale, ignorée par git). But :
+   permettre `db push` et `test db --linked` depuis le poste.
 3. Migrations, une par thème, dans l'ordre : extensions et enums → tables → index (GiST,
    `sessions.code`, `session_members.user_id`) → fonctions utilitaires → RLS → RPC → triggers →
    publication realtime → buckets et politiques storage.
 4. Jeu de données de développement (`supabase/seed.sql`) : 2 profils fictifs, quelques trous
    publics autour d'un point connu, une session live.
-5. Tests des politiques : scripts SQL `supabase/tests/*.sql` avec `set role authenticated` et
+5. Tests des politiques : scripts pgTAP `supabase/tests/*.sql` avec `set role authenticated` et
    `request.jwt.claims` pour vérifier qu'un non-membre ne lit pas une session, qu'un membre ne
-   modifie pas le score d'une autre équipe, etc. Exécutés en CI si le développement local Docker
-   est mis en place, sinon manuellement.
+   modifie pas le score d'une autre équipe, que le cas 3 de Q15 est refusé, etc. Exécutés par le
+   PO avec `npx supabase test db --linked` (pas de CI, Q17).
 6. Générer les types Dart ? Non : les modèles sont écrits à la main avec `freezed` (le générateur
    de types Supabase cible TypeScript). Documenter le mapping colonne ↔ champ dans chaque
    repository.
