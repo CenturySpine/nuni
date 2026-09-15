@@ -7,7 +7,8 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: NuniApp()));
     await tester.pumpAndSettle();
 
-    expect(find.text('NUNI'), findsOneWidget);
+    // "NUNI" appears twice: the app bar title and the home tab's own heading.
+    expect(find.text('NUNI'), findsWidgets);
     expect(find.text('Never Up, Never In'), findsOneWidget);
   });
 }

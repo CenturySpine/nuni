@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "nuni-web",
+      "runtimeExecutable": "fvm",
+      "runtimeArgs": ["flutter", "run", "-d", "web-server", "--web-port", "3000", "--dart-define-from-file=env/dev.json"],
+      "port": 3000
+    }
+  ]
+}

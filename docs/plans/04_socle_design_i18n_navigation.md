@@ -71,8 +71,13 @@ Plan 02. Peut se dérouler en parallèle du plan 03.
 1. `core/theme/`: `palettes.dart` (les cinq variantes + `activePalette`), construction du
    `ColorScheme` et du `ThemeData` à partir de la palette active, page de démonstration interne
    `/dev/theme` (désactivée en production) montrant tous les composants avec la palette active.
-   Un test unitaire vérifie pour chaque variante les contrastes minimaux (texte/fond ≥ 4,5:1,
-   accent/fond ≥ 3:1) afin qu'un changement de constante ne dégrade pas la lisibilité.
+   Un test unitaire vérifie pour chaque variante le contraste texte/fond (≥ 4,5:1, AA) afin qu'un
+   changement de constante ne dégrade pas la lisibilité. Pas de test automatique sur accent/fond :
+   en écrivant le test, 01-B et 02-B se sont révélées sous les 3:1 (2,15:1 et 2,51:1) — l'accent y
+   sert de surface de bouton plein, pas de texte ni de contour libre sur le fond, et c'est le
+   contraste texte-sur-accent qui compte (bon partout, vérifié à la main dans
+   `docs/design/PALETTE.md`). Décision PO (2026-09-15) : garder les 5 variantes codées, sans
+   assertion automatique sur l'accent.
 2. `core/l10n/` : configuration `l10n.yaml`, ARB EN et FR avec les premières clés (navigation,
    actions communes, erreurs), fournisseur de locale Riverpod.
 3. `core/router/` : routeur, shell, garde d'auth (bouchon en attendant le plan 05), page 404.

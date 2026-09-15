@@ -3,5 +3,65 @@
   "appTitle": "NUNI",
   "@appTitle": {"description": "Application name shown in the browser tab and on the home page."},
   "tagline": "Never Up, Never In",
-  "@tagline": {"description": "Motto under the application name. Kept in English in every language."}
+  "@tagline": {"description": "Motto under the application name. Kept in English in every language."},
+
+  "navHome": "Home",
+  "@navHome": {"description": "Bottom navigation: my live sessions, create, join."},
+  "navHoles": "Holes",
+  "@navHoles": {"description": "Bottom navigation: hole directory, nearby search."},
+  "navHistory": "History",
+  "@navHistory": {"description": "Bottom navigation: past sessions."},
+
+  "holesComingSoon": "Holes are coming in a future update.",
+  "historyComingSoon": "History is coming in a future update.",
+
+  "loginSignInWithGoogle": "Sign in with Google",
+
+  "profileTitle": "Profile",
+  "profileComingSoon": "Profile is coming in a future update.",
+
+  "commonCancel": "Cancel",
+  "commonConfirm": "Confirm",
+  "commonSave": "Save",
+  "commonDelete": "Delete",
+  "commonRetry": "Retry",
+  "commonClose": "Close",
+
+  "notFoundTitle": "Page not found",
+  "notFoundMessage": "This page does not exist or has moved.",
+  "notFoundAction": "Back to home",
+
+  "settingsTitle": "Settings",
+  "settingsLanguage": "Language",
+  "settingsLanguageSystem": "System",
+  "settingsLanguageFrench": "Français",
+  "settingsLanguageEnglish": "English",
+  "settingsVersion": "Version",
+  "settingsLegal": "Legal notice",
+  "settingsPrivacy": "Privacy",
+  "settingsAbout": "About",
+
+  "legalTitle": "Legal notice",
+  "legalPublisherHeading": "Publisher",
+  "legalPublisherBody": "Bruno Chappe. Contact: bruno.chappe@gmail.com.",
+  "legalHostingHeading": "Hosting",
+  "legalHostingBody": "Site hosted by Vercel. Data hosted by Supabase, West EU (Paris) region.",
+
+  "privacyTitle": "Privacy",
+  "privacyDataHeading": "Data we process",
+  "privacyDataBody": "Your Google identity (email, name, avatar); the players, sessions and strokes you take part in; your GPS position at the moment you create a session or a hole (never tracked continuously); photos you choose to upload.",
+  "privacyPurposeHeading": "Why",
+  "privacyPurposeBody": "Only to run collaborative scoring: sharing sessions, computing rankings, showing holes near you.",
+  "privacyRetentionHeading": "How long",
+  "privacyRetentionBody": "As long as your account exists.",
+  "privacyRightsHeading": "Your rights",
+  "privacyRightsBody": "Access, correction and erasure. Delete your account and its data anytime from the app (\"Delete my account\"), or write to bruno.chappe@gmail.com.",
+  "privacyTrackingHeading": "No tracking",
+  "privacyTrackingBody": "No analytics, no advertising, no tracking. Cookies are limited to keeping you signed in.",
+
+  "aboutTitle": "About",
+  "aboutVersionLabel": "Version {version}",
+  "@aboutVersionLabel": {"placeholders": {"version": {"type": "String"}}},
+  "aboutHomepageLink": "centuryspine.org",
+  "aboutSourceLink": "Source code"
 }

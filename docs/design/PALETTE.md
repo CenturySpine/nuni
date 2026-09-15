@@ -22,6 +22,11 @@ palette se fait uniquement par une référence dans le code (`core/theme/palette
 `activePalette`), jamais par un réglage utilisateur. Chaque variante définit exactement les
 5 couleurs nommées (fond, texte, accent, erreur, succès) plus la couleur de cartouche dérivée.
 
+Limite acceptée (plan 04, 2026-09-15) : pour 01-B et 02-B, l'accent n'a pas 3:1 de contraste avec
+le fond utilisé seul (texte ou contour libre) — seulement en surface de bouton plein avec le texte
+foncé dessus (bon partout, ≥ 6:1). Décision PO : garder les 5 variantes, ne pas tester
+automatiquement le contraste de l'accent (seul texte/fond ≥ 4,5:1 est vérifié par test unitaire).
+
 ## Règle du jeu (rappel)
 
 - 3 couleurs d'entrée fournies par le PO : **fond**, **texte**, **accent**.
@@ -71,7 +76,7 @@ Maquette HTML (source des rendus) : `essais/01_272838-f3de8a-eb9486/maquette.htm
 |---|---|---|
 | fond | `#FCF7E3` (`#F3DE8A` + ~75 % blanc) | — |
 | texte | `#272838` | 12,3:1 |
-| accent | `#EB9486` | bouton plein, texte `#272838` dessus : 6,0:1 |
+| accent | `#EB9486` | bouton plein, texte `#272838` dessus : 6,0:1 ; **en texte ou contour libre sur le fond : 2,15:1, insuffisant** (comme 02-B) |
 | cartouche | `#FFFFFF` | — |
 
 ![01-B](essais/01_272838-f3de8a-eb9486/B_claire.png)

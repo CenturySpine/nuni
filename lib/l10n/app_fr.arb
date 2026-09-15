@@ -1,5 +1,61 @@
 {
   "@@locale": "fr",
   "appTitle": "NUNI",
-  "tagline": "Never Up, Never In"
+  "tagline": "Never Up, Never In",
+
+  "navHome": "Accueil",
+  "navHoles": "Trous",
+  "navHistory": "Historique",
+
+  "holesComingSoon": "Les trous arrivent dans une prochaine mise à jour.",
+  "historyComingSoon": "L'historique arrive dans une prochaine mise à jour.",
+
+  "loginSignInWithGoogle": "Se connecter avec Google",
+
+  "profileTitle": "Profil",
+  "profileComingSoon": "Le profil arrive dans une prochaine mise à jour.",
+
+  "commonCancel": "Annuler",
+  "commonConfirm": "Confirmer",
+  "commonSave": "Enregistrer",
+  "commonDelete": "Supprimer",
+  "commonRetry": "Réessayer",
+  "commonClose": "Fermer",
+
+  "notFoundTitle": "Page introuvable",
+  "notFoundMessage": "Cette page n'existe pas ou a été déplacée.",
+  "notFoundAction": "Retour à l'accueil",
+
+  "settingsTitle": "Réglages",
+  "settingsLanguage": "Langue",
+  "settingsLanguageSystem": "Système",
+  "settingsLanguageFrench": "Français",
+  "settingsLanguageEnglish": "English",
+  "settingsVersion": "Version",
+  "settingsLegal": "Mentions légales",
+  "settingsPrivacy": "Confidentialité",
+  "settingsAbout": "À propos",
+
+  "legalTitle": "Mentions légales",
+  "legalPublisherHeading": "Éditeur",
+  "legalPublisherBody": "Bruno Chappe. Contact : bruno.chappe@gmail.com.",
+  "legalHostingHeading": "Hébergement",
+  "legalHostingBody": "Site hébergé par Vercel. Données hébergées par Supabase, région West EU (Paris).",
+
+  "privacyTitle": "Confidentialité",
+  "privacyDataHeading": "Données traitées",
+  "privacyDataBody": "Votre identité Google (e-mail, nom, avatar) ; les joueurs, sessions et coups auxquels vous participez ; votre position GPS au moment où vous créez une session ou un trou (jamais suivie en continu) ; les photos que vous envoyez volontairement.",
+  "privacyPurposeHeading": "Pourquoi",
+  "privacyPurposeBody": "Uniquement pour faire fonctionner le scoring collaboratif : partager les sessions, calculer les classements, afficher les trous à proximité.",
+  "privacyRetentionHeading": "Durée",
+  "privacyRetentionBody": "Tant que votre compte existe.",
+  "privacyRightsHeading": "Vos droits",
+  "privacyRightsBody": "Accès, rectification et effacement. Supprimez votre compte et ses données à tout moment depuis l'app (« Supprimer mon compte »), ou écrivez à bruno.chappe@gmail.com.",
+  "privacyTrackingHeading": "Aucun suivi",
+  "privacyTrackingBody": "Aucune analytique, aucune publicité, aucun suivi. Les cookies se limitent à garder votre connexion active.",
+
+  "aboutTitle": "À propos",
+  "aboutVersionLabel": "Version {version}",
+  "aboutHomepageLink": "centuryspine.org",
+  "aboutSourceLink": "Code source"
 }

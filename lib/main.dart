@@ -2,7 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
+import 'core/l10n/locale_controller.dart';
 
-void main() {
-  runApp(const ProviderScope(child: NuniApp()));
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final persistedLocale = await loadPersistedLocale();
+
+  runApp(
+    ProviderScope(
+      overrides: [persistedLocaleProvider.overrideWithValue(persistedLocale)],
+      child: const NuniApp(),
+    ),
+  );
 }
