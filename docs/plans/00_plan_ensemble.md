@@ -47,6 +47,8 @@ liées. Les questions sont centralisées dans [QUESTIONS_PO.md](../QUESTIONS_PO.
   projet.
 - 13 est obligatoire mais son plan détaillé n'est rédigé qu'après l'étape 12, quand le modèle cible
   est stabilisé par l'usage. Le schéma de l'étape 3 la prépare (colonnes `legacy_id`).
+- Suppression de compte : retirée du plan 05 (décision PO, 2026-09-16), sujet à part avec ses
+  propres impacts à examiner. Pas encore numérotée ; plan à écrire et positionner plus tard.
 
 ## Jalons de validation avec le product owner
 

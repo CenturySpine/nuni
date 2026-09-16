@@ -3,7 +3,12 @@
 ## Objectif
 
 Connexion Google via Supabase dans une PWA, création automatique du profil, onboarding "mon
-joueur" sans référentiel de ville, édition du profil, déconnexion, suppression de compte.
+joueur" sans référentiel de ville, édition du profil, déconnexion.
+
+La suppression de compte est retirée de ce plan (décision PO, 2026-09-16) : sujet à part entière,
+avec ses propres impacts à examiner (sessions et scores d'autrui référençant mon joueur, données
+déjà partagées, etc.), traité dans un plan dédié écrit plus tard. Pas encore numéroté dans
+`00_plan_ensemble.md`.
 
 ## Prérequis
 
@@ -27,11 +32,6 @@ Plans 03 et 04.
   l'inscription.
 - Profil : nom d'affichage, avatar (photo : voir plan 06 pour le composant d'upload partagé),
   langue. Le joueur lié reprend le nom et l'avatar du profil (synchronisation à la sauvegarde).
-- Suppression de compte : appel de `delete_my_account` (Edge Function, plan 03), puis déconnexion
-  locale. Les sessions créées par l'utilisateur sont supprimées ; les joueurs qu'il a créés et qui
-  sont utilisés dans les sessions d'autres utilisateurs sont conservés mais déliés (règle
-  documentée dans la page "suppression de compte" déjà existante côté Play Store, à réécrire pour
-  NUNI).
 
 ## Étapes
 
@@ -41,8 +41,7 @@ Plans 03 et 04.
    branchée sur l'état d'auth, écran de transition pendant la restauration de session (évite le
    "flash" du login observé dans l'ancienne app).
 3. `features/profile/` : repository `profiles` et `players` (lecture du joueur lié par
-   `players.user_id = auth.uid()`), écran profil, page réglages complétée (déconnexion,
-   suppression de compte avec double confirmation).
+   `players.user_id = auth.uid()`), écran profil, page réglages complétée (déconnexion).
 4. Gestion des erreurs : bandeau standard pour "hors ligne", "session expirée", erreurs RLS.
 5. Tests : unitaires sur les repositories (mocks du client), widget sur le login et le profil.
 
@@ -56,7 +55,6 @@ Plans 03 et 04.
   avec session persistée après fermeture et réouverture.
 - À la première connexion, le joueur lié existe déjà avec le nom Google ; le renommer dans le
   profil se reflète partout.
-- La suppression de compte laisse la base cohérente (tests RLS du plan 03 étendus).
 
 ## Questions PO liées
 
