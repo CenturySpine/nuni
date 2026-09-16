@@ -41,13 +41,22 @@ Documents de référence, à lire avant d'agir :
    installé sur le poste à partir d'une vérification faite depuis ce terminal ; demander au PO de
    vérifier ou d'installer depuis le sien. Recharger le PATH depuis le registre avant d'appeler
    git, gh, node, npx.
-7. **`main` uniquement, pas de branche, pas de pull request.** Le PO travaille seul et de façon
-   incrémentale : on committe et on pousse directement sur `main`, petits pas, souvent. Aucune
-   autre branche n'est poussée sur GitHub, sauf demande explicite du PO. Si l'outil (Claude Code
-   web) impose une branche de session `claude/...`, on ne la pousse pas ; si elle a été créée
-   malgré tout, on la supprime sur GitHub une fois `main` à jour. Raison : Vercel construit
-   chaque branche poussée, et une branche parallèle ne sert à rien à une personne seule.
-   Aucune protection de branche (Q17).
+7. **`main` uniquement, pas de branche, pas de pull request.** Quand un commit est fait, c'est
+   directement sur `main` : le PO travaille seul, aucune autre branche n'est poussée sur GitHub
+   sauf demande explicite du PO. Si l'outil (Claude Code web) impose une branche de session
+   `claude/...`, on ne la pousse pas ; si elle a été créée malgré tout, on la supprime sur GitHub
+   une fois `main` à jour. Raison : Vercel construit chaque branche poussée, et une branche
+   parallèle ne sert à rien à une personne seule. Aucune protection de branche (Q17).
+   **"Petits pas, souvent" décrit le rythme auquel le PO pousse une fois qu'il a vu et accepté un
+   résultat — ce n'est pas un feu vert pour committer sans lui demander (règle 2026-09-16
+   ci-dessous, déjà présente dans les Interdits mais mal appliquée en pratique : ne pas la
+   relâcher au prétexte de petits pas fréquents).**
+7bis. **Jamais de commit ni de push sans demande explicite du PO, pour aucune tâche, aucune
+   dérogation** (rappel renforcé le 2026-09-16 après une dérive où l'assistant committait après
+   presque chaque petit ajustement). La dernière étape d'une tâche est de tester dans le
+   navigateur intégré, puis de laisser le PO tester et donner son retour. Le commit/push est une
+   étape séparée, déclenchée uniquement par une demande explicite du PO dans son message, jamais
+   déduite d'une habitude prise plus tôt dans la conversation.
 8. **Migrations Supabase avant la première mise en service.** Tant que `main` n'a pas été mis en
    service, `supabase/migrations` n'est pas un historique à préserver mais le schéma courant :
    aucune donnée en base n'est vitale, ce sont toujours des données de test. Un changement de

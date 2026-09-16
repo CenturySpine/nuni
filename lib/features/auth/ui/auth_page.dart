@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_error_message.dart';
-import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/google_logo.dart';
 import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_card.dart';
 import '../../../shared/nuni_legal_footer.dart';
@@ -62,7 +62,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                 children: [
                   const NuniLogo(size: 32),
                   const SizedBox(width: 8),
-                  Text(l10n.appTitle, style: textTheme.titleLarge),
+                  Text(l10n.tagline, style: textTheme.titleLarge),
                   const Spacer(),
                   NuniButton(
                     variant: NuniButtonVariant.secondary,
@@ -98,7 +98,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                             onTap: _signingIn ? null : _signIn,
                             child: Row(
                               children: [
-                                const Icon(PhosphorIcons.googleLogo),
+                                const GoogleLogo(size: 20),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(

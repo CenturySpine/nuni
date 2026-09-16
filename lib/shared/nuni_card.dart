@@ -18,6 +18,9 @@ class NuniCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final content = Padding(padding: padding, child: child);
     return Card(
+      // Otherwise the hover/press ink overlay ignores the card's rounded
+      // corners and shows up as a plain rectangle.
+      clipBehavior: Clip.antiAlias,
       child: onTap == null ? content : InkWell(onTap: onTap, child: content),
     );
   }

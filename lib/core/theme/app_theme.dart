@@ -90,11 +90,29 @@ ThemeData buildAppTheme([Palette palette = activePalette]) {
     ),
   );
 
+  // Rectangular, moderately rounded buttons everywhere (PO, 2026-09-16): never
+  // Material 3's default fully-rounded ("pill"/stadium) button shape.
+  final buttonShape = RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(8),
+  );
+
   return ThemeData(
     useMaterial3: true,
     colorScheme: colorScheme,
     scaffoldBackgroundColor: palette.background,
     textTheme: textTheme,
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(shape: buttonShape),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      // Secondary buttons also get a background (palette.card) so they stand
+      // out from the page, not just a border on the bare page background.
+      style: OutlinedButton.styleFrom(
+        backgroundColor: palette.card,
+        side: BorderSide(color: palette.border),
+        shape: buttonShape,
+      ),
+    ),
     cardTheme: CardThemeData(
       color: palette.card,
       elevation: 0,
