@@ -32,6 +32,14 @@ class ProfileRepository {
         .update({'name': displayName, 'avatar_url': ?avatarUrl})
         .eq('user_id', userId);
   }
+
+  Future<void> updateMyLocale(String locale) async {
+    final userId = _client.auth.currentUser!.id;
+    await _client
+        .from('players')
+        .update({'locale': locale})
+        .eq('user_id', userId);
+  }
 }
 
 final profileRepositoryProvider = Provider<ProfileRepository>(

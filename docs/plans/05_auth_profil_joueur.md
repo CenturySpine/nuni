@@ -57,6 +57,21 @@ Plans 03 et 04.
 - À la première connexion, le joueur lié existe déjà avec le nom Google ; le renommer dans le
   profil se reflète partout.
 
+## Vérifié, non vérifié
+
+- Connexion Google réelle vérifiée par le PO sur Chrome desktop et Chrome Android (navigation
+  interne comprise). Safari iOS (PWA installée) non vérifié, faute d'iPhone disponible ; accepté
+  tel quel par le PO (2026-09-16).
+- Langue des réglages synchronisée dans `players.locale` en plus du stockage local (2026-09-16,
+  [profile_repository.dart](../../lib/features/profile/data/profile_repository.dart)) : seul un
+  choix explicite (français/anglais) est envoyé au compte, "Système" n'ayant pas de valeur unique
+  à stocker dans cette colonne ; un échec d'écriture est ignoré silencieusement, la bascule locale
+  ayant déjà pris effet et cette synchronisation n'étant qu'un confort multi-appareil.
+- Tests unitaires des repositories (`auth_repository`, `profile_repository`) avec client mocké :
+  écartés par le PO (2026-09-16) -- `signInWithGoogle` lit `Uri.base.origin`, qui lève en
+  environnement de test VM (`flutter test`, hors navigateur) hors scheme http/https, seul le test
+  widget (déjà en place) exerce ce chemin de façon réaliste.
+
 ## Questions PO liées
 
 Q4 tranchée (colonne `players.user_id`), Q15 (arrivée par lien sans joueur).

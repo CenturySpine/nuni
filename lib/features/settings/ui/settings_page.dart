@@ -9,6 +9,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../../core/l10n/locale_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../profile/data/profile_repository.dart';
 import '../../../shared/nuni_legal_footer.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -48,9 +49,25 @@ class SettingsPage extends ConsumerWidget {
                 ),
               ],
               selected: {locale},
-              onSelectionChanged: (selection) => ref
-                  .read(localeControllerProvider.notifier)
-                  .setLocale(selection.first),
+              onSelectionChanged: (selection) async {
+                final newLocale = selection.first;
+                await ref
+                    .read(localeControllerProvider.notifier)
+                    .setLocale(newLocale);
+                // Only a concrete language syncs to the account -- "System"
+                // has no single value the `players.locale` column (a plain
+                // language code) could hold.
+                if (newLocale != null) {
+                  try {
+                    await ref
+                        .read(profileRepositoryProvider)
+                        .updateMyLocale(newLocale.languageCode);
+                  } catch (_) {
+                    // The local override already applied; account sync is a
+                    // cross-device convenience, not worth surfacing a retry.
+                  }
+                }
+              },
             ),
           ),
           const Divider(),
