@@ -73,7 +73,24 @@ npx supabase db query --linked "delete from supabase_migrations.schema_migration
 
 # 3. Repousser les fichiers modifiés depuis zéro.
 npx supabase db push
+
+# 4. Obligatoire : recréer la fiche "players" de chaque compte Google déjà inscrit
+#    (supabase/backfill_players.sql, committé). La table "players" est recréée vide comme les
+#    autres ; le déclencheur qui la peuple ne s'exécute qu'à l'inscription, jamais rétroactivement
+#    — sans cette étape, tout compte inscrit avant la reconstruction perd sa fiche (nom, avatar,
+#    langue) et la page Profil casse pour lui. Sans effet si la fiche existe déjà.
+npx supabase db query --linked -f supabase/backfill_players.sql
+
+# 5. Optionnel : rejouer les trous de test du PO sur le projet distant (supabase/remote_seed.sql,
+#    committé — différent de supabase/seed.sql, qui reste local-Docker uniquement, cf. son
+#    en-tête). Sans effet si les lignes existent déjà ("on conflict do nothing").
+npx supabase db query --linked -f supabase/remote_seed.sql
 ```
+
+`auth.users` (les comptes Google eux-mêmes) n'est jamais touché par cette procédure : seul le
+schéma applicatif (`public`, tables/fonctions/types/politiques de stockage) est reconstruit. C'est
+justement pour ça que l'étape 4 est nécessaire : les comptes survivent, mais leur fiche `players`
+liée ne survit pas telle quelle.
 
 Le contenu de `reset.sql` (liste des `drop table/function/type ... cascade` et `drop policy on
 storage.objects`) se déduit des fichiers de migration au moment du changement ; il n'est pas

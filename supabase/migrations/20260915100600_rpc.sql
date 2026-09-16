@@ -14,6 +14,8 @@ returns table (
   distance_m int,
   start_lat double precision,
   start_lng double precision,
+  end_lat double precision,
+  end_lng double precision,
   photo_start_path text,
   photo_end_path text,
   visibility hole_visibility,
@@ -27,8 +29,7 @@ set search_path = public
 as $$
   select
     h.id, h.name, h.description, h.par, h.distance_m,
-    st_y(h.start::geometry) as start_lat,
-    st_x(h.start::geometry) as start_lng,
+    h.start_lat, h.start_lng, h.end_lat, h.end_lng,
     h.photo_start_path, h.photo_end_path, h.visibility, h.owner_id,
     st_distance(h.start, st_setsrid(st_makepoint(p_lng, p_lat), 4326)::geography) as distance
   from holes h

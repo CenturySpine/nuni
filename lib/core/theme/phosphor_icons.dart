@@ -31,4 +31,17 @@ abstract final class PhosphorIcons {
   static const arrowClockwise = IconData(0xe036, fontFamily: _regular);
   static const signpost = IconData(0xe89c, fontFamily: _regular);
   static const signOut = IconData(0xe42a, fontFamily: _regular);
+
+  static const plus = IconData(0xe3d4, fontFamily: _regular);
+  static const mapPin = IconData(0xe316, fontFamily: _regular);
+  static const mapPinFill = IconData(0xe316, fontFamily: _fill);
+  static const crosshair = IconData(0xe1d6, fontFamily: _regular);
+  static const globe = IconData(0xe288, fontFamily: _regular);
+  static const lockSimple = IconData(0xe308, fontFamily: _regular);
+  static const camera = IconData(0xe10e, fontFamily: _regular);
+  static const trash = IconData(0xe4a6, fontFamily: _regular);
+  static const navigationArrow = IconData(0xeade, fontFamily: _regular);
+  static const pencilSimple = IconData(0xe3b4, fontFamily: _regular);
+  static const list = IconData(0xe2f0, fontFamily: _regular);
+  static const mapTrifold = IconData(0xe31a, fontFamily: _regular);
 }

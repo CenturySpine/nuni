@@ -26,9 +26,19 @@ create table holes (
   par int not null default 3,
   distance_m int,
   start geography(point, 4326) not null,
+  -- Plain numeric columns PostgREST can return as-is: selecting "start" directly
+  -- would come back as WKB hex, unusable client-side without a spatial function.
+  start_lat double precision generated always as (st_y(start::geometry)) stored,
+  start_lng double precision generated always as (st_x(start::geometry)) stored,
+  -- Target point (PO, 2026-09-16): optional, prepares a future path line
+  -- between start and end. Not used by holes_nearby (proximity is start-only).
+  -- Named "end_point", not "end": END is a reserved SQL keyword.
+  end_point geography(point, 4326),
+  end_lat double precision generated always as (st_y(end_point::geometry)) stored,
+  end_lng double precision generated always as (st_x(end_point::geometry)) stored,
   photo_start_path text,
   photo_end_path text,
-  visibility hole_visibility not null default 'private',
+  visibility hole_visibility not null default 'public',
   legacy_id bigint unique,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

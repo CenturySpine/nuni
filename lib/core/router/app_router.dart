@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/ui/auth_page.dart';
 import '../../features/history/ui/history_page.dart';
+import '../../features/holes/ui/hole_form_page.dart';
 import '../../features/holes/ui/holes_page.dart';
 import '../../features/home/ui/home_page.dart';
 import '../../features/legal/ui/about_page.dart';
@@ -40,8 +41,8 @@ class _GoRouterRefreshStream extends ChangeNotifier {
 }
 
 /// Routes not wired yet: `/session/new`, `/session/:id`,
-/// `/session/:id/hole/:playedHoleId`, `/history/:id`, `/holes/new`,
-/// `/holes/:id` -- added by the plans that build those screens (06-10).
+/// `/session/:id/hole/:playedHoleId`, `/history/:id` -- added by the plans
+/// that build those screens (07-10).
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authChanges = ref.watch(supabaseClientProvider).auth.onAuthStateChange;
   return GoRouter(
@@ -98,6 +99,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfilePage(),
+      ),
+      GoRoute(
+        path: '/holes/new',
+        builder: (context, state) => const HoleFormPage(),
+      ),
+      GoRoute(
+        path: '/holes/:id',
+        builder: (context, state) =>
+            HoleFormPage(holeId: state.pathParameters['id']),
       ),
       // Never actually built: the redirect in authGuard always fires first.
       GoRoute(

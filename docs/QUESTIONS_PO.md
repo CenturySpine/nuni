@@ -163,9 +163,13 @@ valide le texte avant mise en ligne.
 
 ## Trous et géolocalisation (étapes 6, 7)
 
-**Q10 ☐ — Rayon X par défaut pour proposer les trous ?**
-Suggestion : 1 km par défaut, avec trois choix rapides (300 m, 1 km, 5 km) et un bouton "tous mes
-trous" en secours si la géolocalisation est refusée. Valeur mémorisée sur l'appareil.
+**Q10 ☑ — Rayon X par défaut pour proposer les trous ?**
+Réponse PO (2026-09-16) : pas de choix de rayon, un seul rayon fixe de 1 km, non modifiable.
+Suggestion initiale (écartée) : 1 km par défaut avec trois choix rapides (300 m, 1 km, 5 km).
+Le bouton "tous mes trous" en secours si la géolocalisation échoue est conservé.
+Révision PO (2026-09-16, plus tard le même jour) : finalement un curseur (slider) de 0 à 10 km
+par pas de 500 m, défaut 1 km, valeur mémorisée sur l'appareil (reprend l'idée initiale écartée
+ci-dessus).
 
 **Q11 ☐ — Service de géocodage inverse pour détecter la ville à la création de session ?**
 Suggestion : BigDataCloud "reverse-geocode-client" (gratuit, sans clé, conçu pour un appel direct
@@ -173,14 +177,34 @@ depuis le navigateur, CORS ouvert). Repli manuel : champ ville pré-rempli, touj
 avant confirmation. Alternative : Nominatim (OpenStreetMap), gratuit mais politique d'usage stricte
 (1 requête/s, User-Agent obligatoire non paramétrable depuis un navigateur).
 
-**Q12 ☐ — Position d'un trou : uniquement le point de départ (demandé) ou aussi la cible ?**
+**Q12 ☑ — Position d'un trou : uniquement le point de départ (demandé) ou aussi la cible ?**
+Réponse PO (2026-09-16) : suggestion retenue, départ seulement.
 Suggestion : point de départ obligatoire (saisi "à ma position" ou déplaçable sur une carte),
 cible facultative pour plus tard. Le rayon de proximité ne s'applique qu'au départ.
+Révision PO (2026-09-16, plus tard le même jour) : la position de la cible se saisit dès
+maintenant sur la même carte (bascule départ/cible, position de départ toujours obligatoire,
+cible facultative), pour préparer un futur tracé du trajet entre les deux points. Le tracé
+lui-même n'est pas fait maintenant.
 
 **Q13 ☑ — Un trou privé est-il visible des autres membres d'une session où il a été joué ?**
 Réponse PO (2026-09-15) : suggestion retenue, oui en lecture seule.
 Suggestion : oui, en lecture seule, sinon les cartes de trous joués et les exports des autres
 membres afficheraient "trou inconnu".
+
+**Q33 ☑ — Visibilité par défaut d'un trou créé : public ou privé ?**
+Réponse PO (2026-09-16) : suggestion retenue, public.
+Contexte : le plan 06 écrit "public par défaut" (l'intérêt d'un référentiel partagé), mais le
+schéma déjà appliqué en base (plan 03, colonne `holes.visibility`) a été créé avec un défaut
+`private`. Les deux documents se contredisent ; à trancher avant d'écrire l'écran de création.
+Conséquence pour l'utilisateur : avec le défaut `public`, un trou créé sans y toucher est
+immédiatement visible et proposé aux autres joueurs à proximité, ce qui alimente le référentiel
+partagé sans effort ; avec `private`, il faut penser à changer le réglage pour que le trou serve
+à quelqu'un d'autre, et beaucoup resteront privés par oubli.
+Suggestion : `public` par défaut, comme l'a déjà écrit le plan 06 — c'est un catalogue partagé de
+lieux publics (rue, parc), pas des données personnelles, et le défaut actuel en base semble un
+oubli plutôt qu'un choix. Si retenu, correction triviale : `alter table holes alter column
+visibility set default 'public'`, à appliquer via la procédure de reconstruction du schéma
+(§8 AGENTS.md, avec préavis au PO) puisque le fichier de migration déjà poussé serait modifié.
 
 ## Rejoindre une session (étape 9)
 

@@ -119,6 +119,34 @@ ThemeData buildAppTheme([Palette palette = activePalette]) {
       surfaceTintColor: Colors.transparent,
     ),
     dividerTheme: DividerThemeData(color: palette.border, thickness: 1),
+    // Filled, rounded fields (essai visuel, PO 2026-09-16): replaces
+    // Material's default underline, which read as dated. Same 8px radius as
+    // buttons -- one rounding value for the whole app.
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: palette.card,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: palette.border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: palette.border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: palette.accent, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: palette.danger),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: palette.danger, width: 2),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    ),
     appBarTheme: AppBarTheme(
       backgroundColor: palette.background,
       foregroundColor: palette.text,
