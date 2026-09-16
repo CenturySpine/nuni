@@ -45,7 +45,7 @@ void main() {
         lng: any(named: 'lng'),
       ),
     ).thenAnswer(
-      (_) async => const Session(
+      (_) async => Session(
         id: 's1',
         code: 'ABC123',
         ownerId: 'u1',
@@ -53,6 +53,7 @@ void main() {
         kind: SessionKind.individual,
         scoringMode: ScoringMode.strokePlay,
         rankingDirection: RankingDirection.asc,
+        createdAt: DateTime(2026, 9, 16),
       ),
     );
   });

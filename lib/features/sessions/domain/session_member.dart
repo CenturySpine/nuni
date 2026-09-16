@@ -11,6 +11,13 @@ enum MemberRole {
   player,
 }
 
+/// Parses a plain `role` column value read outside a [SessionMember] row
+/// (e.g. joined manually alongside a [Session] for "Mes sessions", plan 09)
+/// -- the generated json_serializable map for [MemberRole] is private to
+/// `session_member.g.dart`.
+MemberRole memberRoleFromPostgresValue(String value) =>
+    value == 'owner' ? MemberRole.owner : MemberRole.player;
+
 /// Mirrors the `session_members` table (plan 03): the waiting-room pool.
 /// `teamId == null` means "not assigned to a team yet" (Q25).
 @freezed

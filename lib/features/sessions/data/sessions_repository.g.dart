@@ -235,3 +235,85 @@ final class ZoneSuggestionsFamily extends $Family
   @override
   String toString() => r'zoneSuggestionsProvider';
 }
+
+@ProviderFor(myOngoingSessions)
+final myOngoingSessionsProvider = MyOngoingSessionsProvider._();
+
+final class MyOngoingSessionsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<MySessionEntry>>,
+          List<MySessionEntry>,
+          FutureOr<List<MySessionEntry>>
+        >
+    with
+        $FutureModifier<List<MySessionEntry>>,
+        $FutureProvider<List<MySessionEntry>> {
+  MyOngoingSessionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'myOngoingSessionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$myOngoingSessionsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<MySessionEntry>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<MySessionEntry>> create(Ref ref) {
+    return myOngoingSessions(ref);
+  }
+}
+
+String _$myOngoingSessionsHash() => r'8ebd8b41b0062afa1d7d920cc26793faff9282ed';
+
+@ProviderFor(myRecentSessions)
+final myRecentSessionsProvider = MyRecentSessionsProvider._();
+
+final class MyRecentSessionsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<MySessionEntry>>,
+          List<MySessionEntry>,
+          FutureOr<List<MySessionEntry>>
+        >
+    with
+        $FutureModifier<List<MySessionEntry>>,
+        $FutureProvider<List<MySessionEntry>> {
+  MyRecentSessionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'myRecentSessionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$myRecentSessionsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<MySessionEntry>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<MySessionEntry>> create(Ref ref) {
+    return myRecentSessions(ref);
+  }
+}
+
+String _$myRecentSessionsHash() => r'5265b7d1470f51c0b3dea8e4d559a26b83a3a235';

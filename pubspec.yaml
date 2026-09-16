@@ -14,6 +14,8 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
   flutter_map: ^8.3.2
   flutter_riverpod: ^3.4.3
   freezed_annotation: ^3.1.0
@@ -26,7 +28,9 @@ dependencies:
   json_annotation: ^4.12.0
   latlong2: ^0.10.1
   package_info_plus: ^9.0.0
+  qr_flutter: ^4.1.0
   riverpod_annotation: ^4.0.7
+  share_plus: ^12.0.2
   shared_preferences: ^2.5.3
   supabase_flutter: ^2.17.2
   url_launcher: ^6.3.2

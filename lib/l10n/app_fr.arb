@@ -7,8 +7,19 @@
   "navHoles": "Trous",
   "navHistory": "Historique",
 
-  "homeComingSoon": "Rejoindre une session et l'historique arrivent dans une prochaine mise à jour.",
   "homeCreateSessionAction": "Créer une session",
+  "homeJoinAction": "Rejoindre",
+  "homeJoinTitle": "Rejoindre une session",
+  "homeJoinCodeLabel": "Code de la session",
+  "homeSectionOngoing": "Mes sessions en cours",
+  "homeSectionRecent": "Dernières sessions",
+  "homeOngoingEmpty": "Aucune session en cours.",
+  "homeRecentEmpty": "Aucune session terminée pour le moment.",
+  "homeSessionStatusDraft": "En préparation",
+  "homeSessionStatusLive": "En direct",
+  "homeSessionStatusCompleted": "Terminée",
+  "homeRoleOwner": "Organisateur",
+  "homeRolePlayer": "Participant",
   "historyComingSoon": "L'historique arrive dans une prochaine mise à jour.",
 
   "sessionsCreateTitle": "Nouvelle session",
@@ -59,6 +70,17 @@
   "sessionsRoomStartBlockedEmpty": "Ajoutez au moins un participant avant de démarrer.",
   "sessionsRoomStarted": "Session démarrée. L'écran en direct arrive dans une prochaine mise à jour.",
   "sessionsRoomBackHome": "Retour à l'accueil",
+  "sessionsRoomLeave": "Quitter la session",
+  "sessionsRoomPromote": "Nommer co-organisateur",
+
+  "sessionsInviteTitle": "Inviter",
+  "sessionsInviteCopyLink": "Copier le lien",
+  "sessionsInviteLinkCopied": "Lien copié.",
+  "sessionsInviteShare": "Partager",
+
+  "joinLoading": "Adhésion à la session…",
+  "joinErrorUnavailable": "Cette session n'existe pas ou est terminée.",
+  "joinErrorNotInTeam": "Vous n'êtes dans aucune équipe de cette session. Demandez à l'organisateur de vous ajouter.",
 
   "holesModeNearby": "Autour de moi",
   "holesModeMine": "Tous mes trous",

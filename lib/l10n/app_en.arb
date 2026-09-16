@@ -12,8 +12,19 @@
   "navHistory": "History",
   "@navHistory": {"description": "Bottom navigation: past sessions."},
 
-  "homeComingSoon": "Joining a session and history are coming in a future update.",
   "homeCreateSessionAction": "Create a session",
+  "homeJoinAction": "Join",
+  "homeJoinTitle": "Join a session",
+  "homeJoinCodeLabel": "Session code",
+  "homeSectionOngoing": "My ongoing sessions",
+  "homeSectionRecent": "Recent sessions",
+  "homeOngoingEmpty": "No session in progress.",
+  "homeRecentEmpty": "No completed session yet.",
+  "homeSessionStatusDraft": "Preparing",
+  "homeSessionStatusLive": "Live",
+  "homeSessionStatusCompleted": "Completed",
+  "homeRoleOwner": "Organizer",
+  "homeRolePlayer": "Participant",
   "historyComingSoon": "History is coming in a future update.",
 
   "sessionsCreateTitle": "New session",
@@ -68,6 +79,17 @@
   "sessionsRoomStartBlockedEmpty": "Add at least one participant before starting.",
   "sessionsRoomStarted": "Session started. The live screen is coming in a future update.",
   "sessionsRoomBackHome": "Back to home",
+  "sessionsRoomLeave": "Leave the session",
+  "sessionsRoomPromote": "Make co-organizer",
+
+  "sessionsInviteTitle": "Invite",
+  "sessionsInviteCopyLink": "Copy link",
+  "sessionsInviteLinkCopied": "Link copied.",
+  "sessionsInviteShare": "Share",
+
+  "joinLoading": "Joining the session…",
+  "joinErrorUnavailable": "This session doesn't exist or has ended.",
+  "joinErrorNotInTeam": "You're not on any team in this session yet. Ask the organizer to add you.",
 
   "holesModeNearby": "Around me",
   "holesModeMine": "All my holes",

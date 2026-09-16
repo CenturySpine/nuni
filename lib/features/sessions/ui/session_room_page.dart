@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -22,6 +21,7 @@ import '../domain/session_room.dart';
 import '../domain/team.dart';
 import '../domain/team_composition.dart';
 import 'add_participant_sheet.dart';
+import 'invite_sheet.dart';
 
 /// `/session/:id` (plan 07): the waiting room while `status = draft`. Plan
 /// 08 owns what this route shows once the session goes live -- for now it's
@@ -91,9 +91,10 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
   @override
   void initState() {
     super.initState();
-    final ownerId = widget.room.session.ownerId;
-    if (widget.room.pool.any((member) => member.userId == ownerId)) {
-      _selected.add(ownerId);
+    final myId = _currentUserId;
+    if (myId != null &&
+        widget.room.pool.any((member) => member.userId == myId)) {
+      _selected.add(myId);
     }
   }
 
@@ -102,6 +103,14 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
     super.didUpdateWidget(oldWidget);
     final poolIds = widget.room.pool.map((member) => member.userId).toSet();
     _selected.removeWhere((id) => !poolIds.contains(id));
+  }
+
+  SessionMember? _findMember(SessionRoomSnapshot room, String? userId) {
+    if (userId == null) return null;
+    for (final member in room.members) {
+      if (member.userId == userId) return member;
+    }
+    return null;
   }
 
   Map<String, String> get _selectionAsPlayerIds {
@@ -203,6 +212,23 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
   Future<void> _deleteTeam(Team team) =>
       _run(() => ref.read(sessionsRepositoryProvider).deleteTeam(team.id));
 
+  Future<void> _promote(SessionMember member) => _run(
+    () => ref
+        .read(sessionsRepositoryProvider)
+        .promoteToOwner(sessionId: widget.sessionId, userId: member.userId),
+  );
+
+  Future<void> _leave() async {
+    await _run(
+      () => ref.read(sessionsRepositoryProvider).leaveSession(widget.sessionId),
+    );
+    // RLS drops access the moment the membership row is gone; the realtime
+    // room stream won't necessarily keep delivering updates past that
+    // point, so leave the page explicitly instead of waiting for it to
+    // reflect the departure.
+    if (mounted) context.go('/');
+  }
+
   Future<void> _start() async {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _busy = true);
@@ -235,7 +261,8 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final room = widget.room;
-    final isOwner = room.session.ownerId == _currentUserId;
+    final myMember = _findMember(room, _currentUserId);
+    final isOwner = myMember?.role == MemberRole.owner;
     final canStart = canStartSession(
       kind: room.session.kind,
       members: room.members,
@@ -247,12 +274,9 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
         title: Text(l10n.sessionsRoomTitle),
         actions: [
           IconButton(
-            icon: const Icon(PhosphorIcons.copy),
-            tooltip: l10n.sessionsRoomCopyCode,
-            onPressed: () async {
-              await Clipboard.setData(ClipboardData(text: room.session.code));
-              _showSnack(l10n.sessionsRoomCodeCopied);
-            },
+            icon: const Icon(PhosphorIcons.shareNetwork),
+            tooltip: l10n.sessionsInviteTitle,
+            onPressed: () => InviteSheet.show(context, room.session.code),
           ),
         ],
       ),
@@ -284,6 +308,15 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
               ),
               style: Theme.of(context).textTheme.bodyLarge,
             ),
+            if (myMember != null) ...[
+              const SizedBox(height: 12),
+              NuniButton(
+                variant: NuniButtonVariant.secondary,
+                icon: PhosphorIcons.signOut,
+                label: l10n.sessionsRoomLeave,
+                onPressed: _busy ? null : _leave,
+              ),
+            ],
           ],
           const SizedBox(height: 24),
           if (room.session.kind == SessionKind.team)
@@ -295,6 +328,7 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
               currentUserId: _currentUserId,
               onDeleteTeam: _deleteTeam,
               onUnassign: _unassign,
+              onPromote: _promote,
             ),
           if (room.session.kind == SessionKind.team) const SizedBox(height: 24),
           _PoolSection(
@@ -312,6 +346,7 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
               }
             }),
             onRemove: _removeMember,
+            onPromote: _promote,
           ),
           if (isOwner) ...[
             const SizedBox(height: 16),
@@ -379,6 +414,7 @@ class _TeamsSection extends StatelessWidget {
     required this.currentUserId,
     required this.onDeleteTeam,
     required this.onUnassign,
+    required this.onPromote,
   });
 
   final SessionRoomSnapshot room;
@@ -388,6 +424,7 @@ class _TeamsSection extends StatelessWidget {
   final String? currentUserId;
   final ValueChanged<Team> onDeleteTeam;
   final ValueChanged<SessionMember> onUnassign;
+  final ValueChanged<SessionMember> onPromote;
 
   @override
   Widget build(BuildContext context) {
@@ -437,6 +474,12 @@ class _TeamsSection extends StatelessWidget {
                               : null,
                         ),
                       ),
+                      if (isOwner && member.role != MemberRole.owner)
+                        IconButton(
+                          icon: const Icon(PhosphorIcons.crown, size: 18),
+                          tooltip: l10n.sessionsRoomPromote,
+                          onPressed: busy ? null : () => onPromote(member),
+                        ),
                       if (isOwner)
                         IconButton(
                           icon: const Icon(PhosphorIcons.minusCircle, size: 18),
@@ -465,6 +508,7 @@ class _PoolSection extends StatelessWidget {
     required this.showSelection,
     required this.onToggle,
     required this.onRemove,
+    required this.onPromote,
   });
 
   final SessionRoomSnapshot room;
@@ -475,6 +519,7 @@ class _PoolSection extends StatelessWidget {
   final bool showSelection;
   final void Function(String userId, bool value) onToggle;
   final ValueChanged<SessionMember> onRemove;
+  final ValueChanged<SessionMember> onPromote;
 
   @override
   Widget build(BuildContext context) {
@@ -508,6 +553,7 @@ class _PoolSection extends StatelessWidget {
                     selected: selected.contains(member.userId),
                     onToggle: (value) => onToggle(member.userId, value),
                     onRemove: () => onRemove(member),
+                    onPromote: () => onPromote(member),
                   ),
               ],
             ),
@@ -528,6 +574,7 @@ class _PoolRow extends StatelessWidget {
     required this.selected,
     required this.onToggle,
     required this.onRemove,
+    required this.onPromote,
   });
 
   final SessionMember member;
@@ -539,12 +586,32 @@ class _PoolRow extends StatelessWidget {
   final bool selected;
   final ValueChanged<bool> onToggle;
   final VoidCallback onRemove;
+  final VoidCallback onPromote;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final name = player?.name ?? '';
     final label = isCurrentUser ? '$name (${l10n.sessionsRoomYou})' : name;
+    final canPromote = isOwner && member.role != MemberRole.owner;
+
+    final actions = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (canPromote)
+          IconButton(
+            icon: const Icon(PhosphorIcons.crown, size: 18),
+            tooltip: l10n.sessionsRoomPromote,
+            onPressed: busy ? null : onPromote,
+          ),
+        if (isOwner)
+          IconButton(
+            icon: const Icon(PhosphorIcons.xCircle, size: 18),
+            tooltip: l10n.sessionsRoomRemoveParticipant,
+            onPressed: busy ? null : onRemove,
+          ),
+      ],
+    );
 
     if (isOwner && showSelection) {
       return CheckboxListTile(
@@ -552,23 +619,10 @@ class _PoolRow extends StatelessWidget {
         onChanged: busy ? null : (value) => onToggle(value ?? false),
         title: Text(label),
         controlAffinity: ListTileControlAffinity.leading,
-        secondary: IconButton(
-          icon: const Icon(PhosphorIcons.xCircle, size: 18),
-          tooltip: l10n.sessionsRoomRemoveParticipant,
-          onPressed: busy ? null : onRemove,
-        ),
+        secondary: actions,
       );
     }
 
-    return ListTile(
-      title: Text(label),
-      trailing: isOwner
-          ? IconButton(
-              icon: const Icon(PhosphorIcons.xCircle, size: 18),
-              tooltip: l10n.sessionsRoomRemoveParticipant,
-              onPressed: busy ? null : onRemove,
-            )
-          : null,
-    );
+    return ListTile(title: Text(label), trailing: isOwner ? actions : null);
   }
 }

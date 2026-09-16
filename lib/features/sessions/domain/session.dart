@@ -33,6 +33,9 @@ abstract class Session with _$Session {
     required RankingDirection rankingDirection,
     String? city,
     String? zone,
+    @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'started_at') DateTime? startedAt,
+    @JsonKey(name: 'ended_at') DateTime? endedAt,
   }) = _Session;
 
   factory Session.fromJson(Map<String, Object?> json) =>

@@ -18,11 +18,13 @@ void main() {
         'ranking_direction': 'asc',
         'city': 'Paris',
         'zone': 'Rive gauche',
+        'created_at': '2026-09-16T10:00:00Z',
+        'started_at': null,
+        'ended_at': null,
         // Columns the client doesn't map, present on a raw realtime row.
         'location': null,
         'weather': null,
         'comment': null,
-        'started_at': null,
       });
 
       expect(session.id, 's1');

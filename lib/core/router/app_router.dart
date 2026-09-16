@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,6 +9,7 @@ import '../../features/history/ui/history_page.dart';
 import '../../features/holes/ui/hole_form_page.dart';
 import '../../features/holes/ui/holes_page.dart';
 import '../../features/home/ui/home_page.dart';
+import '../../features/join/ui/join_page.dart';
 import '../../features/legal/ui/about_page.dart';
 import '../../features/legal/ui/legal_page.dart';
 import '../../features/legal/ui/privacy_page.dart';
@@ -110,10 +110,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             HoleFormPage(holeId: state.pathParameters['id']),
       ),
-      // Never actually built: the redirect in authGuard always fires first.
       GoRoute(
         path: '/join/:code',
-        builder: (context, state) => const SizedBox.shrink(),
+        builder: (context, state) =>
+            JoinPage(code: state.pathParameters['code']!),
       ),
       GoRoute(
         path: '/session/new',

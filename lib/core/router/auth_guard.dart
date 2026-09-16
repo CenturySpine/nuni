@@ -9,24 +9,34 @@ const _authPaths = {'/login', '/signup'};
 
 /// Redirects signed-out visitors to `/login` for every route except the
 /// public ones; redirects a signed-in visitor away from `/login`/`/signup`.
-/// `/join/:code` is remembered then redirected to `/login` regardless of
-/// auth state (plan 09 picks it back up once signed in).
+/// `/join/:code` for a signed-out visitor is remembered then redirected to
+/// `/login`; once signed in, the redirect away from `/login`/`/signup`
+/// picks the code back up instead of going home (plan 09). A signed-in
+/// visitor hitting `/join/:code` directly (already had a session, e.g. an
+/// existing account clicking an invite link) reaches it with no redirect.
 GoRouterRedirect authGuard(Ref ref) {
   return (context, state) {
     final path = state.matchedLocation;
+    final isSignedIn =
+        ref.read(supabaseClientProvider).auth.currentSession != null;
 
     if (path.startsWith('/join/')) {
+      if (isSignedIn) return null;
       ref
           .read(pendingJoinCodeProvider.notifier)
           .set(state.pathParameters['code']);
       return '/login';
     }
 
-    final isSignedIn =
-        ref.read(supabaseClientProvider).auth.currentSession != null;
-
     if (!isSignedIn && !_publicPaths.contains(path)) return '/login';
-    if (isSignedIn && _authPaths.contains(path)) return '/';
+    if (isSignedIn && _authPaths.contains(path)) {
+      final pendingCode = ref.read(pendingJoinCodeProvider);
+      if (pendingCode != null) {
+        ref.read(pendingJoinCodeProvider.notifier).set(null);
+        return '/join/$pendingCode';
+      }
+      return '/';
+    }
     return null;
   };
 }

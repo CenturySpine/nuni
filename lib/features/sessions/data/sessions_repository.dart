@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide Session;
 import '../../../core/supabase/supabase_providers.dart';
 import '../../../core/weather/weather.dart';
 import '../../profile/domain/player.dart';
+import '../domain/my_session_entry.dart';
 import '../domain/ranking_direction.dart';
 import '../domain/scoring_mode.dart';
 import '../domain/session.dart';
@@ -61,6 +62,86 @@ class SessionsRepository {
   Future<Session> fetchSession(String id) async {
     final row = await _client.from('sessions').select().eq('id', id).single();
     return Session.fromJson(row);
+  }
+
+  /// Join by code (plan 09, Q15): the `join_session` RPC applies the three
+  /// cases (attached to a team, dropped in the pool, or refused) and is
+  /// idempotent for someone already a member.
+  Future<Session> joinByCode(String code) async {
+    final row = await _client.rpc<Map<String, dynamic>>(
+      'join_session',
+      params: {'p_code': code},
+    );
+    return Session.fromJson(row);
+  }
+
+  /// Leaves a session the caller is a member of (self-service, draft only --
+  /// RLS `session_members_self_leave_draft`).
+  Future<void> leaveSession(String sessionId) async {
+    final userId = _client.auth.currentUser!.id;
+    await _client
+        .from('session_members')
+        .delete()
+        .eq('session_id', sessionId)
+        .eq('user_id', userId);
+  }
+
+  /// Promotes a member to co-organizer (owner-only, any status but
+  /// completed -- RLS `session_members_owner_update`).
+  Future<void> promoteToOwner({
+    required String sessionId,
+    required String userId,
+  }) => _client
+      .from('session_members')
+      .update({'role': 'owner'})
+      .eq('session_id', sessionId)
+      .eq('user_id', userId);
+
+  /// Sessions the caller is a member of, still in draft or live, most
+  /// recent first ("Mes sessions en cours", plan 09).
+  Future<List<MySessionEntry>> myOngoingSessions() =>
+      _mySessionsByStatus(const ['draft', 'live']);
+
+  /// The caller's most recently completed sessions, capped at [limit]
+  /// ("Dernières sessions", plan 09 -- not otherwise specified by the plan;
+  /// a short recency-ordered list, same shape as the rest of the app,
+  /// applied as a hypothesis).
+  Future<List<MySessionEntry>> myRecentSessions({int limit = 5}) =>
+      _mySessionsByStatus(const ['completed'], limit: limit);
+
+  /// Two plain queries instead of a nested PostgREST embed filter, same
+  /// tradeoff as `_recentPlayerIds`: `session_members` has no status column
+  /// to filter on directly.
+  Future<List<MySessionEntry>> _mySessionsByStatus(
+    List<String> statuses, {
+    int? limit,
+  }) async {
+    final userId = _client.auth.currentUser!.id;
+    final memberRows = await _client
+        .from('session_members')
+        .select('session_id, role')
+        .eq('user_id', userId);
+    final roleBySessionId = {
+      for (final row in memberRows)
+        row['session_id'] as String: row['role'] as String,
+    };
+    if (roleBySessionId.isEmpty) return const [];
+
+    var builder = _client
+        .from('sessions')
+        .select()
+        .inFilter('id', roleBySessionId.keys.toList())
+        .inFilter('status', statuses)
+        .order('created_at', ascending: false);
+    if (limit != null) builder = builder.limit(limit);
+    final rows = await builder;
+    return [
+      for (final row in rows)
+        MySessionEntry(
+          session: Session.fromJson(row),
+          role: memberRoleFromPostgresValue(roleBySessionId[row['id']]!),
+        ),
+    ];
   }
 
   Future<Session> startSession(String sessionId) async {
@@ -410,3 +491,11 @@ Future<List<Player>> playerSearch(Ref ref, String query) =>
 @riverpod
 Future<List<String>> zoneSuggestions(Ref ref, String city) =>
     ref.watch(sessionsRepositoryProvider).zonesForCity(city);
+
+@riverpod
+Future<List<MySessionEntry>> myOngoingSessions(Ref ref) =>
+    ref.watch(sessionsRepositoryProvider).myOngoingSessions();
+
+@riverpod
+Future<List<MySessionEntry>> myRecentSessions(Ref ref) =>
+    ref.watch(sessionsRepositoryProvider).myRecentSessions();
