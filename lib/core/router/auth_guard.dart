@@ -4,10 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../supabase/supabase_providers.dart';
 import 'pending_join_code.dart';
 
-const _publicPaths = {'/login', '/legal', '/privacy', '/about'};
+const _publicPaths = {'/login', '/signup', '/legal', '/privacy', '/about'};
+const _authPaths = {'/login', '/signup'};
 
 /// Redirects signed-out visitors to `/login` for every route except the
-/// public ones; redirects a signed-in visitor away from `/login`.
+/// public ones; redirects a signed-in visitor away from `/login`/`/signup`.
 /// `/join/:code` is remembered then redirected to `/login` regardless of
 /// auth state (plan 09 picks it back up once signed in).
 GoRouterRedirect authGuard(Ref ref) {
@@ -25,7 +26,7 @@ GoRouterRedirect authGuard(Ref ref) {
         ref.read(supabaseClientProvider).auth.currentSession != null;
 
     if (!isSignedIn && !_publicPaths.contains(path)) return '/login';
-    if (isSignedIn && path == '/login') return '/';
+    if (isSignedIn && _authPaths.contains(path)) return '/';
     return null;
   };
 }

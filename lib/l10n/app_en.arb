@@ -16,7 +16,11 @@
   "holesComingSoon": "Holes are coming in a future update.",
   "historyComingSoon": "History is coming in a future update.",
 
-  "loginSignInWithGoogle": "Sign in with Google",
+  "authLoginHeading": "Log in to NUNI",
+  "authSignUpHeading": "Sign up for NUNI",
+  "authSwitchToSignUp": "Sign Up",
+  "authSwitchToLogin": "Log In",
+  "authContinueWithGoogle": "Continue with Google",
 
   "profileTitle": "Profile",
   "profileDisplayNameLabel": "Display name",

@@ -11,7 +11,11 @@
   "holesComingSoon": "Les trous arrivent dans une prochaine mise à jour.",
   "historyComingSoon": "L'historique arrive dans une prochaine mise à jour.",
 
-  "loginSignInWithGoogle": "Se connecter avec Google",
+  "authLoginHeading": "Connexion à NUNI",
+  "authSignUpHeading": "Inscription à NUNI",
+  "authSwitchToSignUp": "S'inscrire",
+  "authSwitchToLogin": "Se connecter",
+  "authContinueWithGoogle": "Continuer avec Google",
 
   "profileTitle": "Profil",
   "profileDisplayNameLabel": "Nom affiché",

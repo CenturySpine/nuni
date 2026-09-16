@@ -37,7 +37,7 @@ void main() {
       await pumpApp(tester);
       await tester.pumpAndSettle();
 
-      expect(find.text('Sign in with Google'), findsOneWidget);
+      expect(find.text('Continue with Google'), findsOneWidget);
       expect(find.text('Home'), findsNothing);
     },
   );

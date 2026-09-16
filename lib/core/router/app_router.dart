@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/auth/ui/login_page.dart';
+import '../../features/auth/ui/auth_page.dart';
 import '../../features/history/ui/history_page.dart';
 import '../../features/holes/ui/holes_page.dart';
 import '../../features/home/ui/home_page.dart';
@@ -77,7 +77,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const AuthPage(isSignUp: false),
+      ),
+      GoRoute(
+        path: '/signup',
+        builder: (context, state) => const AuthPage(isSignUp: true),
+      ),
       GoRoute(path: '/legal', builder: (context, state) => const LegalPage()),
       GoRoute(
         path: '/privacy',
