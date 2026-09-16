@@ -14,6 +14,8 @@ import '../../features/legal/ui/about_page.dart';
 import '../../features/legal/ui/legal_page.dart';
 import '../../features/legal/ui/privacy_page.dart';
 import '../../features/profile/ui/profile_page.dart';
+import '../../features/sessions/ui/session_create_page.dart';
+import '../../features/sessions/ui/session_room_page.dart';
 import '../../features/settings/ui/settings_page.dart';
 import '../supabase/supabase_providers.dart';
 import '../theme/theme_demo_page.dart';
@@ -40,9 +42,8 @@ class _GoRouterRefreshStream extends ChangeNotifier {
   }
 }
 
-/// Routes not wired yet: `/session/new`, `/session/:id`,
-/// `/session/:id/hole/:playedHoleId`, `/history/:id` -- added by the plans
-/// that build those screens (07-10).
+/// Routes not wired yet: `/session/:id/hole/:playedHoleId`, `/history/:id`
+/// -- added by the plans that build those screens (08-10).
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authChanges = ref.watch(supabaseClientProvider).auth.onAuthStateChange;
   return GoRouter(
@@ -113,6 +114,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/join/:code',
         builder: (context, state) => const SizedBox.shrink(),
+      ),
+      GoRoute(
+        path: '/session/new',
+        builder: (context, state) => const SessionCreatePage(),
+      ),
+      GoRoute(
+        path: '/session/:id',
+        builder: (context, state) =>
+            SessionRoomPage(sessionId: state.pathParameters['id']!),
       ),
       if (kDebugMode)
         GoRoute(

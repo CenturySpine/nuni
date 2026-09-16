@@ -106,6 +106,19 @@ création de la session quand le mode Libre est sélectionné (défaut `desc`), 
 l'en-tête de session et les exports ("Libre · le plus haut gagne"). Pour les trois autres modes
 la colonne est déduite du mode et non modifiable.
 
+**Q34 ☑ — Pour les trois modes autres que Libre, quel `ranking_direction` déduire du mode
+(Q7b) ?**
+Réponse PO (2026-09-16) : suggestion retenue.
+Contexte : Q7b tranche que la colonne est "déduite du mode et non modifiable" pour Stroke Play,
+Match Play et Redistribution, mais ne dit pas quelle valeur pour chacun ; nécessaire avant
+d'écrire `create_session` côté client (plan 07).
+Ce que faisait LsgScores (information, pas une réponse à elle seule,
+`docs/reference/features_lsgscores_android.md` §11) : tri croissant par coups en Stroke Play, tri
+décroissant par score (points) dans les modes à points.
+Suggestion : Stroke Play → `asc` (moins de coups gagne) ; Match Play → `desc` ; Redistribution →
+`desc` (les deux à points, plus haut gagne) — reprend directement le comportement de l'ancienne
+app.
+
 **Q8 ☑ — Qui peut saisir le score d'une équipe ?**
 Réponse PO (2026-09-14) : suggestion retenue. Un membre ne saisit que sa propre équipe ; le
 créateur (et tout co-organisateur) saisit toutes les équipes, ce qui couvre le cas "un seul
@@ -171,7 +184,8 @@ Révision PO (2026-09-16, plus tard le même jour) : finalement un curseur (slid
 par pas de 500 m, défaut 1 km, valeur mémorisée sur l'appareil (reprend l'idée initiale écartée
 ci-dessus).
 
-**Q11 ☐ — Service de géocodage inverse pour détecter la ville à la création de session ?**
+**Q11 ☑ — Service de géocodage inverse pour détecter la ville à la création de session ?**
+Réponse PO (2026-09-16) : suggestion retenue.
 Suggestion : BigDataCloud "reverse-geocode-client" (gratuit, sans clé, conçu pour un appel direct
 depuis le navigateur, CORS ouvert). Repli manuel : champ ville pré-rempli, toujours modifiable
 avant confirmation. Alternative : Nominatim (OpenStreetMap), gratuit mais politique d'usage stricte

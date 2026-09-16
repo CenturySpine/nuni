@@ -44,4 +44,16 @@ abstract final class PhosphorIcons {
   static const pencilSimple = IconData(0xe3b4, fontFamily: _regular);
   static const list = IconData(0xe2f0, fontFamily: _regular);
   static const mapTrifold = IconData(0xe31a, fontFamily: _regular);
+
+  static const check = IconData(0xe182, fontFamily: _regular);
+  static const checkCircle = IconData(0xe184, fontFamily: _regular);
+  static const copy = IconData(0xe1ca, fontFamily: _regular);
+  static const diceFive = IconData(0xe1ee, fontFamily: _regular);
+  static const info = IconData(0xe2ce, fontFamily: _regular);
+  static const minusCircle = IconData(0xe32c, fontFamily: _regular);
+  static const play = IconData(0xe3d0, fontFamily: _regular);
+  static const shuffle = IconData(0xe422, fontFamily: _regular);
+  static const userPlus = IconData(0xe4d0, fontFamily: _regular);
+  static const users = IconData(0xe4d6, fontFamily: _regular);
+  static const xCircle = IconData(0xe4f8, fontFamily: _regular);
 }

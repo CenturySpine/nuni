@@ -81,6 +81,23 @@ décision définitive dans `docs/design/PALETTE.md` tant que le PO n'a pas valid
 - Un trou privé n'apparaît pas pour un autre utilisateur (test RLS).
 - Une photo de 4 Mo prise au téléphone est envoyée en moins de 300 ko.
 
+## Vérifié, non vérifié
+
+- Cycle complet (créer, lister, carte, fiche, modifier, supprimer, bascule "tous mes trous",
+  curseur de rayon avec mémorisation, deux points départ/cible) vérifié par le PO sur mobile réel
+  (2026-09-16) : fonctionnel, aspect visuel de la liste/carte à reprendre plus tard (voir
+  Décisions retenues).
+- Liste en moins de 3 s après la position, en extérieur : non chronométré précisément, jugé
+  satisfaisant par le PO ("nickel") -- accepté tel quel.
+- Trou privé invisible d'un autre utilisateur : non rejoué avec deux comptes distincts sur cette
+  étape ; repose sur la politique RLS `holes_select` (validée au plan 3, jalon 1). Accepté tel
+  quel par le PO (2026-09-16).
+- Photo de 4 Mo compressée sous 300 ko : couvert par un test unitaire sur images synthétiques
+  (`test/shared/photo_field_test.dart`), pas sur une vraie photo de téléphone. Accepté tel quel
+  par le PO (2026-09-16).
+- Tests automatisés : `flutter analyze` sans avertissement, 32 tests verts, build web release
+  réussi.
+
 ## Questions PO liées
 
 Q10, Q12, Q13, Q33.

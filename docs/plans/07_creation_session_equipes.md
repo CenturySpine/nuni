@@ -27,7 +27,7 @@ Plans 05 et 06 (géolocalisation partagée).
     composées affichées, "Démarrer" quand tout le monde est placé (Q25).
   Pour un membre : "En attente du démarrage par X", son équipe si elle existe, les autres
   participants présents.
-- Ville : au chargement, position → géocodage inverse (H Q11 : BigDataCloud client, sans clé) →
+- Ville : au chargement, position → géocodage inverse (Q11 : BigDataCloud client, sans clé) →
   champ "Ville" pré-rempli, modifiable, à confirmer. Si la position est refusée, champ vide
   facultatif. La position de création est stockée sur la session (utile pour l'historique et pour
   proposer les trous).
@@ -36,7 +36,8 @@ Plans 05 et 06 (géolocalisation partagée).
 - Type : individuel ou équipe. Mode de scoring : Stroke Play, Match Play, Redistribution, Libre,
   avec une fiche d'explication (bouton info). En mode Libre, un sélecteur supplémentaire "Le plus
   haut gagne / Le plus bas gagne" (Q7b, défaut : le plus haut). Le dernier choix est proposé par
-  défaut.
+  défaut. Pour les trois autres modes, `ranking_direction` est déduit côté client (Q34) : Stroke
+  Play `asc`, Match Play et Redistribution `desc`.
 - Météo : appel Open‑Meteo (sans clé, CORS ouvert) à la création si la position est connue ;
   stockée en `weather` (température, vent, code). Échec silencieux.
 - Équipes (composeur, dans la salle d'attente, **mode équipe seulement**) :
@@ -94,4 +95,4 @@ Plans 05 et 06 (géolocalisation partagée).
 
 ## Questions PO liées
 
-Q5, Q9, Q11, Q15, Q24, Q25, Q26 (tranchées).
+Q5, Q9, Q11, Q15, Q24, Q25, Q26, Q34 (tranchées).
