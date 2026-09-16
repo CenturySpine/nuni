@@ -9,12 +9,14 @@ void main() {
         'id': 'p1',
         'name': 'Ada Lovelace',
         'avatar_url': 'https://example.com/a.png',
+        'locale': 'fr',
         'user_id': 'u1',
       });
 
       expect(player.id, 'p1');
       expect(player.name, 'Ada Lovelace');
       expect(player.avatarUrl, 'https://example.com/a.png');
+      expect(player.locale, 'fr');
       expect(player.userId, 'u1');
     },
   );
@@ -23,6 +25,7 @@ void main() {
     final player = Player.fromJson({
       'id': 'p1',
       'name': 'Old Player',
+      'locale': 'fr',
       'user_id': null,
     });
 

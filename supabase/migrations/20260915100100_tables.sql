@@ -1,27 +1,26 @@
 -- Tables for the NUNI schema (plan 03).
 -- legacy_id columns prepare the LsgScores import (plan 13): nullable, unique, unused until then.
 
-create table profiles (
-  id uuid primary key references auth.users (id) on delete cascade,
-  display_name text not null,
-  avatar_url text,
-  locale text not null default 'fr',
-  created_at timestamptz not null default now()
-);
-
+-- No separate "profiles" table: with Q24 (players are only ever created by the
+-- sign-up trigger, never claimed or created ad hoc), a profile and its linked
+-- player were always 1:1 and kept in sync on every save -- pure duplication.
+-- "players" IS the account-facing table; auth.users is referenced directly
+-- (standard practice, not fragile: Supabase manages that table, but it's a
+-- normal foreign key target). Decision: PO, 2026-09-16.
 create table players (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   avatar_url text,
-  created_by uuid not null references profiles (id),
-  user_id uuid unique references profiles (id),
+  locale text not null default 'fr',
+  created_by uuid not null references auth.users (id),
+  user_id uuid unique references auth.users (id),
   legacy_id bigint unique,
   created_at timestamptz not null default now()
 );
 
 create table holes (
   id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null references profiles (id),
+  owner_id uuid not null references auth.users (id),
   name text not null,
   description text,
   par int not null default 3,
@@ -38,7 +37,7 @@ create table holes (
 create table sessions (
   id uuid primary key default gen_random_uuid(),
   code text not null unique,
-  owner_id uuid not null references profiles (id),
+  owner_id uuid not null references auth.users (id),
   status session_status not null default 'draft',
   kind session_kind not null,
   scoring_mode scoring_mode not null,
@@ -71,7 +70,7 @@ create table team_players (
 
 create table session_members (
   session_id uuid not null references sessions (id) on delete cascade,
-  user_id uuid not null references profiles (id),
+  user_id uuid not null references auth.users (id),
   team_id uuid references teams (id) on delete set null,
   role member_role not null default 'player',
   joined_at timestamptz not null default now(),
@@ -93,7 +92,7 @@ create table scores (
   played_hole_id uuid not null references played_holes (id) on delete cascade,
   team_id uuid not null references teams (id) on delete cascade,
   value int not null check (value between 0 and 20),
-  updated_by uuid references profiles (id),
+  updated_by uuid references auth.users (id),
   updated_at timestamptz not null default now(),
   primary key (played_hole_id, team_id)
 );
@@ -102,7 +101,7 @@ create table session_photos (
   id uuid primary key default gen_random_uuid(),
   session_id uuid not null references sessions (id) on delete cascade,
   storage_path text not null,
-  uploaded_by uuid references profiles (id),
+  uploaded_by uuid references auth.users (id),
   created_at timestamptz not null default now()
 );
 

@@ -7,12 +7,17 @@ existants, on ne les empile pas).
 
 ## Diagramme
 
+Pas de table `profiles` séparée : avec Q24, un profil et son joueur lié étaient toujours créés
+ensemble et resynchronisés à chaque sauvegarde -- deux tables identiques en pratique. `players`
+porte directement les réglages de compte (nom, avatar, langue) et référence `auth.users`
+directement (décision PO, 2026-09-16).
+
+`players.user_id`, `holes.owner_id`, `sessions.owner_id`, `session_members.user_id`,
+`scores.updated_by` et `session_photos.uploaded_by` référencent tous `auth.users` (géré par
+Supabase, hors de ce schéma), non représenté dans le diagramme ci-dessous.
+
 ```mermaid
 erDiagram
-  PROFILES ||--o| PLAYERS : "lié via user_id (0..1)"
-  PROFILES ||--o{ HOLES : "owner_id"
-  PROFILES ||--o{ SESSIONS : "owner_id"
-  PROFILES ||--o{ SESSION_MEMBERS : "user_id"
   SESSIONS ||--o{ TEAMS : "session_id"
   SESSIONS ||--o{ SESSION_MEMBERS : "session_id"
   SESSIONS ||--o{ PLAYED_HOLES : "session_id"
@@ -24,17 +29,13 @@ erDiagram
   HOLES ||--o{ PLAYED_HOLES : "hole_id"
   PLAYED_HOLES ||--o{ SCORES : "played_hole_id"
 
-  PROFILES {
-    uuid id PK "= auth.users.id"
-    text display_name
-    text avatar_url
-    text locale
-  }
   PLAYERS {
     uuid id PK
     text name
-    uuid created_by FK
-    uuid user_id FK "nullable, unique — null si importé de LsgScores"
+    text avatar_url
+    text locale "défaut 'fr'"
+    uuid created_by FK "auth.users"
+    uuid user_id FK "auth.users, nullable, unique — null si importé de LsgScores"
     bigint legacy_id "import plan 13"
   }
   HOLES {
@@ -120,7 +121,6 @@ Résumé par table (détail exact dans `supabase/migrations/20260915100400_rls.s
 
 | Table | Lecture | Écriture |
 |---|---|---|
-| `profiles` | tout authentifié | soi-même |
 | `players` | tout authentifié | le joueur lié (`user_id`) ; aucune création cliente (Q24) |
 | `holes` | public, mes trous, ou joué dans une session dont je suis membre (Q13) | propriétaire |
 | `sessions` | membres | propriétaire (modif/suppr) ; insertion par l'auteur |
@@ -174,6 +174,12 @@ chemin — `user_id` pour `avatars`/`holes`, `session_id` pour `session-photos`)
   test (une ambiguïté de nom de colonne rendait la politique d'écriture des scores inopérante :
   n'importe quel membre pouvait écrire le score de n'importe quelle équipe, pas seulement la
   sienne).
-- `supabase/seed.sql` exécuté une fois contre `nuni` pour vérification puis nettoyé (le projet
-  distant reste vide jusqu'à la première vraie connexion) ; pas rejoué via `supabase start` +
-  `db reset` (Docker local non confirmé sur ce poste).
+- `supabase/seed.sql` exécuté deux fois contre `nuni` pour vérification puis nettoyé à chaque fois ;
+  pas rejoué via `supabase start` + `db reset` (Docker local non confirmé sur ce poste).
+- 2026-09-16 : fusion `profiles`/`players` (redondance constatée par le PO après une première
+  vraie connexion Google — les deux tables étaient toujours 1:1 et resynchronisées à chaque
+  sauvegarde). Schéma distant reconstruit depuis zéro ; le compte réel du PO, déjà connecté avant
+  la reconstruction, a perdu sa ligne `players` (le trigger ne se redéclenche qu'à la création du
+  compte `auth.users`, pas à chaque connexion) — recréée à la main avec les mêmes valeurs que le
+  trigger aurait posées, vérifié en base après coup. `db advisors` et `rls_smoke.sql` (9/9)
+  repassés après la reconstruction, aucune régression.

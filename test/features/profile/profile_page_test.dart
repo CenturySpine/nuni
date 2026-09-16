@@ -3,17 +3,17 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nuni/features/profile/data/profile_repository.dart';
-import 'package:nuni/features/profile/domain/profile.dart';
+import 'package:nuni/features/profile/domain/player.dart';
 import 'package:nuni/features/profile/ui/profile_page.dart';
 import 'package:nuni/l10n/generated/app_localizations.dart';
 
 void main() {
   testWidgets('ProfilePage shows the loaded display name', (tester) async {
-    const profile = Profile(id: 'u1', displayName: 'Ada', locale: 'en');
+    const player = Player(id: 'p1', name: 'Ada', locale: 'en');
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [myProfileProvider.overrideWith((ref) async => profile)],
+        overrides: [myPlayerProvider.overrideWith((ref) async => player)],
         child: MaterialApp(
           localizationsDelegates: const [
             AppLocalizations.delegate,

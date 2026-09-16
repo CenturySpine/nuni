@@ -2,7 +2,6 @@
 -- Every policy targets "authenticated": the app requires Google sign-in for all table access;
 -- only storage objects (plan storage.sql) are readable anonymously.
 
-alter table profiles enable row level security;
 alter table players enable row level security;
 alter table holes enable row level security;
 alter table sessions enable row level security;
@@ -18,7 +17,6 @@ alter table session_photos enable row level security;
 -- roles (verified: tables created by our migration role got none of it, confirmed by running the
 -- app's own queries impersonated as authenticated and hitting "permission denied"). No table
 -- grants anything to anon: the app requires sign-in throughout.
-grant select, update on profiles to authenticated;
 grant select, update on players to authenticated;
 grant select, insert, update, delete on holes to authenticated;
 grant select, insert, update, delete on sessions to authenticated;
@@ -29,17 +27,9 @@ grant select, insert, update, delete on played_holes to authenticated;
 grant select, insert, update, delete on scores to authenticated;
 grant select, insert, update, delete on session_photos to authenticated;
 
--- profiles: read by any authenticated user, write by self. No client insert/delete
--- (created by the on_auth_user_created trigger, removed by delete_my_account).
-create policy "profiles_select" on profiles for select to authenticated
-  using (true);
-
-create policy "profiles_update_self" on profiles for update to authenticated
-  using (id = (select auth.uid()))
-  with check (id = (select auth.uid()));
-
 -- players: shared read-only directory, write by the linked user only. No client insert/delete
--- (Q24: created by the trigger at sign-up, or by the plan 13 import).
+-- (Q24: created by the trigger at sign-up, or by the plan 13 import). This is also the
+-- account-facing table (name, avatar, locale) -- no separate "profiles" table, see tables.sql.
 create policy "players_select" on players for select to authenticated
   using (true);
 

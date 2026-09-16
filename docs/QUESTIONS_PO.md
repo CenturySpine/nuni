@@ -221,6 +221,23 @@ personnes refusent totalement l'app. Conséquences : plus de création de joueur
 07), plus d'onboarding "Qui es-tu ?" ni de "c'est moi" (plan 05) ; profil et joueur sont créés
 ensemble par la base à l'inscription ; `players.user_id` ne reste nul que pour les joueurs importés
 de LsgScores (plan 13), qui ne sont pas sélectionnables dans une nouvelle session.
+Révision (2026-09-16, Q32) : plus de table `profiles` séparée, fusionnée dans `players` — la
+phrase "profil et joueur créés ensemble" ci-dessus décrit un seul et même joueur créé à
+l'inscription, pas deux lignes distinctes.
+
+**Q32 ☑ — `profiles` et `players` sont-elles redondantes, une fois Q24 appliquée ?**
+Question posée par le PO après une première connexion Google réelle, en observant les deux tables
+dans le tableau de bord Supabase.
+Contexte : Q4 (colonne `players.user_id`) date d'avant Q24. Après Q24 (joueur créé uniquement par
+le trigger d'inscription, jamais réclamé), un profil et son joueur lié sont toujours 1:1 et
+resynchronisés à chaque sauvegarde (plan 05) — même règles de lecture/écriture RLS, mêmes
+colonnes dupliquées à chaque fois.
+Réponse PO (2026-09-16) : oui, redondantes ; suggestion retenue (fusion dans `players`, qui
+référence `auth.users` directement). `players.created_by` conservé sans utilité actuelle, au cas
+où une création de joueur par anticipation serait réintroduite plus tard (coût nul). Conséquence
+annexe : confirmé que l'UUID `auth.users` d'un même compte Google ne se reporte pas d'un projet
+Supabase à l'autre (chaque projet génère le sien) — le plan 13 devra donc soit laisser `user_id`
+nul jusqu'à reconnexion, soit pré-provisionner des comptes (question à trancher à ce moment-là).
 
 **Q25 ☑ — Au démarrage, que faire d'un membre du pool qui n'est dans aucune équipe ?**
 Contexte : cas 2 du plan 09, l'organisateur démarre alors qu'un arrivant n'a pas été placé.

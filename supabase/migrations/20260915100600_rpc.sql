@@ -216,9 +216,9 @@ begin
       raise exception 'no_teams' using errcode = 'P0001';
     end if;
 
-    select string_agg(pr.display_name, ', ') into v_unassigned
+    select string_agg(p.name, ', ') into v_unassigned
     from session_members sm
-    join profiles pr on pr.id = sm.user_id
+    join players p on p.user_id = sm.user_id
     where sm.session_id = p_session_id and sm.team_id is null;
 
     if v_unassigned is not null then

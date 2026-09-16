@@ -33,7 +33,7 @@ perte, puis retirer l'ancienne app.
 | `played_holes` | `played_holes` | position conservée |
 | `played_hole_scores` | `scores` | `updated_by` = propriétaire de la session |
 | Storage `sessions/<id>/` | `session_photos` + bucket `session-photos` | `fav_` → `cover_photo_id` |
-| `app_user` | `profiles` | seulement pour les utilisateurs qui se reconnectent à NUNI (même identité Google → même UUID auth si le fournisseur est partagé ; sinon rapprochement par e-mail) |
+| `app_user` | `players.user_id` (pas de table `profiles`, retirée le 2026-09-16) | seulement pour les utilisateurs qui se reconnectent à NUNI ; l'UUID auth ne se reporte pas d'un projet Supabase à l'autre (confirmé le 2026-09-16, cf. plan 03), donc `user_id` reste `null` tant que la personne ne s'est pas reconnectée elle-même, sauf si on choisit de pré-provisionner des comptes (question à trancher au plan 13) |
 | `cities`, `game_zones` | texte sur `sessions` | tables non reprises |
 | `scoring_modes`, `app_versions`, `app_roles` | — | abandonnées |
 

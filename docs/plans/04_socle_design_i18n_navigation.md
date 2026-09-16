@@ -50,7 +50,7 @@ Plan 02. Peut se dérouler en parallèle du plan 03.
   `NuniEmptyState`, `NuniConfirmDialog`, `NuniLoading`, `NuniErrorBanner`.
 - i18n : mécanisme officiel Flutter (`flutter_localizations` + fichiers ARB `app_en.arb`,
   `app_fr.arb`, génération `gen-l10n`). Langue = celle du navigateur par défaut, surcharge
-  possible dans les réglages, mémorisée localement et dans `profiles.locale`.
+  possible dans les réglages, mémorisée localement et dans `players.locale`.
 - Navigation : `go_router` avec un shell à barre du bas de 3 entrées : **Accueil** (mes sessions
   en direct, créer, rejoindre), **Trous**, **Historique**. Le profil et les réglages sont
   accessibles depuis l'avatar en haut à droite. Plus de tiroir latéral.

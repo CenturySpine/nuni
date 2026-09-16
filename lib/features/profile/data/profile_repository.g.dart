@@ -9,39 +9,6 @@ part of 'profile_repository.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(myProfile)
-final myProfileProvider = MyProfileProvider._();
-
-final class MyProfileProvider
-    extends $FunctionalProvider<AsyncValue<Profile>, Profile, FutureOr<Profile>>
-    with $FutureModifier<Profile>, $FutureProvider<Profile> {
-  MyProfileProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'myProfileProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$myProfileHash();
-
-  @$internal
-  @override
-  $FutureProviderElement<Profile> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<Profile> create(Ref ref) {
-    return myProfile(ref);
-  }
-}
-
-String _$myProfileHash() => r'fb379b464a178b8d05f798d0296a91bed9b9c219';
-
 @ProviderFor(myPlayer)
 final myPlayerProvider = MyPlayerProvider._();
 

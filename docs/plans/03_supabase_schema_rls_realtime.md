@@ -39,8 +39,8 @@ Plan 02 (le CLI Supabase est une dépendance npm du dépôt).
   dans une nouvelle session.
 - Q5 tranchée : équipes via table de jointure `team_players` ; la taille (1 en individuel, 2 en
   équipe) est une règle applicative, vérifiée aussi par la RPC de création.
-- Auth : profil **et joueur lié** créés par trigger sur `auth.users` (plus de "ensureUserRow"
-  côté client, plus d'onboarding).
+- Auth : le joueur lié (qui porte aussi les réglages de compte : nom, avatar, langue) créé par
+  trigger sur `auth.users` (plus de "ensureUserRow" côté client, plus d'onboarding).
 - Temps réel : abonnement `postgres_changes` filtré par `session_id` (et non plus un flux sur la
   table entière), tables ajoutées à la publication `supabase_realtime`. Le calcul des scores et
   du classement reste en Dart (pur, testé) : la base ne stocke que les coups.
@@ -51,14 +51,14 @@ Plan 02 (le CLI Supabase est une dépendance npm du dépôt).
 ## Modèle de données cible
 
 ```
-profiles            id uuid PK = auth.users.id, display_name, avatar_url, locale text, created_at
-players             id uuid PK, name text, avatar_url, created_by uuid → profiles,
-                    user_id uuid null unique → profiles (nul = importé de LsgScores, Q24), created_at
-holes               id uuid PK, owner_id uuid → profiles, name, description, par int (défaut 3),
+players             id uuid PK, name text, avatar_url, locale text (défaut 'fr'),
+                    created_by uuid → auth.users,
+                    user_id uuid null unique → auth.users (nul = importé de LsgScores, Q24), created_at
+holes               id uuid PK, owner_id uuid → auth.users, name, description, par int (défaut 3),
                     distance_m int null, start geography(Point,4326) NOT NULL,
                     photo_start_path, photo_end_path, visibility hole_visibility (public|private),
                     created_at, updated_at
-sessions            id uuid PK, code text unique (6 car. A-Z0-9, généré), owner_id → profiles,
+sessions            id uuid PK, code text unique (6 car. A-Z0-9, généré), owner_id → auth.users,
                     status session_status (draft|live|completed), kind session_kind
                     (individual|team), scoring_mode scoring_mode,
                     ranking_direction ranking_direction (asc|desc, Q7b : libre en mode `free`,
@@ -67,18 +67,24 @@ sessions            id uuid PK, code text unique (6 car. A-Z0-9, généré), own
                     comment text null, cover_photo_id uuid null, created_at
 teams               id uuid PK, session_id → sessions (cascade), position int
 team_players        team_id → teams (cascade), player_id → players, PK(team_id, player_id)
-session_members     session_id → sessions (cascade), user_id → profiles, team_id → teams null
+session_members     session_id → sessions (cascade), user_id → auth.users, team_id → teams null
                     (null = dans le pool, pas encore affecté ; Q15), role member_role
                     (owner|player), joined_at, PK(session_id, user_id)
 played_holes        id uuid PK, session_id → sessions (cascade), hole_id → holes, game_mode
                     game_mode, position int, created_at, unique(session_id, position)
 scores              played_hole_id → played_holes (cascade), team_id → teams (cascade),
-                    value int check 0..20 (coups, ou points en mode Libre), updated_by → profiles,
+                    value int check 0..20 (coups, ou points en mode Libre), updated_by → auth.users,
                     updated_at,
                     PK(played_hole_id, team_id)
 session_photos      id uuid PK, session_id → sessions (cascade), storage_path text,
-                    uploaded_by → profiles, created_at
+                    uploaded_by → auth.users, created_at
 ```
+
+Pas de table `profiles` séparée (décision PO, 2026-09-16, après relecture du schéma une fois
+connecté pour de vrai) : avec Q24, un profil et son joueur lié sont toujours créés ensemble et
+resynchronisés à chaque sauvegarde — deux tables identiques en pratique. `players` porte
+directement les colonnes autrefois sur `profiles` (`locale` notamment) et est référencée
+directement par `auth.users`, ce qui est un usage standard chez Supabase.
 
 Tables abandonnées par rapport à l'ancienne app : `cities`, `game_zones`, `scoring_modes`,
 `app_versions`, `app_roles`.
@@ -94,11 +100,11 @@ restant triviale.
 
 ## Règles d'accès (RLS) cibles
 
-- `profiles` : lecture par tout utilisateur authentifié ; écriture par soi-même.
-- `players` : lecture par tout authentifié (référentiel partagé) ; **aucune insertion cliente**
+- `players` (référentiel partagé et table de compte, pas de `profiles` séparée) : lecture par tout
+  authentifié ; **aucune insertion cliente**
   (création par le trigger d'inscription, ou par l'import du plan 13) ; modification par
   l'utilisateur lié (`user_id = auth.uid()`) seulement ; pas de réclamation (Q24) ; pas de
-  suppression cliente (la suppression de compte passe par `delete_my_account`).
+  suppression cliente (la suppression de compte est un plan à part, plan 14).
 - `holes` : lecture si `visibility = public` ou propriétaire, ou (H Q13) si le trou a été joué dans
   une session dont je suis membre ; écriture propriétaire.
 - `sessions` : lecture par les membres ; insertion par l'auteur ; modification et suppression par
@@ -135,12 +141,10 @@ restant triviale.
   participant non affecté (Q25, erreur listant les noms). Puis rattache chaque membre à l'équipe
   de son joueur et passe en `live` avec `started_at`.
 - Plus de `set_my_team` : le joueur ne choisit jamais son équipe (Q15).
-- `delete_my_account()` → purge ordonnée des données de l'utilisateur puis suppression du compte
-  auth (via `auth.admin` dans une Edge Function, ou fonction SQL `security definer` supprimant
-  `auth.users` — à choisir à l'implémentation ; l'Edge Function est la voie documentée).
-- Triggers : création du profil et du joueur lié à l'inscription, `updated_at`, génération du
-  `code` de session,
-  garde "une seule équipe par membre".
+- Suppression de compte : retirée de ce plan (décision PO, 2026-09-16), traitée à part au plan 14
+  (impacts sur les données d'autrui à trancher avant le détail, Q27–Q31).
+- Triggers : création du joueur lié à l'inscription, `updated_at`, génération du `code` de
+  session, garde "une seule équipe par membre".
 
 ## Étapes
 

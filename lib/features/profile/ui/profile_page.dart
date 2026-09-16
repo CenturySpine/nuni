@@ -9,8 +9,8 @@ import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_loading.dart';
 import '../data/profile_repository.dart';
 
-/// My player profile (plan 05): display name and avatar, which are mirrored
-/// onto the linked player when saved.
+/// My player profile (plan 05): display name and avatar. There is no
+/// separate "account" concept to edit -- the player row IS the account.
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
@@ -35,8 +35,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     try {
       await ref
           .read(profileRepositoryProvider)
-          .updateMyProfile(displayName: _displayNameController.text.trim());
-      ref.invalidate(myProfileProvider);
+          .updateMyPlayer(displayName: _displayNameController.text.trim());
       ref.invalidate(myPlayerProvider);
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -55,23 +54,23 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final profileAsync = ref.watch(myProfileProvider);
+    final playerAsync = ref.watch(myPlayerProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.profileTitle)),
-      body: profileAsync.when(
+      body: playerAsync.when(
         loading: () => const NuniLoading(),
         error: (error, _) => Padding(
           padding: const EdgeInsets.all(16),
           child: NuniErrorBanner(
             message: describeError(error, l10n),
-            onRetry: () => ref.invalidate(myProfileProvider),
+            onRetry: () => ref.invalidate(myPlayerProvider),
           ),
         ),
-        data: (profile) {
-          if (_loadedFor != profile.id) {
-            _loadedFor = profile.id;
-            _displayNameController.text = profile.displayName;
+        data: (player) {
+          if (_loadedFor != player.id) {
+            _loadedFor = player.id;
+            _displayNameController.text = player.name;
           }
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -79,10 +78,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               Center(
                 child: CircleAvatar(
                   radius: 40,
-                  backgroundImage: profile.avatarUrl == null
+                  backgroundImage: player.avatarUrl == null
                       ? null
-                      : NetworkImage(profile.avatarUrl!),
-                  child: profile.avatarUrl == null
+                      : NetworkImage(player.avatarUrl!),
+                  child: player.avatarUrl == null
                       ? const Icon(PhosphorIcons.userCircle, size: 40)
                       : null,
                 ),

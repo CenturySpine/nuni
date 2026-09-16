@@ -1,6 +1,7 @@
 -- Triggers (plan 03).
 
--- Profile + linked player created at sign-up (Q24): no client-side onboarding, no "claim" flow.
+-- Linked player created at sign-up (Q24): no client-side onboarding, no "claim" flow. No
+-- separate profile row -- players is the account-facing table too (2026-09-16).
 create or replace function handle_new_user()
 returns trigger
 language plpgsql
@@ -20,11 +21,8 @@ begin
   v_avatar_url := new.raw_user_meta_data ->> 'avatar_url';
   v_locale := coalesce(left(new.raw_user_meta_data ->> 'locale', 2), 'fr');
 
-  insert into profiles (id, display_name, avatar_url, locale)
-  values (new.id, v_display_name, v_avatar_url, v_locale);
-
-  insert into players (name, created_by, user_id)
-  values (v_display_name, new.id, new.id);
+  insert into players (name, avatar_url, locale, created_by, user_id)
+  values (v_display_name, v_avatar_url, v_locale, new.id, new.id);
 
   return new;
 end;
