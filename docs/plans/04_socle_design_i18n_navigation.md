@@ -14,8 +14,20 @@ Plan 02. Peut se dérouler en parallèle du plan 03.
 
 - Logo (Q23) : widget `NuniLogo` reproduisant `web/icons/nuni_logo.svg` ("NU" sur "NI", blocs
   de même largeur et hauteur, deux couleurs neutres), utilisé sur l'écran de connexion et
-  l'en-tête. Construction en formes Flutter (CustomPainter) ou rendu du SVG via `flutter_svg` :
-  à choisir ici selon la simplicité, le SVG restant la source unique.
+  l'en-tête. Construit en formes Flutter (`CustomPainter`), pas de rendu SVG. Toujours affiché
+  sur sa tuile (fond blanc cassé `#F5F5F5`, coins arrondis), identique à l'icône d'app — jamais
+  le glyphe nu sur le fond de la page (décision PO, 2026-09-15). Le nom de l'app et le sous-titre
+  ne sont jamais répétés en texte à côté du logo : la tuile porte déjà le nom (décision PO,
+  2026-09-16, écran de connexion et "À propos").
+- Icônes : Phosphor Icons (licence MIT), même famille que Ridgegear
+  (`src/components/ui/Icon.tsx`, `@phosphor-icons/web`) — décision PO, 2026-09-15. Le paquet
+  `phosphor_flutter` ne compile pas sur cette version de Flutter (`IconData` est une `final
+  class`, le paquet l'étend) ; les deux polices utilisées (Regular, Fill) sont donc copiées
+  directement dans `assets/fonts/` avec les constantes correspondantes dans
+  `core/theme/phosphor_icons.dart`, sans dépendre du paquet.
+- Écran de connexion (`/login`, hors barre du bas) et onglet Accueil (dans la barre du bas) sont
+  deux pages distinctes : l'onglet Accueil n'affiche pas la marque (logo/nom), seulement son
+  propre contenu (décision PO, 2026-09-15).
 
 - Un seul thème clair. Pas de mode sombre (sauf demande ultérieure).
 - Q1 et Q1b tranchées : cinq variantes de palette documentées dans `docs/design/PALETTE.md`

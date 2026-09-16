@@ -52,7 +52,8 @@ liées. Les questions sont centralisées dans [QUESTIONS_PO.md](../QUESTIONS_PO.
 
 1. ☑ Fin d'étape 3 : validation du modèle de données et des règles d'accès (point de non-retour le
    plus coûteux à changer ensuite). Validé par le PO le 2026-09-15.
-2. Fin d'étape 4 : validation visuelle du thème et de la navigation sur téléphone.
+2. ☑ Fin d'étape 4 : validation visuelle du thème et de la navigation sur téléphone. Validé par le
+   PO le 2026-09-16.
 3. Fin d'étape 8 : première session réelle jouée avec plusieurs téléphones.
 4. Fin d'étape 12 : mise en service.
 5. Fin d'étape 13 : anciennes sessions visibles et correctes dans NUNI, retrait de l'ancienne app.
