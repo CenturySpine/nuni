@@ -27,7 +27,7 @@ liées. Les questions sont centralisées dans [QUESTIONS_PO.md](../QUESTIONS_PO.
 | 2 ✅ | Bootstrap du projet Flutter web + dépôt + CI | [02_bootstrap_projet_flutter_ci.md](02_bootstrap_projet_flutter_ci.md) | Squelette Flutter web committé sur `main`, `AGENTS.md`, build Vercel (`vercel.json` + script : analyze + test + build web), push direct sur `main` sans PR, premiers commits techniques permettant de relier le projet Vercel au dépôt |
 | 3 | Backend Supabase : projet, schéma, RLS, RPC, stockage, temps réel | [03_supabase_schema_rls_realtime.md](03_supabase_schema_rls_realtime.md) | Projet Supabase `nuni`, migrations versionnées dans le dépôt, schéma cible appliqué, politiques testées |
 | 4 | Socle applicatif : design system minimal, i18n, navigation | [04_socle_design_i18n_navigation.md](04_socle_design_i18n_navigation.md) | Thème unique (palette réduite), EN/FR, coquille de navigation, composants de base |
-| 5 | Authentification, profil, joueur lié | [05_auth_profil_joueur.md](05_auth_profil_joueur.md) | Connexion Google (redirect PWA), onboarding "mon joueur", édition profil, déconnexion, suppression de compte |
+| 5 | Authentification, profil, joueur lié | [05_auth_profil_joueur.md](05_auth_profil_joueur.md) | Connexion Google (redirect PWA), onboarding "mon joueur", édition profil, déconnexion |
 | 6 | Trous géolocalisés | [06_trous_geoloc.md](06_trous_geoloc.md) | CRUD trous (public/privé, position de départ, photos), recherche par proximité |
 | 7 | Création de session et équipes | [07_creation_session_equipes.md](07_creation_session_equipes.md) | Ville auto-détectée et confirmée, zone libre, mode de scoring, équipes manuelles ou aléatoires, joueurs sélectionnables sans être connectés |
 | 8 | Session en direct : trous joués, saisie collaborative, classement temps réel | [08_session_live_scores_realtime.md](08_session_live_scores_realtime.md) | Écran de session, ajout de trous par proximité, saisie des coups par équipe, classement live, clôture |
@@ -36,6 +36,7 @@ liées. Les questions sont centralisées dans [QUESTIONS_PO.md](../QUESTIONS_PO.
 | 11 | PWA, déploiement Vercel, domaine | [11_pwa_vercel_domaine.md](11_pwa_vercel_domaine.md) | Manifest et icônes NUNI, installation sur l'écran d'accueil, mise à jour douce, déploiement continu sur nuni.centuryspine.org |
 | 12 | Recette et mise en service | [12_recette_migration_mise_en_service.md](12_recette_migration_mise_en_service.md) | Scénarios de recette joués sur mobile, bascule |
 | 13 | Migration des données LsgScores (critique, planifiée en détail après l'étape 12) | [13_migration_donnees_lsgscores.md](13_migration_donnees_lsgscores.md) | Sessions, équipes, joueurs, trous et coups de l'ancienne base importés dans NUNI, vérifiés et consultables dans l'historique |
+| 14 | Suppression de compte (impacts sur les données d'autrui à trancher avant le détail des étapes, Q27–Q31) | [14_suppression_compte.md](14_suppression_compte.md) | Suppression de compte sans casser les sessions, scores et trous partagés avec d'autres utilisateurs |
 
 ## Ordre et dépendances
 
@@ -47,8 +48,10 @@ liées. Les questions sont centralisées dans [QUESTIONS_PO.md](../QUESTIONS_PO.
   projet.
 - 13 est obligatoire mais son plan détaillé n'est rédigé qu'après l'étape 12, quand le modèle cible
   est stabilisé par l'usage. Le schéma de l'étape 3 la prépare (colonnes `legacy_id`).
-- Suppression de compte : retirée du plan 05 (décision PO, 2026-09-16), sujet à part avec ses
-  propres impacts à examiner. Pas encore numérotée ; plan à écrire et positionner plus tard.
+- 14 dépend du plan 5 (compte et joueur lié) mais pas du reste : comme pour 13, le numéro ne fixe
+  pas le moment de l'implémentation. Retirée du plan 05 (décision PO, 2026-09-16) parce que ses
+  impacts sur les données d'autres utilisateurs (Q27–Q31) n'avaient pas été examinés ; son détail
+  n'est écrit qu'une fois ces questions tranchées.
 
 ## Jalons de validation avec le product owner
 

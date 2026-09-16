@@ -7,8 +7,7 @@ joueur" sans référentiel de ville, édition du profil, déconnexion.
 
 La suppression de compte est retirée de ce plan (décision PO, 2026-09-16) : sujet à part entière,
 avec ses propres impacts à examiner (sessions et scores d'autrui référençant mon joueur, données
-déjà partagées, etc.), traité dans un plan dédié écrit plus tard. Pas encore numéroté dans
-`00_plan_ensemble.md`.
+déjà partagées, etc.), traité dans [14_suppression_compte.md](14_suppression_compte.md).
 
 ## Prérequis
 

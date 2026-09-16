@@ -333,3 +333,38 @@ Réponse PO (2026-09-14) : FVM retenu.
 Suggestion : FVM (`winget install Leoafarias.FVM`), qui épingle la version Flutter dans le dépôt
 (`.fvmrc`) et garantit la même version en local et en CI. L'archive officielle convient aussi si
 un seul projet Flutter est prévu.
+
+## Suppression de compte (étape 14)
+
+Retirée du plan 05 (décision PO, 2026-09-16) : impacts sur les données d'autres utilisateurs à
+trancher explicitement avant d'implémenter, pas d'hypothèse silencieuse sur ces points-là.
+
+**Q27 ☐ — Que devient mon joueur (`players`) une fois mon compte supprimé, s'il est référencé dans
+les sessions et scores d'autres utilisateurs ?**
+Suggestion : garder la ligne `players`, délier (`user_id = null`), comme un joueur importé de
+LsgScores — préserve l'historique et les scores des autres sans les casser ; le joueur redevient
+non sélectionnable dans une nouvelle session (règle déjà en place pour `user_id` nul).
+
+**Q28 ☐ — Que deviennent les sessions dont je suis propriétaire, y compris celles où d'autres
+personnes ont des scores ?**
+Suggestion : supprimées entièrement (cascade) si je suis seul propriétaire ; si un co-organisateur
+existe (`session_members.role = owner`), la propriété (`sessions.owner_id`) lui est transférée
+automatiquement plutôt que de supprimer l'historique d'autrui.
+
+**Q29 ☐ — Que deviennent les trous (`holes`) que j'ai créés, notamment les trous publics utilisés
+par d'autres dans leurs sessions passées ?**
+Suggestion : conservés (utiles à l'historique et aux exports d'autres joueurs), propriétaire
+délié — nécessite de rendre `holes.owner_id` nullable (changement de schéma).
+
+**Q30 ☐ — Une session en direct (`status = live`) que je possède, avec d'autres joueurs en train
+d'y jouer au moment de la suppression de mon compte : bloquer, avertir, ou traiter comme les
+autres sessions ?**
+Suggestion : bloquer la suppression tant qu'une session en direct m'appartient ("terminez ou
+supprimez vos sessions en direct d'abord"), pour ne pas couper une partie en cours pour les autres
+participants.
+
+**Q31 ☐ — Exécution technique : fonction SQL `security definer` supprimant directement
+`auth.users`, ou Edge Function utilisant l'API admin de Supabase ?**
+Suggestion : Edge Function (déjà documentée comme la voie recommandée au plan 03) — supprimer un
+utilisateur `auth` depuis une fonction SQL exige des privilèges que Postgres n'expose pas
+proprement ; l'API admin de Supabase (rôle `service_role`) est le chemin prévu pour ça.
