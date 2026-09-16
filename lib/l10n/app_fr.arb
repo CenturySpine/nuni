@@ -14,7 +14,8 @@
   "loginSignInWithGoogle": "Se connecter avec Google",
 
   "profileTitle": "Profil",
-  "profileComingSoon": "Le profil arrive dans une prochaine mise à jour.",
+  "profileDisplayNameLabel": "Nom affiché",
+  "profileSaved": "Profil mis à jour.",
 
   "commonCancel": "Annuler",
   "commonConfirm": "Confirmer",
@@ -22,6 +23,12 @@
   "commonDelete": "Supprimer",
   "commonRetry": "Réessayer",
   "commonClose": "Fermer",
+
+  "errorGeneric": "Une erreur est survenue. Réessayez.",
+  "errorSessionExpired": "Votre session a expiré. Reconnectez-vous.",
+  "errorAccessDenied": "Vous n'avez pas accès à ce contenu.",
+
+  "settingsSignOut": "Se déconnecter",
 
   "notFoundTitle": "Page introuvable",
   "notFoundMessage": "Cette page n'existe pas ou a été déplacée.",
@@ -51,7 +58,7 @@
   "privacyRetentionHeading": "Durée",
   "privacyRetentionBody": "Tant que votre compte existe.",
   "privacyRightsHeading": "Vos droits",
-  "privacyRightsBody": "Accès, rectification et effacement. Supprimez votre compte et ses données à tout moment depuis l'app (« Supprimer mon compte »), ou écrivez à bruno.chappe@gmail.com.",
+  "privacyRightsBody": "Accès, rectification et effacement : écrivez à bruno.chappe@gmail.com. La suppression de compte depuis l'app est prévue mais pas encore construite.",
   "privacyTrackingHeading": "Aucun suivi",
   "privacyTrackingBody": "Aucune analytique, aucune publicité, aucun suivi. Les cookies se limitent à garder votre connexion active.",
 

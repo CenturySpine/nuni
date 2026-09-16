@@ -8,6 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../core/l10n/locale_controller.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../auth/data/auth_repository.dart';
 import '../../../shared/nuni_legal_footer.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -60,6 +61,12 @@ class SettingsPage extends ConsumerWidget {
               builder: (context, snapshot) =>
                   Text(snapshot.data?.version ?? ''),
             ),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(PhosphorIcons.signOut),
+            title: Text(l10n.settingsSignOut),
+            onTap: () => ref.read(authRepositoryProvider).signOut(),
           ),
           const Divider(),
           const Padding(

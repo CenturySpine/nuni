@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,16 +14,39 @@ import '../../features/legal/ui/legal_page.dart';
 import '../../features/legal/ui/privacy_page.dart';
 import '../../features/profile/ui/profile_page.dart';
 import '../../features/settings/ui/settings_page.dart';
+import '../supabase/supabase_providers.dart';
 import '../theme/theme_demo_page.dart';
 import 'app_shell.dart';
 import 'auth_guard.dart';
 import 'not_found_page.dart';
 
+/// Turns a stream into a [Listenable] for [GoRouter.refreshListenable]: the
+/// `GoRouterRefreshStream` helper that used to ship with go_router for
+/// exactly this was removed from the package (v5.0.0, 2022) in favour of
+/// letting apps write their own -- this is that standard ~10-line adapter.
+class _GoRouterRefreshStream extends ChangeNotifier {
+  _GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.listen((_) => notifyListeners());
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
+
 /// Routes not wired yet: `/session/new`, `/session/:id`,
 /// `/session/:id/hole/:playedHoleId`, `/history/:id`, `/holes/new`,
 /// `/holes/:id` -- added by the plans that build those screens (06-10).
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final authChanges = ref.watch(supabaseClientProvider).auth.onAuthStateChange;
   return GoRouter(
+    // Re-evaluates `redirect` on sign-in/sign-out, not just on navigation.
+    refreshListenable: _GoRouterRefreshStream(authChanges),
     redirect: authGuard(ref),
     errorBuilder: (context, state) => const NotFoundPage(),
     routes: [

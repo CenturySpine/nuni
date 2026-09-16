@@ -31,4 +31,5 @@ abstract final class PhosphorIcons {
   static const arrowClockwise = IconData(0xe036, fontFamily: _regular);
   static const signpost = IconData(0xe89c, fontFamily: _regular);
   static const googleLogo = IconData(0xe292, fontFamily: _regular);
+  static const signOut = IconData(0xe42a, fontFamily: _regular);
 }

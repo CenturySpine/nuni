@@ -19,7 +19,8 @@
   "loginSignInWithGoogle": "Sign in with Google",
 
   "profileTitle": "Profile",
-  "profileComingSoon": "Profile is coming in a future update.",
+  "profileDisplayNameLabel": "Display name",
+  "profileSaved": "Profile updated.",
 
   "commonCancel": "Cancel",
   "commonConfirm": "Confirm",
@@ -27,6 +28,12 @@
   "commonDelete": "Delete",
   "commonRetry": "Retry",
   "commonClose": "Close",
+
+  "errorGeneric": "Something went wrong. Try again.",
+  "errorSessionExpired": "Your session has expired. Sign in again.",
+  "errorAccessDenied": "You don't have access to this.",
+
+  "settingsSignOut": "Sign out",
 
   "notFoundTitle": "Page not found",
   "notFoundMessage": "This page does not exist or has moved.",
@@ -56,7 +63,7 @@
   "privacyRetentionHeading": "How long",
   "privacyRetentionBody": "As long as your account exists.",
   "privacyRightsHeading": "Your rights",
-  "privacyRightsBody": "Access, correction and erasure. Delete your account and its data anytime from the app (\"Delete my account\"), or write to bruno.chappe@gmail.com.",
+  "privacyRightsBody": "Access, correction and erasure: write to bruno.chappe@gmail.com. In-app account deletion is planned but not built yet.",
   "privacyTrackingHeading": "No tracking",
   "privacyTrackingBody": "No analytics, no advertising, no tracking. Cookies are limited to keeping you signed in.",
 

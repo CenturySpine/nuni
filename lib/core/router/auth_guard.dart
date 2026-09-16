@@ -1,13 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../supabase/supabase_providers.dart';
 import 'pending_join_code.dart';
 
-/// Redirects `/join/:code` visitors to `/login` after remembering their code
-/// (plan 09 picks it back up once the user is signed in). Stub until plan 05
-/// wires real auth state: every other route is reachable for now.
-/// TODO(plan 05): redirect an unauthenticated visitor to '/login' for every
-/// route except '/login', '/legal', '/privacy', '/about'.
+const _publicPaths = {'/login', '/legal', '/privacy', '/about'};
+
+/// Redirects signed-out visitors to `/login` for every route except the
+/// public ones; redirects a signed-in visitor away from `/login`.
+/// `/join/:code` is remembered then redirected to `/login` regardless of
+/// auth state (plan 09 picks it back up once signed in).
 GoRouterRedirect authGuard(Ref ref) {
   return (context, state) {
     final path = state.matchedLocation;
@@ -19,6 +21,11 @@ GoRouterRedirect authGuard(Ref ref) {
       return '/login';
     }
 
+    final isSignedIn =
+        ref.read(supabaseClientProvider).auth.currentSession != null;
+
+    if (!isSignedIn && !_publicPaths.contains(path)) return '/login';
+    if (isSignedIn && path == '/login') return '/';
     return null;
   };
 }
