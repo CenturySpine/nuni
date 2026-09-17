@@ -24,6 +24,7 @@ class PlayedHoleCard extends StatelessWidget {
     required this.scoringMode,
     required this.canEditTeam,
     required this.playerNameForUserId,
+    required this.onScoreSubmit,
     this.highlighted = false,
     this.onDelete,
   });
@@ -33,6 +34,8 @@ class PlayedHoleCard extends StatelessWidget {
   final ScoringMode scoringMode;
   final bool Function(String teamId) canEditTeam;
   final String? Function(String userId) playerNameForUserId;
+  final Future<void> Function(String playedHoleId, String teamId, int value)
+  onScoreSubmit;
   final bool highlighted;
   final VoidCallback? onDelete;
 
@@ -101,14 +104,17 @@ class PlayedHoleCard extends StatelessWidget {
                     : playerNameForUserId(
                         playedHole.scoreFor(team.id)!.updatedBy!,
                       ),
-                onTap: () => showScoreEntrySheet(
-                  context,
-                  playedHoleId: playedHole.id,
-                  teamId: team.id,
-                  teamLabel: team.playerNames(),
-                  isPoints: isPoints,
-                  initialValue: playedHole.scoreFor(team.id)?.value,
-                ),
+                onTap: () async {
+                  final value = await showScoreEntrySheet(
+                    context,
+                    teamLabel: team.playerNames(),
+                    isPoints: isPoints,
+                    initialValue: playedHole.scoreFor(team.id)?.value,
+                  );
+                  if (value != null) {
+                    await onScoreSubmit(playedHole.id, team.id, value);
+                  }
+                },
               ),
           ],
         ),

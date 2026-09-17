@@ -122,6 +122,17 @@ class _LiveViewState extends ConsumerState<_LiveView> {
     }
   }
 
+  Future<void> _submitScore(String playedHoleId, String teamId, int value) =>
+      _run(
+        () => ref
+            .read(liveRepositoryProvider)
+            .upsertScore(
+              playedHoleId: playedHoleId,
+              teamId: teamId,
+              value: value,
+            ),
+      );
+
   Future<void> _deleteHole(String playedHoleId) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await NuniConfirmDialog.show(
@@ -278,6 +289,7 @@ class _LiveViewState extends ConsumerState<_LiveView> {
                   canEditTeam: (teamId) => isOwner || myTeamId == teamId,
                   playerNameForUserId: (userId) =>
                       snapshot.memberFor(userId)?.playerName,
+                  onScoreSubmit: _submitScore,
                   highlighted: entry.key == 0,
                   onDelete: isOwner
                       ? (_busy ? null : () => _deleteHole(entry.value.id))
