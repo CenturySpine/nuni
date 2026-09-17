@@ -99,10 +99,21 @@ réelle).
 
 ## Notes d'implémentation (2026-09-17)
 
-Code écrit (étapes 1 à 5 : domaine, migration, data, ui, tests calculateurs + widget de saisie) ;
-`flutter analyze`, `flutter test` (71 tests) et `dart format` verts. Étape 6 (test de charge à 4
-téléphones) et le jalon de validation 3 restent à faire par le PO, et supposent d'abord la
-reconstruction du schéma distant (voir point bloquant ci-dessous).
+Étapes 1 à 5 faites (domaine, migration, data, ui, tests calculateurs + widget de saisie).
+Schéma distant reconstruit (AGENTS.md §8, avec accord du PO) et `supabase/backfill_players.sql`
+rejoué. Parcours complet vérifié dans le navigateur avec le compte du PO : création de session,
+démarrage, ajout d'un trou, saisie de score, classement, invitation, membres, clôture, écran
+"terminée", retour sur une session terminée depuis l'accueil. `flutter analyze`, `flutter test`
+(71 tests) et `dart format` verts. Poussé sur `main` (commit `26cdd16`).
+
+Retour PO (2026-09-17) : la feuille de saisie restait ouverte après avoir touché un score. Corrigé
+en déplaçant l'enregistrement (upsert réseau) de la feuille vers son appelant (`PlayedHoleCard` /
+`SessionLivePage`) : la feuille ne fait plus que renvoyer la valeur choisie et se ferme aussitôt,
+même pattern que `add_participant_sheet.dart`. Revérifié dans le navigateur (fermeture immédiate,
+score bien enregistré) et par les tests (71/71). Poussé sur `main` (commit `b4883dd`).
+
+Étape 6 (test de charge à 4 téléphones) et le jalon de validation 3 (première session réelle) :
+validés par le PO (2026-09-17), tests mobile + web faits de son côté. Plan 08 terminé.
 
 Points où le texte du plan laissait un doute, tranchés par la technique faute de mieux, à corriger
 si la lecture est mauvaise une fois vu à l'écran :
@@ -118,9 +129,3 @@ si la lecture est mauvaise une fois vu à l'écran :
   un échec réseau affiche un message d'erreur au lieu de refuser la saisie par anticipation. Le
   lecture seule "dernières données connues" est déjà le comportement par défaut (aucune requête ne
   peut aboutir hors ligne, l'écran garde donc l'instantané précédent).
-
-Point bloquant pour la suite : les migrations modifiées (colonnes `session_id` sur `scores` et
-`team_players`, RPC `session_snapshot` et `add_played_hole`) éditent des fichiers déjà appliqués
-sur le projet distant `nuni` — comme le prévoit AGENTS.md §8, cela exige de reconstruire le schéma
-distant depuis zéro (procédure `docs/DEV.md`), à ne lancer qu'après accord explicite du PO. Rien
-n'a été testé dans le navigateur ni poussé sur le projet distant.
