@@ -125,6 +125,10 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
         await repo.attachWeather(session.id, weather);
       }
 
+      // Home's "Mes sessions en cours" list is a plain Future provider kept
+      // alive by the bottom-nav IndexedStack (never disposed by navigating
+      // away), so it won't pick up the new session on its own.
+      ref.invalidate(myOngoingSessionsProvider);
       if (mounted) context.go('/session/${session.id}');
     } catch (error) {
       if (mounted) {

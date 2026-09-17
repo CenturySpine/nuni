@@ -9,6 +9,7 @@ import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_card.dart';
+import '../../../shared/nuni_confirm_dialog.dart';
 import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_loading.dart';
@@ -133,6 +134,14 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
     final l10n = AppLocalizations.of(context)!;
     try {
       await action();
+      // Don't rely solely on realtime to reflect our own write: found in
+      // testing, a multi-row update (forming a team touches two
+      // `session_members` rows) can have its events arrive interleaved with
+      // the room's own debounced refresh, so a live view sometimes settled
+      // on a snapshot caught between the two rows landing. Invalidating
+      // here re-subscribes from scratch, which always re-reads the fully
+      // committed state -- realtime still covers changes made by others.
+      ref.invalidate(sessionRoomProvider(widget.sessionId));
     } on UnevenPlayerCountException {
       _showSnack(l10n.sessionsRoomRandomDrawOddError);
     } on NotEnoughPlayersException {
@@ -225,8 +234,35 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
     // RLS drops access the moment the membership row is gone; the realtime
     // room stream won't necessarily keep delivering updates past that
     // point, so leave the page explicitly instead of waiting for it to
-    // reflect the departure.
+    // reflect the departure. Home's own list is a plain Future provider
+    // kept alive by the bottom-nav IndexedStack, so it needs an explicit
+    // invalidation too or it keeps showing the session we just left.
+    ref.invalidate(myOngoingSessionsProvider);
     if (mounted) context.go('/');
+  }
+
+  Future<void> _delete() async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await NuniConfirmDialog.show(
+      context,
+      title: l10n.sessionsRoomDeleteConfirmTitle,
+      message: l10n.sessionsRoomDeleteConfirmMessage,
+      confirmLabel: l10n.commonDelete,
+      danger: true,
+    );
+    if (!confirmed || !mounted) return;
+
+    setState(() => _busy = true);
+    try {
+      await ref
+          .read(sessionsRepositoryProvider)
+          .deleteSession(widget.sessionId);
+      ref.invalidate(myOngoingSessionsProvider);
+      if (mounted) context.go('/');
+    } catch (error) {
+      _showSnack(describeError(error, l10n));
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _start() async {
@@ -234,6 +270,8 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
     setState(() => _busy = true);
     try {
       await ref.read(sessionsRepositoryProvider).startSession(widget.sessionId);
+      // Refreshes the "En préparation" -> "En direct" label on home's list.
+      ref.invalidate(myOngoingSessionsProvider);
     } on PostgrestException catch (error) {
       _showSnack(_startErrorMessage(error, l10n));
     } catch (error) {
@@ -386,6 +424,13 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
                 ],
               ),
             ],
+            const SizedBox(height: 24),
+            NuniButton(
+              variant: NuniButtonVariant.danger,
+              icon: PhosphorIcons.trash,
+              label: l10n.sessionsRoomDeleteSession,
+              onPressed: _busy ? null : _delete,
+            ),
           ],
         ],
       ),

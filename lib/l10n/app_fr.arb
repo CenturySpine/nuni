@@ -72,6 +72,9 @@
   "sessionsRoomBackHome": "Retour à l'accueil",
   "sessionsRoomLeave": "Quitter la session",
   "sessionsRoomPromote": "Nommer co-organisateur",
+  "sessionsRoomDeleteSession": "Supprimer la session",
+  "sessionsRoomDeleteConfirmTitle": "Supprimer cette session ?",
+  "sessionsRoomDeleteConfirmMessage": "Cette action est définitive : la session, ses équipes et les scores éventuels sont supprimés pour tout le monde.",
 
   "sessionsInviteTitle": "Inviter",
   "sessionsInviteCopyLink": "Copier le lien",

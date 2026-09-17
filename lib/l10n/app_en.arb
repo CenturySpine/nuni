@@ -81,6 +81,9 @@
   "sessionsRoomBackHome": "Back to home",
   "sessionsRoomLeave": "Leave the session",
   "sessionsRoomPromote": "Make co-organizer",
+  "sessionsRoomDeleteSession": "Delete the session",
+  "sessionsRoomDeleteConfirmTitle": "Delete this session?",
+  "sessionsRoomDeleteConfirmMessage": "This cannot be undone: the session, its teams and any scores are permanently deleted for everyone.",
 
   "sessionsInviteTitle": "Invite",
   "sessionsInviteCopyLink": "Copy link",

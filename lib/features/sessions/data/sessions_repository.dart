@@ -75,6 +75,12 @@ class SessionsRepository {
     return Session.fromJson(row);
   }
 
+  /// Deletes a session outright (owner-only -- RLS `sessions_delete_owner`,
+  /// no status restriction). Cascades to teams, team_players,
+  /// session_members, played_holes, scores and session_photos.
+  Future<void> deleteSession(String sessionId) =>
+      _client.from('sessions').delete().eq('id', sessionId);
+
   /// Leaves a session the caller is a member of (self-service, draft only --
   /// RLS `session_members_self_leave_draft`).
   Future<void> leaveSession(String sessionId) async {
@@ -358,31 +364,52 @@ class SessionsRepository {
       _client.from('teams').delete().eq('id', teamId);
 
   /// A live view of the waiting room: the session row, its participant pool
-  /// and its teams, each from its own session-filtered realtime stream
-  /// (plan 03's "jamais sur une table entière" rule), combined with a
-  /// lookup of the pool's linked players (re-fetched only for ids not seen
-  /// yet).
+  /// and its teams. Each of the three tables has its own session-filtered
+  /// realtime subscription (plan 03's "jamais sur une table entière" rule),
+  /// but the subscription is used only as a "something changed" signal --
+  /// on any event, all three are freshly re-selected and the snapshot is
+  /// rebuilt from that. Trusting `.stream()`'s own cached row list directly
+  /// (the first approach here) surfaced two distinct bugs in testing: a
+  /// duplicated row on `session_members` (composite primary key) and a
+  /// deleted `teams` row that kept reappearing after a delete -- re-fetching
+  /// plain `select()`s on every change sidesteps that caching entirely
+  /// rather than trying to patch each symptom.
   Stream<SessionRoomSnapshot> watchRoom(String sessionId) {
     late final StreamController<SessionRoomSnapshot> controller;
-    StreamSubscription<Map<String, dynamic>>? sessionSub;
+    StreamSubscription<List<Map<String, dynamic>>>? sessionSub;
     StreamSubscription<List<Map<String, dynamic>>>? membersSub;
     StreamSubscription<List<Map<String, dynamic>>>? teamsSub;
 
-    Map<String, dynamic>? sessionRow;
-    var memberRows = <Map<String, dynamic>>[];
-    var teamRows = <Map<String, dynamic>>[];
     final playersByUserId = <String, Player>{};
-    var isEmitting = false;
+    var isRefreshing = false;
     var pending = false;
 
-    Future<void> emit() async {
-      if (sessionRow == null) return;
-      if (isEmitting) {
+    Future<void> refresh() async {
+      if (isRefreshing) {
         pending = true;
         return;
       }
-      isEmitting = true;
+      isRefreshing = true;
       try {
+        final sessionRow = await _client
+            .from('sessions')
+            .select()
+            .eq('id', sessionId)
+            .maybeSingle();
+        if (sessionRow == null) {
+          if (!controller.isClosed) controller.close();
+          return;
+        }
+
+        final memberRows = await _client
+            .from('session_members')
+            .select()
+            .eq('session_id', sessionId);
+        final teamRows = await _client
+            .from('teams')
+            .select()
+            .eq('session_id', sessionId);
+
         final userIds = {
           for (final row in memberRows) row['user_id'] as String,
         };
@@ -398,11 +425,12 @@ class SessionsRepository {
           }
         }
         if (controller.isClosed) return;
+
         final teams = [for (final row in teamRows) Team.fromJson(row)]
           ..sort((a, b) => a.position.compareTo(b.position));
         controller.add(
           SessionRoomSnapshot(
-            session: Session.fromJson(sessionRow!),
+            session: Session.fromJson(sessionRow),
             members: [
               for (final row in memberRows) SessionMember.fromJson(row),
             ],
@@ -413,10 +441,10 @@ class SessionsRepository {
       } catch (error, stackTrace) {
         if (!controller.isClosed) controller.addError(error, stackTrace);
       } finally {
-        isEmitting = false;
+        isRefreshing = false;
         if (pending) {
           pending = false;
-          unawaited(emit());
+          unawaited(refresh());
         }
       }
     }
@@ -427,27 +455,17 @@ class SessionsRepository {
             .from('sessions')
             .stream(primaryKey: ['id'])
             .eq('id', sessionId)
-            .map((rows) => rows.first)
-            .listen((row) {
-              sessionRow = row;
-              unawaited(emit());
-            }, onError: controller.addError);
+            .listen((_) => unawaited(refresh()), onError: controller.addError);
         membersSub = _client
             .from('session_members')
             .stream(primaryKey: ['session_id', 'user_id'])
             .eq('session_id', sessionId)
-            .listen((rows) {
-              memberRows = _dedupeBy(rows, (row) => row['user_id'] as String);
-              unawaited(emit());
-            }, onError: controller.addError);
+            .listen((_) => unawaited(refresh()), onError: controller.addError);
         teamsSub = _client
             .from('teams')
             .stream(primaryKey: ['id'])
             .eq('session_id', sessionId)
-            .listen((rows) {
-              teamRows = _dedupeBy(rows, (row) => row['id'] as String);
-              unawaited(emit());
-            }, onError: controller.addError);
+            .listen((_) => unawaited(refresh()), onError: controller.addError);
       },
       onCancel: () {
         unawaited(sessionSub?.cancel());
@@ -458,22 +476,6 @@ class SessionsRepository {
 
     return controller.stream;
   }
-}
-
-/// Keeps the last row per key. Defends against a duplicate seen in testing
-/// where `.stream()` on a composite-primary-key table (`session_members`)
-/// occasionally emitted the same row twice in one snapshot -- the database
-/// itself was verified to hold a single row, so this is a client-side
-/// safety net, not a workaround for real duplicate data.
-List<Map<String, dynamic>> _dedupeBy(
-  List<Map<String, dynamic>> rows,
-  String Function(Map<String, dynamic>) key,
-) {
-  final byKey = <String, Map<String, dynamic>>{};
-  for (final row in rows) {
-    byKey[key(row)] = row;
-  }
-  return byKey.values.toList();
 }
 
 final sessionsRepositoryProvider = Provider<SessionsRepository>(

@@ -44,6 +44,10 @@ class _JoinPageState extends ConsumerState<JoinPage> {
       final session = await ref
           .read(sessionsRepositoryProvider)
           .joinByCode(widget.code);
+      // Home's "Mes sessions en cours" list is a plain Future provider kept
+      // alive by the bottom-nav IndexedStack, so it won't pick up this
+      // membership on its own.
+      ref.invalidate(myOngoingSessionsProvider);
       if (mounted) context.go('/session/${session.id}');
     } on PostgrestException catch (error) {
       if (!mounted) return;
