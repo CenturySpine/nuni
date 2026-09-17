@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/errors/app_error_message.dart';
 import '../../../core/supabase/supabase_providers.dart';
 import '../../../core/theme/phosphor_icons.dart';
+import '../../../core/weather/weather_client.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_card.dart';
@@ -260,15 +263,34 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _busy = true);
     try {
-      await ref.read(sessionsRepositoryProvider).startSession(widget.sessionId);
+      final repo = ref.read(sessionsRepositoryProvider);
+      await repo.startSession(widget.sessionId);
       // Refreshes the "En préparation" -> "En direct" label on home's list.
       ref.invalidate(myOngoingSessionsProvider);
+      unawaited(_captureWeather(repo));
     } on PostgrestException catch (error) {
       _showSnack(_startErrorMessage(error, l10n));
     } catch (error) {
       _showSnack(describeError(error, l10n));
     } finally {
       if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  /// Captured here rather than at creation (fixed 2026-09-17): a session can
+  /// be prepared well in advance of being played (Q26 "cas 1"), so the
+  /// weather that matters is the one at kick-off, not at creation time.
+  /// Best-effort and silent, same as the weather client's own contract --
+  /// doesn't block or report failure on the "Démarrer" action.
+  Future<void> _captureWeather(SessionsRepository repo) async {
+    final lat = widget.room.session.locationLat;
+    final lng = widget.room.session.locationLng;
+    if (lat == null || lng == null) return;
+    final weather = await ref
+        .read(weatherClientProvider)
+        .fetch(lat: lat, lng: lng);
+    if (weather != null) {
+      await repo.attachWeather(widget.sessionId, weather);
     }
   }
 

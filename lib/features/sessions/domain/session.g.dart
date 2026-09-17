@@ -19,6 +19,8 @@ _Session _$SessionFromJson(Map<String, dynamic> json) => _Session(
   ),
   city: json['city'] as String?,
   zone: json['zone'] as String?,
+  locationLat: (json['location_lat'] as num?)?.toDouble(),
+  locationLng: (json['location_lng'] as num?)?.toDouble(),
   createdAt: DateTime.parse(json['created_at'] as String),
   startedAt: json['started_at'] == null
       ? null
@@ -38,6 +40,8 @@ Map<String, dynamic> _$SessionToJson(_Session instance) => <String, dynamic>{
   'ranking_direction': _$RankingDirectionEnumMap[instance.rankingDirection]!,
   'city': instance.city,
   'zone': instance.zone,
+  'location_lat': instance.locationLat,
+  'location_lng': instance.locationLng,
   'created_at': instance.createdAt.toIso8601String(),
   'started_at': instance.startedAt?.toIso8601String(),
   'ended_at': instance.endedAt?.toIso8601String(),

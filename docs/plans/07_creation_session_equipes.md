@@ -38,8 +38,10 @@ Plans 05 et 06 (géolocalisation partagée).
   haut gagne / Le plus bas gagne" (Q7b, défaut : le plus haut). Le dernier choix est proposé par
   défaut. Pour les trois autres modes, `ranking_direction` est déduit côté client (Q34) : Stroke
   Play `asc`, Match Play et Redistribution `desc`.
-- Météo : appel Open‑Meteo (sans clé, CORS ouvert) à la création si la position est connue ;
-  stockée en `weather` (température, vent, code). Échec silencieux.
+- Météo : appel Open‑Meteo (sans clé, CORS ouvert) au **démarrage** de la session (pas à la
+  création — corrigé le 2026-09-17 : une session peut être préparée à l'avance, Q26 "cas 1", la
+  météo qui compte est celle du moment joué) si la position est connue ; stockée en `weather`
+  (température, vent, code). Échec silencieux.
 - Équipes (composeur, dans la salle d'attente, **mode équipe seulement**) :
   - liste de joueurs = les participants de la session (pool) ; "Ajouter un participant" cherche
     dans tous les joueurs liés à un utilisateur (toute personne connectée au moins une fois, Q24),

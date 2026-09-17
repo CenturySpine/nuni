@@ -55,6 +55,10 @@ create table sessions (
   city text,
   zone text,
   location geography(point, 4326),
+  -- Plain numeric columns PostgREST can return as-is, same reasoning as
+  -- holes.start_lat/start_lng above.
+  location_lat double precision generated always as (st_y(location::geometry)) stored,
+  location_lng double precision generated always as (st_x(location::geometry)) stored,
   started_at timestamptz,
   ended_at timestamptz,
   weather jsonb,

@@ -18,10 +18,16 @@ Plan 08.
   trous joués) en lecture seule, plus la galerie et les actions.
 - Photos : bucket `session-photos`, table `session_photos`, upload multiple (compression client
   comme au plan 06), galerie avec plein écran par balayage, photo de couverture (`cover_photo_id`),
-  suppression. Ajout par tout membre, suppression par l'auteur ou le créateur.
+  suppression. Ajout et suppression réservés au créateur de la session, comme le posent déjà les
+  policies RLS existantes (Q37) — aucune migration à modifier sur ce point. Suppression du fichier
+  dans le bucket faite côté client au moment de la suppression de la photo (Q37), sans Edge
+  Function.
 - Édition (créateur) : date, heure de début, heure de fin (validation : pas dans le futur, fin
-  après début) ; recalcul de la météo historique Open‑Meteo (archive) avec la position de la
-  session si connue. Commentaire libre de session (existait en base dans l'ancienne app sans
+  après début) ; un changement de la date ou de l'heure de **début** seulement (PO, 2026-09-17)
+  recalcule la météo via Open‑Meteo historique (archive) avec la position de la session si connue
+  — la météo capturée au démarrage (plan 07, corrigé) devient fausse si cette date/heure est
+  corrigée après coup ; l'heure de fin seule n'a pas d'effet sur la météo. Commentaire libre de
+  session (existait en base dans l'ancienne app sans
   jamais être saisi ; ici un champ réel).
 - Export PDF : paquet `pdf` (génération pure Dart) + `printing` (téléchargement / partage sur le
   web) ; contenu : en-tête (ville, zone, date, heures, durée, type, mode, météo, commentaire),
@@ -32,7 +38,7 @@ Plan 08.
   téléchargement sur desktop). Variante "sur photo" : même widget superposé à une photo choisie.
   Beaucoup plus simple et fidèle au thème que le dessin sur canvas de l'ancienne app.
 - Suppression d'une session terminée (créateur) avec confirmation forte, cascade base + purge
-  des photos du bucket (Edge Function ou politique de suppression déclenchée).
+  des photos du bucket faite côté client avant la suppression de la session (Q37).
 
 ## Étapes
 
@@ -55,4 +61,4 @@ Plan 08.
 
 ## Questions PO liées
 
-Q16.
+Q16, Q37 (tranchées).

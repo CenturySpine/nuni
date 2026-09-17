@@ -18,6 +18,8 @@ void main() {
         'ranking_direction': 'asc',
         'city': 'Paris',
         'zone': 'Rive gauche',
+        'location_lat': 45.75,
+        'location_lng': 4.85,
         'created_at': '2026-09-16T10:00:00Z',
         'started_at': null,
         'ended_at': null,
@@ -36,6 +38,8 @@ void main() {
       expect(session.rankingDirection, RankingDirection.asc);
       expect(session.city, 'Paris');
       expect(session.zone, 'Rive gauche');
+      expect(session.locationLat, 45.75);
+      expect(session.locationLng, 4.85);
     },
   );
 }

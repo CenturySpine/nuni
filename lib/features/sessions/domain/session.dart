@@ -19,7 +19,9 @@ enum SessionStatus {
 
 /// Mirrors the `sessions` table (plan 03), the fields the waiting room and
 /// creation flow (plan 07) need. `city`/`zone` are read back so the room can
-/// show what the organizer confirmed at creation.
+/// show what the organizer confirmed at creation. `locationLat`/`locationLng`
+/// are generated columns (like `holes.start_lat`/`start_lng`), read back so
+/// `SessionRoomPage` can capture weather at kick-off without re-geolocating.
 @freezed
 abstract class Session with _$Session {
   const factory Session({
@@ -33,6 +35,8 @@ abstract class Session with _$Session {
     required RankingDirection rankingDirection,
     String? city,
     String? zone,
+    @JsonKey(name: 'location_lat') double? locationLat,
+    @JsonKey(name: 'location_lng') double? locationLng,
     @JsonKey(name: 'created_at') required DateTime createdAt,
     @JsonKey(name: 'started_at') DateTime? startedAt,
     @JsonKey(name: 'ended_at') DateTime? endedAt,

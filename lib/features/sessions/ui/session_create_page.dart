@@ -9,8 +9,6 @@ import '../../../core/errors/app_error_message.dart';
 import '../../../core/geocoding/reverse_geocoding_client.dart';
 import '../../../core/location/location_service.dart';
 import '../../../core/theme/phosphor_icons.dart';
-import '../../../core/weather/weather.dart';
-import '../../../core/weather/weather_client.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_chip.dart';
@@ -41,7 +39,6 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
   ScoringMode _scoringMode = ScoringMode.strokePlay;
 
   Position? _position;
-  Weather? _weather;
   bool _creating = false;
 
   @override
@@ -86,11 +83,6 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
       _cityController.text = city;
       _onCityChanged();
     }
-
-    final weather = await ref
-        .read(weatherClientProvider)
-        .fetch(lat: position.latitude, lng: position.longitude);
-    if (mounted) setState(() => _weather = weather);
   }
 
   Future<void> _create() async {
@@ -119,11 +111,6 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
         lat: _position?.latitude,
         lng: _position?.longitude,
       );
-
-      final weather = _weather;
-      if (weather != null) {
-        await repo.attachWeather(session.id, weather);
-      }
 
       // Home's "Mes sessions en cours" list is a plain Future provider kept
       // alive by the bottom-nav IndexedStack (never disposed by navigating

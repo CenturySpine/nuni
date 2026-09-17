@@ -51,9 +51,13 @@ class SessionsRepository {
     return Session.fromJson(row);
   }
 
-  /// Set right after [create] when a position was known (plan 07): a plain
-  /// owner update, not part of `create_session` -- the owner-update RLS
-  /// policy has no status restriction, so this needs no RPC change.
+  /// Set right after [startSession] when the session's position was known
+  /// (fixed 2026-09-17: capturing weather at creation instead of at start
+  /// gave the wrong day's weather for a session prepared in advance, Q26
+  /// "cas 1") -- a plain owner update, not part of `start_session`, since the
+  /// owner-update RLS policy has no status restriction. Also reused by plan
+  /// 10 to recapture weather when the organizer edits the session's start
+  /// date/time after the fact.
   Future<void> attachWeather(String sessionId, Weather weather) => _client
       .from('sessions')
       .update({'weather': weather.toJson()})

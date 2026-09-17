@@ -336,10 +336,25 @@ une classe de bug déjà rencontrée deux fois. Appliquée comme hypothèse (H) 
 
 ## Exports et photos (étape 10)
 
-**Q16 ☐ — Export image : garder la superposition sur une photo prise ou choisie (comme avant) ou
+**Q16 ☑ — Export image : garder la superposition sur une photo prise ou choisie (comme avant) ou
 générer une carte de résultats stylée (sans photo) partageable ?**
 Suggestion : les deux à partir du même composant Flutter rendu en image ; la version "carte de
 résultats" est immédiate et lisible, la version "sur photo" reprend le rendu actuel.
+Réponse PO (2026-09-17) : les deux, confirmé.
+
+**Q37 ☑ — Photos de session : qui peut en ajouter et en supprimer ? Comment purger le bucket de
+stockage quand une photo ou une session entière est supprimée ?**
+Le texte initial du plan 10 proposait "ajout par tout membre, suppression par l'auteur ou le
+créateur", mais le schéma posé au plan 03/06 restreint déjà l'écriture des photos (table
+`session_photos` et bucket `session-photos`) au seul créateur de la session — écart relevé à la
+revue du plan 10.
+Suggestion : garder les policies existantes telles quelles (aucune migration à modifier) ; pour la
+purge, suppression côté client (l'app appelle `storage.remove()` avant/après la suppression de la
+ligne en base), sans Edge Function — pas de nouvelle brique d'infra pour un projet solo, même
+principe que le reste de l'app (aucune autre suppression ne purge le stockage aujourd'hui non
+plus).
+Réponse PO (2026-09-17) : droits conservés au seul créateur de la session (ajout et suppression),
+comme le schéma actuel ; purge côté client, comme suggéré.
 
 ## Hébergement et mise à jour (étape 11)
 
