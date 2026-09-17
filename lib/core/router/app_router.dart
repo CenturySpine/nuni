@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/ui/auth_page.dart';
+import '../../features/history/ui/history_detail_page.dart';
 import '../../features/history/ui/history_page.dart';
 import '../../features/holes/ui/hole_form_page.dart';
 import '../../features/holes/ui/holes_page.dart';
@@ -42,8 +43,8 @@ class _GoRouterRefreshStream extends ChangeNotifier {
   }
 }
 
-/// Routes not wired yet: `/session/:id/hole/:playedHoleId`, `/history/:id`
-/// -- added by the plans that build those screens (08-10).
+/// Routes not wired yet: `/session/:id/hole/:playedHoleId` -- no plan has
+/// needed a dedicated per-hole screen so far.
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authChanges = ref.watch(supabaseClientProvider).auth.onAuthStateChange;
   return GoRouter(
@@ -123,6 +124,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/session/:id',
         builder: (context, state) =>
             SessionRoomPage(sessionId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/history/:id',
+        builder: (context, state) =>
+            HistoryDetailPage(sessionId: state.pathParameters['id']!),
       ),
       if (kDebugMode)
         GoRoute(

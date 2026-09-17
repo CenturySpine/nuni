@@ -61,4 +61,22 @@ abstract final class PhosphorIcons {
   static const qrCode = IconData(0xe3e6, fontFamily: _regular);
   static const shareNetwork = IconData(0xe408, fontFamily: _regular);
   static const signIn = IconData(0xe428, fontFamily: _regular);
+
+  // Weather (plan 10): mapped from the WMO code Open-Meteo returns, see
+  // `core/weather/weather_icon.dart`.
+  static const sun = IconData(0xe472, fontFamily: _regular);
+  static const cloudSun = IconData(0xe540, fontFamily: _regular);
+  static const cloud = IconData(0xe1aa, fontFamily: _regular);
+  static const cloudFog = IconData(0xe53c, fontFamily: _regular);
+  static const cloudRain = IconData(0xe1b4, fontFamily: _regular);
+  static const cloudLightning = IconData(0xe1b2, fontFamily: _regular);
+  static const cloudSnow = IconData(0xe1b8, fontFamily: _regular);
+
+  static const download = IconData(0xe20a, fontFamily: _regular);
+  static const fileImage = IconData(0xea24, fontFamily: _regular);
+  static const filePdf = IconData(0xe702, fontFamily: _regular);
+  static const funnel = IconData(0xe266, fontFamily: _regular);
+  static const imageSquare = IconData(0xe2cc, fontFamily: _regular);
+  static const star = IconData(0xe46a, fontFamily: _regular);
+  static const starFill = IconData(0xe46a, fontFamily: _fill);
 }

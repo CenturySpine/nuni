@@ -71,12 +71,16 @@ class LiveRepository {
 
   /// "Terminer la session" (owner-only, plan 08): a plain update, same RLS
   /// policy as every other owner write to `sessions` (no status
-  /// restriction).
+  /// restriction). `.toUtc()` matters here (found while testing plan 10's
+  /// duration/export math, 2026-09-17): a plain local `DateTime.now()`
+  /// serializes without a timezone offset, so Postgres read it as if it
+  /// were already UTC -- every session closed before this fix has an
+  /// `ended_at` shifted by the closer's local UTC offset.
   Future<void> closeSession(String sessionId) => _client
       .from('sessions')
       .update({
         'status': 'completed',
-        'ended_at': DateTime.now().toIso8601String(),
+        'ended_at': DateTime.now().toUtc().toIso8601String(),
       })
       .eq('id', sessionId);
 

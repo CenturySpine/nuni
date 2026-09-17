@@ -21,6 +21,12 @@ _Session _$SessionFromJson(Map<String, dynamic> json) => _Session(
   zone: json['zone'] as String?,
   locationLat: (json['location_lat'] as num?)?.toDouble(),
   locationLng: (json['location_lng'] as num?)?.toDouble(),
+  weather: json['weather'] == null
+      ? null
+      : Weather.fromJson(json['weather'] as Map<String, dynamic>),
+  comment: json['comment'] as String?,
+  coverPhotoId: json['cover_photo_id'] as String?,
+  coverPhotoPath: json['cover_photo_path'] as String?,
   createdAt: DateTime.parse(json['created_at'] as String),
   startedAt: json['started_at'] == null
       ? null
@@ -42,6 +48,10 @@ Map<String, dynamic> _$SessionToJson(_Session instance) => <String, dynamic>{
   'zone': instance.zone,
   'location_lat': instance.locationLat,
   'location_lng': instance.locationLng,
+  'weather': instance.weather,
+  'comment': instance.comment,
+  'cover_photo_id': instance.coverPhotoId,
+  'cover_photo_path': instance.coverPhotoPath,
   'created_at': instance.createdAt.toIso8601String(),
   'started_at': instance.startedAt?.toIso8601String(),
   'ended_at': instance.endedAt?.toIso8601String(),

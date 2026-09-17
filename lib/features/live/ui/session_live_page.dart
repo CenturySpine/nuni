@@ -17,6 +17,7 @@ import '../../sessions/domain/ranking_direction.dart';
 import '../../sessions/domain/scoring_mode.dart';
 import '../../sessions/domain/session.dart';
 import '../../sessions/ui/invite_sheet.dart';
+import '../../sessions/ui/scoring_mode_label.dart';
 import '../data/live_repository.dart';
 import '../domain/live_session_snapshot.dart';
 import 'add_played_hole_sheet.dart';
@@ -80,14 +81,6 @@ class SessionLivePage extends ConsumerWidget {
     );
   }
 }
-
-String _scoringModeLabel(AppLocalizations l10n, ScoringMode mode) =>
-    switch (mode) {
-      ScoringMode.strokePlay => l10n.sessionsScoringStrokePlay,
-      ScoringMode.matchPlay => l10n.sessionsScoringMatchPlay,
-      ScoringMode.redistribution => l10n.sessionsScoringRedistribution,
-      ScoringMode.free => l10n.sessionsScoringFree,
-    };
 
 enum _MenuAction { members, end, delete }
 
@@ -212,7 +205,7 @@ class _LiveViewState extends ConsumerState<_LiveView> {
       if (session.startedAt != null)
         DateFormat.yMMMd(locale).format(session.startedAt!),
     ];
-    var scoringLine = _scoringModeLabel(l10n, session.scoringMode);
+    var scoringLine = scoringModeLabel(l10n, session.scoringMode);
     if (session.scoringMode == ScoringMode.free) {
       scoringLine +=
           ' · ${session.rankingDirection == RankingDirection.desc ? l10n.sessionsCreateFreeDirectionHighest : l10n.sessionsCreateFreeDirectionLowest}';
@@ -329,7 +322,7 @@ class _CompletedView extends StatelessWidget {
         message: l10n.sessionsLiveCompletedMessage,
         action: NuniButton(
           label: l10n.sessionsLiveCompletedHistory,
-          onPressed: () => context.go('/history'),
+          onPressed: () => context.go('/history/${snapshot.session.id}'),
         ),
       ),
     );

@@ -270,6 +270,18 @@ as $$
         'ranking_direction', s.ranking_direction,
         'city', s.city,
         'zone', s.zone,
+        'location_lat', s.location_lat,
+        'location_lng', s.location_lng,
+        'weather', s.weather,
+        'comment', s.comment,
+        'cover_photo_id', s.cover_photo_id,
+        -- The cover photo's storage path, not just its id: the client
+        -- builds the public URL from a path (plan 10), and joining it here
+        -- once is simpler than a separate `session_photos` lookup per card
+        -- in the history list.
+        'cover_photo_path', (
+          select sp.storage_path from session_photos sp where sp.id = s.cover_photo_id
+        ),
         'created_at', s.created_at,
         'started_at', s.started_at,
         'ended_at', s.ended_at
@@ -337,6 +349,27 @@ $$;
 
 revoke execute on function session_snapshot(uuid) from public;
 grant execute on function session_snapshot(uuid) to authenticated;
+
+-- Every completed session the caller is a member of, most recently started first, each shaped
+-- exactly like a single `session_snapshot` call (plan 10) -- reused as-is rather than duplicating
+-- the nested query above, so the client parses history entries with the same `LiveSessionSnapshot`
+-- model and the same tested `computeStandings` it already uses for the live screen. Simpler than
+-- a slimmer summary-only shape at this app's scale (a personal history, not a public feed).
+create or replace function history_snapshots()
+returns jsonb
+language sql
+security invoker
+stable
+set search_path = public
+as $$
+  select coalesce(jsonb_agg(session_snapshot(s.id) order by s.started_at desc nulls last), '[]'::jsonb)
+  from sessions s
+  where s.status = 'completed'
+    and is_session_member(s.id);
+$$;
+
+revoke execute on function history_snapshots() from public;
+grant execute on function history_snapshots() to authenticated;
 
 -- Adds a played hole (owner-only -- RLS `played_holes_owner_write`): appends at the next
 -- position. A plain client-side insert would need a "next position" round trip first (like

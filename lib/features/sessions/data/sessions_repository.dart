@@ -68,6 +68,26 @@ class SessionsRepository {
     return Session.fromJson(row);
   }
 
+  /// Edits a completed session's schedule and comment (plan 10, owner-only --
+  /// `sessions_update_owner` has no status restriction). Weather recapture on
+  /// a start date/time change is the caller's job (`WeatherClient.fetchArchive`
+  /// + [attachWeather]), not done here: it needs a network round trip of its
+  /// own and a best-effort failure mode, same as the rest of the app's
+  /// weather handling.
+  Future<void> updateSchedule({
+    required String sessionId,
+    required DateTime startedAt,
+    required DateTime endedAt,
+    String? comment,
+  }) => _client
+      .from('sessions')
+      .update({
+        'started_at': startedAt.toUtc().toIso8601String(),
+        'ended_at': endedAt.toUtc().toIso8601String(),
+        'comment': comment,
+      })
+      .eq('id', sessionId);
+
   /// Join by code (plan 09, Q15): the `join_session` RPC applies the three
   /// cases (attached to a team, dropped in the pool, or refused) and is
   /// idempotent for someone already a member.

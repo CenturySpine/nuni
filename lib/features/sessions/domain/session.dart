@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../core/weather/weather.dart';
 import 'ranking_direction.dart';
 import 'scoring_mode.dart';
 import 'session_kind.dart';
@@ -37,6 +38,12 @@ abstract class Session with _$Session {
     String? zone,
     @JsonKey(name: 'location_lat') double? locationLat,
     @JsonKey(name: 'location_lng') double? locationLng,
+    Weather? weather,
+    String? comment,
+    @JsonKey(name: 'cover_photo_id') String? coverPhotoId,
+    // Only present on a `session_snapshot`/`history_snapshots` row (joined
+    // from `session_photos`), not on a plain `sessions` select (plan 10).
+    @JsonKey(name: 'cover_photo_path') String? coverPhotoPath,
     @JsonKey(name: 'created_at') required DateTime createdAt,
     @JsonKey(name: 'started_at') DateTime? startedAt,
     @JsonKey(name: 'ended_at') DateTime? endedAt,

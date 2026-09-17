@@ -143,7 +143,11 @@ class _SessionCard extends StatelessWidget {
         : l10n.homeRolePlayer;
 
     return NuniCard(
-      onTap: () => context.push('/session/${session.id}'),
+      onTap: () => context.push(
+        session.status == SessionStatus.completed
+            ? '/history/${session.id}'
+            : '/session/${session.id}',
+      ),
       child: Row(
         children: [
           Icon(

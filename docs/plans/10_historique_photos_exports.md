@@ -62,3 +62,36 @@ Plan 08.
 ## Questions PO liées
 
 Q16, Q37 (tranchées).
+
+## Notes d'implémentation (2026-09-17)
+
+Toutes les étapes faites : paquets (`pdf`, `printing`, `uuid`, `web` en direct),
+`features/history/` (liste, détail, édition, galerie), `features/exports/` (modèle d'export,
+générateur PDF, carte de résultats, capture image, partage/téléchargement). `session_snapshot`
+étendu (météo, commentaire, photo de couverture) et nouvelle RPC `history_snapshots` qui le
+réutilise tel quel pour chaque session terminée, plutôt que dupliquer la requête. Détail
+`/history/:id` : mêmes composants que la session en direct (`RankingCard`, `PlayedHoleCard`) en
+lecture seule. `flutter analyze`, `dart format` et 81 tests verts (calculateurs déjà couverts par
+le plan 08 ; nouveaux : validation des horaires, modèle d'export, génération PDF). Schéma distant
+reconstruit et testé en direct dans le navigateur : création → démarrage → saisie → clôture →
+détail → édition (commentaire seul, puis changement d'heure de début) → export PDF → export image
+→ suppression.
+
+Deux bugs réels trouvés et corrigés pendant ce test, tous deux hors du périmètre strict du plan 10
+mais découverts par lui :
+- `closeSession` (plan 08, `live_repository.dart`) enregistrait `ended_at` avec l'heure locale du
+  navigateur sans conversion UTC : Postgres la lisait comme si elle était déjà UTC, décalant la
+  valeur de l'écart de fuseau du poste qui clôture la session. Corrigé (`.toUtc()`). Sans effet sur
+  les sessions déjà closes avant ce correctif (leur `ended_at` reste faussé ; aucune n'est une
+  vraie donnée à ce stade).
+- La feuille d'édition comparait l'heure de début tapée par l'utilisateur (précision à la minute)
+  à la valeur brute de la base (précision à la milliseconde) pour décider si la météo devait être
+  recalculée : cet écart de précision déclenchait un recalcul à chaque sauvegarde, même sans
+  changement réel. Corrigé (comparaison tronquée à la minute des deux côtés). Revérifié : un
+  enregistrement sans toucher aux horaires laisse la météo intacte ; un changement d'heure de
+  début la recalcule.
+
+Limite de vérification : l'upload de photos n'a pas pu être testé dans le navigateur automatisé
+(sélecteur de fichier natif, hors de portée des outils de ce test) ; le partage/téléchargement de
+l'image et du PDF n'a montré aucune erreur mais je n'ai pas pu confirmer la réception réelle du
+fichier en environnement automatisé. À vérifier par toi sur un vrai appareil.
