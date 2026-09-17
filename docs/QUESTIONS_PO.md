@@ -298,6 +298,42 @@ ces participants. Une seule notion (participant) pour les deux types, une seule 
 l'écran. Appliquée comme hypothèse.
 Réponse PO (2026-09-15) : suggestion retenue.
 
+## Session en direct (étape 8)
+
+**Q35 ☑ — `scores` et `team_players` n'ont pas de colonne `session_id` : comment les filtrer en
+temps réel ?**
+Réponse PO (2026-09-17) : suggestion retenue.
+Contexte : le plan 08 prévoit un abonnement `postgres_changes` filtré `session_id=eq.<id>` sur
+`scores` et `team_players`, au même titre que sur `teams`, `played_holes`, `session_members` et
+`sessions`. Mais `scores` est identifiée par `(played_hole_id, team_id)` et `team_players` par
+`(team_id, player_id)` : ni l'une ni l'autre n'a de colonne `session_id`, ce filtre est donc
+impossible à écrire tel quel. S'abonner sans filtre est exclu (AGENTS.md, conventions : "temps
+réel : abonnements Supabase filtrés par session, jamais sur une table entière").
+Conséquence pour l'utilisateur si non résolu : une saisie de score ou une modification d'équipe
+faite par un autre joueur ne remonterait pas en direct sur les autres téléphones.
+Suggestion : ajouter une colonne `session_id` dénormalisée sur `scores` et `team_players`
+(référence à `sessions`, renseignée par trigger à l'insertion depuis la ligne parente
+`played_holes`/`teams`) — même schéma que celui déjà en place sur `teams.session_id` et
+`played_holes.session_id`, filtrage direct, cohérent avec le reste de l'écran. Appliquée comme
+hypothèse (H) dans le plan 08.
+
+**Q36 ☑ — Sur un événement temps réel, corriger l'instantané localement ou recharger l'instantané
+complet ?**
+Réponse PO (2026-09-17) : suggestion retenue.
+Contexte : le plan décrit un "réducteur d'événements temps réel" qui applique chaque événement
+reçu à l'instantané local en mémoire. C'est le mécanisme qui a produit deux bugs réels trouvés en
+testant les plans 07/09 : une ligne dupliquée sur `session_members` et une ligne supprimée de
+`teams` qui restait affichée jusqu'à un rechargement manuel — dans les deux cas, la liste que
+`.stream()` reconstruit lui-même en local avait divergé de la base, en particulier sur les
+suppressions et les mises à jour touchant plusieurs lignes à la fois.
+Conséquence pour l'utilisateur si non résolu : même classe de bug qu'en salle d'attente, mais sur
+l'écran où elle compte le plus (scores et classement pendant la partie).
+Suggestion : reprendre le correctif déjà retenu en salle d'attente (`session_room_page.dart`) —
+les abonnements realtime ne servent qu'à détecter "quelque chose a changé" ; chaque déclenchement
+relance un appel frais à la RPC `session_snapshot`, sans tenter de corriger l'instantané localement
+à partir du contenu de l'événement. Plus simple à écrire et à tester (pas de réducteur), et évite
+une classe de bug déjà rencontrée deux fois. Appliquée comme hypothèse (H) dans le plan 08.
+
 ## Exports et photos (étape 10)
 
 **Q16 ☐ — Export image : garder la superposition sur une photo prise ou choisie (comme avant) ou

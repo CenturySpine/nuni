@@ -72,9 +72,13 @@ create table teams (
   unique (session_id, position)
 );
 
+-- session_id is denormalized from teams.session_id (Q35, plan 08): team_players has no session
+-- column of its own, so a realtime subscription can't filter it by session_id without one.
+-- Populated by a trigger (triggers.sql), never set by the client.
 create table team_players (
   team_id uuid not null references teams (id) on delete cascade,
   player_id uuid not null references players (id),
+  session_id uuid not null references sessions (id) on delete cascade,
   primary key (team_id, player_id)
 );
 
@@ -98,9 +102,12 @@ create table played_holes (
   unique (session_id, position)
 );
 
+-- session_id is denormalized from played_holes.session_id (Q35, plan 08), same reasoning and
+-- population mechanism as team_players.session_id above.
 create table scores (
   played_hole_id uuid not null references played_holes (id) on delete cascade,
   team_id uuid not null references teams (id) on delete cascade,
+  session_id uuid not null references sessions (id) on delete cascade,
   value int not null check (value between 0 and 20),
   updated_by uuid references auth.users (id),
   updated_at timestamptz not null default now(),

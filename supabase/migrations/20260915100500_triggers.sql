@@ -150,6 +150,43 @@ create trigger session_members_guard_frozen_teams_trigger
   before update on session_members
   for each row execute function session_members_guard_frozen_teams();
 
+-- Denormalized session_id (Q35, plan 08): populated from the parent row so scores and
+-- team_players can be realtime-filtered by session_id like teams/played_holes already are.
+-- "before insert or update" (not insert-only) because scores is written via upsert (plan 08's
+-- inline score entry): on a conflict, Postgres runs the UPDATE branch with the client-supplied
+-- NEW row, which never carries session_id -- only a trigger that also fires on update
+-- re-derives it every time. team_players is insert-only in practice but the same trigger shape
+-- costs nothing extra and stays consistent.
+create or replace function team_players_set_session_id()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  select session_id into new.session_id from teams where id = new.team_id;
+  return new;
+end;
+$$;
+
+create trigger team_players_set_session_id_trigger
+  before insert or update on team_players
+  for each row execute function team_players_set_session_id();
+
+create or replace function scores_set_session_id()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  select session_id into new.session_id from played_holes where id = new.played_hole_id;
+  return new;
+end;
+$$;
+
+create trigger scores_set_session_id_trigger
+  before insert or update on scores
+  for each row execute function scores_set_session_id();
+
 -- None of the functions above are meant to be called directly (trigger-only, or an internal
 -- helper); Postgres grants EXECUTE to PUBLIC by default at creation, so revoke it explicitly.
 -- (handle_new_user and the "returns trigger" functions can't be invoked via RPC anyway, but
@@ -160,3 +197,5 @@ revoke execute on function generate_session_code() from public, authenticated;
 revoke execute on function sessions_set_code() from public, authenticated;
 revoke execute on function team_players_guard_single_team() from public, authenticated;
 revoke execute on function session_members_guard_frozen_teams() from public, authenticated;
+revoke execute on function team_players_set_session_id() from public, authenticated;
+revoke execute on function scores_set_session_id() from public, authenticated;

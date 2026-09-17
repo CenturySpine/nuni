@@ -13,9 +13,13 @@ alter publication supabase_realtime add table scores;
 -- row" only carries primary-key columns, so Realtime can't evaluate a
 -- `session_id` filter for it and silently drops the event -- found in
 -- testing (plan 07): deleting a team never reached the waiting room, which
--- kept showing it, empty, until a manual reload. `scores` and
--- `session_members` don't need this: `session_id`/`played_hole_id` are
--- already part of their primary key, so the default identity already
--- includes them on delete.
+-- kept showing it, empty, until a manual reload. `session_members` doesn't
+-- need this: `session_id` is already part of its primary key, so the
+-- default identity already includes it on delete. `scores` and
+-- `team_players` are the same case as teams/played_holes: their new
+-- `session_id` column (Q35, plan 08) isn't part of their primary key
+-- either, so a DELETE's old-row image needs the same widening.
 alter table teams replica identity full;
 alter table played_holes replica identity full;
+alter table scores replica identity full;
+alter table team_players replica identity full;

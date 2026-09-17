@@ -12,12 +12,20 @@ Plans 03 (temps réel, RLS), 06, 07.
 
 ## Décisions retenues
 
-- Source de vérité : la base. L'écran charge un instantané de la session (session, équipes,
-  joueurs, trous joués, coups) puis s'abonne aux changements `postgres_changes` filtrés
-  `session_id=eq.<id>` sur `played_holes`, `scores`, `teams`, `team_players`, `session_members`
-  et `sessions` (clôture). À chaque événement, l'instantané local est mis à jour et le classement
-  recalculé en Dart. Reconnexion : à la reprise de l'onglet ou du réseau, rechargement de
-  l'instantané (les événements manqués ne sont pas rejoués par Supabase).
+- Source de vérité : la base. L'écran charge l'instantané de la session via la RPC
+  `session_snapshot(session_id)` (session, équipes, joueurs, trous joués, coups) puis s'abonne aux
+  changements `postgres_changes` filtrés `session_id=eq.<id>` sur `played_holes`, `scores`,
+  `teams`, `team_players`, `session_members` et `sessions` (clôture). Q35 : `scores` et
+  `team_players` n'ont pas de colonne `session_id` ; une colonne dénormalisée leur est ajoutée
+  (triggers depuis `played_holes`/`teams`) pour permettre ce filtre, comme il existe déjà sur
+  `teams` et `played_holes`.
+  Q36 : les abonnements ne servent qu'à détecter qu'un événement est survenu — aucun événement
+  n'est appliqué à l'instantané local ; chaque déclenchement relance `session_snapshot` et
+  remplace l'instantané, comme le fait déjà la salle d'attente (`session_room_page.dart`) depuis
+  que la première approche (corriger l'instantané avec le contenu de l'événement) a produit deux
+  bugs réels en plans 07/09 (ligne dupliquée, suppression non répercutée). Le classement est
+  recalculé en Dart à partir de l'instantané reçu. Reconnexion : à la reprise de l'onglet ou du
+  réseau, rechargement de l'instantané (les événements manqués ne sont pas rejoués par Supabase).
 - Calcul des scores : réécriture en Dart des trois calculateurs (Stroke Play, Match Play,
   Redistribution) avec les tests existants transposés, plus le mode **Libre** (Q7 : la valeur
   saisie est le nombre de points, aucun calcul) ; classement : coups croissants en Stroke Play,
@@ -61,14 +69,17 @@ Plans 03 (temps réel, RLS), 06, 07.
 ## Étapes
 
 1. `features/live/domain` : modèle d'instantané de session, calculateurs et classement (tests
-   transposés de `ScoringModeTest`), réducteur d'événements temps réel (pur, testé).
-2. `features/live/data` : chargement de l'instantané (une requête par table, ou une RPC
-   `session_snapshot(session_id)` retournant un JSON unique — retenue pour limiter les allers-retours
-   sur mobile), abonnement realtime, upsert de coups, ajout/suppression de trous joués, clôture.
-3. `features/live/ui` : écran de session, carte de classement, carte de trou joué, feuille de
+   transposés de `ScoringModeTest`).
+2. Migration : colonne `session_id` dénormalisée sur `scores` et `team_players`, triggers de
+   renseignement (Q35).
+3. `features/live/data` : RPC `session_snapshot(session_id)` (JSON unique, limite les
+   allers-retours sur mobile) ; abonnements realtime utilisés uniquement comme déclencheurs, qui
+   rechargent `session_snapshot` à chaque événement (Q36) ; upsert de coups, ajout/suppression
+   de trous joués, clôture.
+4. `features/live/ui` : écran de session, carte de classement, carte de trou joué, feuille de
    saisie, feuille d'ajout de trou, bandeaux de fin.
-4. Tests : réducteur (chaque type d'événement), calculateurs, widget de saisie.
-5. Test de charge léger : 4 téléphones saisissant en même temps ; vérifier l'absence de doublons
+5. Tests : calculateurs, widget de saisie.
+6. Test de charge léger : 4 téléphones saisissant en même temps ; vérifier l'absence de doublons
    (clé primaire composite) et la convergence des écrans en moins de 2 s.
 
 ## Livrables
@@ -83,4 +94,33 @@ Plans 03 (temps réel, RLS), 06, 07.
 
 ## Questions PO liées
 
-Q7, Q8, Q9. Jalon de validation 3 du plan d'ensemble (première session réelle).
+Q7, Q8, Q9, Q35, Q36 (tranchées). Jalon de validation 3 du plan d'ensemble (première session
+réelle).
+
+## Notes d'implémentation (2026-09-17)
+
+Code écrit (étapes 1 à 5 : domaine, migration, data, ui, tests calculateurs + widget de saisie) ;
+`flutter analyze`, `flutter test` (71 tests) et `dart format` verts. Étape 6 (test de charge à 4
+téléphones) et le jalon de validation 3 restent à faire par le PO, et supposent d'abord la
+reconstruction du schéma distant (voir point bloquant ci-dessous).
+
+Points où le texte du plan laissait un doute, tranchés par la technique faute de mieux, à corriger
+si la lecture est mauvaise une fois vu à l'écran :
+- "chaque carte montrant chaque équipe avec coups et points (ou points seuls en Stroke Play)" :
+  lu comme probablement inversé (Stroke Play n'a pas de notion de points séparée du nombre de
+  coups). Implémenté : Stroke Play affiche les coups seuls ; Match Play et Redistribution
+  affichent coups et points ; Libre affiche les points seuls (aucun coup saisi, Q7b).
+- "bandeau 'Session terminée par X'" : aucune colonne ne mémorise qui a cliqué sur "Terminer la
+  session" (seul `sessions.ended_at` existe) ; le bandeau affiche "Session terminée" sans nommer
+  X. Ajouter cette colonne est possible mais non fait, faute de le voir demandé ailleurs dans le
+  schéma.
+- Hors ligne : pas de dépendance de détection réseau ajoutée. La saisie est tentée normalement ;
+  un échec réseau affiche un message d'erreur au lieu de refuser la saisie par anticipation. Le
+  lecture seule "dernières données connues" est déjà le comportement par défaut (aucune requête ne
+  peut aboutir hors ligne, l'écran garde donc l'instantané précédent).
+
+Point bloquant pour la suite : les migrations modifiées (colonnes `session_id` sur `scores` et
+`team_players`, RPC `session_snapshot` et `add_played_hole`) éditent des fichiers déjà appliqués
+sur le projet distant `nuni` — comme le prévoit AGENTS.md §8, cela exige de reconstruire le schéma
+distant depuis zéro (procédure `docs/DEV.md`), à ne lancer qu'après accord explicite du PO. Rien
+n'a été testé dans le navigateur ni poussé sur le projet distant.

@@ -237,3 +237,134 @@ $$;
 
 revoke execute on function start_session(uuid) from public;
 grant execute on function start_session(uuid) to authenticated;
+
+-- One JSON snapshot of a live session (plan 08, Q36): the session, its teams (with their
+-- players, via team_players -- the frozen-after-draft roster, Q15), its played holes (with the
+-- hole's own display fields and every team's raw entered value for that hole), and its members
+-- (for the "who's the owner" / "promote a co-organizer" / "which team is mine" lookups the
+-- screen needs). security invoker: relies entirely on the same RLS policies as every other read
+-- (sessions/teams/team_players/played_holes/scores/session_members _select), so a non-member
+-- gets an empty/partial result rather than an error -- same behavior as reading the tables
+-- directly. Called fresh on every realtime "something changed" event on any of those tables
+-- (Q36), never patched locally client-side.
+create or replace function session_snapshot(p_session_id uuid)
+returns jsonb
+language sql
+security invoker
+stable
+set search_path = public
+as $$
+  select jsonb_build_object(
+    -- Explicit field list, not to_jsonb(s): matches the Dart Session model
+    -- exactly (session.dart) and skips the geography-typed `location`
+    -- column, whose to_jsonb output is an opaque WKB string the client
+    -- never reads.
+    'session', (
+      select jsonb_build_object(
+        'id', s.id,
+        'code', s.code,
+        'owner_id', s.owner_id,
+        'status', s.status,
+        'kind', s.kind,
+        'scoring_mode', s.scoring_mode,
+        'ranking_direction', s.ranking_direction,
+        'city', s.city,
+        'zone', s.zone,
+        'created_at', s.created_at,
+        'started_at', s.started_at,
+        'ended_at', s.ended_at
+      )
+      from sessions s where s.id = p_session_id
+    ),
+    'members', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'user_id', sm.user_id,
+        'team_id', sm.team_id,
+        'role', sm.role,
+        'player_name', p.name
+      )), '[]'::jsonb)
+      from session_members sm
+      join players p on p.user_id = sm.user_id
+      where sm.session_id = p_session_id
+    ),
+    'teams', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'id', t.id,
+        'position', t.position,
+        'players', (
+          select coalesce(jsonb_agg(jsonb_build_object(
+            'player_id', pl.id,
+            'name', pl.name
+          ) order by pl.name), '[]'::jsonb)
+          from team_players tp
+          join players pl on pl.id = tp.player_id
+          where tp.team_id = t.id
+        )
+      ) order by t.position), '[]'::jsonb)
+      from teams t
+      where t.session_id = p_session_id
+    ),
+    'played_holes', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'id', ph.id,
+        'position', ph.position,
+        'game_mode', ph.game_mode,
+        'hole', jsonb_build_object(
+          'id', h.id,
+          'name', h.name,
+          'par', h.par,
+          'start_lat', h.start_lat,
+          'start_lng', h.start_lng,
+          'visibility', h.visibility
+        ),
+        'scores', (
+          select coalesce(jsonb_agg(jsonb_build_object(
+            'team_id', sc.team_id,
+            'value', sc.value,
+            'updated_by', sc.updated_by,
+            'updated_at', sc.updated_at
+          )), '[]'::jsonb)
+          from scores sc
+          where sc.played_hole_id = ph.id
+        )
+      ) order by ph.position), '[]'::jsonb)
+      from played_holes ph
+      join holes h on h.id = ph.hole_id
+      where ph.session_id = p_session_id
+    )
+  );
+$$;
+
+revoke execute on function session_snapshot(uuid) from public;
+grant execute on function session_snapshot(uuid) to authenticated;
+
+-- Adds a played hole (owner-only -- RLS `played_holes_owner_write`): appends at the next
+-- position. A plain client-side insert would need a "next position" round trip first (like
+-- `_nextTeamPosition` in the Dart repository) and would race two owners adding at once; doing
+-- both in one statement server-side avoids that race and keeps the RLS-only client mutations
+-- pattern for everything that doesn't need it (score upserts, played-hole deletion, closing a
+-- session all stay plain table calls -- see sessions_repository.dart).
+create or replace function add_played_hole(p_session_id uuid, p_hole_id uuid, p_game_mode game_mode)
+returns played_holes
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  v_row played_holes;
+begin
+  insert into played_holes (session_id, hole_id, game_mode, position)
+  values (
+    p_session_id,
+    p_hole_id,
+    p_game_mode,
+    (select coalesce(max(position), 0) + 1 from played_holes where session_id = p_session_id)
+  )
+  returning * into v_row;
+
+  return v_row;
+end;
+$$;
+
+revoke execute on function add_played_hole(uuid, uuid, game_mode) from public;
+grant execute on function add_played_hole(uuid, uuid, game_mode) to authenticated;

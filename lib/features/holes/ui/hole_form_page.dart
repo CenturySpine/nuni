@@ -255,7 +255,11 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(l10n.holesFormSaved)));
-        context.pop();
+        // Callers that need the saved id (plan 08's "Créer un trou ici",
+        // which pushes this route and awaits the result) get it; every
+        // other caller today fires this route with `push` and ignores the
+        // return value, so carrying it costs them nothing.
+        context.pop(id);
       }
     } catch (error) {
       if (mounted) {

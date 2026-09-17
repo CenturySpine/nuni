@@ -10,9 +10,9 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_card.dart';
 import '../../../shared/nuni_confirm_dialog.dart';
-import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../live/ui/session_live_page.dart';
 import '../../profile/domain/player.dart';
 import '../data/sessions_repository.dart';
 import '../domain/session.dart';
@@ -24,9 +24,10 @@ import '../domain/team_composition.dart';
 import 'add_participant_sheet.dart';
 import 'invite_sheet.dart';
 
-/// `/session/:id` (plan 07): the waiting room while `status = draft`. Plan
-/// 08 owns what this route shows once the session goes live -- for now it's
-/// a placeholder, since the live screen doesn't exist yet.
+/// `/session/:id`: the waiting room while `status = draft` (plan 07);
+/// `SessionLivePage` (plan 08) takes over the moment it leaves draft, via
+/// the same realtime-backed `room.session.status` this screen already
+/// watches -- no navigation, no reload.
 class SessionRoomPage extends ConsumerWidget {
   const SessionRoomPage({super.key, required this.sessionId});
 
@@ -54,17 +55,7 @@ class SessionRoomPage extends ConsumerWidget {
       ),
       data: (room) {
         if (room.session.status != SessionStatus.draft) {
-          return Scaffold(
-            appBar: AppBar(title: Text(l10n.sessionsRoomTitle)),
-            body: NuniEmptyState(
-              icon: PhosphorIcons.golfFill,
-              message: l10n.sessionsRoomStarted,
-              action: NuniButton(
-                label: l10n.sessionsRoomBackHome,
-                onPressed: () => context.go('/'),
-              ),
-            ),
-          );
+          return SessionLivePage(sessionId: sessionId);
         }
         return _WaitingRoomView(sessionId: sessionId, room: room);
       },
