@@ -6,6 +6,15 @@ part of 'hole.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+_HolePathPoint _$HolePathPointFromJson(Map<String, dynamic> json) =>
+    _HolePathPoint(
+      lat: (json['lat'] as num).toDouble(),
+      lng: (json['lng'] as num).toDouble(),
+    );
+
+Map<String, dynamic> _$HolePathPointToJson(_HolePathPoint instance) =>
+    <String, dynamic>{'lat': instance.lat, 'lng': instance.lng};
+
 _Hole _$HoleFromJson(Map<String, dynamic> json) => _Hole(
   id: json['id'] as String,
   name: json['name'] as String,
@@ -16,6 +25,9 @@ _Hole _$HoleFromJson(Map<String, dynamic> json) => _Hole(
   startLng: (json['start_lng'] as num).toDouble(),
   endLat: (json['end_lat'] as num?)?.toDouble(),
   endLng: (json['end_lng'] as num?)?.toDouble(),
+  path: (json['path'] as List<dynamic>?)
+      ?.map((e) => HolePathPoint.fromJson(e as Map<String, dynamic>))
+      .toList(),
   photoStartPath: json['photo_start_path'] as String?,
   photoEndPath: json['photo_end_path'] as String?,
   visibility: $enumDecode(_$HoleVisibilityEnumMap, json['visibility']),
@@ -33,6 +45,7 @@ Map<String, dynamic> _$HoleToJson(_Hole instance) => <String, dynamic>{
   'start_lng': instance.startLng,
   'end_lat': instance.endLat,
   'end_lng': instance.endLng,
+  'path': instance.path,
   'photo_start_path': instance.photoStartPath,
   'photo_end_path': instance.photoEndPath,
   'visibility': _$HoleVisibilityEnumMap[instance.visibility]!,

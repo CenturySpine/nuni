@@ -61,6 +61,7 @@ class HolesRepository {
     required double lng,
     double? endLat,
     double? endLng,
+    List<HolePathPoint>? path,
     required HoleVisibility visibility,
     String? photoStartPath,
     String? photoEndPath,
@@ -76,6 +77,7 @@ class HolesRepository {
           'distance_m': distanceM,
           'start': 'SRID=4326;POINT($lng $lat)',
           'end_point': _pointOrNull(endLat, endLng),
+          'path': _pathOrNull(path),
           'visibility': visibility.name,
           'photo_start_path': photoStartPath,
           'photo_end_path': photoEndPath,
@@ -95,6 +97,7 @@ class HolesRepository {
     required double lng,
     double? endLat,
     double? endLng,
+    List<HolePathPoint>? path,
     required HoleVisibility visibility,
     String? photoStartPath,
     String? photoEndPath,
@@ -108,6 +111,7 @@ class HolesRepository {
           'distance_m': distanceM,
           'start': 'SRID=4326;POINT($lng $lat)',
           'end_point': _pointOrNull(endLat, endLng),
+          'path': _pathOrNull(path),
           'visibility': visibility.name,
           'photo_start_path': photoStartPath,
           'photo_end_path': photoEndPath,
@@ -117,6 +121,13 @@ class HolesRepository {
 
   static String? _pointOrNull(double? lat, double? lng) =>
       (lat == null || lng == null) ? null : 'SRID=4326;POINT($lng $lat)';
+
+  static List<Map<String, double>>? _pathOrNull(List<HolePathPoint>? path) =>
+      (path == null || path.isEmpty)
+      ? null
+      : [
+          for (final point in path) {'lat': point.lat, 'lng': point.lng},
+        ];
 
   /// Throws a [PostgrestException] with code `23503` (foreign key violation)
   /// if the hole has been played in a session -- deletion is refused by a

@@ -76,9 +76,20 @@ class _HoleDetailContent extends ConsumerWidget {
         Row(
           children: [
             Expanded(
-              child: Text(
-                hole.name,
-                style: Theme.of(context).textTheme.titleLarge,
+              child: Text.rich(
+                TextSpan(
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  children: [
+                    TextSpan(
+                      text: hole.name,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    TextSpan(
+                      text:
+                          ' · ${[l10n.holesPar(hole.par), if (hole.distanceM != null) l10n.holesDetailLength(hole.distanceM!), if (hole.distance != null) l10n.holesAway(formatDistanceM(hole.distance!))].join(' · ')}',
+                    ),
+                  ],
+                ),
               ),
             ),
             Icon(
@@ -90,12 +101,6 @@ class _HoleDetailContent extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: 4),
-        Text(l10n.holesPar(hole.par)),
-        if (hole.distanceM != null)
-          Text(l10n.holesDetailLength(hole.distanceM!)),
-        if (hole.distance != null)
-          Text(l10n.holesAway(formatDistanceM(hole.distance!))),
         if (hole.description != null && hole.description!.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(hole.description!),
@@ -111,29 +116,37 @@ class _HoleDetailContent extends ConsumerWidget {
           ),
         ],
         const SizedBox(height: 16),
-        NuniButton(
-          icon: PhosphorIcons.navigationArrow,
-          label: l10n.holesDetailGoThere,
-          onPressed: () => launchUrl(
-            Uri.parse(
-              'https://www.google.com/maps/search/?api=1&query=${hole.startLat},${hole.startLng}',
+        Row(
+          children: [
+            if (isOwner) ...[
+              Expanded(
+                child: NuniButton(
+                  variant: NuniButtonVariant.secondary,
+                  icon: PhosphorIcons.pencilSimple,
+                  label: l10n.holesDetailEdit,
+                  onPressed: () {
+                    final router = GoRouter.of(context);
+                    Navigator.of(context).pop();
+                    router.push('/holes/${hole.id}');
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
+            Expanded(
+              child: NuniButton(
+                icon: PhosphorIcons.navigationArrow,
+                label: l10n.holesDetailGoThere,
+                onPressed: () => launchUrl(
+                  Uri.parse(
+                    'https://www.google.com/maps/search/?api=1&query=${hole.startLat},${hole.startLng}',
+                  ),
+                  mode: LaunchMode.externalApplication,
+                ),
+              ),
             ),
-            mode: LaunchMode.externalApplication,
-          ),
+          ],
         ),
-        if (isOwner) ...[
-          const SizedBox(height: 8),
-          NuniButton(
-            variant: NuniButtonVariant.secondary,
-            icon: PhosphorIcons.pencilSimple,
-            label: l10n.holesDetailEdit,
-            onPressed: () {
-              final router = GoRouter.of(context);
-              Navigator.of(context).pop();
-              router.push('/holes/${hole.id}');
-            },
-          ),
-        ],
       ],
     );
   }

@@ -32,6 +32,22 @@ Plans 03, 04, 05.
   sous `holes/<ownerId>/<holeId>/start.jpg` et `end.jpg` (le premier segment doit être l'id du
   propriétaire : c'est ce que vérifie la politique de stockage déjà appliquée, pas l'id du trou
   seul). Le même composant `PhotoField` sert aux avatars et aux photos de session.
+- Tracé (PO, 2026-09-18) : trajet du départ à la cible dessiné sur la carte (trait rouge), avec des
+  points intermédiaires ajoutés par toucher successif de la carte (3e bascule "Tracé" à côté de
+  "Départ"/"Cible", même logique tap-only que les deux autres, pas de glisser). Boutons "annuler le
+  dernier point" et "effacer le tracé" ; pas de réordonnancement ni de suppression d'un point
+  précis en v1. Stocké dans une nouvelle colonne `holes.path` (`jsonb`, tableau ordonné
+  `{"lat":..,"lng":..}`) : simple `jsonb` plutôt qu'un type PostGIS `linestring` puisque ce tracé
+  n'est jamais utilisé dans une requête spatiale (contrairement à `start`/`end_point`), seulement
+  affiché. Colonne ajoutée directement dans `20260915100100_tables.sql` (schéma pas encore en
+  service, AGENTS.md point 8) ; `holes_nearby` n'est pas modifiée (le tracé n'est utilisé que dans
+  le formulaire d'édition, pas dans la liste/carte "autour de moi").
+- Par et distance déduits du tracé (PO, 2026-09-18) : distance = longueur totale du tracé (somme
+  des segments départ→...→cible, formule de Haversine via `latlong2`) ; par = nombre de points du
+  tracé (départ et cible compris) + 1. Les deux champs restent des champs texte normaux et
+  éditables, mais le tracé reprend toujours la main dessus dès qu'un point est ajouté ou retiré
+  (choix explicite du PO : pas de mémorisation d'une saisie manuelle qui "gèlerait" le champ). Ne
+  se déclenche qu'à partir de deux points (un simple départ seul ne change rien).
 - Visibilité (Q33) : `public` par défaut (l'intérêt d'un référentiel partagé), `private` sur
   demande. Le schéma déjà appliqué (plan 03) a un défaut `private` à corriger avant d'écrire
   l'écran de création (migration à modifier, reconstruction du schéma distant à prévenir auprès

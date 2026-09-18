@@ -10,6 +10,18 @@ enum HoleVisibility {
   private,
 }
 
+/// One waypoint of the path drawn between a hole's start and end (PO,
+/// 2026-09-18). Stored as a plain jsonb array on `holes.path`, ordered from
+/// start to end.
+@freezed
+abstract class HolePathPoint with _$HolePathPoint {
+  const factory HolePathPoint({required double lat, required double lng}) =
+      _HolePathPoint;
+
+  factory HolePathPoint.fromJson(Map<String, Object?> json) =>
+      _$HolePathPointFromJson(json);
+}
+
 /// Mirrors the `holes` table (plan 03), read either as a plain row (`start_lat`
 /// / `start_lng` are generated columns) or as a `holes_nearby` RPC row, which
 /// adds `distance` (metres from the search point). `distanceM` is a different
@@ -24,10 +36,12 @@ abstract class Hole with _$Hole {
     @JsonKey(name: 'distance_m') int? distanceM,
     @JsonKey(name: 'start_lat') required double startLat,
     @JsonKey(name: 'start_lng') required double startLng,
-    // Target point (PO, 2026-09-16): optional, captured for a future path
-    // line between start and end -- not drawn yet.
+    // Target point (PO, 2026-09-16): optional.
     @JsonKey(name: 'end_lat') double? endLat,
     @JsonKey(name: 'end_lng') double? endLng,
+    // Intermediate waypoints between start and end (PO, 2026-09-18), drawn as
+    // a line on the hole's map.
+    List<HolePathPoint>? path,
     @JsonKey(name: 'photo_start_path') String? photoStartPath,
     @JsonKey(name: 'photo_end_path') String? photoEndPath,
     required HoleVisibility visibility,

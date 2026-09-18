@@ -25,7 +25,7 @@ import '../domain/hole.dart';
 
 const _fallbackMapCenter = LatLng(48.8566, 2.3522);
 
-enum _ActivePoint { start, end }
+enum _ActivePoint { start, end, path }
 
 /// A throwaway storage-path segment for a hole that doesn't have a row id
 /// yet: photo uploads start the moment a photo is picked (PO, 2026-09-16),
@@ -58,6 +58,7 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
   HoleVisibility _visibility = HoleVisibility.public;
   LatLng? _startPosition;
   LatLng? _endPosition;
+  final List<LatLng> _path = [];
   _ActivePoint _activePoint = _ActivePoint.start;
   double? _accuracy;
   late final String _photoFolderId;
@@ -98,6 +99,7 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
       if (position != null) {
         _startPosition = LatLng(position.latitude, position.longitude);
         _accuracy = position.accuracy;
+        _syncParAndDistanceFromPath();
       }
     });
   }
@@ -156,12 +158,52 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
 
   void _handleMapTap(LatLng point) {
     setState(() {
-      if (_activePoint == _ActivePoint.start) {
-        _startPosition = point;
-      } else {
-        _endPosition = point;
+      switch (_activePoint) {
+        case _ActivePoint.start:
+          _startPosition = point;
+        case _ActivePoint.end:
+          _endPosition = point;
+        case _ActivePoint.path:
+          _path.add(point);
       }
+      _syncParAndDistanceFromPath();
     });
+  }
+
+  void _undoLastPathPoint() {
+    setState(() {
+      _path.removeLast();
+      _syncParAndDistanceFromPath();
+    });
+  }
+
+  void _clearPath() {
+    setState(() {
+      _path.clear();
+      _syncParAndDistanceFromPath();
+    });
+  }
+
+  /// Par and length in metres, deduced from the path (PO, 2026-09-18): par
+  /// defaults to the number of points on the path (start and end included)
+  /// plus one, distance to the path's total length. Both fields stay plain
+  /// editable text fields, but the path always takes the pen back over a
+  /// manual edit on the next point added or removed (PO's explicit call --
+  /// simpler than tracking whether the field was touched, and the path is
+  /// the source of truth while it's being built). Only kicks in once there
+  /// is an actual path (at least two points) to measure; a lone start point
+  /// leaves both fields as they were.
+  void _syncParAndDistanceFromPath() {
+    final points = [?_startPosition, ..._path, ?_endPosition];
+    if (points.length < 2) return;
+
+    const distanceCalculator = Distance();
+    var metres = 0.0;
+    for (var i = 0; i < points.length - 1; i++) {
+      metres += distanceCalculator.distance(points[i], points[i + 1]);
+    }
+    _distanceController.text = metres.round().toString();
+    _parController.text = (points.length + 1).toString();
   }
 
   void _prefill(Hole hole) {
@@ -175,6 +217,12 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
     _endPosition = (hole.endLat != null && hole.endLng != null)
         ? LatLng(hole.endLat!, hole.endLng!)
         : null;
+    _path
+      ..clear()
+      ..addAll([
+        for (final point in hole.path ?? const <HolePathPoint>[])
+          LatLng(point.lat, point.lng),
+      ]);
     _startPhotoPath = hole.photoStartPath;
     _endPhotoPath = hole.photoEndPath;
   }
@@ -228,6 +276,7 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
           lng: _startPosition!.longitude,
           endLat: _endPosition?.latitude,
           endLng: _endPosition?.longitude,
+          path: _pathPoints,
           visibility: _visibility,
           photoStartPath: _startPhotoPath,
           photoEndPath: _endPhotoPath,
@@ -242,6 +291,7 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
           lng: _startPosition!.longitude,
           endLat: _endPosition?.latitude,
           endLng: _endPosition?.longitude,
+          path: _pathPoints,
           visibility: _visibility,
           photoStartPath: _startPhotoPath,
           photoEndPath: _endPhotoPath,
@@ -270,6 +320,13 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
       if (mounted) setState(() => _saving = false);
     }
   }
+
+  List<HolePathPoint>? get _pathPoints => _path.isEmpty
+      ? null
+      : [
+          for (final point in _path)
+            HolePathPoint(lat: point.latitude, lng: point.longitude),
+        ];
 
   Future<void> _delete() async {
     final l10n = AppLocalizations.of(context)!;
@@ -452,12 +509,20 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
                       onTap: () =>
                           setState(() => _activePoint = _ActivePoint.end),
                     ),
+                    const SizedBox(width: 8),
+                    NuniChip(
+                      label: l10n.holesFormPointPath,
+                      selected: _activePoint == _ActivePoint.path,
+                      onTap: () =>
+                          setState(() => _activePoint = _ActivePoint.path),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 _PositionPicker(
                   startPosition: _startPosition,
                   endPosition: _endPosition,
+                  path: _path,
                   activePoint: _activePoint,
                   onTap: _handleMapTap,
                 ),
@@ -480,6 +545,25 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
                     ],
                   ],
                 ),
+                if (_activePoint == _ActivePoint.path) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      NuniButton(
+                        variant: NuniButtonVariant.secondary,
+                        label: l10n.holesFormPathUndo,
+                        onPressed: _path.isEmpty ? null : _undoLastPathPoint,
+                      ),
+                      const SizedBox(width: 12),
+                      NuniButton(
+                        variant: NuniButtonVariant.secondary,
+                        icon: PhosphorIcons.trash,
+                        label: l10n.holesFormPathClear,
+                        onPressed: _path.isEmpty ? null : _clearPath,
+                      ),
+                    ],
+                  ),
+                ],
                 if (_startPosition == null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
@@ -555,12 +639,14 @@ class _PositionPicker extends StatefulWidget {
   const _PositionPicker({
     required this.startPosition,
     required this.endPosition,
+    required this.path,
     required this.activePoint,
     required this.onTap,
   });
 
   final LatLng? startPosition;
   final LatLng? endPosition;
+  final List<LatLng> path;
   final _ActivePoint activePoint;
   final ValueChanged<LatLng> onTap;
 
@@ -603,8 +689,35 @@ class _PositionPickerState extends State<_PositionPicker> {
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'org.centuryspine.nuni',
             ),
+            if (widget.startPosition != null || widget.endPosition != null)
+              PolylineLayer(
+                polylines: [
+                  Polyline(
+                    points: [
+                      if (widget.startPosition != null) widget.startPosition!,
+                      ...widget.path,
+                      if (widget.endPosition != null) widget.endPosition!,
+                    ],
+                    color: scheme.error,
+                    strokeWidth: 3,
+                  ),
+                ],
+              ),
             MarkerLayer(
               markers: [
+                for (final point in widget.path)
+                  Marker(
+                    point: point,
+                    width: 14,
+                    height: 14,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: scheme.error,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                    ),
+                  ),
                 if (widget.startPosition != null)
                   Marker(
                     point: widget.startPosition!,

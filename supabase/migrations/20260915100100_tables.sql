@@ -36,6 +36,11 @@ create table holes (
   end_point geography(point, 4326),
   end_lat double precision generated always as (st_y(end_point::geometry)) stored,
   end_lng double precision generated always as (st_x(end_point::geometry)) stored,
+  -- Ordered waypoints of the walk from start to end (PO, 2026-09-18), drawn as
+  -- a line on the hole's map. Display-only, never queried spatially (unlike
+  -- start/end_point above), so a plain jsonb array of {"lat":.., "lng":..}
+  -- is simpler here than a PostGIS linestring plus a GeoJSON-extraction column.
+  path jsonb,
   photo_start_path text,
   photo_end_path text,
   visibility hole_visibility not null default 'public',
