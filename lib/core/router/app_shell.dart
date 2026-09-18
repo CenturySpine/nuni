@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../theme/phosphor_icons.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import 'app_bottom_nav.dart';
 
 /// Bottom-bar shell for the three top-level destinations (Home, Holes,
 /// History). The avatar in the app bar opens Profile / Settings -- there is
@@ -32,29 +33,12 @@ class AppShell extends StatelessWidget {
         ],
       ),
       body: navigationShell,
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: NuniBottomNavBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: (index) => navigationShell.goBranch(
           index,
           initialLocation: index == navigationShell.currentIndex,
         ),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(PhosphorIcons.house),
-            selectedIcon: const Icon(PhosphorIcons.houseFill),
-            label: l10n.navHome,
-          ),
-          NavigationDestination(
-            icon: const Icon(PhosphorIcons.golf),
-            selectedIcon: const Icon(PhosphorIcons.golfFill),
-            label: l10n.navHoles,
-          ),
-          NavigationDestination(
-            icon: const Icon(PhosphorIcons.clockCounterClockwise),
-            selectedIcon: const Icon(PhosphorIcons.clockCounterClockwiseFill),
-            label: l10n.navHistory,
-          ),
-        ],
       ),
     );
   }

@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/errors/app_error_message.dart';
+import '../../../core/router/app_bottom_nav.dart';
 import '../../../core/supabase/supabase_providers.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
-import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_confirm_dialog.dart';
 import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
@@ -60,10 +60,16 @@ class SessionLivePage extends ConsumerWidget {
     final liveAsync = ref.watch(liveSessionProvider(sessionId));
 
     return liveAsync.when(
-      loading: () => const Scaffold(body: NuniLoading()),
+      loading: () => const Scaffold(
+        body: NuniLoading(),
+        bottomNavigationBar: NuniStandaloneBottomNav(),
+      ),
       error: (error, _) {
         if (error is LiveSessionDeleted) {
-          return const Scaffold(body: NuniLoading());
+          return const Scaffold(
+            body: NuniLoading(),
+            bottomNavigationBar: NuniStandaloneBottomNav(),
+          );
         }
         return Scaffold(
           body: Padding(
@@ -73,11 +79,26 @@ class SessionLivePage extends ConsumerWidget {
               onRetry: () => ref.invalidate(liveSessionProvider(sessionId)),
             ),
           ),
+          bottomNavigationBar: const NuniStandaloneBottomNav(),
         );
       },
-      data: (snapshot) => snapshot.session.status == SessionStatus.completed
-          ? _CompletedView(snapshot: snapshot)
-          : _LiveView(sessionId: sessionId, snapshot: snapshot),
+      data: (snapshot) {
+        // No wrap-up screen of its own (PO, 2026-09-18): the moment a
+        // session completes -- already on load, or via this realtime
+        // snapshot switching status under the user's feet -- its recap
+        // IS the history detail page, so go straight there instead of an
+        // intermediate "session terminée" screen with a button to it.
+        if (snapshot.session.status == SessionStatus.completed) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) context.go('/history/${snapshot.session.id}');
+          });
+          return const Scaffold(
+            body: NuniLoading(),
+            bottomNavigationBar: NuniStandaloneBottomNav(),
+          );
+        }
+        return _LiveView(sessionId: sessionId, snapshot: snapshot);
+      },
     );
   }
 }
@@ -303,28 +324,7 @@ class _LiveViewState extends ConsumerState<_LiveView> {
               child: const Icon(PhosphorIcons.plus),
             )
           : null,
-    );
-  }
-}
-
-class _CompletedView extends StatelessWidget {
-  const _CompletedView({required this.snapshot});
-
-  final LiveSessionSnapshot snapshot;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.sessionsLiveCompletedTitle)),
-      body: NuniEmptyState(
-        icon: PhosphorIcons.checkCircle,
-        message: l10n.sessionsLiveCompletedMessage,
-        action: NuniButton(
-          label: l10n.sessionsLiveCompletedHistory,
-          onPressed: () => context.go('/history/${snapshot.session.id}'),
-        ),
-      ),
+      bottomNavigationBar: const NuniStandaloneBottomNav(),
     );
   }
 }

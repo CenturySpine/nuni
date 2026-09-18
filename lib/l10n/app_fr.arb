@@ -120,9 +120,6 @@
   "sessionsLiveEndConfirmTitle": "Terminer cette session ?",
   "sessionsLiveEndConfirmMessage": "Les scores ne pourront plus être saisis une fois la session terminée.",
 
-  "sessionsLiveCompletedTitle": "Session terminée",
-  "sessionsLiveCompletedMessage": "Cette session est terminée.",
-  "sessionsLiveCompletedHistory": "Aller à l'historique",
   "sessionsLiveDeletedMessage": "Cette session a été supprimée.",
 
   "historyEmpty": "Aucune session terminée pour le moment.",

@@ -136,9 +136,6 @@
   "sessionsLiveEndConfirmTitle": "End this session?",
   "sessionsLiveEndConfirmMessage": "Scores can no longer be entered once the session has ended.",
 
-  "sessionsLiveCompletedTitle": "Session ended",
-  "sessionsLiveCompletedMessage": "This session has ended.",
-  "sessionsLiveCompletedHistory": "Go to history",
   "sessionsLiveDeletedMessage": "This session was deleted.",
 
   "historyEmpty": "No completed session yet.",

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/errors/app_error_message.dart';
+import '../../../core/router/app_bottom_nav.dart';
 import '../../../core/supabase/supabase_providers.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../core/weather/weather_client.dart';
@@ -45,6 +46,7 @@ class SessionRoomPage extends ConsumerWidget {
       loading: () => Scaffold(
         appBar: AppBar(title: Text(l10n.sessionsRoomTitle)),
         body: const NuniLoading(),
+        bottomNavigationBar: const NuniStandaloneBottomNav(),
       ),
       error: (error, _) => Scaffold(
         appBar: AppBar(title: Text(l10n.sessionsRoomTitle)),
@@ -55,6 +57,7 @@ class SessionRoomPage extends ConsumerWidget {
             onRetry: () => ref.invalidate(sessionRoomProvider(sessionId)),
           ),
         ),
+        bottomNavigationBar: const NuniStandaloneBottomNav(),
       ),
       data: (room) {
         if (room.session.status != SessionStatus.draft) {
@@ -447,8 +450,12 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
           ],
         ],
       ),
-      bottomNavigationBar: isOwner
-          ? SafeArea(
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isOwner)
+            SafeArea(
+              bottom: false,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: NuniButton(
@@ -457,8 +464,10 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
                   onPressed: (_busy || !canStart) ? null : _start,
                 ),
               ),
-            )
-          : null,
+            ),
+          const NuniStandaloneBottomNav(),
+        ],
+      ),
     );
   }
 }
