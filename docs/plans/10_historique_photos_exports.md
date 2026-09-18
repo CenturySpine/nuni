@@ -91,7 +91,26 @@ mais découverts par lui :
   enregistrement sans toucher aux horaires laisse la météo intacte ; un changement d'heure de
   début la recalcule.
 
-Limite de vérification : l'upload de photos n'a pas pu être testé dans le navigateur automatisé
-(sélecteur de fichier natif, hors de portée des outils de ce test) ; le partage/téléchargement de
-l'image et du PDF n'a montré aucune erreur mais je n'ai pas pu confirmer la réception réelle du
-fichier en environnement automatisé. À vérifier par toi sur un vrai appareil.
+Upload de photo revérifié ensuite avec une vraie photo (fournie par le PO) : import dans la
+galerie, définition en couverture, incrustation dans le PDF et dans l'image de résultats, tous
+confirmés fonctionnels (export PDF récupéré et transmis au PO pour inspection directe).
+
+Retours PO sur l'image de résultats (2026-09-17/18), chacun revérifié à l'écran :
+- Proposer les photos déjà importées dans la session au lieu de forcer un nouveau choix sur le
+  système de fichiers (la bande de sélection montre désormais les photos de la session en premier,
+  "+" pour en ajouter une nouvelle en dernier recours).
+- L'assombrissement de toute la photo pour lire le texte altérait trop l'image : remplacé par un
+  calque semi-transparent localisé sous chaque bloc de texte, le reste de la photo intact.
+- Marges de la carte réduites (64 → 40 → 20 px).
+- Logo replacé à côté du titre (au lieu d'au-dessus) pour gagner en hauteur.
+- Le canevas carré fixe avec la photo en `contain` laissait des bandes noires quand elle ne
+  remplissait pas le carré ; la carte prend maintenant exactement la forme (le ratio) de la photo
+  choisie plutôt qu'un carré imposé — plus aucune bande, quelle que soit la photo.
+
+## Clôture (2026-09-18)
+
+Plan accepté par le PO. Le critère d'acceptation "PDF à 6 équipes et 9 trous tient sur une page"
+n'a pas été testé manuellement (jugé peu prioritaire par le PO) ; le tableau du générateur PDF n'a
+pas de logique de pagination ou de réduction automatique de police au-delà d'une certaine taille,
+donc une session à beaucoup d'équipes/trous pourrait déborder d'une page A4 — à ajuster plus tard
+si le cas se présente réellement.

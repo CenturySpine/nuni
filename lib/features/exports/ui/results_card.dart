@@ -12,10 +12,14 @@ import '../../live/domain/live_team.dart';
 import '../../sessions/ui/scoring_mode_label.dart';
 
 /// The "carte de résultats" (plan 10, Q16 -- both variants kept): a square
-/// share card, either on the app's own themed background or overlaid on a
-/// chosen photo. Captured to PNG via a `RepaintBoundary` around this widget
-/// (see `image_export.dart`), so it's built at a fixed pixel size rather
-/// than filling whatever space its parent gives it.
+/// share card on the app's own themed background, or -- on a chosen photo --
+/// a card shaped exactly like that photo (PO feedback, 2026-09-18: a fixed
+/// square with the photo letterboxed inside it left black bars where the
+/// photo didn't fill it; matching the card's own shape to the photo's
+/// avoids that entirely, no bars ever). Captured to PNG via a
+/// `RepaintBoundary` around this widget (see `image_export.dart`), so it's
+/// built at a fixed pixel size rather than filling whatever space its
+/// parent gives it.
 ///
 /// On a photo (PO feedback, 2026-09-17): the photo itself is never dimmed --
 /// a first version darkened the whole image to keep the text legible, which
@@ -26,10 +30,16 @@ class ResultsCard extends StatelessWidget {
     super.key,
     required this.entry,
     this.backgroundImageBytes,
+    this.photoAspectRatio,
   });
 
   final HistoryEntry entry;
   final Uint8List? backgroundImageBytes;
+
+  /// The photo's own width/height ratio (decoded by the caller, which has
+  /// the raw bytes before they're ever handed here). Ignored without a
+  /// photo, when the card is a fixed 1080x1080 square.
+  final double? photoAspectRatio;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +49,9 @@ class ResultsCard extends StatelessWidget {
     final teamById = {for (final t in entry.snapshot.teams) t.id: t};
     final onPhoto = backgroundImageBytes != null;
     final foreground = onPhoto ? Colors.white : null;
+    final ratio = photoAspectRatio ?? 1;
+    final cardWidth = 1080.0;
+    final cardHeight = onPhoto ? 1080.0 / ratio : 1080.0;
 
     final subtitleParts = [
       if (session.city != null && session.city!.isNotEmpty) session.city!,
@@ -59,21 +72,19 @@ class ResultsCard extends StatelessWidget {
           );
 
     return Container(
-      width: 1080,
-      height: 1080,
+      width: cardWidth,
+      height: cardHeight,
       decoration: BoxDecoration(
-        // With a photo, `contain` never crops it -- its own aspect ratio is
-        // always kept, letterboxed on this black backdrop instead of the
-        // square canvas stretching or cropping it to fit (PO feedback,
-        // 2026-09-17). Without one, this same colour is just the flat card
-        // background.
         color: onPhoto
-            ? Colors.black
+            ? null
             : Theme.of(context).colorScheme.surfaceContainerHighest,
+        // The card's own size already matches the photo's ratio exactly
+        // (above), so `cover` neither crops it nor needs letterboxing --
+        // it lands pixel-for-pixel.
         image: onPhoto
             ? DecorationImage(
                 image: MemoryImage(backgroundImageBytes!),
-                fit: BoxFit.contain,
+                fit: BoxFit.cover,
               )
             : null,
       ),

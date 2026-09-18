@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/errors/app_error_message.dart';
@@ -20,10 +21,12 @@ import 'results_card.dart';
 /// "Exporter en image" (plan 10, Q16 -- both variants): a full-screen
 /// preview of the `ResultsCard`, scaled to fit via `FittedBox` for on-screen
 /// display while the `RepaintBoundary` underneath stays at the card's real
-/// 1080x1080 -- what actually gets captured. The background photo strip
-/// offers the session's own photos first (PO feedback, 2026-09-17: no point
-/// asking to pick from the filesystem when photos are already in the
-/// session), with "add from device" only as one more tile alongside them.
+/// size -- 1080 wide, shaped to the chosen photo's own ratio (or a
+/// 1080x1080 square without one) -- which is what actually gets captured.
+/// The background photo strip offers the session's own photos first (PO
+/// feedback, 2026-09-17: no point asking to pick from the filesystem when
+/// photos are already in the session), with "add from device" only as one
+/// more tile alongside them.
 Future<void> showImageExportDialog(BuildContext context, HistoryEntry entry) =>
     showDialog<void>(
       context: context,
@@ -42,6 +45,7 @@ class _ImageExportDialog extends ConsumerStatefulWidget {
 class _ImageExportDialogState extends ConsumerState<_ImageExportDialog> {
   final _repaintKey = GlobalKey();
   Uint8List? _backgroundPhoto;
+  double? _backgroundAspectRatio;
   String? _selectedPhotoId;
   bool _busy = false;
 
@@ -49,6 +53,15 @@ class _ImageExportDialogState extends ConsumerState<_ImageExportDialog> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  /// The card is shaped to match the photo exactly (PO feedback,
+  /// 2026-09-18), so its ratio has to be known before the card can lay
+  /// itself out -- decoded here, once, rather than in `build()`.
+  double? _aspectRatioOf(Uint8List bytes) {
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null || decoded.height == 0) return null;
+    return decoded.width / decoded.height;
   }
 
   Future<void> _useSessionPhoto(SessionPhoto photo) async {
@@ -63,7 +76,12 @@ class _ImageExportDialogState extends ConsumerState<_ImageExportDialog> {
           .photoUrl(photo.storagePath);
       final response = await http.get(Uri.parse(url));
       if (response.statusCode != 200) throw Exception('download_failed');
-      if (mounted) setState(() => _backgroundPhoto = response.bodyBytes);
+      if (mounted) {
+        setState(() {
+          _backgroundPhoto = response.bodyBytes;
+          _backgroundAspectRatio = _aspectRatioOf(response.bodyBytes);
+        });
+      }
     } catch (error) {
       if (mounted) {
         setState(() => _selectedPhotoId = null);
@@ -80,6 +98,7 @@ class _ImageExportDialogState extends ConsumerState<_ImageExportDialog> {
     final bytes = resizeForUpload(await picked.readAsBytes(), maxWidth: 1080);
     setState(() {
       _backgroundPhoto = bytes;
+      _backgroundAspectRatio = _aspectRatioOf(bytes);
       _selectedPhotoId = null;
     });
   }
@@ -87,6 +106,7 @@ class _ImageExportDialogState extends ConsumerState<_ImageExportDialog> {
   void _clearPhoto() {
     setState(() {
       _backgroundPhoto = null;
+      _backgroundAspectRatio = null;
       _selectedPhotoId = null;
     });
   }
@@ -129,13 +149,16 @@ class _ImageExportDialogState extends ConsumerState<_ImageExportDialog> {
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: AspectRatio(
-                    aspectRatio: 1,
+                    // Matches the card's own computed shape so the preview
+                    // never shows bars the actual export doesn't have.
+                    aspectRatio: _backgroundAspectRatio ?? 1,
                     child: FittedBox(
                       child: RepaintBoundary(
                         key: _repaintKey,
                         child: ResultsCard(
                           entry: widget.entry,
                           backgroundImageBytes: _backgroundPhoto,
+                          photoAspectRatio: _backgroundAspectRatio,
                         ),
                       ),
                     ),
