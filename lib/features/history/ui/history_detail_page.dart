@@ -16,6 +16,7 @@ import '../../exports/ui/image_export_dialog.dart';
 import '../../exports/ui/pdf_export_action.dart';
 import '../../live/ui/played_hole_card.dart';
 import '../../live/ui/ranking_card.dart';
+import '../../sessions/data/sessions_repository.dart';
 import '../../sessions/ui/scoring_mode_label.dart';
 import '../data/history_repository.dart';
 import '../domain/history_entry.dart';
@@ -84,6 +85,12 @@ class _DetailView extends ConsumerWidget {
           .read(historyRepositoryProvider)
           .deleteSessionWithPhotos(sessionId: sessionId, photos: photos);
       ref.invalidate(historyEntriesProvider);
+      // Home's "en cours" / "dernières sessions" lists are separate
+      // providers (PO, 2026-09-18: a session deleted from history kept
+      // showing there) -- they don't refresh on their own just because
+      // history's list did.
+      ref.invalidate(myOngoingSessionsProvider);
+      ref.invalidate(myRecentSessionsProvider);
       if (context.mounted) context.go('/history');
     } catch (error) {
       if (context.mounted) {
