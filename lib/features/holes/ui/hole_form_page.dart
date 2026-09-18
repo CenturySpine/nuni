@@ -71,6 +71,7 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
   bool _saving = false;
   bool _locating = false;
   String? _loadedFor;
+  final _mapController = MapController();
 
   @override
   void initState() {
@@ -85,9 +86,14 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
     _parController.dispose();
     _distanceController.dispose();
     _descriptionController.dispose();
+    _mapController.dispose();
     super.dispose();
   }
 
+  /// The only situation allowed to move/zoom the map on its own (PO,
+  /// 2026-09-18): every other position change (tapping the map, undoing or
+  /// clearing a path point) leaves the current view exactly as the user left
+  /// it, so `_PositionPicker` never touches the map camera itself.
   Future<void> _useMyPosition({bool silent = false}) async {
     if (!silent) setState(() => _locating = true);
     final position = await ref
@@ -102,6 +108,9 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
         _syncParAndDistanceFromPath();
       }
     });
+    if (position != null && mounted) {
+      _mapController.move(_startPosition!, 16);
+    }
   }
 
   void _onStartPhotoPicked(Uint8List bytes) {
@@ -520,6 +529,7 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
                 ),
                 const SizedBox(height: 12),
                 _PositionPicker(
+                  mapController: _mapController,
                   startPosition: _startPosition,
                   endPosition: _endPosition,
                   path: _path,
@@ -635,8 +645,9 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
 /// above the map (PO, 2026-09-16) selects which marker a tap moves. There is
 /// no drag gesture on the base `flutter_map` marker layer, and tapping is at
 /// least as usable on a phone.
-class _PositionPicker extends StatefulWidget {
+class _PositionPicker extends StatelessWidget {
   const _PositionPicker({
+    required this.mapController,
     required this.startPosition,
     required this.endPosition,
     required this.path,
@@ -644,6 +655,7 @@ class _PositionPicker extends StatefulWidget {
     required this.onTap,
   });
 
+  final MapController mapController;
   final LatLng? startPosition;
   final LatLng? endPosition;
   final List<LatLng> path;
@@ -651,53 +663,30 @@ class _PositionPicker extends StatefulWidget {
   final ValueChanged<LatLng> onTap;
 
   @override
-  State<_PositionPicker> createState() => _PositionPickerState();
-}
-
-class _PositionPickerState extends State<_PositionPicker> {
-  final _mapController = MapController();
-
-  @override
-  void didUpdateWidget(covariant _PositionPicker oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.startPosition != null &&
-        widget.startPosition != oldWidget.startPosition) {
-      _mapController.move(widget.startPosition!, 16);
-    } else if (widget.endPosition != null &&
-        widget.endPosition != oldWidget.endPosition) {
-      _mapController.move(widget.endPosition!, 16);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final initial = widget.startPosition ?? widget.endPosition;
+    final initial = startPosition ?? endPosition;
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: SizedBox(
         height: 340,
         child: FlutterMap(
-          mapController: _mapController,
+          mapController: mapController,
           options: MapOptions(
             initialCenter: initial ?? _fallbackMapCenter,
             initialZoom: initial == null ? 5 : 16,
-            onTap: (tapPosition, point) => widget.onTap(point),
+            onTap: (tapPosition, point) => onTap(point),
           ),
           children: [
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'org.centuryspine.nuni',
             ),
-            if (widget.startPosition != null || widget.endPosition != null)
+            if (startPosition != null || endPosition != null)
               PolylineLayer(
                 polylines: [
                   Polyline(
-                    points: [
-                      if (widget.startPosition != null) widget.startPosition!,
-                      ...widget.path,
-                      if (widget.endPosition != null) widget.endPosition!,
-                    ],
+                    points: [?startPosition, ...path, ?endPosition],
                     color: scheme.error,
                     strokeWidth: 3,
                   ),
@@ -705,7 +694,7 @@ class _PositionPickerState extends State<_PositionPicker> {
               ),
             MarkerLayer(
               markers: [
-                for (final point in widget.path)
+                for (final point in path)
                   Marker(
                     point: point,
                     width: 14,
@@ -718,9 +707,9 @@ class _PositionPickerState extends State<_PositionPicker> {
                       ),
                     ),
                   ),
-                if (widget.startPosition != null)
+                if (startPosition != null)
                   Marker(
-                    point: widget.startPosition!,
+                    point: startPosition!,
                     width: 40,
                     height: 40,
                     alignment: Alignment.topCenter,
@@ -730,9 +719,9 @@ class _PositionPickerState extends State<_PositionPicker> {
                       size: 36,
                     ),
                   ),
-                if (widget.endPosition != null)
+                if (endPosition != null)
                   Marker(
-                    point: widget.endPosition!,
+                    point: endPosition!,
                     width: 40,
                     height: 40,
                     alignment: Alignment.topCenter,
