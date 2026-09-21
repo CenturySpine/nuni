@@ -37,7 +37,7 @@ liées. Les questions sont centralisées dans [QUESTIONS_PO.md](../QUESTIONS_PO.
 | 12 | Recette et mise en service | [12_recette_migration_mise_en_service.md](12_recette_migration_mise_en_service.md) | Scénarios de recette joués sur mobile, bascule |
 | 13 | Migration des données LsgScores (critique, planifiée en détail après l'étape 12) | [13_migration_donnees_lsgscores.md](13_migration_donnees_lsgscores.md) | Sessions, équipes, joueurs, trous et coups de l'ancienne base importés dans NUNI, vérifiés et consultables dans l'historique |
 | 14 | Suppression de compte (impacts sur les données d'autrui à trancher avant le détail des étapes, Q27–Q31) | [14_suppression_compte.md](14_suppression_compte.md) | Suppression de compte sans casser les sessions, scores et trous partagés avec d'autres utilisateurs |
-| 15 | Championnat individuel annuel (plan fonctionnel validé le 2026-09-21, Q38–Q42 tranchées ; plan technique détaillé restant à écrire) | [15_championnat_individuel_annuel.md](15_championnat_individuel_annuel.md) | Classement individuel annuel par zone géographique organique, agrégeant les sessions marquées "championnat", affiché en provisoire sur l'accueil |
+| 15 | Championnat individuel annuel (plans fonctionnel et technique rédigés et validés le 2026-09-21, Q38–Q45 toutes tranchées) | [15_championnat_individuel_annuel.md](15_championnat_individuel_annuel.md) | Classement individuel annuel par zone géographique organique, agrégeant les sessions marquées "championnat", affiché en provisoire sur l'accueil |
 
 ## Ordre et dépendances
 
@@ -54,8 +54,9 @@ liées. Les questions sont centralisées dans [QUESTIONS_PO.md](../QUESTIONS_PO.
   impacts sur les données d'autres utilisateurs (Q27–Q31) n'avaient pas été examinés ; son détail
   n'est écrit qu'une fois ces questions tranchées.
 - 15 dépend fonctionnellement de 7 (ville détectée à la création) et 8/10 (historique des scores),
-  déjà livrées ; indépendante de 11, 13 et 14 (Q42, tranchée). Plan fonctionnel validé par le PO le
-  2026-09-21 ; reste à écrire le plan technique détaillé avant implémentation (règle 1, AGENTS.md).
+  déjà livrées ; indépendante de 11, 13 et 14 (Q42, tranchée). Plans fonctionnel et technique
+  rédigés le 2026-09-21 ; implémentation à démarrer sur validation PO du plan technique (règle 1,
+  AGENTS.md).
 
 ## Jalons de validation avec le product owner
 

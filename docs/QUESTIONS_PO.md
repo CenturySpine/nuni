@@ -524,3 +524,29 @@ définitive, 13 récupération des anciennes données LsgScores, 14 suppression 
 championnat est développable dès maintenant, en parallèle ou avant : ces trois étapes ne touchent
 pas au domaine des sessions et des scores, rien de leur travail ne serait cassé ou à refaire si le
 championnat arrive avant ou en même temps.
+
+**Q43 ☑ — Une session en mode Équipe compte-t-elle pour le championnat individuel, et si oui
+comment répartir les points entre coéquipiers ?**
+Réponse PO (2026-09-21) : oui, les deux types de session comptent ; les coéquipiers d'une même
+équipe touchent tous les mêmes points ce jour-là (le classement et la présence de l'équipe leur
+sont attribués identiquement).
+Contexte découvert en rédigeant le plan technique : le plan fonctionnel ne distinguait pas
+individuel/équipe. Suggestion initiale (écartée) : n'admettre que les sessions individuelles, pour
+que chaque résultat du jour appartienne à une seule personne.
+
+**Q44 ☑ — Quel rayon utiliser pour rapprocher automatiquement des sessions dans une même zone de
+championnat ?**
+Réponse PO (2026-09-21) : 15 km, fixe, non réglable.
+Suggestion : échelle d'une agglomération et ses environs proches — assez large pour ne pas
+fragmenter des communes limitrophes d'une même ville, assez étroit pour ne pas fusionner deux
+villes clairement distinctes. À comparer au rayon de 1 km (glissable 0–10 km) déjà utilisé pour
+retrouver les trous à proximité (Q10), qui répond à un besoin différent (retrouver un lieu précis,
+pas rapprocher des villes).
+
+**Q45 ☑ — En cas d'égalité du total de points en fin de saison entre deux joueurs, comment les
+départager à l'affichage ?**
+Réponse PO (2026-09-21) : le nombre de sessions championnat jouées départage en premier (le plus
+présent gagne) ; si cette présence est elle aussi égale, égalité finale (affichés à la même
+position, "ex æquo").
+Suggestion initiale (écartée) : aucun départage forcé, tri alphabétique pour la seule stabilité de
+l'affichage.
