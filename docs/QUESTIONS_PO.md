@@ -474,3 +474,53 @@ participants.
 Suggestion : Edge Function (déjà documentée comme la voie recommandée au plan 03) — supprimer un
 utilisateur `auth` depuis une fonction SQL exige des privilèges que Postgres n'expose pas
 proprement ; l'API admin de Supabase (rôle `service_role`) est le chemin prévu pour ça.
+
+## Championnat individuel annuel (étape 15)
+
+Décisions de principe déjà tranchées par le PO le 2026-09-21 (tagage par le créateur seul même
+après clôture ; zones géographiques par proximité entre sessions, pas par nom de ville ; points de
+classement selon la position et le nombre de participants du jour, plus un point de présence fixe
+en plus). Détail complet : [plans/15_championnat_individuel_annuel.md](plans/15_championnat_individuel_annuel.md).
+
+**Q38 ☑ — Bornes exactes de la "saison" du championnat (année scolaire, ex. 2026-2027) ?**
+Réponse PO (2026-09-21) : suggestion retenue, du 1er septembre au 31 août de l'année suivante.
+Suggestion : couvre toute l'année sans coupure ni zone grise (contrairement à une saison type
+"septembre-juin" qui laisserait les sessions d'été hors de toute saison), et correspond à l'usage
+courant du terme "année scolaire" pour nommer une saison (2026-2027).
+
+**Q39 ☑ — Faut-il un nombre minimal de sessions championnat jouées pour apparaître au classement
+(provisoire ou final) ?**
+Réponse PO (2026-09-21) : suggestion retenue, aucun minimum.
+Suggestion : le point de présence fixe (décision du 2026-09-21) décourage déjà les scores gonflés
+par une seule bonne performance sans y ajouter une deuxième règle à expliquer aux joueurs ; un
+joueur n'ayant joué qu'une session apparaîtra simplement avec un total faible, comparable à sa
+seule participation.
+Point d'attention conservé : tôt dans la saison, un joueur n'ayant joué qu'une seule session et bien
+classé ce jour-là peut se retrouver provisoirement en tête, avant que les joueurs réguliers
+n'accumulent davantage de sessions. Le classement est alors explicitement "provisoire" à l'écran
+pour ne pas laisser croire à un résultat acquis.
+
+**Q40 ☑ — Égalité de classement au sein d'une session championnat (deux joueurs ex æquo ce
+jour-là) : mêmes points de classement aux deux, ou répartition ?**
+Réponse PO (2026-09-21) : suggestion retenue, mêmes points aux deux.
+Suggestion : celui de la meilleure des deux positions à égalité (pas de moyenne ni de partage).
+Cohérent avec l'affichage déjà existant des égalités ("ex æquo") en mode Libre et Match Play (Q7b) ;
+une règle de partage introduirait des demi-points ou des arrondis à expliquer sans bénéfice
+fonctionnel clair.
+
+**Q41 ☑ — Comment nommer une zone de championnat à l'écran, puisqu'il n'existe plus de référentiel
+ville ?**
+Réponse PO (2026-09-21) : suggestion retenue.
+Suggestion : le nom affiché est déduit automatiquement du texte "ville" le plus fréquent parmi les
+sessions qui composent la zone, recalculé à mesure que de nouvelles sessions s'y ajoutent. Aucune
+saisie à faire par un administrateur au lancement. Une correction manuelle du nom pourra être
+ajoutée plus tard si le nom déduit s'avère trompeur (par exemple une zone à cheval sur deux
+communes), mais n'est pas indispensable pour démarrer.
+
+**Q42 ☑ — Où caler cette étape dans l'ordre du plan d'ensemble ?**
+Réponse PO (2026-09-21) : suggestion retenue, aucune contrainte avec les étapes non terminées.
+Reformulation : le plan d'ensemble a encore trois étapes non terminées (11 mise en ligne
+définitive, 13 récupération des anciennes données LsgScores, 14 suppression de compte). Le
+championnat est développable dès maintenant, en parallèle ou avant : ces trois étapes ne touchent
+pas au domaine des sessions et des scores, rien de leur travail ne serait cassé ou à refaire si le
+championnat arrive avant ou en même temps.
