@@ -38,6 +38,7 @@ liées. Les questions sont centralisées dans [QUESTIONS_PO.md](../QUESTIONS_PO.
 | 13 | Migration des données LsgScores (critique, planifiée en détail après l'étape 12) | [13_migration_donnees_lsgscores.md](13_migration_donnees_lsgscores.md) | Sessions, équipes, joueurs, trous et coups de l'ancienne base importés dans NUNI, vérifiés et consultables dans l'historique |
 | 14 | Suppression de compte (impacts sur les données d'autrui à trancher avant le détail des étapes, Q27–Q31) | [14_suppression_compte.md](14_suppression_compte.md) | Suppression de compte sans casser les sessions, scores et trous partagés avec d'autres utilisateurs |
 | 15 | Championnat individuel annuel (plans fonctionnel et technique rédigés et validés le 2026-09-21, Q38–Q45 toutes tranchées) | [15_championnat_individuel_annuel.md](15_championnat_individuel_annuel.md) | Classement individuel annuel par zone géographique organique, agrégeant les sessions marquées "championnat", affiché en provisoire sur l'accueil |
+| 16 | Rôles applicatifs (super_admin / player), validé par le PO le 2026-09-22 (Q46–Q47) | [16_roles_applicatifs.md](16_roles_applicatifs.md) | Rôle applicatif `super_admin` pour le PO seul, `player` par défaut pour tous les autres comptes, fondation pour de futures actions structurantes — aucun écran ni politique existante modifiés à ce stade |
 
 ## Ordre et dépendances
 
@@ -57,6 +58,9 @@ liées. Les questions sont centralisées dans [QUESTIONS_PO.md](../QUESTIONS_PO.
   déjà livrées ; indépendante de 11, 13 et 14 (Q42, tranchée). Plans fonctionnel et technique
   rédigés le 2026-09-21 ; implémentation à démarrer sur validation PO du plan technique (règle 1,
   AGENTS.md).
+- 16 ne dépend d'aucune autre étape (schéma seul, aucun écran) ; prépare une alternative pour le
+  plan 13 (M5, tagage rétroactif "championnat" des sessions importées) sans l'imposer — ce choix
+  reste ouvert au moment où le plan 13 sera détaillé.
 
 ## Jalons de validation avec le product owner
 

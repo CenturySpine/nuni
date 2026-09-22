@@ -2,6 +2,7 @@
 -- Every policy targets "authenticated": the app requires Google sign-in for all table access;
 -- only storage objects (plan storage.sql) are readable anonymously.
 
+alter table user_roles enable row level security;
 alter table players enable row level security;
 alter table holes enable row level security;
 alter table sessions enable row level security;
@@ -17,6 +18,7 @@ alter table session_photos enable row level security;
 -- roles (verified: tables created by our migration role got none of it, confirmed by running the
 -- app's own queries impersonated as authenticated and hitting "permission denied"). No table
 -- grants anything to anon: the app requires sign-in throughout.
+grant select on user_roles to authenticated;
 grant select, update on players to authenticated;
 grant select, insert, update, delete on holes to authenticated;
 grant select, insert, update, delete on sessions to authenticated;
@@ -26,6 +28,13 @@ grant select, insert, update, delete on session_members to authenticated;
 grant select, insert, update, delete on played_holes to authenticated;
 grant select, insert, update, delete on scores to authenticated;
 grant select, insert, update, delete on session_photos to authenticated;
+
+-- user_roles: a user reads only their own row (can I see admin-only UI?), never anyone else's.
+-- No insert/update/delete policy or grant at all (plan 16): the table is only ever written by
+-- direct database access with the service key (bootstrap, or any future promotion) -- no
+-- escalation path exists through the app, even from a compromised client.
+create policy "user_roles_select_self" on user_roles for select to authenticated
+  using (user_id = (select auth.uid()));
 
 -- players: shared read-only directory, write by the linked user only. No client insert/delete
 -- (Q24: created by the trigger at sign-up, or by the plan 13 import). This is also the

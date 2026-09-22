@@ -13,8 +13,13 @@ porte directement les réglages de compte (nom, avatar, langue) et référence `
 directement (décision PO, 2026-09-16).
 
 `players.user_id`, `holes.owner_id`, `sessions.owner_id`, `session_members.user_id`,
-`scores.updated_by` et `session_photos.uploaded_by` référencent tous `auth.users` (géré par
-Supabase, hors de ce schéma), non représenté dans le diagramme ci-dessous.
+`scores.updated_by`, `session_photos.uploaded_by` et `user_roles.user_id` référencent tous
+`auth.users` (géré par Supabase, hors de ce schéma), non représenté dans le diagramme ci-dessous.
+
+`user_roles` (plan 16) n'est pas dans le diagramme ci-dessous, qui décrit le domaine
+sessions/scores : c'est une table à part, sans autre relation que `auth.users`, `user_id uuid PK
+FK` + `role app_role` (`player`|`super_admin`, défaut `player`) + `created_at`. Ne contient que
+les exceptions (les `super_admin`) ; un compte absent de la table est un `player` implicite.
 
 ```mermaid
 erDiagram
@@ -107,20 +112,24 @@ erDiagram
 | `scoring_mode` | `stroke_play`, `match_play`, `redistribution`, `free` |
 | `ranking_direction` | `asc`, `desc` (libre en mode `free`, Q7b) |
 | `game_mode` | `individual`, `scramble`, `greensome`, `best_ball` |
-| `member_role` | `owner`, `player` |
+| `member_role` | `owner`, `player` (rôle **dans une session** — sans rapport avec `app_role`) |
+| `app_role` | `player`, `super_admin` (rôle **applicatif**, plan 16) |
 
 ## Politiques d'accès (RLS)
 
-Toutes les tables ci-dessus ont RLS activée, ciblant uniquement le rôle `authenticated` (l'app
-exige une connexion Google partout ; seuls les buckets de stockage sont lisibles anonymement).
-Deux fonctions `security definer` évitent les politiques récursives :
+Toutes les tables ci-dessus, plus `user_roles`, ont RLS activée, ciblant uniquement le rôle
+`authenticated` (l'app exige une connexion Google partout ; seuls les buckets de stockage sont
+lisibles anonymement). Trois fonctions `security definer` évitent les politiques récursives :
 `is_session_member(session_id)` et `is_session_owner(session_id)` (propriétaire au sens large :
-créateur ou co-organisateur promu, `session_members.role = 'owner'`).
+créateur ou co-organisateur promu, `session_members.role = 'owner'`), et `is_super_admin()`
+(plan 16, rôle applicatif `user_roles.role = 'super_admin'` — pas encore référencée par une
+politique existante, prête pour de futures actions structurantes).
 
 Résumé par table (détail exact dans `supabase/migrations/20260915100400_rls.sql`) :
 
 | Table | Lecture | Écriture |
 |---|---|---|
+| `user_roles` | soi-même seulement | aucune (accès direct base, clé service, plan 16) |
 | `players` | tout authentifié | le joueur lié (`user_id`) ; aucune création cliente (Q24) |
 | `holes` | public, mes trous, ou joué dans une session dont je suis membre (Q13) | propriétaire |
 | `sessions` | membres | propriétaire (modif/suppr) ; insertion par l'auteur |
@@ -147,9 +156,9 @@ CLI de migration (vérifié : sans ce `GRANT` explicite, `authenticated` n'a auc
 - `start_session(session_id)` — passage en `live` (Q25) : une équipe par participant en
   individuel, aucun participant non affecté en équipe.
 
-Ces quatre fonctions, plus `is_session_member`/`is_session_owner`, ont leur droit d'exécution par
-défaut à `PUBLIC` révoqué puis regranté uniquement à `authenticated` (sinon un utilisateur non
-connecté peut les appeler).
+Ces quatre fonctions, plus `is_session_member`/`is_session_owner`/`is_super_admin`, ont leur droit
+d'exécution par défaut à `PUBLIC` révoqué puis regranté uniquement à `authenticated` (sinon un
+utilisateur non connecté peut les appeler).
 
 ## Temps réel et stockage
 

@@ -81,7 +81,12 @@ npx supabase db push
 #    langue) et la page Profil casse pour lui. Sans effet si la fiche existe déjà.
 npx supabase db query --linked -f supabase/backfill_players.sql
 
-# 5. Optionnel : rejouer les trous de test du PO sur le projet distant (supabase/remote_seed.sql,
+# 5. Obligatoire : reposer le rôle "super_admin" du PO (supabase/seed_super_admin.sql, committé,
+#    plan 16). La table "user_roles" est recréée vide comme les autres — sans cette étape,
+#    personne n'a de droit élevé après une reconstruction. Sans effet si la ligne existe déjà.
+npx supabase db query --linked -f supabase/seed_super_admin.sql
+
+# 6. Optionnel : rejouer les trous de test du PO sur le projet distant (supabase/remote_seed.sql,
 #    committé — différent de supabase/seed.sql, qui reste local-Docker uniquement, cf. son
 #    en-tête). Sans effet si les lignes existent déjà ("on conflict do nothing").
 npx supabase db query --linked -f supabase/remote_seed.sql

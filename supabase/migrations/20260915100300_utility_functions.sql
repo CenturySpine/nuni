@@ -29,9 +29,27 @@ as $$
   );
 $$;
 
+-- App-wide role check (plan 16), same shape as the two functions above. Not yet referenced by
+-- any RLS policy: a foundation for future structuring actions to opt into individually.
+create or replace function is_super_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from user_roles
+    where user_id = auth.uid()
+      and role = 'super_admin'
+  );
+$$;
+
 -- Postgres grants EXECUTE to PUBLIC by default at creation; revoke it so only signed-in clients
 -- (not anon) can call these.
 revoke execute on function is_session_member(uuid) from public;
 revoke execute on function is_session_owner(uuid) from public;
+revoke execute on function is_super_admin() from public;
 grant execute on function is_session_member(uuid) to authenticated;
 grant execute on function is_session_owner(uuid) to authenticated;
+grant execute on function is_super_admin() to authenticated;

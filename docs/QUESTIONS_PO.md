@@ -550,3 +550,30 @@ présent gagne) ; si cette présence est elle aussi égale, égalité finale (af
 position, "ex æquo").
 Suggestion initiale (écartée) : aucun départage forcé, tri alphabétique pour la seule stabilité de
 l'affichage.
+
+## Rôles applicatifs (étape 16)
+
+Demande PO du 2026-09-22 : aucun compte n'a de droit élevé dans NUNI pour effectuer des
+modifications structurantes (exemple donné : le tagage rétroactif de sessions LsgScores importées
+comme "championnat", plan 13 M5). Détail complet :
+[plans/16_roles_applicatifs.md](plans/16_roles_applicatifs.md).
+
+**Q46 ☑ — Le rôle applicatif doit-il être lié à l'utilisateur authentifié (`auth.users`) ou au
+joueur (`players`) ?**
+Réponse PO (2026-09-22) : suggestion retenue, `auth.users`.
+Suggestion : cohérent avec les contrôles d'accès déjà en place — `is_session_owner()` et
+`is_session_member()` vérifient déjà `auth.uid()`, jamais un `player_id`. Un rôle applicatif
+décrit qui a le droit d'agir dans l'app, pas quel joueur on incarne en partie ; il doit suivre la
+même identité que le reste des contrôles. `players.user_id` peut en plus être vide (joueur importé
+de LsgScores, Q24), ce qui aurait de toute façon fait retomber un rôle posé là sur l'utilisateur
+authentifié dans ce cas.
+
+**Q47 ☑ — Faut-il une vraie table catalogue des rôles ("Roles" avec les lignes super_admin/player,
+telle que demandée initialement) ou un type énuméré Postgres avec une seule table de lien ?**
+Réponse PO (2026-09-22) : suggestion retenue, type énuméré `app_role` (`player`, `super_admin`) +
+table de lien `user_roles(user_id, role)`.
+Suggestion : même famille que `member_role` (owner/player par session), déjà en place. AGENTS.md
+interdit explicitement une table de référence pour un ensemble de valeurs fixe et connu d'avance
+(déjà appliqué à `scoring_mode`/`game_mode`, jamais de table `scoring_modes`). Seule l'exception
+(`super_admin`) est stockée dans `user_roles` ; un compte absent de la table est un `player`
+implicite, sans ligne à créer pour chaque compte à l'inscription.

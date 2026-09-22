@@ -85,6 +85,11 @@ perte, puis retirer l'ancienne app.
   rattachement à une zone se fait alors par le même mécanisme automatique que toute session
   championnat (ci-dessus), à condition que l'étape 1 (repositionnement des trous) soit terminée
   avant l'étape 2 (import des sessions).
+  **Mise à jour 2026-09-22 (plan 16)** : un rôle applicatif `super_admin` existe désormais
+  (`is_super_admin()`, `user_roles`), porté uniquement par le PO. Alternative possible au script à
+  clé service pour ce tagage rétroactif : une action côté app protégée par `is_super_admin()`.
+  Reste à trancher au moment où ce plan sera détaillé — pas un changement forcé par le plan 16,
+  qui ne touche aucune politique RLS existante.
 
 ## Critères d'acceptation (cadre)
 

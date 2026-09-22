@@ -18,6 +18,16 @@ create table players (
   created_at timestamptz not null default now()
 );
 
+-- App-wide role, distinct from session_members.role (plan 16). Only exceptions are stored: a
+-- user with no row here is an implicit 'player' -- no trigger populates one at sign-up, unlike
+-- players. Bootstrapped by supabase/seed_super_admin.sql, mandatory after every reconstruction
+-- (rule 8, AGENTS.md) since this table lives in "public" like players.
+create table user_roles (
+  user_id uuid primary key references auth.users (id),
+  role app_role not null default 'player',
+  created_at timestamptz not null default now()
+);
+
 create table holes (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references auth.users (id),
