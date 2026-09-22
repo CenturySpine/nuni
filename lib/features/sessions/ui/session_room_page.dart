@@ -26,6 +26,7 @@ import '../domain/session_room.dart';
 import '../domain/team.dart';
 import '../domain/team_composition.dart';
 import 'add_participant_sheet.dart';
+import 'championship_toggle.dart';
 import 'invite_sheet.dart';
 
 /// `/session/:id`: the waiting room while `status = draft` (plan 07);
@@ -262,6 +263,35 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
     }
   }
 
+  Future<void> _toggleChampionship(bool value) async {
+    setState(() => _busy = true);
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final repo = ref.read(sessionsRepositoryProvider);
+      final tagged = await repo.setChampionship(
+        sessionId: widget.sessionId,
+        isChampionship: value,
+      );
+      ref.invalidate(sessionRoomProvider(widget.sessionId));
+      if (value && mounted) {
+        final zoneLabel = tagged.championshipZoneId == null
+            ? null
+            : await repo.championshipZoneLabel(tagged.championshipZoneId!);
+        if (mounted) {
+          await showChampionshipTagConfirmation(
+            context,
+            zoneLabel: zoneLabel,
+            season: tagged.championshipSeason ?? '',
+          );
+        }
+      }
+    } catch (error) {
+      _showSnack(describeError(error, l10n));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _start() async {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _busy = true);
@@ -440,7 +470,13 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
                 ],
               ),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+            ChampionshipToggle(
+              value: room.session.isChampionship,
+              locationKnown: room.session.locationLat != null,
+              onChanged: _busy ? null : _toggleChampionship,
+            ),
+            const SizedBox(height: 8),
             NuniButton(
               variant: NuniButtonVariant.danger,
               icon: PhosphorIcons.trash,

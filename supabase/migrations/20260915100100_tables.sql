@@ -59,6 +59,17 @@ create table holes (
   updated_at timestamptz not null default now()
 );
 
+-- Championship zones (plan 15): organic geographic groupings of "championship"-tagged sessions,
+-- emerging from where sessions are actually played rather than from an administered city/zone
+-- referential. Deliberately minimal -- no "name" column, its display label is derived at read
+-- time (championship_zone_label, utility_functions.sql) from the cities of its member sessions,
+-- never stored, so it can never drift out of sync and never needs an extra write when a new
+-- session joins.
+create table championship_zones (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now()
+);
+
 create table sessions (
   id uuid primary key default gen_random_uuid(),
   code text not null unique,
@@ -79,6 +90,18 @@ create table sessions (
   weather jsonb,
   comment text,
   cover_photo_id uuid,
+  -- Championship tagging (plan 15): posed by the creator (is_championship), the rest computed and
+  -- frozen by a trigger (triggers.sql) -- never posed by the client.
+  is_championship boolean not null default false,
+  championship_zone_id uuid references championship_zones (id),
+  -- "September Y to August Y+1" season, derived from when the session was played -- never typed
+  -- in. NOT a generated column, unlike location_lat/location_lng above: Postgres requires a
+  -- generated column's expression to be IMMUTABLE, and extracting year/month from a timestamptz
+  -- is only STABLE (it depends on the session's TimeZone setting) -- confirmed the hard way,
+  -- `create table` refused with "generation expression is not immutable" (SQLSTATE 42P17).
+  -- Recomputed instead on every insert/update by the trigger below, same trigger that assigns
+  -- the zone -- the client still never writes it directly.
+  championship_season text,
   legacy_id bigint unique,
   created_at timestamptz not null default now()
 );

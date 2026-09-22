@@ -275,6 +275,9 @@ as $$
         'weather', s.weather,
         'comment', s.comment,
         'cover_photo_id', s.cover_photo_id,
+        'is_championship', s.is_championship,
+        'championship_zone_id', s.championship_zone_id,
+        'championship_season', s.championship_season,
         -- The cover photo's storage path, not just its id: the client
         -- builds the public URL from a path (plan 10), and joining it here
         -- once is simpler than a separate `session_photos` lookup per card
@@ -370,6 +373,32 @@ $$;
 
 revoke execute on function history_snapshots() from public;
 grant execute on function history_snapshots() to authenticated;
+
+-- Every completed, championship-tagged session of one zone/season, shaped exactly like a single
+-- `session_snapshot` call (plan 15, same reasoning as history_snapshots above): the client
+-- computes each session's standings with the same tested `computeStandings`, then folds ranking
+-- and attendance points into a season total in Dart (AGENTS.md: classement calculated in Dart,
+-- the base only stores entered values). security definer, unlike history_snapshots: exposes
+-- sessions regardless of the caller's own membership, restricted instead to sessions explicitly
+-- marked championship and completed in this zone/season -- a session that isn't marked stays
+-- invisible to non-members, RLS unchanged for it.
+create or replace function championship_zone_results(p_zone_id uuid, p_season text)
+returns jsonb
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select coalesce(jsonb_agg(session_snapshot(s.id) order by s.started_at desc nulls last), '[]'::jsonb)
+  from sessions s
+  where s.is_championship
+    and s.status = 'completed'
+    and s.championship_zone_id = p_zone_id
+    and s.championship_season = p_season;
+$$;
+
+revoke execute on function championship_zone_results(uuid, text) from public;
+grant execute on function championship_zone_results(uuid, text) to authenticated;
 
 -- Adds a played hole (owner-only -- RLS `played_holes_owner_write`): appends at the next
 -- position. A plain client-side insert would need a "next position" round trip first (like

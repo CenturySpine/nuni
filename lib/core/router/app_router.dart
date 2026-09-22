@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/ui/auth_page.dart';
+import '../../features/championship/ui/championship_page.dart';
 import '../../features/history/ui/history_detail_page.dart';
 import '../../features/history/ui/history_page.dart';
 import '../../features/holes/ui/hole_form_page.dart';
@@ -129,6 +130,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/history/:id',
         builder: (context, state) =>
             HistoryDetailPage(sessionId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/championship',
+        builder: (context, state) => const ChampionshipPage(),
       ),
       if (kDebugMode)
         GoRoute(

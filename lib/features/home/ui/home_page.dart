@@ -10,6 +10,7 @@ import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_card.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../championship/ui/championship_home_card.dart';
 import '../../join/ui/join_by_code_sheet.dart';
 import '../../sessions/data/sessions_repository.dart';
 import '../../sessions/domain/my_session_entry.dart';
@@ -39,31 +40,35 @@ class HomePage extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: NuniButton(
-                icon: PhosphorIcons.plus,
-                label: l10n.homeCreateSessionAction,
-                onPressed: () => context.push('/session/new'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: NuniButton(
-                variant: NuniButtonVariant.secondary,
-                icon: PhosphorIcons.signIn,
-                label: l10n.homeJoinAction,
-                onPressed: () => _join(context),
-              ),
-            ),
-          ],
-        ),
+        const ChampionshipHomeSection(),
         const SizedBox(height: 24),
         _SessionSection(
           title: l10n.homeSectionOngoing,
           emptyMessage: l10n.homeOngoingEmpty,
           entries: ref.watch(myOngoingSessionsProvider),
+          actions: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: NuniButton(
+                    icon: PhosphorIcons.plus,
+                    label: l10n.homeCreateSessionAction,
+                    onPressed: () => context.push('/session/new'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: NuniButton(
+                    variant: NuniButtonVariant.secondary,
+                    icon: PhosphorIcons.signIn,
+                    label: l10n.homeJoinAction,
+                    onPressed: () => _join(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 24),
         _SessionSection(
@@ -81,11 +86,13 @@ class _SessionSection extends StatelessWidget {
     required this.title,
     required this.emptyMessage,
     required this.entries,
+    this.actions,
   });
 
   final String title;
   final String emptyMessage;
   final AsyncValue<List<MySessionEntry>> entries;
+  final Widget? actions;
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +105,7 @@ class _SessionSection extends StatelessWidget {
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(title, style: Theme.of(context).textTheme.titleMedium),
         ),
+        ?actions,
         entries.when(
           data: (list) => list.isEmpty
               ? NuniCard(child: Text(emptyMessage))

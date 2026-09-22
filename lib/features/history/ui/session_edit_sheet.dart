@@ -8,6 +8,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
 import '../../sessions/data/sessions_repository.dart';
 import '../../sessions/domain/session.dart';
+import '../../sessions/ui/championship_toggle.dart';
 import '../data/history_repository.dart';
 import '../domain/schedule_validation.dart';
 
@@ -37,6 +38,7 @@ class _SessionEditSheetState extends ConsumerState<SessionEditSheet> {
   late TimeOfDay _startTime;
   late TimeOfDay _endTime;
   late final TextEditingController _commentController;
+  late bool _isChampionship;
   bool _saving = false;
   String? _error;
 
@@ -49,6 +51,7 @@ class _SessionEditSheetState extends ConsumerState<SessionEditSheet> {
     _startTime = TimeOfDay.fromDateTime(startedAt);
     _endTime = TimeOfDay.fromDateTime(endedAt);
     _commentController = TextEditingController(text: widget.session.comment);
+    _isChampionship = widget.session.isChampionship;
   }
 
   @override
@@ -159,6 +162,29 @@ class _SessionEditSheetState extends ConsumerState<SessionEditSheet> {
         }
       }
 
+      if (_isChampionship != widget.session.isChampionship) {
+        final tagged = await ref
+            .read(sessionsRepositoryProvider)
+            .setChampionship(
+              sessionId: widget.session.id,
+              isChampionship: _isChampionship,
+            );
+        if (_isChampionship && mounted) {
+          final zoneLabel = tagged.championshipZoneId == null
+              ? null
+              : await ref
+                    .read(sessionsRepositoryProvider)
+                    .championshipZoneLabel(tagged.championshipZoneId!);
+          if (mounted) {
+            await showChampionshipTagConfirmation(
+              context,
+              zoneLabel: zoneLabel,
+              season: tagged.championshipSeason ?? '',
+            );
+          }
+        }
+      }
+
       ref.invalidate(historyDetailProvider(widget.session.id));
       ref.invalidate(historyEntriesProvider);
       if (mounted) Navigator.of(context).pop(true);
@@ -215,6 +241,13 @@ class _SessionEditSheetState extends ConsumerState<SessionEditSheet> {
             title: Text(l10n.historyEditEndTimeLabel),
             subtitle: Text(_endTime.format(context)),
             onTap: _saving ? null : _pickEndTime,
+          ),
+          ChampionshipToggle(
+            value: _isChampionship,
+            locationKnown: widget.session.locationLat != null,
+            onChanged: _saving
+                ? null
+                : (value) => setState(() => _isChampionship = value),
           ),
           const SizedBox(height: 8),
           TextField(

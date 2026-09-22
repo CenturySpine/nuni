@@ -8,12 +8,16 @@ import '../../../core/supabase/supabase_providers.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../core/weather/weather_icon.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/nuni_card.dart';
 import '../../../shared/nuni_confirm_dialog.dart';
 import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../championship/domain/championship_session_result.dart';
 import '../../exports/ui/image_export_dialog.dart';
 import '../../exports/ui/pdf_export_action.dart';
+import '../../live/domain/live_team.dart';
+import '../../live/domain/team_standing.dart';
 import '../../live/ui/played_hole_card.dart';
 import '../../live/ui/ranking_card.dart';
 import '../../sessions/data/sessions_repository.dart';
@@ -158,6 +162,13 @@ class _DetailView extends ConsumerWidget {
           teams: entry.snapshot.teams,
           playedHoles: entry.snapshot.playedHoles,
         ),
+        if (session.isChampionship) ...[
+          const SizedBox(height: 16),
+          _ChampionshipPointsCard(
+            teams: entry.snapshot.teams,
+            standings: entry.standings,
+          ),
+        ],
         const SizedBox(height: 16),
         for (final playedHole in entry.snapshot.playedHoles)
           Padding(
@@ -218,6 +229,57 @@ class _DetailView extends ConsumerWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// Championship points earned this session (plan 15, parcours 4), per team
+/// -- every teammate of a Team-mode session earns identically (Q43), so a
+/// per-team line already shows each player's own total. Ranking points
+/// alone come from the same [TeamStanding] the ranking card above already
+/// computed; the fixed attendance point is added here.
+class _ChampionshipPointsCard extends StatelessWidget {
+  const _ChampionshipPointsCard({required this.teams, required this.standings});
+
+  final List<LiveTeam> teams;
+  final List<TeamStanding> standings;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final rankingPoints = sessionRankingPoints(standings);
+    final teamById = {for (final t in teams) t.id: t};
+    final ordered = [...standings]
+      ..sort((a, b) => a.position.compareTo(b.position));
+
+    return NuniCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.championshipPointsCardTitle,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: 8),
+          for (final standing in ordered)
+            if (teamById[standing.teamId] case final team?)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  children: [
+                    Expanded(child: Text(team.playerNames())),
+                    Text(
+                      l10n.championshipPointsValue(
+                        (rankingPoints[team.id] ?? 0) +
+                            championshipAttendancePoints,
+                      ),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+        ],
+      ),
     );
   }
 }

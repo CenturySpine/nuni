@@ -18,6 +18,7 @@ import '../data/sessions_repository.dart';
 import '../domain/ranking_direction.dart';
 import '../domain/scoring_mode.dart';
 import '../domain/session_kind.dart';
+import 'championship_toggle.dart';
 import 'scoring_mode_info_sheet.dart';
 
 /// `/session/new` (plan 07): parameters only -- team composition happens
@@ -37,6 +38,7 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
 
   SessionKind _kind = SessionKind.individual;
   ScoringMode _scoringMode = ScoringMode.strokePlay;
+  bool _isChampionship = false;
 
   Position? _position;
   bool _creating = false;
@@ -112,11 +114,33 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
         lng: _position?.longitude,
       );
 
+      var taggedSession = session;
+      if (_isChampionship) {
+        taggedSession = await repo.setChampionship(
+          sessionId: session.id,
+          isChampionship: true,
+        );
+        if (mounted) {
+          final zoneLabel = taggedSession.championshipZoneId == null
+              ? null
+              : await repo.championshipZoneLabel(
+                  taggedSession.championshipZoneId!,
+                );
+          if (mounted) {
+            await showChampionshipTagConfirmation(
+              context,
+              zoneLabel: zoneLabel,
+              season: taggedSession.championshipSeason ?? '',
+            );
+          }
+        }
+      }
+
       // Home's "Mes sessions en cours" list is a plain Future provider kept
       // alive by the bottom-nav IndexedStack (never disposed by navigating
       // away), so it won't pick up the new session on its own.
       ref.invalidate(myOngoingSessionsProvider);
-      if (mounted) context.go('/session/${session.id}');
+      if (mounted) context.go('/session/${taggedSession.id}');
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -258,7 +282,13 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
               ],
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
+          ChampionshipToggle(
+            value: _isChampionship,
+            locationKnown: _position != null,
+            onChanged: (value) => setState(() => _isChampionship = value),
+          ),
+          const SizedBox(height: 16),
           NuniButton(
             label: l10n.sessionsCreateSubmit,
             onPressed: _creating ? null : _create,

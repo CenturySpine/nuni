@@ -27,6 +27,9 @@ _Session _$SessionFromJson(Map<String, dynamic> json) => _Session(
   comment: json['comment'] as String?,
   coverPhotoId: json['cover_photo_id'] as String?,
   coverPhotoPath: json['cover_photo_path'] as String?,
+  isChampionship: json['is_championship'] as bool? ?? false,
+  championshipZoneId: json['championship_zone_id'] as String?,
+  championshipSeason: json['championship_season'] as String?,
   createdAt: DateTime.parse(json['created_at'] as String),
   startedAt: json['started_at'] == null
       ? null
@@ -52,6 +55,9 @@ Map<String, dynamic> _$SessionToJson(_Session instance) => <String, dynamic>{
   'comment': instance.comment,
   'cover_photo_id': instance.coverPhotoId,
   'cover_photo_path': instance.coverPhotoPath,
+  'is_championship': instance.isChampionship,
+  'championship_zone_id': instance.championshipZoneId,
+  'championship_season': instance.championshipSeason,
   'created_at': instance.createdAt.toIso8601String(),
   'started_at': instance.startedAt?.toIso8601String(),
   'ended_at': instance.endedAt?.toIso8601String(),

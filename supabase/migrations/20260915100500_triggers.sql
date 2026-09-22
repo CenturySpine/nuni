@@ -187,6 +187,57 @@ create trigger scores_set_session_id_trigger
   before insert or update on scores
   for each row execute function scores_set_session_id();
 
+-- Championship zone/season (plan 15): championship_zone_id and championship_season are entirely
+-- trigger-owned, never settable by the client (same principle as team_players.session_id above).
+--   1. Season: recomputed from scratch on every row (it isn't frozen the way the zone is -- an
+--      edited start date, plan 10, should move a session to the season it actually belongs to).
+--      Done here rather than as a generated column: see tables.sql's comment on
+--      championship_season for why extract() on a timestamptz can't be an IMMUTABLE generated
+--      expression, only a plain trigger-computed one.
+--   2. Zone: frozen to its previous value (or null at insert) regardless of what the client
+--      sends. First time is_championship becomes true with no zone yet: requires a known
+--      location (geolocation refused at creation, plan 07, means the checkbox can't be turned on
+--      -- an explicit error here, surfaced by the screen as a disabled checkbox with a message
+--      rather than a silent failure) and assigns a zone via assign_championship_zone. Once
+--      assigned, a zone never changes, even if the session is unmarked and remarked later.
+create or replace function sessions_set_championship_zone()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  v_played_at timestamptz;
+  v_month int;
+  v_year int;
+begin
+  v_played_at := coalesce(new.started_at, new.created_at);
+  v_month := extract(month from (v_played_at at time zone 'utc'));
+  v_year := extract(year from (v_played_at at time zone 'utc'));
+  new.championship_season := case
+    when v_month >= 9 then v_year || '-' || (v_year + 1)
+    else (v_year - 1) || '-' || v_year
+  end;
+
+  new.championship_zone_id := case
+    when tg_op = 'INSERT' then null
+    else old.championship_zone_id
+  end;
+
+  if new.is_championship and new.championship_zone_id is null then
+    if new.location is null then
+      raise exception 'championship_requires_location' using errcode = 'P0001';
+    end if;
+    new.championship_zone_id := assign_championship_zone(new);
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger sessions_set_championship_zone_trigger
+  before insert or update on sessions
+  for each row execute function sessions_set_championship_zone();
+
 -- None of the functions above are meant to be called directly (trigger-only, or an internal
 -- helper); Postgres grants EXECUTE to PUBLIC by default at creation, so revoke it explicitly.
 -- (handle_new_user and the "returns trigger" functions can't be invoked via RPC anyway, but
@@ -199,3 +250,4 @@ revoke execute on function team_players_guard_single_team() from public, authent
 revoke execute on function session_members_guard_frozen_teams() from public, authenticated;
 revoke execute on function team_players_set_session_id() from public, authenticated;
 revoke execute on function scores_set_session_id() from public, authenticated;
+revoke execute on function sessions_set_championship_zone() from public, authenticated;

@@ -75,21 +75,19 @@ perte, puis retirer l'ancienne app.
   identifiant utilisateur ? (Non : l'UUID est propre à chaque projet Supabase ; rapprochement par
   e-mail à prévoir.)
 - M4 : conservation ou non des sessions jamais terminées de l'ancienne base.
-- M5 — Marquage rétroactif de sessions importées comme "championnat" (demande PO, 2026-09-22, plan
-  15) : la règle normale de l'app ("seul le créateur peut taguer une session") ne peut pas
+- M5 ☑ — Marquage rétroactif de sessions importées comme "championnat" (demande PO, 2026-09-22,
+  plan 15) : la règle normale de l'app ("seul le créateur peut taguer une session") ne peut pas
   s'appliquer telle quelle à une session importée dont le propriétaire réel ne s'est pas encore
-  reconnecté à NUNI (M2). Suggestion : le script de migration lui-même pose `is_championship =
-  true` sur les sessions retenues par le PO pour constituer un championnat rétroactif (ex. saison
-  2025-2026), directement via la clé service, sans passer par la règle de permission de l'app
-  vivante — pas de nouveau rôle "administrateur" à créer pour un besoin ponctuel. Le
+  reconnecté à NUNI (M2).
+  Réponse PO (2026-09-22, Q48) : action côté app protégée par `is_super_admin()` (plan 16),
+  plutôt qu'un script de migration à clé service. Détail technique à écrire lors du plan détaillé :
+  une RPC `security definer` dédiée (même famille que `championship_zone_results`), réservée à
+  `is_super_admin()`, posant `is_championship = true` sur une session choisie par le PO. Le
   rattachement à une zone se fait alors par le même mécanisme automatique que toute session
   championnat (ci-dessus), à condition que l'étape 1 (repositionnement des trous) soit terminée
-  avant l'étape 2 (import des sessions).
-  **Mise à jour 2026-09-22 (plan 16)** : un rôle applicatif `super_admin` existe désormais
-  (`is_super_admin()`, `user_roles`), porté uniquement par le PO. Alternative possible au script à
-  clé service pour ce tagage rétroactif : une action côté app protégée par `is_super_admin()`.
-  Reste à trancher au moment où ce plan sera détaillé — pas un changement forcé par le plan 16,
-  qui ne touche aucune politique RLS existante.
+  avant l'étape 2 (import des sessions). Avantage sur le script à clé service : le PO peut
+  retagger depuis l'app à tout moment (pas seulement pendant la fenêtre de migration), et le même
+  mécanisme sert pour toute correction future, pas seulement l'import initial.
 
 ## Critères d'acceptation (cadre)
 

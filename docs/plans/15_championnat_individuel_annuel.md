@@ -134,15 +134,14 @@ et **préavis au PO avant de reconstruire le schéma distant** (même règle) :
     - `championship_zone_id uuid references championship_zones (id)` — **jamais posée par le
       client** (même principe que `team_players.session_id`, déjà dénormalisée par trigger) :
       calculée automatiquement, voir "Regroupement géographique" ci-dessous.
-    - `championship_season text generated always as (
-      case when extract(month from coalesce(started_at, created_at)) >= 9
-        then extract(year from coalesce(started_at, created_at))::text || '-' ||
-             (extract(year from coalesce(started_at, created_at)) + 1)::text
-        else (extract(year from coalesce(started_at, created_at)) - 1)::text || '-' ||
-             extract(year from coalesce(started_at, created_at))::text
-      end
-      ) stored` — dérivée de la date de la session (Q38), jamais saisie ; même façade que les
-      colonnes générées déjà en place (`start_lat`, `location_lat`...).
+    - `championship_season text` — dérivée de la date de la session (Q38), jamais saisie. **Pas**
+      une colonne générée comme `start_lat`/`location_lat` : Postgres exige une expression
+      `IMMUTABLE` pour une colonne générée, et extraire l'année/le mois d'un `timestamptz` n'est
+      que `STABLE` (dépend du réglage de fuseau horaire de la session) -- constaté à la
+      reconstruction du 2026-09-22, `create table` refusée avec "generation expression is not
+      immutable". Recalculée à la place par le même trigger que la zone (ci-dessous), sur chaque
+      insertion/mise à jour (pas gelée comme la zone : une date de début corrigée après coup,
+      étape 10, doit déplacer la session vers la bonne saison).
 - `20260915100200_indexes.sql` : index spatial partiel `create index sessions_championship_location_idx
   on sessions using gist (location) where is_championship;` — n'indexe que les sessions
   championnat, utilisé uniquement par le rattachement de zone (ci-dessous) ; index simple sur
@@ -161,16 +160,18 @@ et **préavis au PO avant de reconstruire le schéma distant** (même règle) :
     propriétaire de la table) y écrit.
   - Droit d'exécution des deux nouvelles fonctions RPC (ci-dessous) révoqué à `PUBLIC`, regranté à
     `authenticated` seulement, même traitement que les RPC existantes.
-- `20260915100500_triggers.sql` : trigger `before insert or update on sessions` (peut s'ajouter au
-  trigger existant qui pose `team_players.session_id`/`scores.session_id`, ou un trigger dédié) qui :
-  1. Fige `championship_zone_id` à sa valeur précédente (`OLD.championship_zone_id` ou `null` à la
+- `20260915100500_triggers.sql` : trigger dédié `before insert or update on sessions` qui :
+  1. Recalcule `championship_season` à chaque fois (voir ci-dessus) — jamais gelée, contrairement
+     à la zone : une date de début corrigée après coup (étape 10) déplace la session vers la bonne
+     saison.
+  2. Fige `championship_zone_id` à sa valeur précédente (`OLD.championship_zone_id` ou `null` à la
      création) — toute valeur envoyée par le client est ignorée, jamais une erreur silencieuse côté
      client, juste un champ qu'il n'a jamais eu à remplir.
-  2. Si `NEW.is_championship = true` et que la zone n'est pas encore posée, appelle
+  3. Si `NEW.is_championship = true` et que la zone n'est pas encore posée, appelle
      `assign_championship_zone(NEW)` et l'assigne. Une fois posée, elle ne change plus, même si la
      session est démarquée puis remarquée plus tard (Q du tagage) : pas d'oscillation, un
      comportement simple à expliquer et à tester.
-  3. Si la session n'a pas de position connue (`location is null` — géolocalisation refusée à la
+  4. Si la session n'a pas de position connue (`location is null` — géolocalisation refusée à la
      création, plan 07), `is_championship` ne peut pas passer à `true` : la fonction lève une
      erreur explicite, remontée à l'écran (case à cocher désactivée, message "position inconnue
      pour cette partie").
@@ -210,9 +211,10 @@ rien de spécifique à une session créée dans NUNI : il ne regarde que `sessio
 géométrique des trous qu'elles référencent, repositionnés au préalable dans l'app) — une fois
 posée, ces sessions rejoignent une zone exactement comme n'importe quelle autre, y compris une zone
 déjà peuplée par de vraies sessions NUNI jouées au même endroit. Le tagage "championnat" de ces
-sessions importées se fait directement par le script de migration (clé service), pas par la règle
-normale "seul le créateur" de ce plan, puisque le propriétaire d'une session importée n'a souvent
-aucun compte NUNI encore rattaché (plan 13, M2).
+sessions importées ne passe pas par la règle normale "seul le créateur" de ce plan, puisque le
+propriétaire d'une session importée n'a souvent aucun compte NUNI encore rattaché (plan 13, M2) :
+il se fait par une action côté app réservée au rôle `super_admin` (plan 16, Q48), pas par un script
+de migration à clé service — détail technique (RPC dédiée) écrit lors du plan 13 détaillé.
 
 ## Calcul des points (mécanisme)
 

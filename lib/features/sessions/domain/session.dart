@@ -44,6 +44,12 @@ abstract class Session with _$Session {
     // Only present on a `session_snapshot`/`history_snapshots` row (joined
     // from `session_photos`), not on a plain `sessions` select (plan 10).
     @JsonKey(name: 'cover_photo_path') String? coverPhotoPath,
+    // Championship tagging (plan 15): `isChampionship` is the only one the
+    // client ever writes -- `championshipZoneId`/`championshipSeason` are
+    // trigger-owned, read back only.
+    @JsonKey(name: 'is_championship') @Default(false) bool isChampionship,
+    @JsonKey(name: 'championship_zone_id') String? championshipZoneId,
+    @JsonKey(name: 'championship_season') String? championshipSeason,
     @JsonKey(name: 'created_at') required DateTime createdAt,
     @JsonKey(name: 'started_at') DateTime? startedAt,
     @JsonKey(name: 'ended_at') DateTime? endedAt,

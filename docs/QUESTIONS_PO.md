@@ -577,3 +577,13 @@ interdit explicitement une table de référence pour un ensemble de valeurs fixe
 (déjà appliqué à `scoring_mode`/`game_mode`, jamais de table `scoring_modes`). Seule l'exception
 (`super_admin`) est stockée dans `user_roles` ; un compte absent de la table est un `player`
 implicite, sans ligne à créer pour chaque compte à l'inscription.
+
+**Q48 ☑ — Plan 13 (M5), marquage rétroactif "championnat" des sessions importées de LsgScores :
+script de migration à clé service, ou action côté app protégée par `is_super_admin()` ?**
+Réponse PO (2026-09-22) : action côté app protégée par `is_super_admin()`.
+Suggestion : maintenant que le rôle existe (plan 16), une action app dédiée (RPC `security
+definer` posant `is_championship = true`, réservée à `is_super_admin()`) est préférable au script à
+clé service envisagé initialement — le PO peut retagger depuis l'app à tout moment, sans dépendre
+d'une exécution manuelle hors ligne, et le mécanisme sert aussi pour toute correction future sur
+n'importe quelle session, pas seulement au moment de l'import. Détail technique (nom de la RPC,
+politique exacte) à écrire lors du détail du plan 13.

@@ -21,6 +21,11 @@ sessions/scores : c'est une table à part, sans autre relation que `auth.users`,
 FK` + `role app_role` (`player`|`super_admin`, défaut `player`) + `created_at`. Ne contient que
 les exceptions (les `super_admin`) ; un compte absent de la table est un `player` implicite.
 
+`championship_zones` (plan 15) n'est pas non plus dans le diagramme ci-dessous : `id uuid PK` +
+`created_at`, volontairement sans colonne `name` (le nom affiché se déduit à la lecture,
+`championship_zone_label`, jamais stocké). `sessions.championship_zone_id` y réfère (nullable) ;
+elle n'a aucune autre relation.
+
 ```mermaid
 erDiagram
   SESSIONS ||--o{ TEAMS : "session_id"
@@ -62,6 +67,9 @@ erDiagram
     ranking_direction ranking_direction
     text city
     text zone
+    boolean is_championship "défaut false, plan 15"
+    uuid championship_zone_id FK "nullable, posé par trigger, plan 15"
+    text championship_season "calculé par trigger, ex. '2026-2027', plan 15"
     bigint legacy_id
   }
   TEAMS {
@@ -117,22 +125,26 @@ erDiagram
 
 ## Politiques d'accès (RLS)
 
-Toutes les tables ci-dessus, plus `user_roles`, ont RLS activée, ciblant uniquement le rôle
-`authenticated` (l'app exige une connexion Google partout ; seuls les buckets de stockage sont
-lisibles anonymement). Trois fonctions `security definer` évitent les politiques récursives :
-`is_session_member(session_id)` et `is_session_owner(session_id)` (propriétaire au sens large :
-créateur ou co-organisateur promu, `session_members.role = 'owner'`), et `is_super_admin()`
-(plan 16, rôle applicatif `user_roles.role = 'super_admin'` — pas encore référencée par une
-politique existante, prête pour de futures actions structurantes).
+Toutes les tables ci-dessus, plus `user_roles` et `championship_zones`, ont RLS activée, ciblant
+uniquement le rôle `authenticated` (l'app exige une connexion Google partout ; seuls les buckets de
+stockage sont lisibles anonymement). Cinq fonctions `security definer` évitent les politiques
+récursives : `is_session_member(session_id)` et `is_session_owner(session_id)` (propriétaire au
+sens large : créateur ou co-organisateur promu, `session_members.role = 'owner'`),
+`is_super_admin()` (plan 16, rôle applicatif `user_roles.role = 'super_admin'` — pas encore
+référencée par une politique existante, prête pour de futures actions structurantes), et
+`assign_championship_zone(session)`/`championship_zone_label(zone_id)` (plan 15, lisent/écrivent
+`championship_zones` et `sessions` à travers toute session championnat, pas seulement celles du
+caller).
 
 Résumé par table (détail exact dans `supabase/migrations/20260915100400_rls.sql`) :
 
 | Table | Lecture | Écriture |
 |---|---|---|
 | `user_roles` | soi-même seulement | aucune (accès direct base, clé service, plan 16) |
+| `championship_zones` | tout authentifié (un classement n'est pas confidentiel) | aucune (seule `assign_championship_zone`, security definer, y écrit) |
 | `players` | tout authentifié | le joueur lié (`user_id`) ; aucune création cliente (Q24) |
 | `holes` | public, mes trous, ou joué dans une session dont je suis membre (Q13) | propriétaire |
-| `sessions` | membres | propriétaire (modif/suppr) ; insertion par l'auteur |
+| `sessions` | membres | propriétaire (modif/suppr, dont `is_championship`) ; insertion par l'auteur ; `championship_zone_id`/`championship_season` gelés par trigger, jamais posés par le client |
 | `teams`, `team_players` | membres | propriétaire, tant que `draft` (Q15) |
 | `session_members` | membres | soi-même (rejoindre via RPC, quitter si `draft`) ; propriétaire (ajouter si `draft`, retirer, changer l'équipe si `draft` ou promouvoir un rôle sinon — `team_id` gelé après `draft` par trigger, Q15) |
 | `played_holes` | membres | propriétaire |
@@ -155,10 +167,17 @@ CLI de migration (vérifié : sans ce `GRANT` explicite, `authenticated` n'a auc
   location? {lat,lng}, comment?, teams? [{position, player_ids[]}]}`.
 - `start_session(session_id)` — passage en `live` (Q25) : une équipe par participant en
   individuel, aucun participant non affecté en équipe.
+- `session_snapshot(session_id)` / `history_snapshots()` — le détail complet d'une session (plan
+  08/10), et l'historique des sessions terminées du caller, chacune shapée pareil.
+- `championship_zone_results(zone_id, season)` (plan 15) — même forme qu'un `session_snapshot`,
+  agrégée sur toutes les sessions championnat terminées d'une zone/saison, indépendamment de la
+  qualité de membre du caller (`security definer`) ; le calcul du classement (points, égalités)
+  se fait en Dart à la lecture (`features/championship/domain`), jamais stocké.
 
-Ces quatre fonctions, plus `is_session_member`/`is_session_owner`/`is_super_admin`, ont leur droit
-d'exécution par défaut à `PUBLIC` révoqué puis regranté uniquement à `authenticated` (sinon un
-utilisateur non connecté peut les appeler).
+Ces fonctions, plus `is_session_member`/`is_session_owner`/`is_super_admin`/
+`assign_championship_zone`/`championship_zone_label`, ont leur droit d'exécution par défaut à
+`PUBLIC` révoqué puis regranté uniquement à `authenticated` (sinon un utilisateur non connecté
+peut les appeler).
 
 ## Temps réel et stockage
 
@@ -192,3 +211,14 @@ chemin — `user_id` pour `avatars`/`holes`, `session_id` pour `session-photos`)
   compte `auth.users`, pas à chaque connexion) — recréée à la main avec les mêmes valeurs que le
   trigger aurait posées, vérifié en base après coup. `db advisors` et `rls_smoke.sql` (9/9)
   repassés après la reconstruction, aucune régression.
+- 2026-09-22 (plan 15, championnat) : première tentative de `db push` refusée par Postgres
+  (`generation expression is not immutable`, SQLSTATE 42P17) — `extract()` sur un `timestamptz`
+  n'est que `STABLE`, invalide pour une colonne générée. `championship_season` corrigée en colonne
+  normale calculée par trigger (voir ci-dessus), schéma distant reconstruit depuis zéro avec
+  succès ensuite. `rls_smoke.sql` (9/9) et un script de vérification dédié au mécanisme du plan 15
+  (non committé, ad hoc) : zone assignée au premier tagage, saison dérivée de `started_at`, une
+  session proche (< 15 km) rejoint la même zone, une lointaine en fonde une autre, la zone reste
+  gelée après un démarquage/remarquage, le tagage sans position connue est refusé,
+  `championship_zone_label` renvoie la ville majoritaire, `championship_zone_results` n'expose que
+  les sessions championnat *terminées* de la zone/saison à un non-membre sans élargir l'accès à la
+  ligne `sessions` brute — 10/10 passés.

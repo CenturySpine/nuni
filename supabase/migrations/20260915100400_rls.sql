@@ -3,6 +3,7 @@
 -- only storage objects (plan storage.sql) are readable anonymously.
 
 alter table user_roles enable row level security;
+alter table championship_zones enable row level security;
 alter table players enable row level security;
 alter table holes enable row level security;
 alter table sessions enable row level security;
@@ -19,6 +20,7 @@ alter table session_photos enable row level security;
 -- app's own queries impersonated as authenticated and hitting "permission denied"). No table
 -- grants anything to anon: the app requires sign-in throughout.
 grant select on user_roles to authenticated;
+grant select on championship_zones to authenticated;
 grant select, update on players to authenticated;
 grant select, insert, update, delete on holes to authenticated;
 grant select, insert, update, delete on sessions to authenticated;
@@ -35,6 +37,12 @@ grant select, insert, update, delete on session_photos to authenticated;
 -- escalation path exists through the app, even from a compromised client.
 create policy "user_roles_select_self" on user_roles for select to authenticated
   using (user_id = (select auth.uid()));
+
+-- championship_zones: a classement isn't confidential data, unlike a member-only session's own
+-- detail (plan 15) -- readable by any signed-in account. No write grant to authenticated at all:
+-- the only writer is assign_championship_zone (security definer, owns the table).
+create policy "championship_zones_select" on championship_zones for select to authenticated
+  using (true);
 
 -- players: shared read-only directory, write by the linked user only. No client insert/delete
 -- (Q24: created by the trigger at sign-up, or by the plan 13 import). This is also the
