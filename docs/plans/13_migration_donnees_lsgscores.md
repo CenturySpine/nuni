@@ -44,6 +44,22 @@ perte, puis retirer l'ancienne app.
   contrôle (comptes par table avant/après, totaux de coups par session identiques). Alternative :
   `postgres_fdw` ou export/import SQL ; le script Dart réutilise les modèles de l'app et reste
   lisible.
+- **Migration en deux temps (décision PO, 2026-09-22), qui répond à M1 :**
+  1. Import des trous seuls (`holes`, `start` laissé `null` — inconnu à l'import, comme prévu par
+     le schéma). Le PO repositionne ensuite chaque trou hérité à sa vraie position, à la main, dans
+     l'écran d'édition de trou déjà existant (plan 06) — pas de nouvel écran, pas de géocodage
+     automatique à construire.
+  2. Import des sessions et du reste (`teams`, `played_holes`, `scores`, `session_photos`) une
+     fois cette étape terminée, pas avant. Une session important n'a jamais eu de position GPS
+     propre dans l'ancienne app (position saisie à la création, absente de LsgScores) : le script
+     calcule `sessions.location` comme le centre géométrique des trous distincts qu'elle référence
+     (via `played_holes.hole_id`), une fois ceux-ci repositionnés. Une session dont tous les trous
+     référencés sont restés sans position reste elle-même sans position (comportement normal,
+     déjà prévu ailleurs dans l'app : Q11/plan 07, "position refusée, champ vide facultatif").
+     Conséquence utile pour le plan 15 (championnat) : une fois `location` renseignée, le
+     rattachement automatique à une zone de championnat (rayon de 15 km, Q44) s'applique aux
+     sessions importées exactement comme aux sessions créées dans NUNI, sans mécanisme
+     particulier à écrire pour elles.
 - Exécution à blanc sur une copie (branche Supabase ou projet temporaire), puis en production
   pendant une fenêtre sans session en direct.
 - Vérification : pour chaque ancienne session, le classement recalculé par NUNI doit être identique
@@ -51,14 +67,24 @@ perte, puis retirer l'ancienne app.
 
 ## Questions à ouvrir au moment du plan détaillé
 
-- M1 : position de départ des anciens trous (saisie manuelle dans NUNI après import, ou `start`
-  nullable pour les trous hérités avec proposition de géolocalisation à la première utilisation).
+- M1 ☑ — Position de départ des anciens trous : résolue ci-dessus (2026-09-22), migration en deux
+  temps, repositionnement manuel dans l'app entre les deux.
 - M2 : propriétaire des données importées quand l'ancien utilisateur ne s'est pas encore connecté
   à NUNI (compte "archive" temporaire, réattribution au premier login par e-mail).
 - M3 : identité Google : le même client OAuth pour les deux projets Supabase donne-t-il le même
   identifiant utilisateur ? (Non : l'UUID est propre à chaque projet Supabase ; rapprochement par
   e-mail à prévoir.)
 - M4 : conservation ou non des sessions jamais terminées de l'ancienne base.
+- M5 — Marquage rétroactif de sessions importées comme "championnat" (demande PO, 2026-09-22, plan
+  15) : la règle normale de l'app ("seul le créateur peut taguer une session") ne peut pas
+  s'appliquer telle quelle à une session importée dont le propriétaire réel ne s'est pas encore
+  reconnecté à NUNI (M2). Suggestion : le script de migration lui-même pose `is_championship =
+  true` sur les sessions retenues par le PO pour constituer un championnat rétroactif (ex. saison
+  2025-2026), directement via la clé service, sans passer par la règle de permission de l'app
+  vivante — pas de nouveau rôle "administrateur" à créer pour un besoin ponctuel. Le
+  rattachement à une zone se fait alors par le même mécanisme automatique que toute session
+  championnat (ci-dessus), à condition que l'étape 1 (repositionnement des trous) soit terminée
+  avant l'étape 2 (import des sessions).
 
 ## Critères d'acceptation (cadre)
 

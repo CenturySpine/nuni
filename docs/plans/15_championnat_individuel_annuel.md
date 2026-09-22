@@ -204,6 +204,16 @@ faire s'étendre une zone de proche en proche sur une longue distance si des ses
 tous les 15 km sans discontinuité (effet de chaîne). Sans objet à l'échelle d'une association
 locale ; à surveiller seulement si l'usage dépasse largement ce cadre.
 
+**Compatibilité avec les sessions importées de LsgScores (plan 13, M5).** Ce mécanisme ne suppose
+rien de spécifique à une session créée dans NUNI : il ne regarde que `sessions.location`. Le plan
+13 prévoit que les sessions importées reçoivent cette position au moment de la migration (centre
+géométrique des trous qu'elles référencent, repositionnés au préalable dans l'app) — une fois
+posée, ces sessions rejoignent une zone exactement comme n'importe quelle autre, y compris une zone
+déjà peuplée par de vraies sessions NUNI jouées au même endroit. Le tagage "championnat" de ces
+sessions importées se fait directement par le script de migration (clé service), pas par la règle
+normale "seul le créateur" de ce plan, puisque le propriétaire d'une session importée n'a souvent
+aucun compte NUNI encore rattaché (plan 13, M2).
+
 ## Calcul des points (mécanisme)
 
 Respecte la convention déjà en place (AGENTS.md : "calcul des scores et du classement en Dart,
