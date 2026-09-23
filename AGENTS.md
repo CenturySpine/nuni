@@ -67,6 +67,12 @@ Documents de référence, à lire avant d'agir :
    `docs/DEV.md`). **Toujours prévenir le PO avant de lancer cette reconstruction**, même si elle
    est sans risque à ce stade. Après la mise en service, on repasse en migrations additives
    normales (plus jamais d'édition d'un fichier déjà appliqué en production).
+   **Exception, données réelles conservées par seed (Q63, 2026-09-23) :** les trous importés de
+   LsgScores et repositionnés à la main (et ceux créés depuis dans l'app) sont des données à
+   garder. Avant toute reconstruction, régénérer `supabase/remote_seed.sql` depuis la base
+   (`fvm dart run tool/export_remote_seed.dart`), relire le diff, le committer avec l'accord du
+   PO, puis le rejouer après la reconstruction (étape 6 de `docs/DEV.md`, devenue obligatoire).
+   Même principe prévu pour les sessions et joueurs importés une fois l'import terminé.
 
 ## Ton des échanges avec le PO
 
@@ -146,7 +152,9 @@ GitHub Actions (Q17).
 - Secrets dans le dépôt (clés Supabase, jetons, identifiants OAuth). Le dépôt est **public**.
 - Réglage de thème ou de palette exposé à l'utilisateur.
 - Table `scoring_modes`, table de lien user↔joueur, tables villes/zones comme prérequis d'une
-  session.
+  session. Seule exception acceptée (Q64, 2026-09-23) : `legacy_player_emails`, table privée
+  (aucun droit pour l'app) qui ne sert qu'à rattacher un joueur importé de LsgScores à son compte
+  à l'inscription, et se vide au fur et à mesure.
 - Écrire dans l'ancien dépôt LsgScores.
 - Commit ou push sans que le PO l'ait demandé ou accordé.
 - Protection de branche ou PR obligatoire sur `main` (Q17) : le PO pousse directement sur `main`.

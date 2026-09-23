@@ -70,11 +70,12 @@ perte, puis retirer l'ancienne app.
 - M1 ☑ — Position de départ des anciens trous : résolue ci-dessus (2026-09-22), migration en deux
   temps, repositionnement manuel dans l'app entre les deux.
 - M2 : propriétaire des données importées quand l'ancien utilisateur ne s'est pas encore connecté
-  à NUNI (compte "archive" temporaire, réattribution au premier login par e-mail).
-- M3 : identité Google : le même client OAuth pour les deux projets Supabase donne-t-il le même
+  à NUNI. Détaillé à l'étape 2 (2026-09-23) : toutes les sessions ont été créées par le PO ; les
+  joueurs sans compte sont traités par Q64.
+- M3 ☑ — identité Google : le même client OAuth pour les deux projets Supabase donne-t-il le même
   identifiant utilisateur ? (Non : l'UUID est propre à chaque projet Supabase ; rapprochement par
-  e-mail à prévoir.)
-- M4 : conservation ou non des sessions jamais terminées de l'ancienne base.
+  e-mail, appliqué à l'étape 2.)
+- M4 ☑ — sans objet : aucune session LsgScores n'est en cours (profil du 2026-09-23).
 - M5 ☑ — Marquage rétroactif de sessions importées comme "championnat" (demande PO, 2026-09-22,
   plan 15) : la règle normale de l'app ("seul le créateur peut taguer une session") ne peut pas
   s'appliquer telle quelle à une session importée dont le propriétaire réel ne s'est pas encore
@@ -176,6 +177,106 @@ Ajoutée comme étape 7 (optionnelle) de la procédure de reconstruction de `doc
 - Un trou importé apparaît dans « Mes trous » du PO avec « Position à définir », s'édite, et après
   enregistrement d'une position apparaît dans « Autour de moi ».
 - `flutter analyze` sans remarque, tests verts (dont `Hole.fromJson` sans position), chaînes EN/FR.
+
+## Étape 2 — Import des sessions (plan détaillé validé par le PO le 2026-09-23)
+
+Décisions : Q62 à Q71 retenues (2026-09-23) ; Q63 avec une variante du PO : on continue à
+reconstruire la base, les trous réels étant conservés par le seed (`supabase/remote_seed.sql`,
+régénéré depuis la base par `tool/export_remote_seed.dart`, fait le 2026-09-23).
+
+Prérequis vérifié le 2026-09-23 (lecture seule des deux bases) : les 17 trous joués dans LsgScores
+existent dans NUNI, 16 ont une position ; le 17e est « Generic », converti en trou libre (Q62).
+
+### Données source (profil du 2026-09-23, lecture seule)
+
+- 7 sessions, toutes terminées (aucune en cours : M4 sans objet), toutes créées par le compte du PO,
+  toutes à Lyon, zone « INSA ». 2 en équipes, 5 individuelles ; 6 en Stroke Play, 1 en Match Play.
+- 29 équipes (1 ou 2 joueurs), 44 trous joués (modes de jeu 1, 2 et 3), 181 scores (2 à 10 coups).
+- 14 fiches joueurs, dont 10 ont joué au moins une partie. Parmi ces 10, 3 correspondent (même
+  adresse e-mail) à un compte NUNI existant ; 7 n'ont pas de compte NUNI, dont 2 sans adresse e-mail
+  connue dans LsgScores.
+- Horaires stockés en texte sans fuseau (`2025-09-02T18:55:00`) ; météo stockée comme une chaîne
+  JSON au format OpenWeatherMap (`description`, `iconCode` « 01d », `temperature`, `windSpeedKmh`),
+  différent du format NUNI (`temperature_c`, `wind_kph`, `code` WMO).
+- Photos : bucket privé `Sessions`, dossier `<id session>/`, 14 fichiers ; le préfixe `fav_`
+  désigne la photo de couverture (une par session).
+
+Correction du cadre ci-dessus : la météo n'a pas « la même structure JSON » (voir Q69).
+
+### Correspondance
+
+| LsgScores | NUNI | Règle |
+|---|---|---|
+| `sessions.id` | `sessions.legacy_id` | clé d'idempotence |
+| `user_id` (propriétaire) | `owner_id` | compte NUNI du PO (rapproché par e-mail, M3) |
+| `datetime`, `enddatetime` | `started_at`, `ended_at` | heure locale de Paris (Q68) |
+| `sessiontype` | `kind` | `INDIVIDUAL` → `individual`, `TEAM` → `team` |
+| `scoringmodeid` | `scoring_mode`, `ranking_direction` | 1 → `stroke_play`/`asc`, 2 → `match_play`/`desc`, 3 → `redistribution`/`desc` |
+| `cityid`, `gamezoneid` | `city`, `zone` | noms en texte (« Lyon », « INSA »), espaces retirés |
+| — | `location` | centre des trous positionnés de la session (déjà prévu, M1) |
+| `weatherdata` | `weather` | conversion de format (Q69) |
+| `comment` | `comment` | recopie (toutes vides aujourd'hui) |
+| `isongoing` | `status` | `completed` (aucune session en cours) |
+| — | `is_championship` | `false` à l'import ; marquage ensuite par le PO depuis l'app (Q71) |
+| `teams` (player1, player2) | `teams` + `team_players` | `legacy_id` = id d'équipe ; position = ordre des id |
+| `players` | `players` | voir Q64 à Q66 |
+| `played_holes` | `played_holes` | `legacy_id`, position conservée ; mode de jeu 1 → `individual`, 2 → `scramble`, 3 → `greensome`, 4 → `best_ball` ; trou 32 « Generic » → trou libre sans libellé (Q62) |
+| `played_hole_scores` | `scores` | `value` = coups ; `updated_by` = propriétaire |
+| — | `session_members` | propriétaire + joueurs ayant un compte NUNI (Q67) |
+| Storage `Sessions/<id>/*` | bucket `session-photos` + `session_photos` | `<id session NUNI>/<nom d'origine>` ; `fav_` → `cover_photo_id` (Q70) |
+
+### Outil
+
+Nouvelle sous-commande `fvm dart run tool/migrate_lsgscores.dart sessions [--dry-run]`, même
+fichier de clés que l'étape 1.
+
+1. Contrôle préalable (affiché aussi en `--dry-run`) : chaque trou joué, sauf « Generic », doit
+   exister dans NUNI ; les trous sans position sont listés. Arrêt si un trou manque.
+2. Joueurs : rapprochement par e-mail avec les comptes NUNI, création des autres (Q64 à Q66).
+3. Par session, dans l'ordre : session, équipes, membres d'équipe, membres de session, trous joués,
+   scores, photos. Chaque niveau est idempotent (`legacy_id` ou clé naturelle, doublons ignorés) :
+   un rejeu après une interruption complète ce qui manque sans rien dupliquer ni écraser.
+4. Trou « Generic » : exclu de l'import des trous (`excludedLegacyHoleIds` dans le script, fait
+   le 2026-09-23) et absent du seed ; il disparaît de NUNI à la reconstruction qui précède
+   l'import des sessions, sans suppression à faire à la main.
+5. Rapport `build/migration/sessions_report.csv` et contrôles : nombres de sessions (7), équipes
+   (29), trous joués (44), scores (181), photos (14) identiques des deux côtés ; total de coups par
+   équipe identique à LsgScores.
+
+Droits : le rôle « service » reçoit la lecture et l'insertion sur `sessions`, `teams`,
+`team_players`, `session_members`, `played_holes`, `scores`, `session_photos`, `players`,
+`legacy_player_emails`. Les e-mails des comptes NUNI sont lus par l'API d'administration des
+comptes (clé service), jamais depuis l'app.
+
+Identifiants stables (conséquence de Q63, les reconstructions continuent) : les identifiants NUNI
+des sessions, équipes, trous joués et joueurs importés sont dérivés de l'identifiant LsgScores
+(UUID v5, toujours le même pour une même ligne d'origine). Une reconstruction suivie d'un rejeu
+redonne exactement les mêmes identifiants : les photos de session, rangées sous l'identifiant
+de la session (Q70), sont retrouvées sans nouvelle copie, et les sessions et joueurs pourront
+ensuite rejoindre le seed comme les trous (souhait du PO, 2026-09-23).
+
+Ordre d'exécution : régénérer et committer le seed des trous (`tool/export_remote_seed.dart`),
+prévenir le PO, reconstruire la base (schéma de l'étape 2 inclus), rejouer les seeds, puis
+`migrate_lsgscores.dart sessions --dry-run`, puis l'import réel.
+
+### Changements dans l'app
+
+- Marquage « championnat » par le super_admin (Q71) : RPC `set_session_championship(p_session_id,
+  p_value)` (`security definer`, réservée à `is_super_admin()`), et interrupteur « Session de
+  championnat » dans le détail d'une session de l'historique, visible du super_admin seul. Le
+  rattachement à une zone reste celui du déclencheur existant (plan 15).
+- Rattachement automatique à la première connexion (Q64) : table privée, déclencheur d'inscription
+  modifié.
+
+### Critères d'acceptation de l'étape 2
+
+- Comptes identiques entre les deux bases (sessions, équipes, trous joués, scores, photos).
+- Chaque session s'ouvre dans l'historique NUNI du PO avec le même classement que dans LsgScores
+  (vérification visuelle du PO, session par session).
+- Rejeu immédiat : rien d'inséré, rien de copié, aucune erreur.
+- Les 7 sessions ont une position (centre de leurs trous positionnés) ; la session 219 affiche un
+  trou libre.
+- `flutter analyze` sans remarque, tests verts, chaînes EN/FR.
 
 ## Critères d'acceptation (cadre)
 

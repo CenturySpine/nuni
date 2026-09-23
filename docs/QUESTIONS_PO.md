@@ -720,3 +720,98 @@ l'usage : le fichier n'est plus affiché nulle part. Conséquence à connaître 
 reconstruction, le rejeu de l'import recopie les photos des trous importés depuis LsgScores, y
 compris celles supprimées entre-temps (déjà accepté : une reconstruction efface les retouches
 manuelles).
+
+**Q62 ☑ — Plan 13, étape 2 : que devient l'ancien trou « Generic » (ancien trou 32, joué une fois,
+session 219) ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Constat (vérification du 2026-09-23) : c'est le seul trou importé resté sans position, et son nom
+indique qu'il servait déjà de trou « one shot » dans LsgScores, ce que fait désormais le trou libre
+de NUNI (plan 17).
+Suggestion : le convertir en trou libre. À l'import des sessions, la partie jouée sur l'ancien
+trou 32 devient un trou libre sans libellé (affiché « Trou N · Trou libre »), et l'import des trous
+l'exclut (liste d'exclusion explicite dans le script, avec la raison) ; le trou déjà importé est
+supprimé de NUNI. Le score et le classement de la session 219 sont inchangés : un trou libre compte
+comme un trou normal (Q58). L'alternative, le garder comme trou importé, le laisserait pour
+toujours dans « Mes trous » avec « Position à définir », proposé dans le sélecteur comme un vrai
+emplacement alors qu'il n'en a pas.
+
+### Import des sessions (plan 13, étape 2, 2026-09-23)
+
+**Q63 ☑ — Faut-il arrêter les reconstructions de la base dès maintenant ?**
+Réponse PO (2026-09-23) : non, on continue à reconstruire ; les trous importés et retouchés
+remplacent les trous de test dans `supabase/remote_seed.sql`, rejoué à chaque reconstruction
+(régénéré depuis la base par `tool/export_remote_seed.dart`). Même principe prévu plus tard pour
+les sessions et joueurs importés, une fois l'import terminé.
+Constat : la règle 8 (AGENTS.md) autorise à tout effacer à chaque changement de schéma parce
+qu'« aucune donnée n'est vitale ». Ce n'est plus vrai : les positions des 16 trous repositionnés à
+la main sont perdues à chaque reconstruction, et l'étape 2 demande justement des changements de
+schéma (droits, table privée, déclencheur, RPC).
+Suggestion : oui. À partir de maintenant, migrations additives (un nouveau fichier par changement,
+appliqué par `npx supabase db push`, jamais d'édition d'un fichier déjà appliqué), comme prévu
+après la mise en service. C'est la pratique standard dès qu'une base contient des données à garder,
+et elle évite d'écrire une sauvegarde/restauration des trous. AGENTS.md (règle 8) et docs/DEV.md
+seraient mis à jour en conséquence.
+
+**Q64 ☑ — Joueurs LsgScores sans compte NUNI (7 des 10 joueurs) : faut-il les rattacher
+automatiquement à leur compte quand ils s'inscriront ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Suggestion : oui, par adresse e-mail. L'import crée leur fiche joueur sans compte (`user_id` vide,
+comme prévu par Q24) et note leur e-mail LsgScores dans une table privée (aucun droit pour les
+utilisateurs de l'app, donc jamais lisible depuis l'app). À l'inscription, le déclencheur existant
+cherche cet e-mail : s'il le trouve, il rattache le compte à la fiche importée au lieu d'en créer
+une nouvelle, ajoute la personne aux sessions où elle a joué, puis efface la ligne de la table
+privée. Sans ce rattachement, la personne aurait deux fiches, et ne verrait jamais son historique
+LsgScores. Écart à AGENTS.md à valider : les interdits mentionnent « table de lien user↔joueur » ;
+celle-ci n'en est pas une (elle ne relie aucun compte, elle se vide au fur et à mesure et ne sert
+qu'à l'import), mais c'est une table de plus. Les 2 joueurs sans e-mail connu ne peuvent pas être
+rattachés automatiquement ; ils restent des fiches importées tant que rien d'autre n'est décidé.
+
+**Q65 ☑ — Faut-il importer les 4 fiches joueurs LsgScores qui n'ont jamais joué de partie ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Suggestion : non. Ce sont une fiche de test, un doublon d'une fiche du PO et deux fiches créées à
+l'inscription sans partie jouée ; rien ne les référence, et les personnes concernées qui ont déjà un
+compte NUNI ont déjà leur fiche.
+
+**Q66 ☑ — Photo des joueurs importés ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Suggestion : une fiche importée sans compte NUNI reçoit la photo de LsgScores, recopiée dans le
+bucket `avatars` de NUNI. Une fiche rapprochée d'un compte NUNI existant garde sa photo NUNI (celle
+du compte Google), jamais écrasée par l'import.
+
+**Q67 ☑ — Qui voit les sessions importées ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Suggestion : les mêmes personnes que pour une session créée dans NUNI, c'est-à-dire ses membres :
+le PO (propriétaire, créateur de toutes les sessions LsgScores) et les joueurs de la session qui ont
+déjà un compte NUNI (3 aujourd'hui), chacun rattaché à son équipe. Les autres joueurs deviennent
+membres au moment de leur inscription (Q64). Aucune règle de visibilité particulière aux sessions
+importées.
+
+**Q68 ☑ — Fuseau horaire des heures LsgScores ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Constat : les heures sont stockées sans fuseau (`2025-09-02T18:55:00`), telles qu'affichées par le
+téléphone. Suggestion : les lire comme des heures de Paris (heure d'été ou d'hiver selon la date).
+Toutes les sessions ont été jouées à Lyon ; sans fuseau, NUNI les décalerait de 1 ou 2 heures.
+
+**Q69 ☑ — Météo des sessions importées ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Constat : LsgScores stockait le format OpenWeatherMap (code d'icône « 01d », description en
+anglais), NUNI le format Open-Meteo (code WMO). Suggestion : convertir température et vent tels
+quels et le code d'icône vers le code WMO équivalent (01 → ciel clair, 02 → peu nuageux,
+03 → partiellement nuageux, 04 → couvert, 09/10 → pluie, 11 → orage, 13 → neige, 50 → brouillard) ;
+la description anglaise n'est pas reprise, NUNI affiche son propre libellé à partir du code.
+
+**Q70 ☑ — Photos des sessions : les recopier ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Suggestion : oui, les 14, dans le bucket `session-photos` de NUNI, au même emplacement qu'une photo
+ajoutée dans l'app (`<id de la session NUNI>/<nom d'origine>`), pour que le propriétaire puisse les
+gérer depuis l'app (les règles du stockage l'exigent). La photo `fav_` devient la photo de
+couverture. Ce chemin dépend de l'identifiant NUNI de la session, qui change à chaque
+reconstruction : c'est sans importance si Q63 est retenue.
+
+**Q71 ☑ — Marquage « championnat » des sessions importées (M5, Q48) : où dans l'app ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Suggestion : un interrupteur « Session de championnat » dans le détail d'une session de
+l'historique, visible du super_admin seul, appelant une RPC réservée à `is_super_admin()`. Le choix
+des sessions à marquer reste une action du PO dans l'app après l'import ; le rattachement à une zone
+est fait par le mécanisme existant (plan 15), puisque toutes les sessions importées auront une
+position.

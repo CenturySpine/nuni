@@ -86,15 +86,19 @@ npx supabase db query --linked -f supabase/backfill_players.sql
 #    personne n'a de droit élevé après une reconstruction. Sans effet si la ligne existe déjà.
 npx supabase db query --linked -f supabase/seed_super_admin.sql
 
-# 6. Optionnel : rejouer les trous de test du PO sur le projet distant (supabase/remote_seed.sql,
+# 6. Obligatoire depuis le 2026-09-23 (Q63) : rejouer les trous réels (supabase/remote_seed.sql,
 #    committé — différent de supabase/seed.sql, qui reste local-Docker uniquement, cf. son
-#    en-tête). Sans effet si les lignes existent déjà ("on conflict do nothing").
+#    en-tête) : trous importés de LsgScores et repositionnés à la main, plus ceux créés dans
+#    l'app. Sans cette étape, ces positions sont perdues. Sans effet si les lignes existent déjà
+#    ("on conflict do nothing"). AVANT toute reconstruction, régénérer ce fichier depuis la base
+#    pour y inclure les dernières retouches, relire le diff et le committer :
+#      fvm dart run tool/export_remote_seed.dart
 npx supabase db query --linked -f supabase/remote_seed.sql
 
-# 7. Optionnel : réimporter les trous de LsgScores (plan 13, étape 1). Après les étapes 4 et 5 :
-#    les trous importés appartiennent au compte super_admin. Ils reviennent SANS position : les
-#    repositionnements faits à la main depuis le dernier import sont perdus (accepté par le PO).
-#    Les photos ne sont pas retéléchargées (le stockage survit à la reconstruction).
+# 7. Optionnel : réimporter les trous de LsgScores (plan 13, étape 1). Après l'étape 6, n'insère
+#    rien (les trous du seed portent leur legacy_id ; « Generic » est exclu, Q62) : utile
+#    seulement pour un trou créé dans LsgScores depuis. Les photos ne sont pas retéléchargées (le
+#    stockage survit à la reconstruction).
 #    Nécessite env/migration.json (clés service des deux projets, gabarit
 #    env/migration.example.json, jamais committé).
 fvm dart run tool/migrate_lsgscores.dart holes

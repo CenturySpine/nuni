@@ -19,6 +19,11 @@ import 'package:supabase/supabase.dart';
 const _pageSize = 1000;
 const _reportPath = 'build/migration/holes_report.csv';
 
+/// Legacy holes never imported: 32 "Generic" was LsgScores' one-off hole,
+/// replaced by NUNI's free hole (plan 17) -- its plays become free holes in
+/// the session import (Q62).
+const excludedLegacyHoleIds = {32};
+
 Future<void> main(List<String> args) async {
   if (args.isEmpty || args.first != 'holes') {
     stderr.writeln(
@@ -110,6 +115,7 @@ Future<void> _migrateHoles({
 
   for (final hole in legacyHoles) {
     final legacyId = hole['id'] as int;
+    if (excludedLegacyHoleIds.contains(legacyId)) continue;
     // Legacy names often carry a stray trailing space ("Radioactive ").
     final name = (hole['name'] as String).trim();
     final description = (hole['description'] as String?)?.trim();
