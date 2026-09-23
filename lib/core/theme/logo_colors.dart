@@ -6,7 +6,7 @@ import 'palettes.dart';
 /// `web/icons/nuni_logo.svg`): one icon per installation, so it uses the
 /// default palette whatever the user picked. Inside the app the logo follows
 /// the chosen palette (`NuniLogo`).
-const Color nuniLogoNu = Color(0xFFFFFFFF);
+final Color nuniLogoNu = defaultPalette.onPrimary;
 final Color nuniLogoNi = defaultPalette.logoNi;
 final Color nuniLogoBackgroundStart = defaultPalette.heroStart;
 final Color nuniLogoBackgroundEnd = defaultPalette.heroEnd;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_long_text_page.dart';
+import 'credits_section.dart';
 
 class LegalPage extends StatelessWidget {
   const LegalPage({super.key});
@@ -20,7 +21,12 @@ class LegalPage extends StatelessWidget {
           heading: l10n.legalHostingHeading,
           body: l10n.legalHostingBody,
         ),
+        NuniLongTextSection(
+          heading: l10n.legalDataHostingHeading,
+          body: l10n.legalDataHostingBody,
+        ),
       ],
+      footer: const CreditsSection(),
     );
   }
 }

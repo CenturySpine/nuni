@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/errors/app_error_message.dart';
 import '../../../core/geocoding/reverse_geocoding_client.dart';
 import '../../../core/location/location_service.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
@@ -338,7 +339,7 @@ class _ScoringModeChip extends StatelessWidget {
           icon: Icon(
             PhosphorIcons.info,
             size: 18,
-            color: Theme.of(context).colorScheme.primary,
+            color: context.nuni.primaryInk,
           ),
           visualDensity: VisualDensity.compact,
           onPressed: onInfo,

@@ -13,6 +13,10 @@ class PrivacyPage extends StatelessWidget {
       title: l10n.privacyTitle,
       sections: [
         NuniLongTextSection(
+          heading: l10n.privacyControllerHeading,
+          body: l10n.privacyControllerBody,
+        ),
+        NuniLongTextSection(
           heading: l10n.privacyDataHeading,
           body: l10n.privacyDataBody,
         ),
@@ -21,8 +25,20 @@ class PrivacyPage extends StatelessWidget {
           body: l10n.privacyPurposeBody,
         ),
         NuniLongTextSection(
+          heading: l10n.privacyRecipientsHeading,
+          body: l10n.privacyRecipientsBody,
+        ),
+        NuniLongTextSection(
+          heading: l10n.privacyTransfersHeading,
+          body: l10n.privacyTransfersBody,
+        ),
+        NuniLongTextSection(
           heading: l10n.privacyRetentionHeading,
           body: l10n.privacyRetentionBody,
+        ),
+        NuniLongTextSection(
+          heading: l10n.privacyLegacyHeading,
+          body: l10n.privacyLegacyBody,
         ),
         NuniLongTextSection(
           heading: l10n.privacyRightsHeading,
@@ -31,6 +47,10 @@ class PrivacyPage extends StatelessWidget {
         NuniLongTextSection(
           heading: l10n.privacyTrackingHeading,
           body: l10n.privacyTrackingBody,
+        ),
+        NuniLongTextSection(
+          heading: l10n.privacyUpdatedHeading,
+          body: l10n.privacyUpdatedBody,
         ),
       ],
     );

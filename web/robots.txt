@@ -1,0 +1,4 @@
+# NUNI is a private app: pages carry <meta name="robots" content="noindex">.
+# Crawling stays allowed so that tag (and link-preview tags) can be read.
+User-agent: *
+Allow: /

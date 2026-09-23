@@ -57,7 +57,9 @@ Demande PO (2026-09-23) : garder plusieurs palettes (violet "NUNI Pop" et orange
 pour commencer) et laisser chaque utilisateur choisir la sienne. Lève l'interdit "pas de
 réglage de thème exposé à l'utilisateur" (AGENTS.md).
 Réalisé : section "Couleurs" dans les réglages, sous la langue ; orange par défaut. Les deux
-hypothèses ci-dessous sont confirmées par le PO (2026-09-23) :
+hypothèses ci-dessous sont confirmées par le PO (2026-09-23). Complément PO (2026-09-23) : quatre
+palettes de plus (corail, bleu, turquoise, olive), soit deux froides, deux chaudes, deux douces ;
+détail et ajustements dans [design/PALETTE.md](design/PALETTE.md).
 - Le choix est mémorisé **sur l'appareil**, comme la langue, et non sur le compte. Suggestion :
   en rester là ; le suivre d'un appareil à l'autre demanderait une colonne en base (donc une
   reconstruction du schéma distant, AGENTS.md règle 8) pour un gain faible, la plupart des

@@ -16,6 +16,7 @@ abstract final class PhosphorIcons {
   static const _fill = 'PhosphorFill';
 
   static const house = IconData(0xe2c2, fontFamily: _regular);
+  static const arrowSquareOut = IconData(0xe5de, fontFamily: _regular);
   static const houseFill = IconData(0xe2c2, fontFamily: _fill);
 
   static const golf = IconData(0xea3e, fontFamily: _regular);

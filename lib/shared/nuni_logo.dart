@@ -30,7 +30,10 @@ class NuniLogo extends StatelessWidget {
         borderRadius: BorderRadius.circular(size * 0.26),
       ),
       child: CustomPaint(
-        painter: NuniLogoGlyphPainter(ni: nuni.palette.logoNi),
+        painter: NuniLogoGlyphPainter(
+          nu: nuni.palette.onPrimary,
+          ni: nuni.palette.logoNi,
+        ),
         size: Size(glyphSize, glyphSize),
       ),
     );
@@ -40,9 +43,12 @@ class NuniLogo extends StatelessWidget {
 /// The bare "NU/NI" glyph, without its tile. Public so that
 /// `tool/generate_icons.dart` renders the PWA icons from this exact drawing.
 class NuniLogoGlyphPainter extends CustomPainter {
-  NuniLogoGlyphPainter({Color? ni}) : ni = ni ?? nuniLogoNi;
+  NuniLogoGlyphPainter({Color? nu, Color? ni})
+    : nu = nu ?? nuniLogoNu,
+      ni = ni ?? nuniLogoNi;
 
-  /// Colour of the "NI" row.
+  /// Colours of the "NU" and "NI" rows.
+  final Color nu;
   final Color ni;
 
   @override
@@ -50,14 +56,14 @@ class NuniLogoGlyphPainter extends CustomPainter {
     canvas.save();
     canvas.scale(size.width / 100, size.height / 100);
 
-    final nu = Paint()..color = nuniLogoNu;
+    final nuPaint = Paint()..color = nu;
     final niPaint = Paint()..color = ni;
 
     // "NU", top row.
-    canvas.drawRect(const Rect.fromLTWH(24, 16, 7, 30), nu);
-    canvas.drawPath(_diagonal(top: 16, bottom: 46), nu);
-    canvas.drawRect(const Rect.fromLTWH(39, 16, 7, 30), nu);
-    canvas.drawPath(_letterU(top: 16, bottom: 35), nu);
+    canvas.drawRect(const Rect.fromLTWH(24, 16, 7, 30), nuPaint);
+    canvas.drawPath(_diagonal(top: 16, bottom: 46), nuPaint);
+    canvas.drawRect(const Rect.fromLTWH(39, 16, 7, 30), nuPaint);
+    canvas.drawPath(_letterU(top: 16, bottom: 35), nuPaint);
 
     // "NI", bottom row.
     canvas.drawRect(const Rect.fromLTWH(24, 54, 7, 30), niPaint);
@@ -99,5 +105,5 @@ class NuniLogoGlyphPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant NuniLogoGlyphPainter oldDelegate) =>
-      oldDelegate.ni != ni;
+      oldDelegate.nu != nu || oldDelegate.ni != ni;
 }

@@ -20,6 +20,7 @@ import '../../../shared/nuni_confirm_dialog.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_form_section.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../../shared/nuni_map_attribution.dart';
 import '../../../shared/nuni_segmented.dart';
 import '../../../shared/photo_field.dart';
 import '../data/holes_repository.dart';
@@ -815,6 +816,7 @@ class _PositionPicker extends StatelessWidget {
                   ),
               ],
             ),
+            const NuniMapAttribution(),
           ],
         ),
       ),

@@ -95,10 +95,8 @@ class InviteSheet extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               code,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                letterSpacing: 6,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              style: Theme.of(context).textTheme.headlineMedium
+                  ?.copyWith(letterSpacing: 6, color: context.nuni.primaryInk),
             ),
             const SizedBox(height: 20),
             NuniButton(

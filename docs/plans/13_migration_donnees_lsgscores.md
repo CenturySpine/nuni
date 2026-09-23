@@ -2,7 +2,10 @@
 
 ## Statut
 
-Étape obligatoire et critique (décision PO du 2026-09-14, Q3). Ce document est un cadre : le plan
+**Clôturé par le PO le 2026-09-23** : étapes 1 à 3 livrées et testées. Pas de retrait de
+l'ancienne app prévu ; un plan dédié sera ouvert si c'est un jour décidé.
+
+Historique : Étape obligatoire et critique (décision PO du 2026-09-14, Q3). Ce document est un cadre : le plan
 détaillé est rédigé après l'étape 12, quand le modèle cible a été éprouvé par l'usage. Rien de ce
 qui suit n'est figé, sauf l'objectif.
 

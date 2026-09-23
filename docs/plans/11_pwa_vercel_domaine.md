@@ -96,6 +96,36 @@ Plan 02 (premiers commits). Projet Vercel à créer après ces commits.
 4. Test d'installation : "Ajouter à l'écran d'accueil" sur Android (Chrome) et iOS (Safari),
    lancement en plein écran, retour d'auth Google dans la PWA installée.
 
+## Décisions PO du 2026-09-23 (fin de projet)
+
+- Étape 4 faite : installation testée par le PO.
+- Mesure Lighthouse abandonnée (étape 3 et critère d'acceptation correspondant).
+- Bandeau de mise à jour abandonné (étape 3 et critère correspondant) : une app ouverte prend la
+  nouvelle version au prochain lancement complet.
+- Revue des métadonnées et des pages légales (demande PO du 2026-09-23), réalisée le même jour :
+  - Aperçu de lien (WhatsApp, Messenger...) : balises Open Graph dans `web/index.html`, image
+    `web/og-image.png` (1200×630, palette par défaut) générée par `tool/generate_icons.dart`.
+  - Titre « NUNI — Never Up, Never In », description en français, `lang="fr"` sur la page.
+  - Référencement : décision PO, pas d'indexation (`<meta name="robots" content="noindex,
+    nofollow">`) ; `web/robots.txt` autorise l'exploration pour que cette balise et les aperçus
+    soient lus (avant, `/robots.txt` renvoyait la page de l'app).
+  - `/legal` : éditeur et directeur de la publication, hébergeur du site (Vercel Inc., adresse) et
+    des données (Supabase Pte. Ltd., adresse, stockage UE). Vercel ne publie pas de numéro de
+    téléphone, que la LCEN demande pour l'hébergeur : le lien vers vercel.com en tient lieu.
+  - `/privacy` (RGPD) : responsable du traitement, base légale, destinataires et sous-traitants
+    (dont BigDataCloud, Open-Meteo, OpenStreetMap, appelés avec une position approximative),
+    transferts hors UE et leurs garanties (clauses contractuelles types pour Vercel et Supabase,
+    Data Privacy Framework pour Google), information des joueurs importés de LsgScores, liste
+    complète des droits, réclamation CNIL, date de mise à jour.
+  - Crédits (demande PO du 2026-09-23) : mention « © contributeurs OpenStreetMap » affichée en
+    permanence sur les deux cartes (`NuniMapAttribution`), exigée sur la carte elle-même par les
+    règles d'attribution de la fondation OpenStreetMap (une page séparée ne suffit pas). Section
+    « Crédits » sur `/legal` : services et données (OpenStreetMap, Open-Meteo, BigDataCloud), police
+    et icônes, principales bibliothèques avec leur licence (relevée dans leur fichier LICENSE) et un
+    lien vers leur page, plus le bouton « Voir toutes les licences » (page de licences de Flutter,
+    complète et générée automatiquement, polices ajoutées dans `main.dart`).
+- Revue validée par le PO le 2026-09-23 : plan clôturé.
+
 ## Livrables
 
 - Déploiement continu, domaine actif, PWA installable, mise à jour douce.

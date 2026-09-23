@@ -56,7 +56,7 @@ class PlayedHoleCard extends StatelessWidget {
     final isPrivate = playedHole.hole?.visibility == HoleVisibility.private;
 
     return NuniCard(
-      borderColor: highlighted ? scheme.primary : null,
+      borderColor: highlighted ? context.nuni.primaryInk : null,
       padding: const EdgeInsets.fromLTRB(14, 14, 8, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,7 +228,11 @@ class _TeamScoreRow extends StatelessWidget {
           valueWidget,
           if (editable) ...[
             const SizedBox(width: 10),
-            Icon(PhosphorIcons.pencilSimple, size: 16, color: scheme.primary),
+            Icon(
+              PhosphorIcons.pencilSimple,
+              size: 16,
+              color: context.nuni.primaryInk,
+            ),
           ],
         ],
       ),

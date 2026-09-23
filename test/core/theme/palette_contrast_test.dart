@@ -8,10 +8,10 @@ import 'package:nuni/core/theme/palettes.dart';
 /// carry bold/large text only and are held to AA large text (3:1), which a
 /// true orange can reach but not exceed by much (PO, 2026-09-23).
 const _brandPairs = {
-  'white on primary',
-  'white on hero start',
-  'white on hero end',
-  'primary on background',
+  'label on primary',
+  'label on hero start',
+  'label on hero end',
+  'primary ink on background',
 };
 
 void main() {
@@ -29,10 +29,10 @@ void main() {
       ),
       // Neutral pills and tiles: secondary text on the border tint.
       'secondary text on border tint': (palette.textSecondary, palette.border),
-      'white on primary': (palette.onPrimary, palette.primary),
-      'white on hero start': (palette.onPrimary, palette.heroStart),
-      'white on hero end': (palette.onPrimary, palette.heroEnd),
-      'primary on background': (palette.primary, palette.background),
+      'label on primary': (palette.onPrimary, palette.primary),
+      'label on hero start': (palette.onPrimary, palette.heroStart),
+      'label on hero end': (palette.onPrimary, palette.heroEnd),
+      'primary ink on background': (palette.primaryInk, palette.background),
       'danger on surface': (palette.danger, palette.surface),
       'danger on background': (palette.danger, palette.background),
       for (final (name, tone) in [

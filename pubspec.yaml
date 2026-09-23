@@ -56,6 +56,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  assets:
+    # Licence texts of the bundled fonts, added to Flutter's licence page
+    # (main.dart) next to those of every Dart package.
+    - assets/fonts/LICENSE-phosphor.txt
+    - assets/fonts/LICENSE-plus-jakarta-sans.txt
   fonts:
     # Phosphor Icons (MIT, phosphoricons.com), vendored directly: the
     # `phosphor_flutter` package subclasses IconData, which current Flutter

@@ -33,9 +33,9 @@ liées. Les questions sont centralisées dans [QUESTIONS_PO.md](../QUESTIONS_PO.
 | 8 ✅ | Session en direct : trous joués, saisie collaborative, classement temps réel | [08_session_live_scores_realtime.md](08_session_live_scores_realtime.md) | Écran de session, ajout de trous par proximité, saisie des coups par équipe, classement live, clôture |
 | 9 ✅ | Rejoindre et reprendre une session | [09_rejoindre_reprendre_session.md](09_rejoindre_reprendre_session.md) | Code + lien + QR, adhésion, rattachement à une équipe, reprise depuis n'importe quel appareil |
 | 10 ✅ | Historique, photos, exports | [10_historique_photos_exports.md](10_historique_photos_exports.md) | Liste et détail des sessions passées, galerie photos, export PDF et image partageable, édition des horaires |
-| 11 | PWA, déploiement Vercel, domaine | [11_pwa_vercel_domaine.md](11_pwa_vercel_domaine.md) | Manifest et icônes NUNI, installation sur l'écran d'accueil, mise à jour douce, déploiement continu sur nuni.centuryspine.org |
-| 12 | Recette et mise en service | [12_recette_migration_mise_en_service.md](12_recette_migration_mise_en_service.md) | Scénarios de recette joués sur mobile, bascule |
-| 13 | Migration des données LsgScores (critique). Étapes 1 (trous) et 2 (sessions, joueurs, scores, photos) livrées et testées par le PO le 2026-09-23 ; reste le retrait de l'ancienne app | [13_migration_donnees_lsgscores.md](13_migration_donnees_lsgscores.md) | Sessions, équipes, joueurs, trous et coups de l'ancienne base importés dans NUNI, vérifiés et consultables dans l'historique |
+| 11 ✅ | PWA, déploiement Vercel, domaine. Clôturée le 2026-09-23 : installation testée par le PO, Lighthouse et bandeau de mise à jour abandonnés, métadonnées, pages légales et crédits validés par le PO | [11_pwa_vercel_domaine.md](11_pwa_vercel_domaine.md) | Manifest et icônes NUNI, installation sur l'écran d'accueil, mise à jour douce, déploiement continu sur nuni.centuryspine.org |
+| 12 ✅ | Recette et mise en service. Clôturée par le PO le 2026-09-23 : tests jugés suffisants pour la première version, première session réelle la semaine suivante | [12_recette_migration_mise_en_service.md](12_recette_migration_mise_en_service.md) | Scénarios de recette joués sur mobile, bascule |
+| 13 ✅ | Migration des données LsgScores (critique). Étapes 1 (trous), 2 (sessions, joueurs, scores, photos) et 3 (seeds) livrées et testées par le PO le 2026-09-23. Clôturée le 2026-09-23 : pas de retrait de l'ancienne app prévu (un plan dédié sera ouvert si besoin) | [13_migration_donnees_lsgscores.md](13_migration_donnees_lsgscores.md) | Sessions, équipes, joueurs, trous et coups de l'ancienne base importés dans NUNI, vérifiés et consultables dans l'historique |
 | 14 | Suppression de compte (impacts sur les données d'autrui à trancher avant le détail des étapes, Q27–Q31) | [14_suppression_compte.md](14_suppression_compte.md) | Suppression de compte sans casser les sessions, scores et trous partagés avec d'autres utilisateurs |
 | 15 ✅ | Championnat individuel annuel (implémenté et testé par le PO le 2026-09-22 : schéma distant reconstruit, parcours complet vérifié dans le navigateur) | [15_championnat_individuel_annuel.md](15_championnat_individuel_annuel.md) | Classement individuel annuel par zone géographique organique, agrégeant les sessions marquées "championnat", affiché en provisoire sur l'accueil |
 | 16 ✅ | Rôles applicatifs (super_admin / player), implémenté et vérifié le 2026-09-22 (Q46–Q47) : schéma distant reconstruit, `user_roles` ne contient que le PO en `super_admin`, `flutter analyze`/tests/build Vercel verts | [16_roles_applicatifs.md](16_roles_applicatifs.md) | Rôle applicatif `super_admin` pour le PO seul, `player` par défaut pour tous les autres comptes, fondation pour de futures actions structurantes — aucun écran ni politique existante modifiés à ce stade |
@@ -70,5 +70,7 @@ liées. Les questions sont centralisées dans [QUESTIONS_PO.md](../QUESTIONS_PO.
 2. ☑ Fin d'étape 4 : validation visuelle du thème et de la navigation sur téléphone. Validé par le
    PO le 2026-09-16.
 3. Fin d'étape 8 : première session réelle jouée avec plusieurs téléphones.
-4. Fin d'étape 12 : mise en service.
-5. Fin d'étape 13 : anciennes sessions visibles et correctes dans NUNI, retrait de l'ancienne app.
+4. ☑ Fin d'étape 12 : mise en service. Clôturée par le PO le 2026-09-23, première session
+   réelle la semaine suivante.
+5. ☑ Fin d'étape 13 : anciennes sessions visibles et correctes dans NUNI (2026-09-23). Le
+   retrait de l'ancienne app n'est pas prévu.

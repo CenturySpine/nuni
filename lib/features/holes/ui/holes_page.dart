@@ -14,6 +14,7 @@ import '../../../shared/nuni_chip.dart';
 import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../../shared/nuni_map_attribution.dart';
 import '../../../shared/nuni_status_pill.dart';
 import '../data/holes_repository.dart';
 import '../domain/distance_format.dart';
@@ -104,7 +105,7 @@ class _HolesPageState extends ConsumerState<HolesPage>
                         Icon(
                           PhosphorIcons.crosshair,
                           size: 18,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: context.nuni.primaryInk,
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -367,6 +368,7 @@ class _HolesMapView extends StatelessWidget {
               ),
           ],
         ),
+        const NuniMapAttribution(),
       ],
     );
   }

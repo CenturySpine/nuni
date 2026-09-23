@@ -165,7 +165,7 @@ class _Thumbnail extends ConsumerWidget {
               child: Icon(
                 PhosphorIcons.starFill,
                 size: 16,
-                color: Theme.of(context).colorScheme.primary,
+                color: context.nuni.primaryInk,
               ),
             ),
         ],

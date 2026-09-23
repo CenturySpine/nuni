@@ -29,6 +29,7 @@ class NuniColors extends ThemeExtension<NuniColors> {
 
   Color get success => palette.success;
   AccentTone get primaryTone => palette.primaryTone;
+  Color get primaryInk => palette.primaryInk;
   AccentTone get fairway => palette.fairway;
   AccentTone get highlight => palette.highlight;
   AccentTone get sunshine => palette.sunshine;
@@ -202,7 +203,7 @@ ThemeData buildAppTheme([Palette palette = defaultPalette]) {
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: palette.primary,
+        foregroundColor: palette.primaryInk,
         textStyle: style(15, FontWeight.w700, height: 1.2),
         shape: controlShape,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -318,13 +319,13 @@ ThemeData buildAppTheme([Palette palette = defaultPalette]) {
         (states) => IconThemeData(
           size: 24,
           color: states.contains(WidgetState.selected)
-              ? palette.primary
+              ? palette.primaryInk
               : palette.textSecondary,
         ),
       ),
       labelTextStyle: WidgetStateProperty.resolveWith(
         (states) => states.contains(WidgetState.selected)
-            ? style(12, FontWeight.w700, color: palette.primary)
+            ? style(12, FontWeight.w700, color: palette.primaryInk)
             : style(12, FontWeight.w600, color: palette.textSecondary),
       ),
     ),
@@ -375,7 +376,7 @@ ThemeData buildAppTheme([Palette palette = defaultPalette]) {
       fillColor: palette.surfaceMuted,
       hoverColor: Colors.transparent,
       labelStyle: style(15, FontWeight.w500, color: palette.textSecondary),
-      floatingLabelStyle: style(14, FontWeight.w700, color: palette.primary),
+      floatingLabelStyle: style(14, FontWeight.w700, color: palette.primaryInk),
       hintStyle: style(15, FontWeight.w400, color: palette.textDisabled),
       helperStyle: style(12, FontWeight.w500, color: palette.textSecondary),
       errorStyle: style(12, FontWeight.w600, color: palette.danger),
@@ -384,15 +385,15 @@ ThemeData buildAppTheme([Palette palette = defaultPalette]) {
       border: fieldBorder(Colors.transparent),
       enabledBorder: fieldBorder(Colors.transparent),
       disabledBorder: fieldBorder(Colors.transparent),
-      focusedBorder: fieldBorder(palette.primary, 2),
+      focusedBorder: fieldBorder(palette.primaryInk, 2),
       errorBorder: fieldBorder(palette.danger, 1.5),
       focusedErrorBorder: fieldBorder(palette.danger, 2),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     ),
     textSelectionTheme: TextSelectionThemeData(
-      cursorColor: palette.primary,
+      cursorColor: palette.primaryInk,
       selectionColor: palette.primary.withValues(alpha: 0.25),
-      selectionHandleColor: palette.primary,
+      selectionHandleColor: palette.primaryInk,
     ),
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith(
@@ -421,12 +422,12 @@ ThemeData buildAppTheme([Palette palette = defaultPalette]) {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
     ),
     radioTheme: RadioThemeData(
-      fillColor: whenSelected(palette.primary, palette.textDisabled),
+      fillColor: whenSelected(palette.primaryInk, palette.textDisabled),
     ),
     sliderTheme: SliderThemeData(
-      activeTrackColor: palette.primary,
+      activeTrackColor: palette.primaryInk,
       inactiveTrackColor: palette.primaryTone.container,
-      thumbColor: palette.primary,
+      thumbColor: palette.primaryInk,
       overlayColor: palette.primary.withValues(alpha: 0.12),
       valueIndicatorColor: palette.text,
       valueIndicatorTextStyle: style(
@@ -477,7 +478,7 @@ ThemeData buildAppTheme([Palette palette = defaultPalette]) {
       pressElevation: 0,
     ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
-      color: palette.primary,
+      color: palette.primaryInk,
       linearTrackColor: palette.primaryTone.container,
       circularTrackColor: Colors.transparent,
     ),

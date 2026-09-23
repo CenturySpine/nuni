@@ -248,12 +248,11 @@ class _StandingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
 
     return NuniCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       color: isMe ? context.nuni.primaryTone.container : null,
-      borderColor: isMe ? scheme.primary : null,
+      borderColor: isMe ? context.nuni.primaryInk : null,
       child: Row(
         children: [
           NuniRankBadge(

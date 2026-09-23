@@ -5,7 +5,7 @@
   "display": "standalone",
   "background_color": "#F4F5FA",
   "theme_color": "#F4F5FA",
-  "description": "Never Up, Never In: collaborative street golf session scoring.",
+  "description": "Never Up, Never In : le scoring de street golf entre amis.",
   "orientation": "portrait-primary",
   "prefer_related_applications": false,
   "icons": [

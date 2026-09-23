@@ -2,34 +2,56 @@
 
 ## Palettes au choix de l'utilisateur (Q76, 2026-09-23)
 
-Deux palettes coexistent, même design, mêmes rôles de couleurs : "NUNI Sunset" (orange, par
-défaut) et "NUNI Pop" (violet). L'utilisateur choisit dans Réglages > Couleurs ; le choix est
+Six palettes coexistent, même design, mêmes rôles de couleurs, présentées deux par deux :
+chaudes (orange "NUNI Sunset", par défaut ; corail "NUNI Coral"), froides (violet "NUNI Pop" ;
+bleu "NUNI Ocean"), douces (turquoise "NUNI Lagoon" ; olive "NUNI Olive"). L'utilisateur choisit dans Réglages > Couleurs ; le choix est
 mémorisé sur l'appareil. Le logo dans l'app suit la palette ; l'icône de l'app installée et le
 favicon restent ceux de la palette par défaut (`defaultPalette`, `tool/generate_icons.dart`).
 Ajouter une palette : une constante `Palette` de plus dans `allPalettes`
 (`lib/core/theme/palettes.dart`), un nom traduit dans les ARB, et le test de contraste doit
 passer.
 
-## NUNI Sunset — orange, palette par défaut (PO, 2026-09-23)
+### Corail, bleu, turquoise, olive (PO, 2026-09-23)
 
-Même design que NUNI Pop (ci-dessous), seule la couleur principale change : le violet devient
-un vrai orange, et les couleurs qui en dépendent suivent. Même nombre de couleurs.
+Couleurs principales données par le PO, déclinées avec les mêmes règles que la première version orange : texte
+blanc à 3:1 au moins sur la couleur principale et sur les deux bouts du dégradé, couleur
+principale à 3:1 au moins sur le fond, teinte pâle portant un texte foncé à 4,8:1. Le deuxième
+accent ("highlight") est la couleur complémentaire de la principale. Fond, textes, vert, soleil
+et rouge sont communs à toutes les palettes ; "NI" du logo en `#FFEFB0`.
+
+| Palette | Donnée PO | Principale | Teinte / texte | Dégradé | Accent |
+|---|---|---|---|---|---|
+| Corail | `#E76F51` | `#E56545` (à peine assombrie) | `#FCE9E4` / `#BA3A1A` | `#E76F51` → `#E6564C` | bleu ciel `#2E90FA` |
+| Bleu | `#219EBC` | `#2099B6` (à peine assombrie) | `#E5F7FB` / `#18758B` | `#219EBC` → `#2080B6` | mandarine `#FF7A45` |
+| Turquoise | `#2A9D8F` | `#2A9D8F` (telle quelle) | `#E6F9F7` / `#20786D` | `#2CA3A1` → `#28977B` | mandarine `#FF7A45` |
+| Olive | `#ADC178` | `#7F9545` (même teinte, assombrie) | `#F3F6E9` / `#617234` | `#7E9E49` → `#828C40` | violet `#8E7BFF` |
+
+L'olive donnée ne porte un texte blanc qu'à 2:1 (illisible) : elle est assombrie jusqu'au seuil
+de 3:1 en gardant sa teinte et sa saturation.
+
+## NUNI Sunset — orange (ambre), palette par défaut (PO, 2026-09-23)
+
+Couleur principale `#FFB703` donnée par le PO (remplace l'orange `#E66400` de la première
+version). Trop claire pour un texte blanc (1,75:1) : choix PO (2026-09-23) de la garder telle
+quelle avec un **texte foncé** dessus, seule palette dans ce cas.
 
 | Rôle | Valeur | Usage |
 |---|---|---|
-| Orange (principale) | `#E66400` (teinte `#FFF0E0`, texte `#B34A00`) | bouton principal, sélection, liens, focus |
-| Dégradé de marque | `#EC7000` → `#E25A00` | bandeau de connexion, bandeau d'accueil, logo |
-| Bleu ciel (remplace la mandarine) | `#2E90FA` (teinte `#E3F0FF`, texte `#1B5FB8`) | en préparation, badges, certaines vignettes |
-| Logo | "NU" blanc, "NI" `#FFEFB0` sur le dégradé orange | |
+| Ambre (principale) | `#FFB703`, texte dessus `#14172B` (10:1) | bouton principal, bandeau, cases cochées, interrupteurs |
+| Ambre foncé ("encre" de marque) | `#8A5F00` (5,2:1 sur le fond) | liens, onglet sélectionné, contour de focus, icônes et contours de sélection |
+| Teinte / texte | `#FFF6E0` / `#8A5F00` | fonds sélectionnés, pastilles |
+| Dégradé de marque | `#FFB703` → `#FB8500`, texte foncé ≥ 7:1 | bandeau de connexion, bandeau d'accueil, logo |
+| Bleu ciel (accent) | `#2E90FA` (teinte `#E3F0FF`, texte `#1B5FB8`) | en préparation, badges, certaines vignettes |
+| Leader / championnat | orange `#E66400` (teinte `#FFF0E0`, texte `#B34A00`) au lieu du jaune | le jaune `#FFC43D` serait indiscernable de l'ambre |
+| Logo | "NU" `#14172B`, "NI" blanc sur le dégradé ambre | aussi l'icône de l'app installée |
 
-Fond, textes, vert, soleil et rouge sont inchangés. La mandarine devient bleu ciel pour ne pas
-avoir deux oranges ; le bleu est la couleur complémentaire de l'orange.
+Mécanique : chaque palette a une couleur "encre" de marque (`primaryInk`) pour le texte et les
+traits fins sur fond clair ; elle vaut la couleur principale partout sauf ici. Le bouton "sur
+bandeau" prend la couleur du texte du bandeau (foncé ici) avec un libellé ambre.
 
-Contraste : un vrai orange ne permet pas plus d'environ 3,4:1 avec un texte blanc (un orange à
-4,5:1 tire vers le rouge brique, refusé par le PO). Les aplats de marque (libellés blancs des
-boutons et du bandeau, liens et onglets orange) sont donc tenus au seuil WCAG AA des textes gras
-ou grands, 3:1 (bouton 3,4:1, liens sur le fond 3,1:1). Tous les autres couples restent à
-4,5:1. Le test `palette_contrast_test.dart` applique ces deux seuils.
+Contraste (toutes palettes) : libellés sur la couleur principale et le dégradé, et encre de
+marque sur le fond, au moins 3:1 (textes gras ou grands) ; tout le reste au moins 4,5:1. Le test
+`palette_contrast_test.dart` applique ces deux seuils.
 
 ## NUNI Pop — violet, au choix (Q74, 2026-09-23)
 

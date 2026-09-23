@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_logo.dart';
 
@@ -27,7 +28,7 @@ class AboutPage extends StatelessWidget {
                 Text(
                   l10n.tagline,
                   style: textTheme.titleSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
+                    color: context.nuni.primaryInk,
                   ),
                 ),
                 const SizedBox(height: 8),

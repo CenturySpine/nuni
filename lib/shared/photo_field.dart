@@ -121,7 +121,7 @@ class _PhotoFieldState extends State<PhotoField> {
                           child: Icon(
                             PhosphorIcons.camera,
                             size: 32,
-                            color: scheme.primary,
+                            color: context.nuni.primaryInk,
                           ),
                         )
                       : null,
@@ -156,7 +156,7 @@ class _PhotoFieldState extends State<PhotoField> {
                       ),
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: scheme.primary,
+                        color: context.nuni.primaryInk,
                       ),
                     ),
                   ),

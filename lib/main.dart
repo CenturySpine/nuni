@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
@@ -13,6 +15,7 @@ void main() async {
   // code (plan 09) are written as literal URLs. Vercel's catch-all rewrite
   // to index.html (vercel.json) exists to support exactly this.
   usePathUrlStrategy();
+  _registerFontLicences();
   // Awaited so the initial route decision (see core/router/auth_guard.dart)
   // already knows about a restored session -- no login "flash".
   await initializeSupabase();
@@ -28,4 +31,19 @@ void main() async {
       child: const NuniApp(),
     ),
   );
+}
+
+/// Fonts are bundled as assets, not Dart packages, so Flutter's licence page
+/// (Legal notice > Credits) would miss them without this.
+void _registerFontLicences() {
+  LicenseRegistry.addLicense(() async* {
+    for (final (package, asset) in [
+      ('Phosphor Icons', 'assets/fonts/LICENSE-phosphor.txt'),
+      ('Plus Jakarta Sans', 'assets/fonts/LICENSE-plus-jakarta-sans.txt'),
+    ]) {
+      yield LicenseEntryWithLineBreaks([
+        package,
+      ], await rootBundle.loadString(asset));
+    }
+  });
 }

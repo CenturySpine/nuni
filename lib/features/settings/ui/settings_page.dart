@@ -113,26 +113,27 @@ class SettingsPage extends ConsumerWidget {
           ),
           const SizedBox(height: 28),
           NuniSectionHeader(title: l10n.settingsColors),
-          Row(
-            children: [
-              for (final (index, option) in allPalettes.indexed) ...[
-                if (index > 0) const SizedBox(width: 12),
-                Expanded(
-                  child: _PaletteOption(
-                    palette: option,
-                    label: switch (option.id) {
-                      'pop' => l10n.settingsPalettePop,
-                      _ => l10n.settingsPaletteSunset,
-                    },
-                    selected: option == palette,
-                    onTap: () => ref
-                        .read(paletteControllerProvider.notifier)
-                        .setPalette(option),
+          for (var row = 0; row < allPalettes.length; row += 2) ...[
+            if (row > 0) const SizedBox(height: 12),
+            Row(
+              children: [
+                for (final (index, option)
+                    in allPalettes.skip(row).take(2).indexed) ...[
+                  if (index > 0) const SizedBox(width: 12),
+                  Expanded(
+                    child: _PaletteOption(
+                      palette: option,
+                      label: _paletteLabel(l10n, option),
+                      selected: option == palette,
+                      onTap: () => ref
+                          .read(paletteControllerProvider.notifier)
+                          .setPalette(option),
+                    ),
                   ),
-                ),
+                ],
               ],
-            ],
-          ),
+            ),
+          ],
           const SizedBox(height: 28),
           NuniGroupedList(
             children: [
@@ -171,6 +172,16 @@ class SettingsPage extends ConsumerWidget {
   }
 }
 
+String _paletteLabel(AppLocalizations l10n, Palette palette) =>
+    switch (palette.id) {
+      'coral' => l10n.settingsPaletteCoral,
+      'pop' => l10n.settingsPalettePop,
+      'ocean' => l10n.settingsPaletteOcean,
+      'lagoon' => l10n.settingsPaletteLagoon,
+      'olive' => l10n.settingsPaletteOlive,
+      _ => l10n.settingsPaletteSunset,
+    };
+
 /// One choice of the colour picker: a strip of the palette's brand gradient
 /// and accents, its name, and a check when selected.
 class _PaletteOption extends StatelessWidget {
@@ -195,7 +206,7 @@ class _PaletteOption extends StatelessWidget {
       child: NuniCard(
         onTap: onTap,
         padding: const EdgeInsets.all(12),
-        borderColor: selected ? Theme.of(context).colorScheme.primary : null,
+        borderColor: selected ? nuni.primaryInk : null,
         color: selected ? nuni.primaryTone.container : null,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,7 +258,7 @@ class _PaletteOption extends StatelessWidget {
                   Icon(
                     PhosphorIcons.checkCircle,
                     size: 20,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: nuni.primaryInk,
                   ),
               ],
             ),

@@ -1,5 +1,12 @@
 # Plan 12 — Recette, reprise de données, mise en service
 
+## Statut
+
+Clôturé par le PO le 2026-09-23. Les tests menés pendant le développement sont jugés suffisants
+pour la première version ; les scénarios formels, le guide d'installation et le backlog ne sont
+pas produits. La première session réelle a lieu la semaine suivante ; les bugs éventuels seront
+traités au fil de l'eau.
+
 ## Objectif
 
 Vérifier NUNI dans les conditions réelles, décider de la reprise éventuelle des données de

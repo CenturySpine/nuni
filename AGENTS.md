@@ -136,8 +136,8 @@ GitHub Actions (Q17).
   jamais en dur. Une fonctionnalité n'est terminée que si ses chaînes existent dans les deux
   langues.
 - Couleurs : aucune `Color(0x…)` hors `lib/core/theme/`. Les palettes sont dans
-  `core/theme/palettes.dart` (liste `allPalettes` : "NUNI Sunset" orange, par défaut, et
-  "NUNI Pop" violet ; Q74, Q76). L'utilisateur choisit la sienne dans les réglages
+  `core/theme/palettes.dart` (liste `allPalettes` : six palettes, orange "NUNI Sunset" par défaut ;
+  Q74, Q76). L'utilisateur choisit la sienne dans les réglages
   (`PaletteController`, mémorisée sur l'appareil) ; les écrans lisent les couleurs par
   `Theme.of(context).colorScheme` ou `context.nuni` (accents), jamais en dur, pour suivre ce
   choix. Toute nouvelle palette reprend les mêmes rôles et passe le test de contraste.

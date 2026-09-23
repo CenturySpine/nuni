@@ -247,7 +247,7 @@ class _PhotoStripTile extends StatelessWidget {
             color: scheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(NuniRadius.control),
             border: Border.all(
-              color: selected ? scheme.primary : Colors.transparent,
+              color: selected ? context.nuni.primaryInk : Colors.transparent,
               width: 2,
             ),
           ),
