@@ -56,8 +56,8 @@ un vrai orange, mandarine remplacée par un bleu ciel), devenue la palette par d
 Demande PO (2026-09-23) : garder plusieurs palettes (violet "NUNI Pop" et orange "NUNI Sunset"
 pour commencer) et laisser chaque utilisateur choisir la sienne. Lève l'interdit "pas de
 réglage de thème exposé à l'utilisateur" (AGENTS.md).
-Réalisé : section "Couleurs" dans les réglages, sous la langue ; orange par défaut. Deux
-hypothèses appliquées, à confirmer :
+Réalisé : section "Couleurs" dans les réglages, sous la langue ; orange par défaut. Les deux
+hypothèses ci-dessous sont confirmées par le PO (2026-09-23) :
 - Le choix est mémorisé **sur l'appareil**, comme la langue, et non sur le compte. Suggestion :
   en rester là ; le suivre d'un appareil à l'autre demanderait une colonne en base (donc une
   reconstruction du schéma distant, AGENTS.md règle 8) pour un gain faible, la plupart des
