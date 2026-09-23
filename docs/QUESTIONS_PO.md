@@ -833,3 +833,24 @@ sélecteur de saison existant permet ensuite de naviguer.
 Réponse PO (2026-09-23) : suggestion non retenue ; un historique des championnats sur l'accueil,
 comme l'historique des sessions. Conception détaillée dans le plan 15 (complément du 2026-09-23),
 validée et implémentée le même jour.
+
+### Sauvegarde des données par seed (demande PO du 2026-09-23)
+
+Demande : compléter les seeds pour rejouer après une reconstruction les trous, sessions et
+championnats actuels (données migrées de LsgScores et créées dans NUNI).
+
+**Q73 ☑ — Le seed des sessions et championnats doit-il être committé dans le dépôt (public) ?**
+Réponse PO (2026-09-23) : oui, mais chiffré par mot de passe (`openssl`, AES-256, dérivation
+PBKDF2) et versionné ; mot de passe conservé par le PO dans son KeePass (entrée NUNI) et dans
+`env/seed.json`, non versionné, pour le déchiffrement lors des reconstructions.
+Constat : contrairement aux trous (publics dans l'app, photos de lieux), ce seed contiendrait les
+noms des joueurs et les chemins des photos de session (des visages). Le bucket des photos est
+lisible par quiconque connaît le chemin : le publier sur GitHub rend ces photos accessibles à
+tous. Il contiendrait aussi, pour le rattachement à l'inscription (Q64), les e-mails des joueurs
+importés sans compte, qui ne doivent jamais être publiés.
+Suggestion : seed des trous inchangé (committé) ; seed des sessions, joueurs, scores, photos et
+e-mails généré par le même outil dans un dossier ignoré par git (`supabase/private_seed/`), rejoué
+par la procédure de reconstruction comme les autres. Le PO en garde une copie hors du poste (ex.
+son espace de stockage personnel), puisqu'un fichier local seul ne protège pas d'une perte du
+poste. Tant que l'ancien projet LsgScores existe, le script d'import reste en plus une seconde
+voie de restauration pour les sessions importées.

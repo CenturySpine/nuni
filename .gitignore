@@ -2,6 +2,7 @@
 env/*.json
 !env/example.json
 !env/migration.example.json
+!env/seed.example.json
 *.local
 .env
 .env.*

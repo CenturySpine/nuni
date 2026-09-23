@@ -292,8 +292,51 @@ droit ajouté dans `..._triggers.sql` et appliqué à l'identique sur la base.
   trou libre.
 - `flutter analyze` sans remarque, tests verts, chaînes EN/FR.
 
+## Étape 3 — Sauvegarde des données par seed (validée le 2026-09-23 ; livrée et vérifiée le même jour)
+
+Contrôle complet du 2026-09-23 : export avec le mot de passe du PO, déchiffrement vérifié avant
+toute écriture, reconstruction de la base, rejeu dans l'ordre de `docs/DEV.md`. Empreinte (nombre
+de lignes et hachage du contenu) identique avant/après pour les 13 tables : joueurs (14), trous
+(19), e-mails de rattachement (5), sessions (7), regroupement en zones de championnat (4 sessions
+marquées, mêmes regroupements), équipes (29), membres d'équipe (36), membres de session (18),
+trous joués (44), scores (181), photos (14), rôles (1), zones (1, identifiant régénéré comme
+prévu). Classements identiques par construction (mêmes données, mêmes regroupements).
+
+Demande PO (2026-09-23) : après la migration, rejouer après une reconstruction les trous, sessions
+et championnats actuels, comme les trous le sont déjà (Q63).
+
+- `tool/export_remote_seed.dart` produit, en plus du seed des trous, un seed des données : fiches
+  joueurs (toutes, y compris celles liées à un compte, avec leur identifiant et leur nom modifié),
+  sessions, équipes, membres d'équipe, membres de session, trous joués, scores, photos de session
+  (lignes seulement, les fichiers restent dans le stockage), e-mails de rattachement (Q64).
+  Emplacement (Q73) : `supabase/data_seed.sql.enc`, chiffré par `openssl` (AES-256, PBKDF2,
+  600 000 itérations) et committé ; mot de passe dans `env/seed.json` (ignoré par git) et dans le
+  KeePass du PO. La copie en clair n'existe que le temps du chiffrement ou du rejeu, dans `build/`
+  (ignoré par git). Aller-retour chiffrement/déchiffrement et syntaxe du SQL vérifiés le
+  2026-09-23 avec un mot de passe jetable (fichiers de test supprimés ensuite).
+- Championnats : aucune table à sauvegarder. Les zones sont recalculées par le déclencheur existant
+  quand les sessions marquées sont réinsérées ; elles le sont dans leur ordre de création d'origine
+  (`created_at` conservé), ce qui redonne exactement les mêmes regroupements et donc les mêmes
+  classements. Seuls les identifiants internes des zones changent (invisibles pour l'utilisateur).
+  Saison et code de session sont conservés (le code est fourni, la saison est recalculée à
+  l'identique).
+- Procédure de reconstruction (`docs/DEV.md`) : le seed des données est rejoué avant
+  `backfill_players.sql`, pour que chaque compte retrouve sa fiche d'origine (même identifiant, nom
+  modifié conservé) au lieu d'en recevoir une nouvelle ; le backfill ne complète que les comptes
+  créés depuis le dernier export. L'import LsgScores (étapes 7 et 8) devient une voie de secours.
+- Règle : régénérer les seeds avant toute reconstruction (déjà écrite pour les trous, AGENTS.md).
+- Vérification : export, reconstruction, rejeu, puis comparaison des nombres de lignes par table et
+  des classements de championnat avant/après.
+
 ## Critères d'acceptation (cadre)
 
 - Nombre de sessions, d'équipes, de trous joués et de coups identique entre les deux bases.
 - Chaque ancienne session s'ouvre dans l'historique NUNI avec le même classement.
 - Le script peut être rejoué sans créer de doublon.
+
+## Retrait de l'ancienne app (décision PO du 2026-09-23)
+
+Reporté : l'ancien projet LsgScores (app et base Supabase) est conservé tel quel pendant les
+travaux sur NUNI. Il ne coûte rien, ne gêne pas, et sert de sauvegarde de secours (le script
+d'import peut en restaurer trous et sessions, étape 8 de `docs/DEV.md`). Son retrait sera décidé
+plus tard par le PO.

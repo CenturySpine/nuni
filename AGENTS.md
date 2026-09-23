@@ -69,10 +69,12 @@ Documents de référence, à lire avant d'agir :
    normales (plus jamais d'édition d'un fichier déjà appliqué en production).
    **Exception, données réelles conservées par seed (Q63, 2026-09-23) :** les trous importés de
    LsgScores et repositionnés à la main (et ceux créés depuis dans l'app) sont des données à
-   garder. Avant toute reconstruction, régénérer `supabase/remote_seed.sql` depuis la base
-   (`fvm dart run tool/export_remote_seed.dart`), relire le diff, le committer avec l'accord du
-   PO, puis le rejouer après la reconstruction (étape 6 de `docs/DEV.md`, devenue obligatoire).
-   Même principe prévu pour les sessions et joueurs importés une fois l'import terminé.
+   garder, comme les joueurs, sessions, scores et championnats (Q73). Avant toute reconstruction,
+   régénérer les seeds depuis la base (`fvm dart run tool/export_remote_seed.dart` :
+   `supabase/remote_seed.sql` en clair pour les trous, `supabase/data_seed.sql.enc` chiffré pour
+   le reste, mot de passe dans `env/seed.json`), relire le diff, le committer avec l'accord du
+   PO, puis les rejouer après la reconstruction (étapes 0, 5 et 6 de `docs/DEV.md`). Ne jamais
+   committer une copie déchiffrée du seed des données (noms, e-mails, photos de personnes).
 
 ## Ton des échanges avec le PO
 
