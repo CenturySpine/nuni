@@ -89,6 +89,9 @@
   "sessionsLivePointsValue": "{points} pts",
 
   "sessionsLiveHoleLabel": "Trou {position} · {name}",
+  "sessionsLiveFreeHole": "Trou libre",
+  "sessionsLiveFreeHoleHint": "Jouer un trou ponctuel sans l'ajouter au référentiel",
+  "sessionsLiveFreeHoleLabelField": "Libellé (facultatif)",
   "sessionsLiveDeleteHole": "Retirer ce trou",
   "sessionsLiveMissingScore": "Pas encore de score",
   "sessionsLiveScoreUpdatedBy": "Par {name} à {time}",
@@ -180,6 +183,7 @@
   "holesCreateAction": "Créer un trou",
   "holesPar": "Par {par}",
   "holesAway": "à {distance}",
+  "holesPositionToSet": "Position à définir",
 
   "holesFormTitleNew": "Nouveau trou",
   "holesFormTitleEdit": "Modifier le trou",
@@ -204,6 +208,9 @@
   "holesFormUseMyPosition": "Utiliser ma position",
   "holesFormAccuracy": "Précision : {accuracy} m",
   "holesFormPositionUnavailable": "Impossible d'obtenir votre position. Déplacez le repère sur la carte.",
+  "holesFormPositionToSet": "Ce trou n'a pas encore de position. Touchez la carte ou utilisez votre position.",
+  "holesFormGoToLastHole": "Aller au dernier trou : {name}",
+  "holesFormPhotoRemove": "Supprimer la photo",
   "holesFormPhotoStart": "Photo de départ",
   "holesFormPhotoEnd": "Photo de la cible",
   "holesFormDelete": "Supprimer le trou",

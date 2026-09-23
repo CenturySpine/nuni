@@ -228,6 +228,75 @@ final class HoleByIdFamily extends $Family
   String toString() => r'holeByIdProvider';
 }
 
+@ProviderFor(lastPlacedHole)
+final lastPlacedHoleProvider = LastPlacedHoleFamily._();
+
+final class LastPlacedHoleProvider
+    extends $FunctionalProvider<AsyncValue<Hole?>, Hole?, FutureOr<Hole?>>
+    with $FutureModifier<Hole?>, $FutureProvider<Hole?> {
+  LastPlacedHoleProvider._({
+    required LastPlacedHoleFamily super.from,
+    required String? super.argument,
+  }) : super(
+         retry: null,
+         name: r'lastPlacedHoleProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$lastPlacedHoleHash();
+
+  @override
+  String toString() {
+    return r'lastPlacedHoleProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<Hole?> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Hole?> create(Ref ref) {
+    final argument = this.argument as String?;
+    return lastPlacedHole(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is LastPlacedHoleProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$lastPlacedHoleHash() => r'f462a56edf73cd3f1b3d9361e35d6c010cc4a2b8';
+
+final class LastPlacedHoleFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<Hole?>, String?> {
+  LastPlacedHoleFamily._()
+    : super(
+        retry: null,
+        name: r'lastPlacedHoleProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  LastPlacedHoleProvider call(String? excludeId) =>
+      LastPlacedHoleProvider._(argument: excludeId, from: this);
+
+  @override
+  String toString() => r'lastPlacedHoleProvider';
+}
+
 /// The last radius the user picked (device-local, `shared_preferences`),
 /// falling back to [holesRadiusDefaultM] on first use.
 

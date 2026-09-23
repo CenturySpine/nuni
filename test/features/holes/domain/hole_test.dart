@@ -48,4 +48,33 @@ void main() {
       expect(hole.distance, 240.7);
     },
   );
+
+  test('Hole.fromJson reads a hole imported without a position (plan 13)', () {
+    final hole = Hole.fromJson({
+      'id': 'h2',
+      'name': 'Vieux trou',
+      'par': 3,
+      'start_lat': null,
+      'start_lng': null,
+      'visibility': 'public',
+      'owner_id': 'u1',
+    });
+
+    expect(hole.startLat, isNull);
+    expect(hole.hasPosition, isFalse);
+  });
+
+  test('hasPosition is true once the start is set', () {
+    const hole = Hole(
+      id: 'h1',
+      name: 'Le Ficus',
+      par: 3,
+      startLat: 48.8534,
+      startLng: 2.3488,
+      visibility: HoleVisibility.public,
+      ownerId: 'u1',
+    );
+
+    expect(hole.hasPosition, isTrue);
+  });
 }

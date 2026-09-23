@@ -1,6 +1,7 @@
 # --- Secrets et configuration locale ---
 env/*.json
 !env/example.json
+!env/migration.example.json
 *.local
 .env
 .env.*

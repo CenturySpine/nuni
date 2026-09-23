@@ -1,5 +1,4 @@
-import 'dart:typed_data';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -45,6 +44,25 @@ class HolesRepository {
         .eq('owner_id', userId)
         .order('name');
     return [for (final row in rows) Hole.fromJson(row)];
+  }
+
+  /// My most recently created or modified hole that has a position, other
+  /// than [excludeId] (PO, 2026-09-23): lets the form jump the map straight
+  /// to the area being worked on. Read from the database (`updated_at`, kept
+  /// by a trigger) rather than remembered on the device, so it follows the
+  /// user from one device to another.
+  Future<Hole?> fetchLastPlaced({String? excludeId}) async {
+    var query = _client
+        .from('holes')
+        .select()
+        .eq('owner_id', _client.auth.currentUser!.id)
+        .not('start', 'is', null);
+    if (excludeId != null) query = query.neq('id', excludeId);
+    final row = await query
+        .order('updated_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+    return row == null ? null : Hole.fromJson(row);
   }
 
   Future<Hole> fetchById(String id) async {
@@ -158,6 +176,19 @@ class HolesRepository {
     return path;
   }
 
+  /// Deletes photos a hole no longer references, once it's saved (Q61:
+  /// removing or replacing a photo deletes the old file). Best effort: the
+  /// hole is already saved, so a failure only leaves an unreferenced file and
+  /// must not surface as a failed save.
+  Future<void> deletePhotos(Set<String> paths) async {
+    if (paths.isEmpty) return;
+    try {
+      await _client.storage.from('holes').remove(paths.toList());
+    } on StorageException catch (error) {
+      debugPrint('Unreferenced hole photos not deleted: ${error.message}');
+    }
+  }
+
   String photoUrl(String path) =>
       _client.storage.from('holes').getPublicUrl(path);
 }
@@ -190,6 +221,10 @@ Future<List<Hole>> myHoles(Ref ref) =>
 @riverpod
 Future<Hole> holeById(Ref ref, String id) =>
     ref.watch(holesRepositoryProvider).fetchById(id);
+
+@riverpod
+Future<Hole?> lastPlacedHole(Ref ref, String? excludeId) =>
+    ref.watch(holesRepositoryProvider).fetchLastPlaced(excludeId: excludeId);
 
 /// The last radius the user picked (device-local, `shared_preferences`),
 /// falling back to [holesRadiusDefaultM] on first use.

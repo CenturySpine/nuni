@@ -587,3 +587,136 @@ clé service envisagé initialement — le PO peut retagger depuis l'app à tout
 d'une exécution manuelle hors ligne, et le mécanisme sert aussi pour toute correction future sur
 n'importe quelle session, pas seulement au moment de l'import. Détail technique (nom de la RPC,
 politique exacte) à écrire lors du détail du plan 13.
+
+## Migration LsgScores (étape 13)
+
+Étape 1, import des trous seuls (demande PO du 2026-09-23). Détail :
+[plans/13_migration_donnees_lsgscores.md](plans/13_migration_donnees_lsgscores.md).
+
+**Q49 ☑ — Position des trous importés : rendre `holes.start` facultatif, ou mettre une position
+provisoire ?**
+Suggestion : facultatif (`null`), comme le prévoit déjà le plan 13. Aujourd'hui la colonne est
+obligatoire ; une position provisoire (centre de la ville, 0/0) ferait apparaître de faux trous
+dans « Autour de moi » et fausserait plus tard le centre géométrique des sessions importées et
+leur zone de championnat. Coût : colonne rendue facultative (reconstruction du schéma distant),
+quatre endroits de l'app à adapter (carte, liste, fiche, formulaire), mention « Position à
+définir ». La création d'un trou dans l'app continue d'exiger une position.
+Réponse PO (2026-09-23) : suggestion retenue (après examen de la demande de « trou générique »
+(Q56) : les deux sujets sont indépendants, Q49 ne concerne que
+les trous importés).
+
+**Q50 ☑ — Propriétaire des trous importés ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Suggestion : le compte du PO. L'identifiant de l'ancien compte n'existe pas dans NUNI (M3) et
+seul le propriétaire peut modifier un trou (RLS) : c'est la condition pour que le PO puisse les
+repositionner depuis l'écran d'édition existant. Les trous restent publics, donc visibles et
+jouables par tous. Une réattribution à l'auteur d'origine pourra être traitée avec M2.
+
+**Q51 ☑ — Visibilité des trous importés ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Suggestion : `public`. Dans LsgScores tout utilisateur connecté voyait tous les trous ; les
+passer en privé les rendrait invisibles des autres joueurs.
+
+**Q52 ☑ — Photos des trous : les recopier dans NUNI maintenant ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Suggestion : oui, dans le bucket `holes` de NUNI sous `<id du PO>/legacy-<ancien id>/start.jpg` (chemin précisé à l'implémentation : dossier du propriétaire, pour que les règles du stockage le laissent remplacer la photo depuis l'app). Le chemin
+ne dépend pas de l'identifiant NUNI du trou (qui change à chaque reconstruction), et le stockage
+survit aux reconstructions : un rejeu retrouve les photos sans rien retélécharger. Garder les URL
+de l'ancien projet rendrait les photos dépendantes d'un projet destiné à être retiré. Les photos
+aident aussi à retrouver l'emplacement réel des trous.
+
+**Q53 ☑ — Zone de jeu d'origine (ex. « Parc X ») : où la conserver ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Suggestion : nulle part en base, seulement dans le rapport d'import (fichier CSV local listant
+chaque trou avec sa zone et sa ville d'origine), qui sert de feuille de route pour le
+repositionnement. NUNI a abandonné les zones (plan d'ensemble) ; l'écrire dans la description
+polluerait un champ visible de tous.
+
+**Q54 ☑ — Outil d'import : script Dart lisant l'ancienne base en direct, ou fichier SQL généré une
+fois et committé (comme `remote_seed.sql`) ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Suggestion : script Dart (`tool/migrate_lsgscores.dart holes`), clés dans `env/migration.json`
+(non committé). Le dépôt est public : un fichier SQL committé y publierait les données de tous
+les anciens utilisateurs. Le script reste rejouable tant que l'ancien projet existe, il servira
+aussi à l'étape 2 (sessions), et il reprend les trous créés dans LsgScores après la première
+exécution. Pour l'exécuter, il faut la clé service (clé d'administration, qui ignore les règles
+d'accès) des deux projets Supabase, à copier par le PO depuis leurs tableaux de bord.
+
+**Q55 ☑ — Rejeu sans reconstruction : un trou déjà importé doit-il être écrasé par les données de
+LsgScores ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Suggestion : non, jamais (« ignorer les doublons »). Sinon un simple rejeu effacerait les
+positions posées à la main. Conséquence à connaître : un trou importé puis supprimé dans NUNI
+revient au rejeu suivant.
+
+### Trou générique (demande PO du 2026-09-23)
+
+Besoin : pouvoir jouer à tout moment un trou « one shot » (trou de test, partie rapide) sans le
+créer dans le référentiel des trous ; ce trou n'a pas de position GPS. Constaté dans le code : le
+par d'un trou n'intervient dans aucun calcul de score ni de classement (affichage seul), et une
+même session peut déjà contenir plusieurs fois le même trou (seule la place du trou dans la
+session doit être unique).
+
+**Q56 ☑ — Comment représenter le trou générique : une ligne spéciale dans la table des trous, ou un
+trou joué qui ne renvoie à aucun trou du référentiel ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Suggestion : un trou joué sans trou de référence (`played_holes.hole_id` rendu facultatif ; vide
+= trou générique). Une ligne spéciale dans `holes` exigerait un propriétaire (compte réel ou
+compte technique à créer), devrait être masquée de « Mes trous », de la carte et de l'édition,
+protégée contre la suppression, et porterait un nom figé dans une seule langue. Sans ligne, le nom
+affiché vient des traductions (« Trou libre » / « Free hole »), il n'y a rien à protéger, et une
+reconstruction de la base n'a rien à recréer. Coût : la requête SQL qui lit le détail d'une
+session doit tolérer un trou absent, ainsi que les écrans qui affichent le nom d'un trou joué
+(session en direct, historique, exports). Dans le sélecteur de trous, « Trou libre » est toujours
+proposé en tête, quels que soient la position et le rayon. Ce choix ne dépend pas de Q49 : les
+trous importés sans position restent un sujet séparé.
+
+**Q57 ☑ — Le trou générique porte-t-il un libellé saisi au moment de l'ajout ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Suggestion : oui, facultatif (colonne `played_holes.label`), ex. « Test escalier ». Sans libellé,
+une session de cinq trous génériques affiche cinq fois « Trou libre » et l'historique ne permet
+plus de les distinguer ; laissé vide, l'app affiche « Trou libre » avec le numéro du trou dans la
+session. Ni par ni distance à saisir : le par ne sert à aucun calcul.
+
+**Q58 ☑ — Une session contenant des trous génériques compte-t-elle pour le championnat ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Suggestion : oui, sans règle particulière. Le championnat agrège le classement des sessions, pas
+les trous. Seul effet : un trou générique n'entre pas dans le calcul du centre géométrique d'une
+session (il n'a pas de position), ce qui ne concerne que les sessions importées (plan 13).
+
+**Q59 ☑ — Dans quel plan et dans quel ordre ?**
+Réponse PO (2026-09-23) : suggestion retenue.
+Suggestion : un plan 17 « Trou générique » séparé, implémenté avant l'étape 1 du plan 13. Les deux
+changent le schéma et imposent une reconstruction de la base distante : les regrouper n'en fait
+qu'une, suivie de l'import des trous.
+
+### Retouches des trous (demandes PO du 2026-09-23, plan 06)
+
+**Q60 ☑ — « Utiliser la position du dernier trou » : où retenir ce dernier trou, et que fait le
+bouton ?**
+Réponse PO (2026-09-23) : suggestion retenue, déplacement de la carte uniquement ; le départ se
+pose à la main. But : rendre fluide la création d'un trou en ouvrant la carte au plus près de la
+dernière zone éditée.
+Suggestion appliquée en hypothèse : le dernier trou est lu en base (mon trou créé ou modifié le
+plus récemment qui a une position, hors trou en cours d'édition, via `updated_at` déjà tenu à jour
+par la base). Rien à sauvegarder à part, et le bouton suit l'utilisateur d'un appareil à l'autre
+(une mémoire sur l'appareil serait perdue en changeant de téléphone ou en vidant le navigateur).
+Le bouton, libellé « Aller au dernier trou : <nom> », déplace seulement la carte (zoom rapproché)
+sans poser le départ : copier la position d'un autre trou placerait deux trous au même point, et
+c'est le toucher sur la carte qui pose le vrai départ.
+
+**Q61 ☑ — Photo supprimée : effacer aussi le fichier du stockage ?**
+Réponse PO (2026-09-23) : suggestion non retenue. Supprimer ou remplacer une photo supprime
+complètement l'ancienne : référence du trou et fichier du stockage. Mise en œuvre : à
+l'enregistrement du trou, tout fichier photo que le trou référençait au chargement ou qui a été
+envoyé pendant l'édition, et qu'il ne référence plus, est effacé du stockage. Un échec de cet
+effacement ne fait pas échouer l'enregistrement (le trou est déjà enregistré). Un remplacement
+d'une photo prise dans l'app réécrit le même fichier ; celui d'une photo importée de LsgScores
+efface l'ancien fichier.
+Suggestion appliquée en hypothèse : non, seule la référence du trou est effacée, comme c'est déjà
+le cas quand une photo est remplacée. Effacer le fichier au moment de l'enregistrement ajoute un
+cas d'échec partiel (trou enregistré mais fichier non effacé, ou l'inverse) pour un gain nul à
+l'usage : le fichier n'est plus affiché nulle part. Conséquence à connaître : après une
+reconstruction, le rejeu de l'import recopie les photos des trous importés depuis LsgScores, y
+compris celles supprimées entre-temps (déjà accepté : une reconstruction efface les retouches
+manuelles).

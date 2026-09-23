@@ -114,6 +114,23 @@ décision définitive dans `docs/design/PALETTE.md` tant que le PO n'a pas valid
 - Tests automatisés : `flutter analyze` sans avertissement, 32 tests verts, build web release
   réussi.
 
+## Retouches du 2026-09-23 (demandées par le PO pendant le repositionnement des trous importés, plan 13)
+
+- Chaque photo (départ, cible) se supprime individuellement dans le formulaire (croix en coin).
+  Supprimer ou remplacer une photo efface l'ancien fichier du stockage à l'enregistrement (Q61).
+- Formulaire : bouton « Aller au dernier trou : <nom> » à côté de « Utiliser ma position ». Il
+  déplace seulement la carte vers mon dernier trou créé ou modifié qui a une position (lu en base
+  via `updated_at`) ; le départ se pose ensuite en touchant la carte (Q60).
+- Emplacement photo vide du formulaire : icône centrée, cadre visible.
+- Fiche d'aperçu : les deux emplacements photo toujours affichés, avec un emplacement vide pour
+  une photo manquante.
+- Liste des trous : l'icône de position est remplacée par les miniatures des photos de départ et
+  de cible (emplacement vide si absente).
+- Pose des points enchaînée : une fois le départ posé (toucher la carte ou « Utiliser ma
+  position »), le mode passe seul à « Cible », puis à « Tracé » une fois la cible posée. Le passage
+  automatique ne se fait que vers un point pas encore posé (corriger le départ d'un trou qui a déjà
+  une cible laisse le mode sur « Départ »). Les boutons de mode restent utilisables à tout moment.
+
 ## Questions PO liées
 
-Q10, Q12, Q13, Q33.
+Q10, Q12, Q13, Q33, Q60, Q61.

@@ -17,6 +17,7 @@ import '../data/holes_repository.dart';
 import '../domain/distance_format.dart';
 import '../domain/hole.dart';
 import 'hole_detail_sheet.dart';
+import 'hole_photo_thumb.dart';
 
 const _osmTileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const _osmUserAgent = 'org.centuryspine.nuni';
@@ -206,15 +207,18 @@ class _HolesPageState extends ConsumerState<HolesPage>
   }
 }
 
-class _HolesListView extends StatelessWidget {
+class _HolesListView extends ConsumerWidget {
   const _HolesListView({required this.holes, required this.emptyMessage});
 
   final List<Hole> holes;
   final String emptyMessage;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    // Read lazily: a list without photos never needs the storage client.
+    String? url(String? path) =>
+        path == null ? null : ref.read(holesRepositoryProvider).photoUrl(path);
     if (holes.isEmpty) {
       return NuniEmptyState(icon: PhosphorIcons.mapPin, message: emptyMessage);
     }
@@ -229,18 +233,18 @@ class _HolesListView extends StatelessWidget {
           onTap: () => showHoleDetailSheet(context, hole.id),
           child: Row(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: scheme.secondaryContainer,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  PhosphorIcons.mapPin,
-                  color: scheme.primary,
-                  size: 20,
-                ),
+              // Start and target photos, placeholders when missing (PO,
+              // 2026-09-23).
+              HolePhotoThumb(
+                url: url(hole.photoStartPath),
+                size: 44,
+                iconSize: 18,
+              ),
+              const SizedBox(width: 4),
+              HolePhotoThumb(
+                url: url(hole.photoEndPath),
+                size: 44,
+                iconSize: 18,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -252,7 +256,9 @@ class _HolesListView extends StatelessWidget {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     Text(
-                      l10n.holesPar(hole.par),
+                      hole.hasPosition
+                          ? l10n.holesPar(hole.par)
+                          : '${l10n.holesPar(hole.par)} · ${l10n.holesPositionToSet}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -281,10 +287,16 @@ class _HolesMapView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    // Holes imported from LsgScores without a position yet (plan 13) only
+    // show in the list, never on the map.
+    final placed = [
+      for (final hole in holes)
+        if (hole.hasPosition) hole,
+    ];
     final center = myPosition != null
         ? LatLng(myPosition!.latitude, myPosition!.longitude)
-        : holes.isNotEmpty
-        ? LatLng(holes.first.startLat, holes.first.startLng)
+        : placed.isNotEmpty
+        ? LatLng(placed.first.startLat!, placed.first.startLng!)
         : _fallbackMapCenter;
 
     return FlutterMap(
@@ -309,9 +321,9 @@ class _HolesMapView extends StatelessWidget {
                   ),
                 ),
               ),
-            for (final hole in holes)
+            for (final hole in placed)
               Marker(
-                point: LatLng(hole.startLat, hole.startLng),
+                point: LatLng(hole.startLat!, hole.startLng!),
                 width: 40,
                 height: 40,
                 alignment: Alignment.topCenter,

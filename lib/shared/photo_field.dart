@@ -32,7 +32,9 @@ Uint8List resizeForUpload(
 /// to start that upload in the background and not block on it, so the caller
 /// starts uploading the moment a photo is picked instead of waiting for the
 /// rest of the form (PO, 2026-09-16). [uploading] only drives a small corner
-/// badge here; the local preview is shown immediately either way.
+/// badge here; the local preview is shown immediately either way. With
+/// [onRemoved], a filled slot gets a corner button that empties it (PO,
+/// 2026-09-23); the caller clears its stored path.
 class PhotoField extends StatefulWidget {
   const PhotoField({
     super.key,
@@ -40,12 +42,16 @@ class PhotoField extends StatefulWidget {
     this.imageUrl,
     required this.onPicked,
     this.uploading = false,
+    this.onRemoved,
+    this.removeTooltip,
   });
 
   final String label;
   final String? imageUrl;
   final ValueChanged<Uint8List> onPicked;
   final bool uploading;
+  final VoidCallback? onRemoved;
+  final String? removeTooltip;
 
   @override
   State<PhotoField> createState() => _PhotoFieldState();
@@ -68,6 +74,11 @@ class _PhotoFieldState extends State<PhotoField> {
     widget.onPicked(bytes);
   }
 
+  void _remove() {
+    setState(() => _localPreview = null);
+    widget.onRemoved!();
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -81,11 +92,17 @@ class _PhotoFieldState extends State<PhotoField> {
             width: 120,
             height: 120,
             child: Stack(
+              // Expand, not the default loose fit: otherwise an empty slot
+              // shrinks to its icon and the placeholder frame disappears.
+              fit: StackFit.expand,
               children: [
                 Container(
                   decoration: BoxDecoration(
                     color: scheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
+                    border: hasImage
+                        ? null
+                        : Border.all(color: scheme.outlineVariant),
                     image: !hasImage
                         ? null
                         : DecorationImage(
@@ -99,12 +116,31 @@ class _PhotoFieldState extends State<PhotoField> {
                   child: _resizing
                       ? const Center(child: CircularProgressIndicator())
                       : !hasImage
-                      ? Icon(
-                          PhosphorIcons.camera,
-                          color: scheme.onSurfaceVariant,
+                      ? Center(
+                          child: Icon(
+                            PhosphorIcons.camera,
+                            size: 32,
+                            color: scheme.onSurfaceVariant,
+                          ),
                         )
                       : null,
                 ),
+                if (hasImage && widget.onRemoved != null && !_resizing)
+                  Positioned(
+                    top: 2,
+                    right: 2,
+                    child: IconButton(
+                      onPressed: _remove,
+                      tooltip: widget.removeTooltip,
+                      icon: const Icon(PhosphorIcons.xCircle, size: 20),
+                      style: IconButton.styleFrom(
+                        backgroundColor: scheme.surface,
+                        foregroundColor: scheme.onSurface,
+                        minimumSize: const Size(32, 32),
+                        padding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ),
                 if (widget.uploading && !_resizing)
                   Positioned(
                     right: 6,

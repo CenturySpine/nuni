@@ -10,13 +10,14 @@ class ExportHoleColumn {
   const ExportHoleColumn({
     required this.id,
     required this.position,
-    required this.holeName,
+    this.holeName,
     required this.gameMode,
   });
 
   final String id;
   final int position;
-  final String holeName;
+  // Null for an unlabelled free hole (plan 17).
+  final String? holeName;
   final GameMode gameMode;
 }
 
@@ -80,7 +81,7 @@ SessionExportModel buildExportModel(HistoryEntry entry) {
       ExportHoleColumn(
         id: ph.id,
         position: ph.position,
-        holeName: ph.hole.name,
+        holeName: ph.customName,
         gameMode: ph.gameMode,
       ),
   ];

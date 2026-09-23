@@ -6,6 +6,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../holes/domain/hole.dart';
 import '../../sessions/domain/scoring_mode.dart';
 import 'game_mode_label.dart';
+import 'played_hole_label.dart';
 import '../domain/live_team.dart';
 import '../domain/played_hole.dart';
 import '../domain/score_calculator.dart';
@@ -62,7 +63,7 @@ class PlayedHoleCard extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  playedHole.hole.visibility == HoleVisibility.private
+                  playedHole.hole?.visibility == HoleVisibility.private
                       ? PhosphorIcons.lockSimple
                       : PhosphorIcons.golf,
                   size: 18,
@@ -73,7 +74,7 @@ class PlayedHoleCard extends StatelessWidget {
                   child: Text(
                     l10n.sessionsLiveHoleLabel(
                       playedHole.position,
-                      playedHole.hole.name,
+                      playedHoleName(l10n, playedHole),
                     ),
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
@@ -87,7 +88,11 @@ class PlayedHoleCard extends StatelessWidget {
               ],
             ),
             Text(
-              '${l10n.holesPar(playedHole.hole.par)} · ${gameModeLabel(l10n, playedHole.gameMode)}',
+              [
+                // A free hole has no par (plan 17).
+                if (playedHole.hole case final hole?) l10n.holesPar(hole.par),
+                gameModeLabel(l10n, playedHole.gameMode),
+              ].join(' · '),
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 8),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
@@ -10,6 +11,7 @@ import 'package:nuni/features/holes/data/holes_repository.dart';
 import 'package:nuni/features/holes/domain/hole.dart';
 import 'package:nuni/features/holes/ui/hole_form_page.dart';
 import 'package:nuni/l10n/generated/app_localizations.dart';
+import 'package:nuni/shared/nuni_chip.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class _MockHolesRepository extends Mock implements HolesRepository {}
@@ -111,4 +113,36 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets(
+    'placing start moves on to the target, then to the path (PO, 2026-09-23)',
+    (tester) async {
+      await pumpForm(tester);
+      await tester.pumpAndSettle();
+
+      bool selected(String label) => tester
+          .widget<NuniChip>(find.widgetWithText(NuniChip, label))
+          .selected;
+      Future<void> tapMap(Offset offset) async {
+        await tester.tapAt(tester.getCenter(find.byType(FlutterMap)) + offset);
+        // Past flutter_map's double-tap window, so the tap is delivered.
+        await tester.pump(const Duration(milliseconds: 500));
+      }
+
+      expect(selected('Start'), isTrue);
+
+      await tapMap(Offset.zero);
+      expect(selected('Target'), isTrue);
+
+      await tapMap(const Offset(40, 40));
+      expect(selected('Path'), isTrue);
+
+      // Manual switch still works, and correcting the start of a hole that
+      // already has a target stays on start.
+      await tester.tap(find.widgetWithText(NuniChip, 'Start'));
+      await tester.pump();
+      await tapMap(const Offset(-40, 0));
+      expect(selected('Start'), isTrue);
+    },
+  );
 }

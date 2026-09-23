@@ -289,7 +289,7 @@ as double,
 /// @nodoc
 mixin _$Hole {
 
- String get id; String get name; String? get description; int get par;@JsonKey(name: 'distance_m') int? get distanceM;@JsonKey(name: 'start_lat') double get startLat;@JsonKey(name: 'start_lng') double get startLng;@JsonKey(name: 'end_lat') double? get endLat;@JsonKey(name: 'end_lng') double? get endLng; List<HolePathPoint>? get path;@JsonKey(name: 'photo_start_path') String? get photoStartPath;@JsonKey(name: 'photo_end_path') String? get photoEndPath; HoleVisibility get visibility;@JsonKey(name: 'owner_id') String get ownerId; double? get distance;
+ String get id; String get name; String? get description; int get par;@JsonKey(name: 'distance_m') int? get distanceM;@JsonKey(name: 'start_lat') double? get startLat;@JsonKey(name: 'start_lng') double? get startLng;@JsonKey(name: 'end_lat') double? get endLat;@JsonKey(name: 'end_lng') double? get endLng; List<HolePathPoint>? get path;@JsonKey(name: 'photo_start_path') String? get photoStartPath;@JsonKey(name: 'photo_end_path') String? get photoEndPath; HoleVisibility get visibility;@JsonKey(name: 'owner_id') String get ownerId; double? get distance;
 /// Create a copy of Hole
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -327,7 +327,7 @@ abstract mixin class $HoleCopyWith<$Res>  {
   factory $HoleCopyWith(Hole value, $Res Function(Hole) _then) = _$HoleCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String? description, int par,@JsonKey(name: 'distance_m') int? distanceM,@JsonKey(name: 'start_lat') double startLat,@JsonKey(name: 'start_lng') double startLng,@JsonKey(name: 'end_lat') double? endLat,@JsonKey(name: 'end_lng') double? endLng, List<HolePathPoint>? path,@JsonKey(name: 'photo_start_path') String? photoStartPath,@JsonKey(name: 'photo_end_path') String? photoEndPath, HoleVisibility visibility,@JsonKey(name: 'owner_id') String ownerId, double? distance
+ String id, String name, String? description, int par,@JsonKey(name: 'distance_m') int? distanceM,@JsonKey(name: 'start_lat') double? startLat,@JsonKey(name: 'start_lng') double? startLng,@JsonKey(name: 'end_lat') double? endLat,@JsonKey(name: 'end_lng') double? endLng, List<HolePathPoint>? path,@JsonKey(name: 'photo_start_path') String? photoStartPath,@JsonKey(name: 'photo_end_path') String? photoEndPath, HoleVisibility visibility,@JsonKey(name: 'owner_id') String ownerId, double? distance
 });
 
 
@@ -344,16 +344,16 @@ class _$HoleCopyWithImpl<$Res>
 
 /// Create a copy of Hole
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? par = null,Object? distanceM = freezed,Object? startLat = null,Object? startLng = null,Object? endLat = freezed,Object? endLng = freezed,Object? path = freezed,Object? photoStartPath = freezed,Object? photoEndPath = freezed,Object? visibility = null,Object? ownerId = null,Object? distance = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? par = null,Object? distanceM = freezed,Object? startLat = freezed,Object? startLng = freezed,Object? endLat = freezed,Object? endLng = freezed,Object? path = freezed,Object? photoStartPath = freezed,Object? photoEndPath = freezed,Object? visibility = null,Object? ownerId = null,Object? distance = freezed,}) {
   return _then(Hole(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,par: null == par ? _self.par : par // ignore: cast_nullable_to_non_nullable
 as int,distanceM: freezed == distanceM ? _self.distanceM : distanceM // ignore: cast_nullable_to_non_nullable
-as int?,startLat: null == startLat ? _self.startLat : startLat // ignore: cast_nullable_to_non_nullable
-as double,startLng: null == startLng ? _self.startLng : startLng // ignore: cast_nullable_to_non_nullable
-as double,endLat: freezed == endLat ? _self.endLat : endLat // ignore: cast_nullable_to_non_nullable
+as int?,startLat: freezed == startLat ? _self.startLat : startLat // ignore: cast_nullable_to_non_nullable
+as double?,startLng: freezed == startLng ? _self.startLng : startLng // ignore: cast_nullable_to_non_nullable
+as double?,endLat: freezed == endLat ? _self.endLat : endLat // ignore: cast_nullable_to_non_nullable
 as double?,endLng: freezed == endLng ? _self.endLng : endLng // ignore: cast_nullable_to_non_nullable
 as double?,path: freezed == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
 as List<HolePathPoint>?,photoStartPath: freezed == photoStartPath ? _self.photoStartPath : photoStartPath // ignore: cast_nullable_to_non_nullable
@@ -446,7 +446,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  int par, @JsonKey(name: 'distance_m')  int? distanceM, @JsonKey(name: 'start_lat')  double startLat, @JsonKey(name: 'start_lng')  double startLng, @JsonKey(name: 'end_lat')  double? endLat, @JsonKey(name: 'end_lng')  double? endLng,  List<HolePathPoint>? path, @JsonKey(name: 'photo_start_path')  String? photoStartPath, @JsonKey(name: 'photo_end_path')  String? photoEndPath,  HoleVisibility visibility, @JsonKey(name: 'owner_id')  String ownerId,  double? distance)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  int par, @JsonKey(name: 'distance_m')  int? distanceM, @JsonKey(name: 'start_lat')  double? startLat, @JsonKey(name: 'start_lng')  double? startLng, @JsonKey(name: 'end_lat')  double? endLat, @JsonKey(name: 'end_lng')  double? endLng,  List<HolePathPoint>? path, @JsonKey(name: 'photo_start_path')  String? photoStartPath, @JsonKey(name: 'photo_end_path')  String? photoEndPath,  HoleVisibility visibility, @JsonKey(name: 'owner_id')  String ownerId,  double? distance)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Hole() when $default != null:
 return $default(_that.id,_that.name,_that.description,_that.par,_that.distanceM,_that.startLat,_that.startLng,_that.endLat,_that.endLng,_that.path,_that.photoStartPath,_that.photoEndPath,_that.visibility,_that.ownerId,_that.distance);case _:
@@ -467,7 +467,7 @@ return $default(_that.id,_that.name,_that.description,_that.par,_that.distanceM,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  int par, @JsonKey(name: 'distance_m')  int? distanceM, @JsonKey(name: 'start_lat')  double startLat, @JsonKey(name: 'start_lng')  double startLng, @JsonKey(name: 'end_lat')  double? endLat, @JsonKey(name: 'end_lng')  double? endLng,  List<HolePathPoint>? path, @JsonKey(name: 'photo_start_path')  String? photoStartPath, @JsonKey(name: 'photo_end_path')  String? photoEndPath,  HoleVisibility visibility, @JsonKey(name: 'owner_id')  String ownerId,  double? distance)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  int par, @JsonKey(name: 'distance_m')  int? distanceM, @JsonKey(name: 'start_lat')  double? startLat, @JsonKey(name: 'start_lng')  double? startLng, @JsonKey(name: 'end_lat')  double? endLat, @JsonKey(name: 'end_lng')  double? endLng,  List<HolePathPoint>? path, @JsonKey(name: 'photo_start_path')  String? photoStartPath, @JsonKey(name: 'photo_end_path')  String? photoEndPath,  HoleVisibility visibility, @JsonKey(name: 'owner_id')  String ownerId,  double? distance)  $default,) {final _that = this;
 switch (_that) {
 case _Hole():
 return $default(_that.id,_that.name,_that.description,_that.par,_that.distanceM,_that.startLat,_that.startLng,_that.endLat,_that.endLng,_that.path,_that.photoStartPath,_that.photoEndPath,_that.visibility,_that.ownerId,_that.distance);case _:
@@ -487,7 +487,7 @@ return $default(_that.id,_that.name,_that.description,_that.par,_that.distanceM,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? description,  int par, @JsonKey(name: 'distance_m')  int? distanceM, @JsonKey(name: 'start_lat')  double startLat, @JsonKey(name: 'start_lng')  double startLng, @JsonKey(name: 'end_lat')  double? endLat, @JsonKey(name: 'end_lng')  double? endLng,  List<HolePathPoint>? path, @JsonKey(name: 'photo_start_path')  String? photoStartPath, @JsonKey(name: 'photo_end_path')  String? photoEndPath,  HoleVisibility visibility, @JsonKey(name: 'owner_id')  String ownerId,  double? distance)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? description,  int par, @JsonKey(name: 'distance_m')  int? distanceM, @JsonKey(name: 'start_lat')  double? startLat, @JsonKey(name: 'start_lng')  double? startLng, @JsonKey(name: 'end_lat')  double? endLat, @JsonKey(name: 'end_lng')  double? endLng,  List<HolePathPoint>? path, @JsonKey(name: 'photo_start_path')  String? photoStartPath, @JsonKey(name: 'photo_end_path')  String? photoEndPath,  HoleVisibility visibility, @JsonKey(name: 'owner_id')  String ownerId,  double? distance)?  $default,) {final _that = this;
 switch (_that) {
 case _Hole() when $default != null:
 return $default(_that.id,_that.name,_that.description,_that.par,_that.distanceM,_that.startLat,_that.startLng,_that.endLat,_that.endLng,_that.path,_that.photoStartPath,_that.photoEndPath,_that.visibility,_that.ownerId,_that.distance);case _:
@@ -502,7 +502,7 @@ return $default(_that.id,_that.name,_that.description,_that.par,_that.distanceM,
 @JsonSerializable()
 
 class _Hole implements Hole {
-  const _Hole({required this.id, required this.name, this.description, required this.par, @JsonKey(name: 'distance_m') this.distanceM, @JsonKey(name: 'start_lat') required this.startLat, @JsonKey(name: 'start_lng') required this.startLng, @JsonKey(name: 'end_lat') this.endLat, @JsonKey(name: 'end_lng') this.endLng,  List<HolePathPoint>? path, @JsonKey(name: 'photo_start_path') this.photoStartPath, @JsonKey(name: 'photo_end_path') this.photoEndPath, required this.visibility, @JsonKey(name: 'owner_id') required this.ownerId, this.distance}): _path = path;
+  const _Hole({required this.id, required this.name, this.description, required this.par, @JsonKey(name: 'distance_m') this.distanceM, @JsonKey(name: 'start_lat') this.startLat, @JsonKey(name: 'start_lng') this.startLng, @JsonKey(name: 'end_lat') this.endLat, @JsonKey(name: 'end_lng') this.endLng,  List<HolePathPoint>? path, @JsonKey(name: 'photo_start_path') this.photoStartPath, @JsonKey(name: 'photo_end_path') this.photoEndPath, required this.visibility, @JsonKey(name: 'owner_id') required this.ownerId, this.distance}): _path = path;
   factory _Hole.fromJson(Map<String, dynamic> json) => _$HoleFromJson(json);
 
 @override final  String id;
@@ -510,8 +510,8 @@ class _Hole implements Hole {
 @override final  String? description;
 @override final  int par;
 @override@JsonKey(name: 'distance_m') final  int? distanceM;
-@override@JsonKey(name: 'start_lat') final  double startLat;
-@override@JsonKey(name: 'start_lng') final  double startLng;
+@override@JsonKey(name: 'start_lat') final  double? startLat;
+@override@JsonKey(name: 'start_lng') final  double? startLng;
 @override@JsonKey(name: 'end_lat') final  double? endLat;
 @override@JsonKey(name: 'end_lng') final  double? endLng;
  final  List<HolePathPoint>? _path;
@@ -564,7 +564,7 @@ abstract mixin class _$HoleCopyWith<$Res> implements $HoleCopyWith<$Res> {
   factory _$HoleCopyWith(_Hole value, $Res Function(_Hole) _then) = __$HoleCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String? description, int par,@JsonKey(name: 'distance_m') int? distanceM,@JsonKey(name: 'start_lat') double startLat,@JsonKey(name: 'start_lng') double startLng,@JsonKey(name: 'end_lat') double? endLat,@JsonKey(name: 'end_lng') double? endLng, List<HolePathPoint>? path,@JsonKey(name: 'photo_start_path') String? photoStartPath,@JsonKey(name: 'photo_end_path') String? photoEndPath, HoleVisibility visibility,@JsonKey(name: 'owner_id') String ownerId, double? distance
+ String id, String name, String? description, int par,@JsonKey(name: 'distance_m') int? distanceM,@JsonKey(name: 'start_lat') double? startLat,@JsonKey(name: 'start_lng') double? startLng,@JsonKey(name: 'end_lat') double? endLat,@JsonKey(name: 'end_lng') double? endLng, List<HolePathPoint>? path,@JsonKey(name: 'photo_start_path') String? photoStartPath,@JsonKey(name: 'photo_end_path') String? photoEndPath, HoleVisibility visibility,@JsonKey(name: 'owner_id') String ownerId, double? distance
 });
 
 
@@ -581,16 +581,16 @@ class __$HoleCopyWithImpl<$Res>
 
 /// Create a copy of Hole
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? par = null,Object? distanceM = freezed,Object? startLat = null,Object? startLng = null,Object? endLat = freezed,Object? endLng = freezed,Object? path = freezed,Object? photoStartPath = freezed,Object? photoEndPath = freezed,Object? visibility = null,Object? ownerId = null,Object? distance = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? par = null,Object? distanceM = freezed,Object? startLat = freezed,Object? startLng = freezed,Object? endLat = freezed,Object? endLng = freezed,Object? path = freezed,Object? photoStartPath = freezed,Object? photoEndPath = freezed,Object? visibility = null,Object? ownerId = null,Object? distance = freezed,}) {
   return _then(_Hole(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,par: null == par ? _self.par : par // ignore: cast_nullable_to_non_nullable
 as int,distanceM: freezed == distanceM ? _self.distanceM : distanceM // ignore: cast_nullable_to_non_nullable
-as int?,startLat: null == startLat ? _self.startLat : startLat // ignore: cast_nullable_to_non_nullable
-as double,startLng: null == startLng ? _self.startLng : startLng // ignore: cast_nullable_to_non_nullable
-as double,endLat: freezed == endLat ? _self.endLat : endLat // ignore: cast_nullable_to_non_nullable
+as int?,startLat: freezed == startLat ? _self.startLat : startLat // ignore: cast_nullable_to_non_nullable
+as double?,startLng: freezed == startLng ? _self.startLng : startLng // ignore: cast_nullable_to_non_nullable
+as double?,endLat: freezed == endLat ? _self.endLat : endLat // ignore: cast_nullable_to_non_nullable
 as double?,endLng: freezed == endLng ? _self.endLng : endLng // ignore: cast_nullable_to_non_nullable
 as double?,path: freezed == path ? _self._path : path // ignore: cast_nullable_to_non_nullable
 as List<HolePathPoint>?,photoStartPath: freezed == photoStartPath ? _self.photoStartPath : photoStartPath // ignore: cast_nullable_to_non_nullable

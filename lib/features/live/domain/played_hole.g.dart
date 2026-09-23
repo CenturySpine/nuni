@@ -11,8 +11,8 @@ _PlayedHoleGeo _$PlayedHoleGeoFromJson(Map<String, dynamic> json) =>
       id: json['id'] as String,
       name: json['name'] as String,
       par: (json['par'] as num).toInt(),
-      startLat: (json['start_lat'] as num).toDouble(),
-      startLng: (json['start_lng'] as num).toDouble(),
+      startLat: (json['start_lat'] as num?)?.toDouble(),
+      startLng: (json['start_lng'] as num?)?.toDouble(),
       visibility: $enumDecode(_$HoleVisibilityEnumMap, json['visibility']),
     );
 
@@ -52,7 +52,10 @@ _PlayedHole _$PlayedHoleFromJson(Map<String, dynamic> json) => _PlayedHole(
   id: json['id'] as String,
   position: (json['position'] as num).toInt(),
   gameMode: $enumDecode(_$GameModeEnumMap, json['game_mode']),
-  hole: PlayedHoleGeo.fromJson(json['hole'] as Map<String, dynamic>),
+  hole: json['hole'] == null
+      ? null
+      : PlayedHoleGeo.fromJson(json['hole'] as Map<String, dynamic>),
+  label: json['label'] as String?,
   scores: (json['scores'] as List<dynamic>)
       .map((e) => HoleScore.fromJson(e as Map<String, dynamic>))
       .toList(),
@@ -64,6 +67,7 @@ Map<String, dynamic> _$PlayedHoleToJson(_PlayedHole instance) =>
       'position': instance.position,
       'game_mode': _$GameModeEnumMap[instance.gameMode]!,
       'hole': instance.hole,
+      'label': instance.label,
       'scores': instance.scores,
     };
 

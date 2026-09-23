@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:nuni/shared/photo_field.dart';
@@ -26,5 +27,55 @@ void main() {
 
     expect(decoded.width, 100);
     expect(decoded.height, 60);
+  });
+
+  testWidgets('a filled slot can be emptied with its remove button', (
+    tester,
+  ) async {
+    String? url = 'https://example.invalid/start.jpg';
+    var removed = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: StatefulBuilder(
+            builder: (context, setState) => PhotoField(
+              label: 'Start',
+              imageUrl: url,
+              onPicked: (_) {},
+              removeTooltip: 'Remove photo',
+              onRemoved: () => setState(() {
+                removed++;
+                url = null;
+              }),
+            ),
+          ),
+        ),
+      ),
+    );
+    // The fake URL never loads in tests; its load error is irrelevant here.
+    tester.takeException();
+
+    await tester.tap(find.byTooltip('Remove photo'));
+    await tester.pump();
+
+    expect(removed, 1);
+    expect(find.byTooltip('Remove photo'), findsNothing);
+  });
+
+  testWidgets('an empty slot has no remove button', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PhotoField(
+            label: 'Start',
+            onPicked: (_) {},
+            removeTooltip: 'Remove photo',
+            onRemoved: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byTooltip('Remove photo'), findsNothing);
   });
 }

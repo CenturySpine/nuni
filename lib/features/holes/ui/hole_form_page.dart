@@ -66,6 +66,10 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
   String? _endPhotoPath;
   Future<String>? _startUploadFuture;
   Future<String>? _endUploadFuture;
+  // Every photo path this hole referenced when loaded or received during this
+  // edit: whichever of them the saved hole no longer references is deleted
+  // from storage after a successful save (PO, 2026-09-23, Q61).
+  final _photoPathsSeen = <String>{};
   bool _startUploading = false;
   bool _endUploading = false;
   bool _saving = false;
@@ -105,12 +109,34 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
       if (position != null) {
         _startPosition = LatLng(position.latitude, position.longitude);
         _accuracy = position.accuracy;
+        // An explicit "use my position" places the start like a tap does;
+        // the silent fill when a new form opens doesn't (nothing was placed
+        // by the user yet).
+        if (!silent && _activePoint == _ActivePoint.start) {
+          _advanceActivePoint();
+        }
         _syncParAndDistanceFromPath();
       }
     });
     if (position != null && mounted) {
       _mapController.move(_startPosition!, 16);
     }
+  }
+
+  /// Empties a photo slot (PO, 2026-09-23): on save, the hole row loses its
+  /// path and the file is deleted from storage (Q61).
+  void _removePhoto({required bool isStart}) {
+    setState(() {
+      if (isStart) {
+        _startPhotoPath = null;
+        _startUploadFuture = null;
+        _startUploading = false;
+      } else {
+        _endPhotoPath = null;
+        _endUploadFuture = null;
+        _endUploading = false;
+      }
+    });
   }
 
   void _onStartPhotoPicked(Uint8List bytes) {
@@ -124,6 +150,9 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
     future
         .then((path) {
           if (!mounted) return;
+          // Photo removed (or replaced) while this upload was running.
+          _photoPathsSeen.add(path);
+          if (_startUploadFuture != future) return;
           setState(() {
             _startPhotoPath = path;
             _startUploading = false;
@@ -150,6 +179,9 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
     future
         .then((path) {
           if (!mounted) return;
+          // Photo removed (or replaced) while this upload was running.
+          _photoPathsSeen.add(path);
+          if (_endUploadFuture != future) return;
           setState(() {
             _endPhotoPath = path;
             _endUploading = false;
@@ -165,6 +197,19 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
         });
   }
 
+  /// Once start is placed, moves on to the target, then to the path (PO,
+  /// 2026-09-23), so drawing a new hole takes no mode switch. Only moves on
+  /// to a point not placed yet: correcting the start of a hole that already
+  /// has a target leaves the start mode active, so the next tap can't move
+  /// the target by surprise. The chips still switch mode manually.
+  void _advanceActivePoint() {
+    if (_activePoint == _ActivePoint.start && _endPosition == null) {
+      _activePoint = _ActivePoint.end;
+    } else if (_activePoint == _ActivePoint.end && _path.isEmpty) {
+      _activePoint = _ActivePoint.path;
+    }
+  }
+
   void _handleMapTap(LatLng point) {
     setState(() {
       switch (_activePoint) {
@@ -175,6 +220,7 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
         case _ActivePoint.path:
           _path.add(point);
       }
+      _advanceActivePoint();
       _syncParAndDistanceFromPath();
     });
   }
@@ -222,7 +268,9 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
     _parController.text = hole.par.toString();
     _distanceController.text = hole.distanceM?.toString() ?? '';
     _visibility = hole.visibility;
-    _startPosition = LatLng(hole.startLat, hole.startLng);
+    _startPosition = hole.hasPosition
+        ? LatLng(hole.startLat!, hole.startLng!)
+        : null;
     _endPosition = (hole.endLat != null && hole.endLng != null)
         ? LatLng(hole.endLat!, hole.endLng!)
         : null;
@@ -234,6 +282,7 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
       ]);
     _startPhotoPath = hole.photoStartPath;
     _endPhotoPath = hole.photoEndPath;
+    _photoPathsSeen.addAll([?hole.photoStartPath, ?hole.photoEndPath]);
   }
 
   Future<void> _save() async {
@@ -307,8 +356,13 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
         );
       }
 
+      await repo.deletePhotos(
+        _photoPathsSeen.difference({?_startPhotoPath, ?_endPhotoPath}),
+      );
+
       ref.invalidate(nearbyHolesProvider);
       ref.invalidate(myHolesProvider);
+      ref.invalidate(lastPlacedHoleProvider);
       if (widget.isEditing) ref.invalidate(holeByIdProvider(id));
 
       if (mounted) {
@@ -353,6 +407,7 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
       await ref.read(holesRepositoryProvider).delete(widget.holeId!);
       ref.invalidate(nearbyHolesProvider);
       ref.invalidate(myHolesProvider);
+      ref.invalidate(lastPlacedHoleProvider);
       if (mounted) context.pop();
     } on PostgrestException catch (error) {
       if (mounted) {
@@ -537,7 +592,10 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
                   onTap: _handleMapTap,
                 ),
                 const SizedBox(height: 8),
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     NuniButton(
                       variant: NuniButtonVariant.secondary,
@@ -545,14 +603,25 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
                       label: l10n.holesFormUseMyPosition,
                       onPressed: _locating ? null : () => _useMyPosition(),
                     ),
-                    if (_locating) ...[
-                      const SizedBox(width: 12),
+                    // Only moves the map (PO, 2026-09-23): the start is then
+                    // placed by tapping, never copied from the other hole.
+                    if (ref.watch(lastPlacedHoleProvider(widget.holeId)).value
+                        case final lastHole?)
+                      NuniButton(
+                        variant: NuniButtonVariant.secondary,
+                        icon: PhosphorIcons.mapPin,
+                        label: l10n.holesFormGoToLastHole(lastHole.name),
+                        onPressed: () => _mapController.move(
+                          LatLng(lastHole.startLat!, lastHole.startLng!),
+                          17,
+                        ),
+                      ),
+                    if (_locating)
                       const SizedBox(
                         height: 16,
                         width: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
-                    ],
                   ],
                 ),
                 if (_activePoint == _ActivePoint.path) ...[
@@ -578,7 +647,12 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      l10n.holesFormPositionUnavailable,
+                      // Editing a hole imported from LsgScores without a
+                      // position (plan 13): nothing failed, it just has to
+                      // be placed.
+                      widget.isEditing
+                          ? l10n.holesFormPositionToSet
+                          : l10n.holesFormPositionUnavailable,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
                       ),
@@ -607,6 +681,8 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
                           : repo.photoUrl(_startPhotoPath!),
                       uploading: _startUploading,
                       onPicked: _onStartPhotoPicked,
+                      onRemoved: () => _removePhoto(isStart: true),
+                      removeTooltip: l10n.holesFormPhotoRemove,
                     ),
                     PhotoField(
                       label: l10n.holesFormPhotoEnd,
@@ -615,6 +691,8 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
                           : repo.photoUrl(_endPhotoPath!),
                       uploading: _endUploading,
                       onPicked: _onEndPhotoPicked,
+                      onRemoved: () => _removePhoto(isStart: false),
+                      removeTooltip: l10n.holesFormPhotoRemove,
                     ),
                   ],
                 ),

@@ -324,14 +324,16 @@ as $$
         'id', ph.id,
         'position', ph.position,
         'game_mode', ph.game_mode,
-        'hole', jsonb_build_object(
+        'label', ph.label,
+        -- null for a generic "free hole" (plan 17): no row in the hole directory.
+        'hole', case when h.id is null then null else jsonb_build_object(
           'id', h.id,
           'name', h.name,
           'par', h.par,
           'start_lat', h.start_lat,
           'start_lng', h.start_lng,
           'visibility', h.visibility
-        ),
+        ) end,
         'scores', (
           select coalesce(jsonb_agg(jsonb_build_object(
             'team_id', sc.team_id,
@@ -344,7 +346,7 @@ as $$
         )
       ) order by ph.position), '[]'::jsonb)
       from played_holes ph
-      join holes h on h.id = ph.hole_id
+      left join holes h on h.id = ph.hole_id
       where ph.session_id = p_session_id
     )
   );
@@ -406,7 +408,14 @@ grant execute on function championship_zone_results(uuid, text) to authenticated
 -- both in one statement server-side avoids that race and keeps the RLS-only client mutations
 -- pattern for everything that doesn't need it (score upserts, played-hole deletion, closing a
 -- session all stay plain table calls -- see sessions_repository.dart).
-create or replace function add_played_hole(p_session_id uuid, p_hole_id uuid, p_game_mode game_mode)
+-- A null p_hole_id adds a generic "free hole" (plan 17), with an optional label (blank = none);
+-- the label is ignored for a hole from the directory.
+create or replace function add_played_hole(
+  p_session_id uuid,
+  p_hole_id uuid,
+  p_game_mode game_mode,
+  p_label text default null
+)
 returns played_holes
 language plpgsql
 security invoker
@@ -415,10 +424,11 @@ as $$
 declare
   v_row played_holes;
 begin
-  insert into played_holes (session_id, hole_id, game_mode, position)
+  insert into played_holes (session_id, hole_id, label, game_mode, position)
   values (
     p_session_id,
     p_hole_id,
+    case when p_hole_id is null then nullif(btrim(p_label), '') end,
     p_game_mode,
     (select coalesce(max(position), 0) + 1 from played_holes where session_id = p_session_id)
   )
@@ -428,5 +438,5 @@ begin
 end;
 $$;
 
-revoke execute on function add_played_hole(uuid, uuid, game_mode) from public;
-grant execute on function add_played_hole(uuid, uuid, game_mode) to authenticated;
+revoke execute on function add_played_hole(uuid, uuid, game_mode, text) from public;
+grant execute on function add_played_hole(uuid, uuid, game_mode, text) to authenticated;

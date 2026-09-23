@@ -34,8 +34,10 @@ abstract class Hole with _$Hole {
     String? description,
     required int par,
     @JsonKey(name: 'distance_m') int? distanceM,
-    @JsonKey(name: 'start_lat') required double startLat,
-    @JsonKey(name: 'start_lng') required double startLng,
+    // Null only for a hole imported from LsgScores (plan 13, Q49) whose
+    // position the PO hasn't set yet; the app itself always writes one.
+    @JsonKey(name: 'start_lat') double? startLat,
+    @JsonKey(name: 'start_lng') double? startLng,
     // Target point (PO, 2026-09-16): optional.
     @JsonKey(name: 'end_lat') double? endLat,
     @JsonKey(name: 'end_lng') double? endLng,
@@ -51,4 +53,10 @@ abstract class Hole with _$Hole {
   }) = _Hole;
 
   factory Hole.fromJson(Map<String, Object?> json) => _$HoleFromJson(json);
+}
+
+extension HolePosition on Hole {
+  /// False only for a hole imported from LsgScores not repositioned yet
+  /// (plan 13, Q49): kept off every map and out of "around me".
+  bool get hasPosition => startLat != null && startLng != null;
 }

@@ -30,6 +30,11 @@ grant select, insert, update, delete on session_members to authenticated;
 grant select, insert, update, delete on played_holes to authenticated;
 grant select, insert, update, delete on scores to authenticated;
 grant select, insert, update, delete on session_photos to authenticated;
+-- service_role (bypasses RLS, but not table privileges, same reason as above): only what the
+-- LsgScores import script needs (tool/migrate_lsgscores.dart, plan 13) -- find the super_admin
+-- who owns imported rows, read the already-imported legacy_ids, insert the missing ones.
+grant select on user_roles to service_role;
+grant select, insert on holes to service_role;
 
 -- user_roles: a user reads only their own row (can I see admin-only UI?), never anyone else's.
 -- No insert/update/delete policy or grant at all (plan 16): the table is only ever written by

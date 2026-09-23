@@ -21,8 +21,8 @@ _Hole _$HoleFromJson(Map<String, dynamic> json) => _Hole(
   description: json['description'] as String?,
   par: (json['par'] as num).toInt(),
   distanceM: (json['distance_m'] as num?)?.toInt(),
-  startLat: (json['start_lat'] as num).toDouble(),
-  startLng: (json['start_lng'] as num).toDouble(),
+  startLat: (json['start_lat'] as num?)?.toDouble(),
+  startLng: (json['start_lng'] as num?)?.toDouble(),
   endLat: (json['end_lat'] as num?)?.toDouble(),
   endLng: (json['end_lng'] as num?)?.toDouble(),
   path: (json['path'] as List<dynamic>?)

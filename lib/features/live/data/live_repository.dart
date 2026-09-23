@@ -51,17 +51,20 @@ class LiveRepository {
 
   /// Owner-only (RLS `played_holes_owner_write`); appends at the next
   /// position server-side (`add_played_hole` RPC) to avoid a client-side
-  /// "next position" race between two owners adding at once.
+  /// "next position" race between two owners adding at once. A null
+  /// [holeId] adds a generic free hole (plan 17), with an optional [label].
   Future<void> addPlayedHole({
     required String sessionId,
-    required String holeId,
+    required String? holeId,
     required GameMode gameMode,
+    String? label,
   }) => _client.rpc<Map<String, dynamic>>(
     'add_played_hole',
     params: {
       'p_session_id': sessionId,
       'p_hole_id': holeId,
       'p_game_mode': gameMode.toPostgresValue(),
+      'p_label': label,
     },
   );
 

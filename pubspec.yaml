@@ -48,6 +48,9 @@ dev_dependencies:
   json_serializable: ^6.14.1
   mocktail: ^1.0.5
   riverpod_generator: ^4.0.9
+  # Pure-Dart client for tool/migrate_lsgscores.dart (plan 13), already
+  # resolved transitively through supabase_flutter.
+  supabase: ^2.16.1
 
 flutter:
   uses-material-design: true

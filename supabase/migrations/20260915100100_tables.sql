@@ -35,7 +35,10 @@ create table holes (
   description text,
   par int not null default 3,
   distance_m int,
-  start geography(point, 4326) not null,
+  -- Nullable only for holes imported from LsgScores (plan 13, Q49), which never had a position:
+  -- the PO sets it by hand afterwards. The app itself always writes one (the form requires it).
+  -- A null start keeps the hole out of holes_nearby (st_dwithin on null is never true).
+  start geography(point, 4326),
   -- Plain numeric columns PostgREST can return as-is: selecting "start" directly
   -- would come back as WKB hex, unusable client-side without a spatial function.
   start_lat double precision generated always as (st_y(start::geometry)) stored,
@@ -136,7 +139,11 @@ create table session_members (
 create table played_holes (
   id uuid primary key default gen_random_uuid(),
   session_id uuid not null references sessions (id) on delete cascade,
-  hole_id uuid not null references holes (id),
+  -- Null = generic "free hole" (plan 17, Q56): played on the spot without any row in the hole
+  -- directory; its displayed name comes from the app's translations, plus the optional label.
+  hole_id uuid references holes (id),
+  -- Optional name typed when adding a free hole (Q57); only ever set when hole_id is null.
+  label text,
   game_mode game_mode not null,
   position int not null,
   legacy_id bigint unique,

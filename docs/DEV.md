@@ -90,6 +90,14 @@ npx supabase db query --linked -f supabase/seed_super_admin.sql
 #    committé — différent de supabase/seed.sql, qui reste local-Docker uniquement, cf. son
 #    en-tête). Sans effet si les lignes existent déjà ("on conflict do nothing").
 npx supabase db query --linked -f supabase/remote_seed.sql
+
+# 7. Optionnel : réimporter les trous de LsgScores (plan 13, étape 1). Après les étapes 4 et 5 :
+#    les trous importés appartiennent au compte super_admin. Ils reviennent SANS position : les
+#    repositionnements faits à la main depuis le dernier import sont perdus (accepté par le PO).
+#    Les photos ne sont pas retéléchargées (le stockage survit à la reconstruction).
+#    Nécessite env/migration.json (clés service des deux projets, gabarit
+#    env/migration.example.json, jamais committé).
+fvm dart run tool/migrate_lsgscores.dart holes
 ```
 
 `auth.users` (les comptes Google eux-mêmes) n'est jamais touché par cette procédure : seul le

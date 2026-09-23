@@ -13,6 +13,7 @@ import '../../../shared/nuni_loading.dart';
 import '../data/holes_repository.dart';
 import '../domain/distance_format.dart';
 import '../domain/hole.dart';
+import 'hole_photo_thumb.dart';
 
 /// The "fiche en lecture" (plan 06): a read-only bottom sheet reached by
 /// tapping a hole in the list or on the map. Editing has its own route
@@ -86,7 +87,7 @@ class _HoleDetailContent extends ConsumerWidget {
                     ),
                     TextSpan(
                       text:
-                          ' · ${[l10n.holesPar(hole.par), if (hole.distanceM != null) l10n.holesDetailLength(hole.distanceM!), if (hole.distance != null) l10n.holesAway(formatDistanceM(hole.distance!))].join(' · ')}',
+                          ' · ${[l10n.holesPar(hole.par), if (hole.distanceM != null) l10n.holesDetailLength(hole.distanceM!), if (hole.distance != null) l10n.holesAway(formatDistanceM(hole.distance!)), if (!hole.hasPosition) l10n.holesPositionToSet].join(' · ')}',
                     ),
                   ],
                 ),
@@ -105,16 +106,26 @@ class _HoleDetailContent extends ConsumerWidget {
           const SizedBox(height: 8),
           Text(hole.description!),
         ],
-        if (startUrl != null || endUrl != null) ...[
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              if (startUrl != null) Expanded(child: _Photo(url: startUrl)),
-              if (startUrl != null && endUrl != null) const SizedBox(width: 8),
-              if (endUrl != null) Expanded(child: _Photo(url: endUrl)),
-            ],
-          ),
-        ],
+        // Both slots always shown, a placeholder standing in for a missing
+        // photo (PO, 2026-09-23).
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _PhotoWithCaption(
+                url: startUrl,
+                caption: l10n.holesFormPhotoStart,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _PhotoWithCaption(
+                url: endUrl,
+                caption: l10n.holesFormPhotoEnd,
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 16),
         Row(
           children: [
@@ -131,20 +142,22 @@ class _HoleDetailContent extends ConsumerWidget {
                   },
                 ),
               ),
-              const SizedBox(width: 8),
+              if (hole.hasPosition) const SizedBox(width: 8),
             ],
-            Expanded(
-              child: NuniButton(
-                icon: PhosphorIcons.navigationArrow,
-                label: l10n.holesDetailGoThere,
-                onPressed: () => launchUrl(
-                  Uri.parse(
-                    'https://www.google.com/maps/search/?api=1&query=${hole.startLat},${hole.startLng}',
+            // No "go there" for a hole imported without a position (plan 13).
+            if (hole.hasPosition)
+              Expanded(
+                child: NuniButton(
+                  icon: PhosphorIcons.navigationArrow,
+                  label: l10n.holesDetailGoThere,
+                  onPressed: () => launchUrl(
+                    Uri.parse(
+                      'https://www.google.com/maps/search/?api=1&query=${hole.startLat!},${hole.startLng!}',
+                    ),
+                    mode: LaunchMode.externalApplication,
                   ),
-                  mode: LaunchMode.externalApplication,
                 ),
               ),
-            ),
           ],
         ),
       ],
@@ -152,17 +165,18 @@ class _HoleDetailContent extends ConsumerWidget {
   }
 }
 
-class _Photo extends StatelessWidget {
-  const _Photo({required this.url});
+class _PhotoWithCaption extends StatelessWidget {
+  const _PhotoWithCaption({required this.url, required this.caption});
 
-  final String url;
+  final String? url;
+  final String caption;
 
   @override
-  Widget build(BuildContext context) => ClipRRect(
-    borderRadius: BorderRadius.circular(8),
-    child: AspectRatio(
-      aspectRatio: 1,
-      child: Image.network(url, fit: BoxFit.cover),
-    ),
+  Widget build(BuildContext context) => Column(
+    children: [
+      HolePhotoThumb(url: url, iconSize: 32),
+      const SizedBox(height: 4),
+      Text(caption, style: Theme.of(context).textTheme.bodySmall),
+    ],
   );
 }

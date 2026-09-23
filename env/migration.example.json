@@ -1,0 +1,6 @@
+{
+  "LEGACY_SUPABASE_URL": "https://<legacy-project-ref>.supabase.co",
+  "LEGACY_SUPABASE_SERVICE_KEY": "<legacy project service_role / secret key>",
+  "NUNI_SUPABASE_URL": "https://<nuni-project-ref>.supabase.co",
+  "NUNI_SUPABASE_SERVICE_KEY": "<nuni project service_role / secret key>"
+}

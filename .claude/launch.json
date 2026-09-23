@@ -6,6 +6,12 @@
       "runtimeExecutable": "fvm",
       "runtimeArgs": ["flutter", "run", "-d", "web-server", "--web-port", "3000", "--dart-define-from-file=env/dev.json"],
       "port": 3000
+    },
+    {
+      "name": "nuni-web-release",
+      "runtimeExecutable": "fvm",
+      "runtimeArgs": ["flutter", "run", "-d", "web-server", "--release", "--web-port", "3000", "--dart-define-from-file=env/dev.json"],
+      "port": 3000
     }
   ]
 }

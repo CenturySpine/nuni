@@ -15,8 +15,8 @@ abstract class PlayedHoleGeo with _$PlayedHoleGeo {
     required String id,
     required String name,
     required int par,
-    @JsonKey(name: 'start_lat') required double startLat,
-    @JsonKey(name: 'start_lng') required double startLng,
+    @JsonKey(name: 'start_lat') double? startLat,
+    @JsonKey(name: 'start_lng') double? startLng,
     required HoleVisibility visibility,
   }) = _PlayedHoleGeo;
 
@@ -43,13 +43,17 @@ abstract class HoleScore with _$HoleScore {
 
 /// Mirrors one entry of `session_snapshot`'s `played_holes` array (plan 08):
 /// a `played_holes` row, its `holes` row and every team's score for it.
+/// [hole] is null for a generic "free hole" (plan 17), which may carry a
+/// [label] instead -- show it with `playedHoleName` (ui/played_hole_label.dart)
+/// rather than `hole.name`.
 @freezed
 abstract class PlayedHole with _$PlayedHole {
   const factory PlayedHole({
     required String id,
     required int position,
     @JsonKey(name: 'game_mode') required GameMode gameMode,
-    required PlayedHoleGeo hole,
+    PlayedHoleGeo? hole,
+    String? label,
     required List<HoleScore> scores,
   }) = _PlayedHole;
 
@@ -70,4 +74,12 @@ extension PlayedHoleScores on PlayedHole {
   Map<String, int> get valueByTeamId => {
     for (final score in scores) score.teamId: score.value,
   };
+}
+
+extension PlayedHoleName on PlayedHole {
+  bool get isFreeHole => hole == null;
+
+  /// The directory hole's name, or a free hole's label (plan 17, Q57); null
+  /// for an unlabelled free hole, whose name is translated by the UI.
+  String? get customName => hole?.name ?? label;
 }

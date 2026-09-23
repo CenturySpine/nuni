@@ -23,6 +23,14 @@ void main() {
     visibility: HoleVisibility.public,
     ownerId: 'u1',
   );
+  // Imported from LsgScores, not repositioned yet (plan 13, Q49).
+  const imported = Hole(
+    id: 'h2',
+    name: 'Vieux trou',
+    par: 2,
+    visibility: HoleVisibility.public,
+    ownerId: 'u1',
+  );
 
   Future<void> pumpHolesPage(WidgetTester tester) async {
     final router = GoRouter(
@@ -41,7 +49,7 @@ void main() {
           myPositionProvider.overrideWith((ref) async => null),
           holesRadiusProvider.overrideWith(() => _FixedHolesRadius()),
           nearbyHolesProvider.overrideWith((ref, radiusM) async => const []),
-          myHolesProvider.overrideWith((ref) async => const [mine]),
+          myHolesProvider.overrideWith((ref) async => const [mine, imported]),
         ],
         child: MaterialApp.router(
           routerConfig: router,
@@ -83,5 +91,17 @@ void main() {
 
     expect(find.text('Le Ficus'), findsOneWidget);
     expect(find.text('Par 3'), findsOneWidget);
+  });
+
+  testWidgets('a hole without a position is listed as "position to set"', (
+    tester,
+  ) async {
+    await pumpHolesPage(tester);
+
+    await tester.tap(find.text('All my holes'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Vieux trou'), findsOneWidget);
+    expect(find.text('Par 2 · Position to set'), findsOneWidget);
   });
 }

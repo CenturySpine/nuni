@@ -23,7 +23,8 @@ enum _Mode { nearby, mine }
 
 /// "Ajouter un trou" (plan 08, owner-only): pick a hole nearby or from
 /// "all my holes" (same directory as the Holes tab, plan 06), or create one
-/// on the spot -- then choose its game mode and add it to the session.
+/// on the spot, or play a generic "free hole" (plan 17) -- then choose its
+/// game mode and add it to the session.
 Future<void> showAddPlayedHoleSheet(
   BuildContext context, {
   required String sessionId,
@@ -55,6 +56,9 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
   String _query = '';
   int? _draggingRadiusM;
   Hole? _selectedHole;
+  // Generic "free hole" picked instead of a directory hole (plan 17).
+  bool _freeHole = false;
+  final _labelController = TextEditingController();
   late GameMode _gameMode;
   bool _saving = false;
 
@@ -69,6 +73,7 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
   @override
   void dispose() {
     _searchController.dispose();
+    _labelController.dispose();
     super.dispose();
   }
 
@@ -83,15 +88,16 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
 
   Future<void> _submit() async {
     final hole = _selectedHole;
-    if (hole == null) return;
+    if (hole == null && !_freeHole) return;
     setState(() => _saving = true);
     try {
       await ref
           .read(liveRepositoryProvider)
           .addPlayedHole(
             sessionId: widget.sessionId,
-            holeId: hole.id,
+            holeId: hole?.id,
             gameMode: _gameMode,
+            label: _freeHole ? _labelController.text : null,
           );
       if (mounted) Navigator.of(context).pop();
     } catch (error) {
@@ -116,9 +122,11 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
       ),
       child: SizedBox(
         height: MediaQuery.sizeOf(context).height * 0.82,
-        child: _selectedHole == null
-            ? _buildPicker(context, l10n)
-            : _buildGameModeStep(context, l10n, _selectedHole!),
+        child: _selectedHole != null
+            ? _buildGameModeStep(context, l10n, _selectedHole!.name)
+            : _freeHole
+            ? _buildGameModeStep(context, l10n, l10n.sessionsLiveFreeHole)
+            : _buildPicker(context, l10n),
       ),
     );
   }
@@ -187,6 +195,16 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
           onPressed: _createHoleHere,
         ),
         const SizedBox(height: 8),
+        // Always offered, whatever the position, radius or search (plan 17).
+        ListTile(
+          tileColor: Theme.of(context).colorScheme.secondaryContainer,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          leading: const Icon(PhosphorIcons.golf),
+          title: Text(l10n.sessionsLiveFreeHole),
+          subtitle: Text(l10n.sessionsLiveFreeHoleHint),
+          onTap: () => setState(() => _freeHole = true),
+        ),
+        const SizedBox(height: 8),
         Expanded(
           child: holesAsync.when(
             loading: () => const NuniLoading(),
@@ -249,7 +267,7 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
   Widget _buildGameModeStep(
     BuildContext context,
     AppLocalizations l10n,
-    Hole hole,
+    String title,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,18 +277,28 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
           children: [
             IconButton(
               icon: const Icon(PhosphorIcons.caretRight),
-              onPressed: () => setState(() => _selectedHole = null),
+              onPressed: () => setState(() {
+                _selectedHole = null;
+                _freeHole = false;
+              }),
               tooltip: l10n.commonBack,
             ),
             Expanded(
-              child: Text(
-                hole.name,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              child: Text(title, style: Theme.of(context).textTheme.titleLarge),
             ),
           ],
         ),
         const SizedBox(height: 8),
+        if (_freeHole) ...[
+          TextField(
+            controller: _labelController,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              labelText: l10n.sessionsLiveFreeHoleLabelField,
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         if (widget.kind == SessionKind.team) ...[
           Row(
             children: [

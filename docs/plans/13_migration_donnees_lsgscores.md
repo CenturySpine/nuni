@@ -89,6 +89,94 @@ perte, puis retirer l'ancienne app.
   retagger depuis l'app à tout moment (pas seulement pendant la fenêtre de migration), et le même
   mécanisme sert pour toute correction future, pas seulement l'import initial.
 
+## Étape 1 — Import des trous (validée le 2026-09-23 ; livrée et testée par le PO le même jour)
+
+Résultat du premier import (2026-09-23) : 17 trous (zone INSA, Lyon), 25 photos sur 26 copiées
+(la photo de départ de l'ancien trou 6, « Fireman #1 », n'existe plus dans le stockage de
+LsgScores). Rejeu immédiat : 0 trou inséré, 0 photo copiée. Repositionnement manuel en cours par
+le PO.
+
+État des décisions : Q49 à Q55 retenues (2026-09-23). La demande de « trou
+générique » (Q56–Q59) fait l'objet du plan 17, livré avec cette étape pour ne reconstruire la
+base distante qu'une fois.
+
+Demande PO (2026-09-23) : commencer par les trous seuls ; l'import doit être rejouable à
+l'identique après une reconstruction de la base (AGENTS.md point 8). Le PO accepte qu'une
+reconstruction efface les repositionnements manuels faits entre-temps (les trous sont réimportés
+sans position).
+
+### Données source (ancien dépôt, lecture seule)
+
+`public.holes` de LsgScores (`supabase/sql/schema_15_11_2025.sql`) : `id bigint`, `name`,
+`gamezoneid` (→ `game_zones.name`, `cities`), `description`, `distance int`, `par`,
+`startphotouri` / `endphotouri` (URL publiques complètes du bucket `Holes`), `user_id` (UUID auth
+de l'ancien projet, sans équivalent dans NUNI). Tous les trous étaient lisibles par tout
+utilisateur connecté (`holes_select_auth ... using (true)`).
+
+### Correspondance
+
+| LsgScores | NUNI `holes` | Règle |
+|---|---|---|
+| `id` | `legacy_id` | clé d'idempotence |
+| `name`, `description`, `par` | idem | recopie directe |
+| `distance` | `distance_m` | recopie directe (mètres) |
+| — | `start`, `end_point`, `path` | `null` (Q49) ; posés à la main par le PO dans l'écran d'édition existant |
+| `user_id` | `owner_id` | compte du PO (Q50) |
+| — | `visibility` | `public` (Q51) |
+| `startphotouri`, `endphotouri` | `photo_start_path`, `photo_end_path` | photo recopiée dans le bucket `holes` de NUNI sous `<id du PO>/legacy-<legacy_id>/start.<ext>` / `end.<ext>` (Q52 ; dans le dossier du propriétaire, seul dossier où les règles du stockage le laissent remplacer la photo depuis l'app) |
+| `gamezoneid` | — | non stocké ; reporté dans le rapport d'import pour aider le repositionnement (Q53) |
+
+Tous les trous sont importés, pas seulement ceux du PO : les sessions de l'étape 2 les
+référencent.
+
+### Outil (Q54)
+
+Script Dart autonome `tool/migrate_lsgscores.dart`, sous-commande `holes` :
+
+1. Lit les trous et zones de l'ancien projet par l'API REST (clé service de l'ancien projet).
+2. Pour chaque photo : si l'objet `<id du PO>/legacy-<legacy_id>/...` n'existe pas déjà dans le bucket
+   `holes` de NUNI, la télécharge depuis l'URL publique et la dépose. Le stockage survit à une
+   reconstruction du schéma : un rejeu ne retélécharge rien.
+3. Insère les trous dans NUNI (clé service NUNI) par lot, en `upsert` sur `legacy_id` avec
+   « ignorer les doublons » (Q55) : un trou déjà importé n'est jamais modifié par un rejeu.
+4. Écrit un rapport (`build/migration/holes_report.csv`, dossier ignoré par git) : `legacy_id`,
+   nom, zone et ville d'origine, présent/inséré/ignoré, photos copiées ; et affiche les comptes
+   (source, insérés, déjà présents).
+
+Droits : les tables NUNI n'accordent rien par défaut au rôle « service » (constaté le 2026-09-23 au
+premier import à blanc, « permission denied for table user_roles ») ; `..._rls.sql` lui accorde le
+strict nécessaire au script (lecture de `user_roles`, lecture et insertion dans `holes`).
+
+Secrets dans `env/migration.json` (déjà ignoré par `env/*.json`) : URL + clé service de l'ancien
+projet, URL + clé service de NUNI. Aucune donnée ni clé dans le dépôt public.
+
+Commande : `fvm dart run tool/migrate_lsgscores.dart holes` (`--env <fichier>` pour un autre fichier
+de clés, `--dry-run` pour tout lire et produire le rapport sans rien écrire dans NUNI). Gabarit des
+clés : `env/migration.example.json` (committé, sans valeur).
+Ajoutée comme étape 7 (optionnelle) de la procédure de reconstruction de `docs/DEV.md`.
+
+### Changements dans l'app (conséquence de Q49)
+
+- Schéma : `holes.start` devient nullable (fichier `..._tables.sql`, reconstruction du schéma
+  distant, PO prévenu avant). `holes_nearby` exclut déjà naturellement les trous sans position
+  (distance nulle) : à vérifier et tester.
+- Modèles `Hole` et `PlayedHole` : `startLat` / `startLng` deviennent nullables.
+- Liste « Mes trous » : un trou sans position s'affiche avec la mention « Position à définir »
+  (EN/FR) ; il n'apparaît pas sur la carte ni dans « Autour de moi ».
+- Fiche détail : lien Google Maps masqué sans position.
+- Formulaire d'édition : position vide au chargement, obligatoire à l'enregistrement (déjà le cas
+  à la création).
+- La création d'un trou dans l'app exige toujours une position : seul l'import en produit sans.
+
+### Critères d'acceptation de l'étape 1
+
+- Nombre de trous NUNI avec `legacy_id` = nombre de trous LsgScores.
+- Deuxième exécution immédiate : 0 inséré, 0 photo copiée, aucune erreur.
+- Après reconstruction du schéma + rejeu : mêmes trous, photos affichées sans nouvel envoi.
+- Un trou importé apparaît dans « Mes trous » du PO avec « Position à définir », s'édite, et après
+  enregistrement d'une position apparaît dans « Autour de moi ».
+- `flutter analyze` sans remarque, tests verts (dont `Hole.fromJson` sans position), chaînes EN/FR.
+
 ## Critères d'acceptation (cadre)
 
 - Nombre de sessions, d'équipes, de trous joués et de coups identique entre les deux bases.
