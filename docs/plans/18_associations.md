@@ -6,6 +6,7 @@ Demande PO du 2026-09-23. Questions Q77 à Q87 tranchées le même jour (`docs/Q
 Plan rédigé et validé par le PO le 2026-09-23 ; implémenté le même jour, base distante
 reconstruite (données rattachées à Lyon Street Golf, tests RLS verts) ; testé et validé par le PO le
 2026-09-23.
+**Plan clôturé le 2026-09-23** (suppression d'une association par un super_admin comprise, Q89).
 
 ## En bref, pour les membres
 
