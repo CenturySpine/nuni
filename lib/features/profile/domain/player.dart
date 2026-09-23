@@ -17,6 +17,9 @@ abstract class Player with _$Player {
     required String name,
     @JsonKey(name: 'avatar_url') String? avatarUrl,
     required String locale,
+    // Null = not chosen yet (plan 18): the app asks before anything else,
+    // unless a creation request of mine is pending (Q81).
+    @JsonKey(name: 'association_id') String? associationId,
     @JsonKey(name: 'user_id') String? userId,
   }) = _Player;
 

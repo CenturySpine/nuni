@@ -1,6 +1,33 @@
 -- Tables for the NUNI schema (plan 03).
 -- legacy_id columns prepare the LsgScores import (plan 13): nullable, unique, unused until then.
 
+-- Associations (plan 18): the club a player belongs to and a session is played for; a
+-- championship is one association's season (Q77). A player's creation request stays 'pending'
+-- until a super_admin approves it (Q81: only an approved association can own sessions). The
+-- initial list (Q84) is supabase/associations_seed.sql. "location" places the city (Q83): the
+-- first-sign-in screen suggests the nearest association from it.
+create table associations (
+  id uuid primary key default gen_random_uuid(),
+  name text not null check (btrim(name) <> ''),
+  -- Abbreviation shown in tight spots (championship card): "LSG", "SGO"...
+  short_name text,
+  city text not null check (btrim(city) <> ''),
+  location geography(point, 4326) not null,
+  -- Plain numeric columns PostgREST can return as-is, same reasoning as holes.start_lat below.
+  location_lat double precision generated always as (st_y(location::geometry)) stored,
+  location_lng double precision generated always as (st_x(location::geometry)) stored,
+  website_url text,
+  -- Path in the "association-logos" bucket; empty until a local manager uploads one.
+  logo_path text,
+  status association_status not null default 'pending',
+  -- Null for the initial list, seeded rather than requested.
+  created_by uuid references auth.users (id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  reviewed_by uuid references auth.users (id),
+  reviewed_at timestamptz
+);
+
 -- No separate "profiles" table: with Q24 (players are only ever created by the
 -- sign-up trigger, never claimed or created ad hoc), a profile and its linked
 -- player were always 1:1 and kept in sync on every save -- pure duplication.
@@ -12,6 +39,9 @@ create table players (
   name text not null,
   avatar_url text,
   locale text not null default 'fr',
+  -- Null = not chosen yet: the app asks at the next opening (plan 18), unless the player has a
+  -- creation request pending (Q81). Only ever an approved association (guard in triggers.sql).
+  association_id uuid references associations (id),
   created_by uuid not null references auth.users (id),
   user_id uuid unique references auth.users (id),
   legacy_id bigint unique,
@@ -73,15 +103,32 @@ create table holes (
   updated_at timestamptz not null default now()
 );
 
--- Championship zones (plan 15): organic geographic groupings of "championship"-tagged sessions,
--- emerging from where sessions are actually played rather than from an administered city/zone
--- referential. Deliberately minimal -- no "name" column, its display label is derived at read
--- time (championship_zone_label, utility_functions.sql) from the cities of its member sessions,
--- never stored, so it can never drift out of sync and never needs an extra write when a new
--- session joins.
-create table championship_zones (
+-- Local managers of an association (plan 18): one row per claim, kept after a decision for the
+-- record. At most one approved manager per association (Q78, unique index in indexes.sql). The
+-- requester of an association creation gets a 'pending' row too, approved together with the
+-- association (Q82). Readable by everyone (the association page shows the manager's name); the
+-- contact details live apart, in association_manager_contacts.
+create table association_managers (
   id uuid primary key default gen_random_uuid(),
-  created_at timestamptz not null default now()
+  association_id uuid not null references associations (id) on delete cascade,
+  user_id uuid not null references auth.users (id),
+  status association_manager_status not null default 'pending',
+  requested_at timestamptz not null default now(),
+  reviewed_by uuid references auth.users (id),
+  reviewed_at timestamptz
+);
+
+-- A manager's e-mail and phone, and the message of their claim (plan 18): never public. A table
+-- of its own rather than hidden columns on association_managers, so an ordinary list query can't
+-- expose them by mistake and the access rule stays one simple policy (the manager themself, or a
+-- super_admin). An association creation request is always a claim too (Q82), so its message
+-- lives here as well.
+create table association_manager_contacts (
+  manager_id uuid primary key references association_managers (id) on delete cascade,
+  email text not null check (btrim(email) <> ''),
+  phone text not null check (btrim(phone) <> ''),
+  -- Free text from the requester to the super_admin (Q86).
+  request_message text
 );
 
 create table sessions (
@@ -104,17 +151,20 @@ create table sessions (
   weather jsonb,
   comment text,
   cover_photo_id uuid,
-  -- Championship tagging (plan 15): posed by the creator (is_championship), the rest computed and
-  -- frozen by a trigger (triggers.sql) -- never posed by the client.
+  -- The creator's association when the session was created (plan 18), set by a trigger
+  -- (triggers.sql), never by the client; frozen afterwards except by a super_admin (Q80). Also
+  -- the championship this session counts for when tagged (Q77).
+  association_id uuid not null references associations (id),
+  -- Championship tagging (plan 15): posed by the creator (is_championship), the season computed
+  -- by a trigger (triggers.sql) -- never posed by the client.
   is_championship boolean not null default false,
-  championship_zone_id uuid references championship_zones (id),
   -- "September Y to August Y+1" season, derived from when the session was played -- never typed
   -- in. NOT a generated column, unlike location_lat/location_lng above: Postgres requires a
   -- generated column's expression to be IMMUTABLE, and extracting year/month from a timestamptz
   -- is only STABLE (it depends on the session's TimeZone setting) -- confirmed the hard way,
   -- `create table` refused with "generation expression is not immutable" (SQLSTATE 42P17).
-  -- Recomputed instead on every insert/update by the trigger below, same trigger that assigns
-  -- the zone -- the client still never writes it directly.
+  -- Recomputed instead on every insert/update by a trigger -- the client never writes it
+  -- directly.
   championship_season text,
   legacy_id bigint unique,
   created_at timestamptz not null default now()

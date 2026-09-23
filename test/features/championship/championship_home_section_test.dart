@@ -69,11 +69,11 @@ void main() {
           myChampionshipMembershipsProvider.overrideWith(
             (ref) async => memberships,
           ),
-          championshipZoneStandingsProvider.overrideWith(
+          championshipStandingsProvider.overrideWith(
             (ref, args) async => standings,
           ),
-          championshipZoneLabelProvider.overrideWith(
-            (ref, zoneId) async => 'INSA',
+          championshipAssociationLabelProvider.overrideWith(
+            (ref, associationId) async => 'INSA',
           ),
           myPlayerProvider.overrideWith((ref) async => me),
         ],
@@ -96,8 +96,8 @@ void main() {
     tester,
   ) async {
     await pump(tester, [
-      (zoneId: 'z1', season: current),
-      (zoneId: 'z1', season: pastSeason),
+      (associationId: 'z1', season: current),
+      (associationId: 'z1', season: pastSeason),
     ]);
 
     expect(find.text('INSA · $current'), findsOneWidget);
@@ -109,7 +109,7 @@ void main() {
   testWidgets(
     'a past season alone still shows the history (Q72), opening its classement',
     (tester) async {
-      await pump(tester, [(zoneId: 'z1', season: pastSeason)]);
+      await pump(tester, [(associationId: 'z1', season: pastSeason)]);
 
       expect(find.text('INSA · $current'), findsNothing);
       expect(find.text('INSA · $pastSeason'), findsOneWidget);
@@ -118,7 +118,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(openedUri?.path, '/championship');
-      expect(openedUri?.queryParameters, {'zone': 'z1', 'season': pastSeason});
+      expect(openedUri?.queryParameters, {
+        'association': 'z1',
+        'season': pastSeason,
+      });
     },
   );
 

@@ -11,6 +11,7 @@ _Player _$PlayerFromJson(Map<String, dynamic> json) => _Player(
   name: json['name'] as String,
   avatarUrl: json['avatar_url'] as String?,
   locale: json['locale'] as String,
+  associationId: json['association_id'] as String?,
   userId: json['user_id'] as String?,
 );
 
@@ -19,5 +20,6 @@ Map<String, dynamic> _$PlayerToJson(_Player instance) => <String, dynamic>{
   'name': instance.name,
   'avatar_url': instance.avatarUrl,
   'locale': instance.locale,
+  'association_id': instance.associationId,
   'user_id': instance.userId,
 };

@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../theme/phosphor_icons.dart';
 
-/// The three bottom-nav destinations (Home, Holes, History), shared between
+/// The four bottom-nav destinations (Home, Holes, History, Associations --
+/// the last one put forward on purpose, plan 18 Q85), shared between
 /// [AppShell] (inside the stateful shell, driven by the branch index) and
 /// [NuniStandaloneBottomNav] (outside it).
 class NuniBottomNavBar extends StatelessWidget {
@@ -46,6 +47,11 @@ class NuniBottomNavBar extends StatelessWidget {
             selectedIcon: const Icon(PhosphorIcons.clockCounterClockwiseFill),
             label: l10n.navHistory,
           ),
+          NavigationDestination(
+            icon: const Icon(PhosphorIcons.usersThree),
+            selectedIcon: const Icon(PhosphorIcons.usersThreeFill),
+            label: l10n.navAssociations,
+          ),
         ],
       ),
     );
@@ -65,7 +71,7 @@ class NuniStandaloneBottomNav extends StatelessWidget {
   /// session's detail page, reached from there.
   final int selectedIndex;
 
-  static const _paths = ['/', '/holes', '/history'];
+  static const _paths = ['/', '/holes', '/history', '/associations'];
 
   @override
   Widget build(BuildContext context) => NuniBottomNavBar(

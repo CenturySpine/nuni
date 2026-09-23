@@ -4,6 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/associations/ui/association_detail_page.dart';
+import '../../features/associations/ui/association_form_page.dart';
+import '../../features/associations/ui/associations_page.dart';
+import '../../features/associations/ui/pending_requests_page.dart';
 import '../../features/auth/ui/auth_page.dart';
 import '../../features/championship/ui/championship_page.dart';
 import '../../features/history/ui/history_detail_page.dart';
@@ -79,7 +83,33 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/associations',
+                builder: (context, state) => const AssociationsPage(),
+              ),
+            ],
+          ),
         ],
+      ),
+      GoRoute(
+        path: '/associations/new',
+        builder: (context, state) => const AssociationFormPage(),
+      ),
+      GoRoute(
+        path: '/associations/:id',
+        builder: (context, state) =>
+            AssociationDetailPage(associationId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/associations/:id/edit',
+        builder: (context, state) =>
+            AssociationFormPage(associationId: state.pathParameters['id']),
+      ),
+      GoRoute(
+        path: '/admin/requests',
+        builder: (context, state) => const PendingRequestsPage(),
       ),
       GoRoute(
         path: '/login',
@@ -134,7 +164,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/championship',
         builder: (context, state) => ChampionshipPage(
-          initialZoneId: state.uri.queryParameters['zone'],
+          initialAssociationId: state.uri.queryParameters['association'],
           initialSeason: state.uri.queryParameters['season'],
         ),
       ),

@@ -56,3 +56,30 @@ create policy "session_photos_bucket_owner_delete" on storage.objects for delete
     bucket_id = 'session-photos'
     and is_session_owner((storage.foldername(name))[1]::uuid)
   );
+
+-- association-logos/<association_id>/... (plan 18): written by that association's approved local
+-- manager or a super_admin, public read like the other buckets.
+insert into storage.buckets (id, name, public)
+values ('association-logos', 'association-logos', true)
+on conflict (id) do nothing;
+
+create policy "association_logos_public_read" on storage.objects for select
+  using (bucket_id = 'association-logos');
+
+create policy "association_logos_manager_insert" on storage.objects for insert to authenticated
+  with check (
+    bucket_id = 'association-logos'
+    and (
+      is_association_manager((storage.foldername(name))[1]::uuid)
+      or is_super_admin()
+    )
+  );
+
+create policy "association_logos_manager_delete" on storage.objects for delete to authenticated
+  using (
+    bucket_id = 'association-logos'
+    and (
+      is_association_manager((storage.foldername(name))[1]::uuid)
+      or is_super_admin()
+    )
+  );

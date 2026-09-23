@@ -208,20 +208,18 @@ create trigger scores_set_session_id_trigger
   before insert or update on scores
   for each row execute function scores_set_session_id();
 
--- Championship zone/season (plan 15): championship_zone_id and championship_season are entirely
--- trigger-owned, never settable by the client (same principle as team_players.session_id above).
---   1. Season: recomputed from scratch on every row (it isn't frozen the way the zone is -- an
---      edited start date, plan 10, should move a session to the season it actually belongs to).
---      Done here rather than as a generated column: see tables.sql's comment on
---      championship_season for why extract() on a timestamptz can't be an IMMUTABLE generated
---      expression, only a plain trigger-computed one.
---   2. Zone: frozen to its previous value (or null at insert) regardless of what the client
---      sends. First time is_championship becomes true with no zone yet: requires a known
---      location (geolocation refused at creation, plan 07, means the checkbox can't be turned on
---      -- an explicit error here, surfaced by the screen as a disabled checkbox with a message
---      rather than a silent failure) and assigns a zone via assign_championship_zone. Once
---      assigned, a zone never changes, even if the session is unmarked and remarked later.
-create or replace function sessions_set_championship_zone()
+-- Association and championship season of a session (plans 15 and 18), both trigger-owned,
+-- never settable by the client (same principle as team_players.session_id above).
+--   1. Season: recomputed from scratch on every row, so an edited start date (plan 10) moves a
+--      session to the season it actually belongs to. Done here rather than as a generated
+--      column: see tables.sql's comment on championship_season for why extract() on a
+--      timestamptz can't be an IMMUTABLE generated expression.
+--   2. Association: at creation, the creator's association (plan 18), which must be approved --
+--      a player without one, or whose creation request is still pending, can't create a session
+--      (Q81). A row inserted with no signed-in caller (seed replay, LsgScores import) keeps the
+--      association it carries, or takes its owner's if it carries none. Afterwards frozen (Q80):
+--      only a super_admin changes it, through set_session_association (rpc.sql).
+create or replace function sessions_set_association_and_season()
 returns trigger
 language plpgsql
 set search_path = public
@@ -239,25 +237,56 @@ begin
     else (v_year - 1) || '-' || v_year
   end;
 
-  new.championship_zone_id := case
-    when tg_op = 'INSERT' then null
-    else old.championship_zone_id
-  end;
-
-  if new.is_championship and new.championship_zone_id is null then
-    if new.location is null then
-      raise exception 'championship_requires_location' using errcode = 'P0001';
+  if tg_op = 'INSERT' then
+    if new.association_id is null or auth.uid() is not null then
+      select p.association_id into new.association_id
+      from players p
+      join associations a on a.id = p.association_id and a.status = 'approved'
+      where p.user_id = new.owner_id;
     end if;
-    new.championship_zone_id := assign_championship_zone(new);
+    if new.association_id is null then
+      raise exception 'association_required' using errcode = 'P0001';
+    end if;
+  elsif new.association_id is distinct from old.association_id
+    and auth.uid() is not null
+    and not is_super_admin() then
+    new.association_id := old.association_id;
   end if;
 
   return new;
 end;
 $$;
 
-create trigger sessions_set_championship_zone_trigger
+create trigger sessions_set_association_and_season_trigger
   before insert or update on sessions
-  for each row execute function sessions_set_championship_zone();
+  for each row execute function sessions_set_association_and_season();
+
+-- A player joins only an approved association (plan 18, Q79/Q81): a pending request can't be
+-- joined, even by its own requester, who is attached by approve_association at approval time.
+create or replace function players_guard_association()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if new.association_id is distinct from old.association_id
+    and new.association_id is not null
+    and not exists (
+      select 1 from associations where id = new.association_id and status = 'approved'
+    ) then
+    raise exception 'association_not_approved' using errcode = 'P0001';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger players_guard_association_trigger
+  before update on players
+  for each row execute function players_guard_association();
+
+create trigger associations_set_updated_at
+  before update on associations
+  for each row execute function set_updated_at();
 
 -- None of the functions above are meant to be called directly (trigger-only, or an internal
 -- helper); Postgres grants EXECUTE to PUBLIC by default at creation, so revoke it explicitly.
@@ -274,4 +303,5 @@ revoke execute on function team_players_guard_single_team() from public, authent
 revoke execute on function session_members_guard_frozen_teams() from public, authenticated;
 revoke execute on function team_players_set_session_id() from public, authenticated;
 revoke execute on function scores_set_session_id() from public, authenticated;
-revoke execute on function sessions_set_championship_zone() from public, authenticated;
+revoke execute on function sessions_set_association_and_season() from public, authenticated;
+revoke execute on function players_guard_association() from public, authenticated;

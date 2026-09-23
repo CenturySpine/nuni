@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/supabase/supabase_providers.dart';
+import '../../associations/data/associations_repository.dart';
 import '../../live/domain/live_session_snapshot.dart';
 import '../domain/championship_membership.dart';
 import '../domain/championship_session_result.dart';
@@ -15,46 +16,41 @@ class ChampionshipRepository {
 
   final SupabaseClient _client;
 
-  /// Every zone/season the caller has at least one completed championship
+  /// Every association/season the caller has at least one completed championship
   /// session in (plan 15, parcours 2): a plain `sessions` read, no RPC --
   /// the existing member-only RLS already limits this to sessions the
   /// caller took part in, same as any other session read.
   Future<List<ChampionshipMembership>> fetchMyMemberships() async {
     final rows = await _client
         .from('sessions')
-        .select('championship_zone_id, championship_season')
+        .select('association_id, championship_season')
         .eq('is_championship', true)
         .eq('status', 'completed');
 
     final seen = <String>{};
     final memberships = <ChampionshipMembership>[];
     for (final row in rows) {
-      final zoneId = row['championship_zone_id'] as String?;
+      final associationId = row['association_id'] as String?;
       final season = row['championship_season'] as String?;
-      if (zoneId == null || season == null) continue;
-      if (seen.add('$zoneId|$season')) {
-        memberships.add((zoneId: zoneId, season: season));
+      if (associationId == null || season == null) continue;
+      if (seen.add('$associationId|$season')) {
+        memberships.add((associationId: associationId, season: season));
       }
     }
     return memberships;
   }
 
-  Future<String?> fetchZoneLabel(String zoneId) => _client.rpc<String?>(
-    'championship_zone_label',
-    params: {'p_zone_id': zoneId},
-  );
-
-  /// Every championship session of [zoneId]/[season], already folded into
+  /// Every championship session of [associationId]/[season], already folded into
   /// per-player points (plan 15's calculation, kept in Dart -- the RPC
   /// returns only raw already-entered data, same shape as a
   /// `session_snapshot` call).
-  Future<List<ChampionshipSessionResult>> fetchZoneResults({
-    required String zoneId,
+  Future<List<ChampionshipSessionResult>> fetchResults({
+    required String associationId,
     required String season,
   }) async {
     final List<dynamic> rows = await _client.rpc(
-      'championship_zone_results',
-      params: {'p_zone_id': zoneId, 'p_season': season},
+      'championship_association_results',
+      params: {'p_association_id': associationId, 'p_season': season},
     );
     return [
       for (final row in rows)
@@ -73,18 +69,23 @@ final championshipRepositoryProvider = Provider<ChampionshipRepository>(
 Future<List<ChampionshipMembership>> myChampionshipMemberships(Ref ref) =>
     ref.watch(championshipRepositoryProvider).fetchMyMemberships();
 
+/// A championship's name (plan 18, Q77): its association's abbreviation, or
+/// its name when it has none.
 @riverpod
-Future<String?> championshipZoneLabel(Ref ref, String zoneId) =>
-    ref.watch(championshipRepositoryProvider).fetchZoneLabel(zoneId);
+Future<String?> championshipAssociationLabel(
+  Ref ref,
+  String associationId,
+) async =>
+    (await ref.watch(associationByIdProvider(associationId).future))?.label;
 
 @riverpod
-Future<List<PlayerStanding>> championshipZoneStandings(
+Future<List<PlayerStanding>> championshipStandings(
   Ref ref,
-  String zoneId,
+  String associationId,
   String season,
 ) async {
   final results = await ref
       .watch(championshipRepositoryProvider)
-      .fetchZoneResults(zoneId: zoneId, season: season);
+      .fetchResults(associationId: associationId, season: season);
   return seasonStandings(results);
 }

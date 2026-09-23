@@ -276,7 +276,7 @@ as $$
         'comment', s.comment,
         'cover_photo_id', s.cover_photo_id,
         'is_championship', s.is_championship,
-        'championship_zone_id', s.championship_zone_id,
+        'association_id', s.association_id,
         'championship_season', s.championship_season,
         -- The cover photo's storage path, not just its id: the client
         -- builds the public URL from a path (plan 10), and joining it here
@@ -376,15 +376,16 @@ $$;
 revoke execute on function history_snapshots() from public;
 grant execute on function history_snapshots() to authenticated;
 
--- Every completed, championship-tagged session of one zone/season, shaped exactly like a single
+-- Every completed, championship-tagged session of one association/season (plans 15 and 18, Q77),
+-- shaped exactly like a single
 -- `session_snapshot` call (plan 15, same reasoning as history_snapshots above): the client
 -- computes each session's standings with the same tested `computeStandings`, then folds ranking
 -- and attendance points into a season total in Dart (AGENTS.md: classement calculated in Dart,
 -- the base only stores entered values). security definer, unlike history_snapshots: exposes
 -- sessions regardless of the caller's own membership, restricted instead to sessions explicitly
--- marked championship and completed in this zone/season -- a session that isn't marked stays
--- invisible to non-members, RLS unchanged for it.
-create or replace function championship_zone_results(p_zone_id uuid, p_season text)
+-- marked championship and completed for this association/season -- a session that isn't marked
+-- stays invisible to non-members, RLS unchanged for it.
+create or replace function championship_association_results(p_association_id uuid, p_season text)
 returns jsonb
 language sql
 security definer
@@ -395,12 +396,12 @@ as $$
   from sessions s
   where s.is_championship
     and s.status = 'completed'
-    and s.championship_zone_id = p_zone_id
+    and s.association_id = p_association_id
     and s.championship_season = p_season;
 $$;
 
-revoke execute on function championship_zone_results(uuid, text) from public;
-grant execute on function championship_zone_results(uuid, text) to authenticated;
+revoke execute on function championship_association_results(uuid, text) from public;
+grant execute on function championship_association_results(uuid, text) to authenticated;
 
 -- Adds a played hole (owner-only -- RLS `played_holes_owner_write`): appends at the next
 -- position. A plain client-side insert would need a "next position" round trip first (like
@@ -440,3 +441,319 @@ $$;
 
 revoke execute on function add_played_hole(uuid, uuid, game_mode, text) from public;
 grant execute on function add_played_hole(uuid, uuid, game_mode, text) to authenticated;
+
+-- ---------------------------------------------------------------------------------------------
+-- Associations (plan 18). The tables are read-only for the app (rls.sql): every write is one of
+-- these security-definer functions, each checking who may do it. Errors are plain codes the app
+-- translates (P0001, same convention as the session RPCs above).
+-- ---------------------------------------------------------------------------------------------
+
+-- Point from a {"lat": number, "lng": number} object, as the payloads below send it.
+create or replace function _payload_point(p_point jsonb)
+returns geography
+language sql
+immutable
+set search_path = public
+as $$
+  select st_setsrid(
+    st_makepoint((p_point ->> 'lng')::double precision, (p_point ->> 'lat')::double precision),
+    4326
+  )::geography;
+$$;
+
+-- Asks for a new association (decision 8): created 'pending' with its requester as its pending
+-- local manager (Q82). The requester stays in their current association (or none) until a
+-- super_admin approves (Q81). payload:
+-- { "name": text, "short_name": text?, "city": text, "location": {"lat", "lng"},
+--   "website_url": text?, "email": text, "phone": text, "message": text? }
+create or replace function request_association(payload jsonb)
+returns associations
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_association associations;
+  v_manager_id uuid;
+begin
+  if auth.uid() is null then
+    raise exception 'not_signed_in' using errcode = 'P0001';
+  end if;
+  if exists (select 1 from associations where created_by = auth.uid() and status = 'pending') then
+    raise exception 'request_already_pending' using errcode = 'P0001';
+  end if;
+
+  insert into associations (name, short_name, city, location, website_url, created_by)
+  values (
+    btrim(payload ->> 'name'),
+    nullif(btrim(payload ->> 'short_name'), ''),
+    btrim(payload ->> 'city'),
+    _payload_point(payload -> 'location'),
+    nullif(btrim(payload ->> 'website_url'), ''),
+    auth.uid()
+  )
+  returning * into v_association;
+
+  insert into association_managers (association_id, user_id)
+  values (v_association.id, auth.uid())
+  returning id into v_manager_id;
+
+  insert into association_manager_contacts (manager_id, email, phone, request_message)
+  values (
+    v_manager_id,
+    btrim(payload ->> 'email'),
+    btrim(payload ->> 'phone'),
+    nullif(btrim(payload ->> 'message'), '')
+  );
+
+  return v_association;
+end;
+$$;
+
+-- Claims the local manager role of an approved association that has none (decision 7, Q78).
+create or replace function claim_association_manager(
+  p_association_id uuid,
+  p_email text,
+  p_phone text,
+  p_message text default null
+)
+returns association_managers
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_manager association_managers;
+begin
+  if auth.uid() is null then
+    raise exception 'not_signed_in' using errcode = 'P0001';
+  end if;
+  if not exists (select 1 from associations where id = p_association_id and status = 'approved') then
+    raise exception 'association_not_approved' using errcode = 'P0001';
+  end if;
+  if exists (
+    select 1 from association_managers
+    where association_id = p_association_id and status = 'approved'
+  ) then
+    raise exception 'association_has_manager' using errcode = 'P0001';
+  end if;
+  if exists (
+    select 1 from association_managers
+    where association_id = p_association_id and user_id = auth.uid() and status = 'pending'
+  ) then
+    raise exception 'claim_already_pending' using errcode = 'P0001';
+  end if;
+
+  insert into association_managers (association_id, user_id)
+  values (p_association_id, auth.uid())
+  returning * into v_manager;
+
+  insert into association_manager_contacts (manager_id, email, phone, request_message)
+  values (v_manager.id, btrim(p_email), btrim(p_phone), nullif(btrim(p_message), ''));
+
+  return v_manager;
+end;
+$$;
+
+-- Edits an association (decision 7): its approved local manager, or a super_admin. Only the keys
+-- present in the payload change; an empty short_name/website_url/logo_path clears it. "email" /
+-- "phone" update the caller's own contact details as that association's manager. payload:
+-- { "name"?, "short_name"?, "city"?, "location"?: {"lat", "lng"}, "website_url"?, "logo_path"?,
+--   "email"?, "phone"? }
+create or replace function update_association(p_association_id uuid, payload jsonb)
+returns associations
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_association associations;
+begin
+  if not (is_association_manager(p_association_id) or is_super_admin()) then
+    raise exception 'not_association_manager' using errcode = 'P0001';
+  end if;
+
+  update associations set
+    name = case when payload ? 'name' then btrim(payload ->> 'name') else name end,
+    short_name = case
+      when payload ? 'short_name' then nullif(btrim(payload ->> 'short_name'), '')
+      else short_name
+    end,
+    city = case when payload ? 'city' then btrim(payload ->> 'city') else city end,
+    location = case
+      when payload ? 'location' then _payload_point(payload -> 'location')
+      else location
+    end,
+    website_url = case
+      when payload ? 'website_url' then nullif(btrim(payload ->> 'website_url'), '')
+      else website_url
+    end,
+    logo_path = case
+      when payload ? 'logo_path' then nullif(btrim(payload ->> 'logo_path'), '')
+      else logo_path
+    end
+  where id = p_association_id
+  returning * into v_association;
+
+  if payload ? 'email' or payload ? 'phone' then
+    update association_manager_contacts c set
+      email = case when payload ? 'email' then btrim(payload ->> 'email') else c.email end,
+      phone = case when payload ? 'phone' then btrim(payload ->> 'phone') else c.phone end
+    from association_managers am
+    where am.id = c.manager_id
+      and am.association_id = p_association_id
+      and am.user_id = auth.uid()
+      and am.status = 'approved';
+  end if;
+
+  return v_association;
+end;
+$$;
+
+-- Approves or refuses an association creation request (decision 9, super_admin only). Approval
+-- also approves its requester as local manager and moves them into it (Q82); refusal closes both
+-- and leaves the requester where they were (the choice screen shows again if that's nowhere).
+create or replace function review_association(p_association_id uuid, p_approve boolean)
+returns associations
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_association associations;
+begin
+  if not is_super_admin() then
+    raise exception 'not_super_admin' using errcode = 'P0001';
+  end if;
+
+  update associations
+  set status = case when p_approve then 'approved' else 'rejected' end::association_status,
+      reviewed_by = auth.uid(),
+      reviewed_at = now()
+  where id = p_association_id and status = 'pending'
+  returning * into v_association;
+
+  if v_association.id is null then
+    raise exception 'request_not_pending' using errcode = 'P0001';
+  end if;
+
+  update association_managers
+  set status = case when p_approve then 'approved' else 'rejected' end::association_manager_status,
+      reviewed_by = auth.uid(),
+      reviewed_at = now()
+  where association_id = p_association_id
+    and user_id = v_association.created_by
+    and status = 'pending';
+
+  if p_approve then
+    update players set association_id = p_association_id
+    where user_id = v_association.created_by;
+  end if;
+
+  return v_association;
+end;
+$$;
+
+-- Approves or refuses a local-manager claim (decision 7, super_admin only). Approval fails if the
+-- association already has an approved manager (Q78: revoke that one first).
+create or replace function review_association_manager(p_manager_id uuid, p_approve boolean)
+returns association_managers
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_manager association_managers;
+begin
+  if not is_super_admin() then
+    raise exception 'not_super_admin' using errcode = 'P0001';
+  end if;
+
+  select * into v_manager from association_managers where id = p_manager_id;
+  if v_manager.id is null or v_manager.status <> 'pending' then
+    raise exception 'request_not_pending' using errcode = 'P0001';
+  end if;
+  if p_approve and exists (
+    select 1 from association_managers
+    where association_id = v_manager.association_id and status = 'approved'
+  ) then
+    raise exception 'association_has_manager' using errcode = 'P0001';
+  end if;
+
+  update association_managers
+  set status = case when p_approve then 'approved' else 'rejected' end::association_manager_status,
+      reviewed_by = auth.uid(),
+      reviewed_at = now()
+  where id = p_manager_id
+  returning * into v_manager;
+
+  return v_manager;
+end;
+$$;
+
+-- Removes an approved local manager (Q78, super_admin only), which reopens the claim.
+create or replace function revoke_association_manager(p_manager_id uuid)
+returns association_managers
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_manager association_managers;
+begin
+  if not is_super_admin() then
+    raise exception 'not_super_admin' using errcode = 'P0001';
+  end if;
+
+  update association_managers
+  set status = 'revoked', reviewed_by = auth.uid(), reviewed_at = now()
+  where id = p_manager_id and status = 'approved'
+  returning * into v_manager;
+
+  if v_manager.id is null then
+    raise exception 'manager_not_approved' using errcode = 'P0001';
+  end if;
+  return v_manager;
+end;
+$$;
+
+-- Corrects the association of a session (Q80, super_admin only): the one way past the freeze of
+-- sessions_set_association_and_season (triggers.sql).
+create or replace function set_session_association(p_session_id uuid, p_association_id uuid)
+returns sessions
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_session sessions;
+begin
+  if not is_super_admin() then
+    raise exception 'not_super_admin' using errcode = 'P0001';
+  end if;
+  if not exists (select 1 from associations where id = p_association_id and status = 'approved') then
+    raise exception 'association_not_approved' using errcode = 'P0001';
+  end if;
+
+  update sessions set association_id = p_association_id
+  where id = p_session_id
+  returning * into v_session;
+  return v_session;
+end;
+$$;
+
+revoke execute on function _payload_point(jsonb) from public;
+revoke execute on function request_association(jsonb) from public;
+revoke execute on function claim_association_manager(uuid, text, text, text) from public;
+revoke execute on function update_association(uuid, jsonb) from public;
+revoke execute on function review_association(uuid, boolean) from public;
+revoke execute on function review_association_manager(uuid, boolean) from public;
+revoke execute on function revoke_association_manager(uuid) from public;
+revoke execute on function set_session_association(uuid, uuid) from public;
+grant execute on function request_association(jsonb) to authenticated;
+grant execute on function claim_association_manager(uuid, text, text, text) to authenticated;
+grant execute on function update_association(uuid, jsonb) to authenticated;
+grant execute on function review_association(uuid, boolean) to authenticated;
+grant execute on function review_association_manager(uuid, boolean) to authenticated;
+grant execute on function revoke_association_manager(uuid) to authenticated;
+grant execute on function set_session_association(uuid, uuid) to authenticated;

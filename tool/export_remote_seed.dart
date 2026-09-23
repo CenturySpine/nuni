@@ -7,10 +7,13 @@
 //
 // 1. supabase/remote_seed.sql (plain, committed): the holes -- public in the
 //    app, photos of places.
-// 2. supabase/data_seed.sql.enc (encrypted, committed): players, sessions,
-//    teams, members, played holes, scores, session photo rows and the
-//    sign-up linking e-mails (Q64) -- names, e-mails and photo paths of real
-//    people, so never committed in clear (the repo is public). Encrypted with
+// 2. supabase/data_seed.sql.enc (encrypted, committed): associations (plan
+//    18: requests, edits of the initial ones), their local managers and
+//    their contact details, players, sessions, teams, members, played holes,
+//    scores, session photo rows and the sign-up linking e-mails (Q64) --
+//    names, e-mails, phones and photo paths of real people, so never
+//    committed in clear (the repo is public). The initial associations
+//    themselves are supabase/associations_seed.sql, replayed before. Encrypted with
 //    openssl (AES-256, PBKDF2 key derivation) and a passphrase kept by the PO
 //    in their password manager and in env/seed.json (git-ignored).
 //
@@ -255,9 +258,28 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
       .order(orderBy, ascending: true)
       .limit(100000);
 
+  final associations = await all(
+    'associations',
+    'id, name, short_name, city, location_lat, location_lng, website_url, '
+        'logo_path, status, created_by, created_at, updated_at, reviewed_by, '
+        'reviewed_at',
+    'created_at',
+  );
+  final managers = await all(
+    'association_managers',
+    'id, association_id, user_id, status, requested_at, reviewed_by, '
+        'reviewed_at',
+    'requested_at',
+  );
+  final contacts = await all(
+    'association_manager_contacts',
+    'manager_id, email, phone, request_message',
+    'manager_id',
+  );
   final players = await all(
     'players',
-    'id, name, avatar_url, locale, created_by, user_id, legacy_id, created_at',
+    'id, name, avatar_url, locale, association_id, created_by, user_id, '
+        'legacy_id, created_at',
     'created_at',
   );
   final emails = await all(
@@ -269,7 +291,8 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
     'sessions',
     'id, code, owner_id, status, kind, scoring_mode, ranking_direction, city, '
         'zone, location_lat, location_lng, started_at, ended_at, weather, '
-        'comment, cover_photo_id, is_championship, legacy_id, created_at',
+        'comment, cover_photo_id, association_id, is_championship, legacy_id, '
+        'created_at',
     'created_at',
   );
   final teams = await all('teams', 'id, session_id, position, legacy_id', 'id');
@@ -300,6 +323,18 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
     'created_at',
   );
 
+  final associationRows = [
+    for (final a in associations)
+      {
+        ...Map.of(a)
+          ..remove('location_lat')
+          ..remove('location_lng'),
+        'location': _Raw(
+          "'SRID=4326;POINT(${a['location_lng']} ${a['location_lat']})'",
+        ),
+      },
+  ];
+
   final sessionRows = [
     for (final s in sessions)
       {
@@ -324,12 +359,13 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
     ..writeln('-- Replay after supabase/remote_seed.sql (holes) and before')
     ..writeln('-- supabase/backfill_players.sql, see docs/DEV.md.')
     ..writeln(
-      '-- Championship zones are not saved: the sessions trigger rebuilds',
+      '-- Associations already there (supabase/associations_seed.sql) are',
     )
-    ..writeln(
-      '-- them, sessions being inserted in their original creation order.',
-    )
+    ..writeln('-- updated, to keep the edits made in the app.')
     ..writeln('begin;');
+  _insert(buffer, 'associations', associationRows, upsertOn: 'id');
+  _insert(buffer, 'association_managers', managers);
+  _insert(buffer, 'association_manager_contacts', contacts);
   _insert(buffer, 'players', players);
   _insert(buffer, 'legacy_player_emails', emails);
   _insert(buffer, 'sessions', sessionRows);
@@ -351,25 +387,32 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
   return (
     sql: buffer.toString(),
     summary:
-        '${players.length} players, ${sessions.length} sessions, '
+        '${associations.length} associations, ${managers.length} manager '
+        'requests, ${players.length} players, ${sessions.length} sessions, '
         '${teams.length} teams, ${playedHoles.length} played holes, '
         '${scores.length} scores, ${photos.length} session photos, '
         '${emails.length} pending e-mails',
   );
 }
 
-/// One statement per row: sessions must go in one by one anyway (the zone
-/// trigger reads the rows inserted before), and it keeps the file readable
-/// once decrypted.
+/// One statement per row, which keeps the file readable once decrypted.
+/// Rows already there are left as they are, unless [upsertOn] names the key
+/// to update them on.
 void _insert(
   StringBuffer buffer,
   String table,
-  List<Map<String, dynamic>> rows,
-) {
+  List<Map<String, dynamic>> rows, {
+  String? upsertOn,
+}) {
   for (final row in rows) {
+    final conflict = upsertOn == null
+        ? 'on conflict do nothing'
+        : 'on conflict ($upsertOn) do update set '
+              '${[for (final key in row.keys)
+                if (key != upsertOn) '$key = excluded.$key'].join(', ')}';
     buffer.writeln(
       'insert into $table (${row.keys.join(', ')}) values '
-      '(${row.values.map(_sql).join(', ')}) on conflict do nothing;',
+      '(${row.values.map(_sql).join(', ')}) $conflict;',
     );
   }
 }

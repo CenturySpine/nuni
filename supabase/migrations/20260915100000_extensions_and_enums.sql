@@ -12,3 +12,6 @@ create type game_mode as enum ('individual', 'scramble', 'greensome', 'best_ball
 create type member_role as enum ('owner', 'player');
 -- App-wide role (plan 16), distinct from member_role (session-scoped owner/player).
 create type app_role as enum ('player', 'super_admin');
+-- Associations (plan 18): a creation request or a local-manager claim waits for a super_admin.
+create type association_status as enum ('pending', 'approved', 'rejected');
+create type association_manager_status as enum ('pending', 'approved', 'rejected', 'revoked');

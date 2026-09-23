@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../../core/authorization/authorization_repository.dart';
 import '../../../core/l10n/locale_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/palette_controller.dart';
@@ -15,6 +16,7 @@ import '../../../shared/nuni_grouped_list.dart';
 import '../../../shared/nuni_icon_tile.dart';
 import '../../../shared/nuni_legal_footer.dart';
 import '../../../shared/nuni_section_header.dart';
+import '../../associations/data/associations_repository.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../profile/data/profile_repository.dart';
 
@@ -28,6 +30,13 @@ class SettingsPage extends ConsumerWidget {
     final palette = ref.watch(paletteControllerProvider);
     final player = ref.watch(myPlayerProvider).value;
     final danger = context.nuni.danger;
+    final myAssociation = player?.associationId == null
+        ? null
+        : ref.watch(associationByIdProvider(player!.associationId!)).value;
+    final isSuperAdmin = ref.watch(isSuperAdminProvider).value ?? false;
+    final pendingCount = isSuperAdmin
+        ? ref.watch(pendingRequestsProvider).value?.length ?? 0
+        : 0;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
@@ -137,6 +146,37 @@ class SettingsPage extends ConsumerWidget {
           const SizedBox(height: 28),
           NuniGroupedList(
             children: [
+              ListTile(
+                leading: const NuniIconTile(
+                  icon: PhosphorIcons.usersThree,
+                  tone: NuniTone.primary,
+                  size: 36,
+                ),
+                title: Text(l10n.settingsMyAssociation),
+                subtitle: Text(
+                  myAssociation?.name ?? l10n.settingsNoAssociation,
+                ),
+                trailing: const Icon(PhosphorIcons.caretRight, size: 18),
+                onTap: () => context.push(
+                  myAssociation == null
+                      ? '/associations'
+                      : '/associations/${myAssociation.id}',
+                ),
+              ),
+              // Super_admin only (plan 18, Q86): requests awaiting review.
+              if (isSuperAdmin)
+                ListTile(
+                  leading: const NuniIconTile(
+                    icon: PhosphorIcons.shieldCheck,
+                    tone: NuniTone.highlight,
+                    size: 36,
+                  ),
+                  title: Text(l10n.associationsAdminTitle),
+                  trailing: pendingCount == 0
+                      ? const Icon(PhosphorIcons.caretRight, size: 18)
+                      : Badge(label: Text('$pendingCount')),
+                  onTap: () => context.push('/admin/requests'),
+                ),
               ListTile(
                 leading: const NuniIconTile(
                   icon: PhosphorIcons.info,

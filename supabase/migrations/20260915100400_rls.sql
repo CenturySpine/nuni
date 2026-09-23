@@ -3,7 +3,9 @@
 -- only storage objects (plan storage.sql) are readable anonymously.
 
 alter table user_roles enable row level security;
-alter table championship_zones enable row level security;
+alter table associations enable row level security;
+alter table association_managers enable row level security;
+alter table association_manager_contacts enable row level security;
 alter table players enable row level security;
 alter table holes enable row level security;
 alter table sessions enable row level security;
@@ -22,7 +24,11 @@ alter table legacy_player_emails enable row level security;
 -- app's own queries impersonated as authenticated and hitting "permission denied"). No table
 -- grants anything to anon: the app requires sign-in throughout.
 grant select on user_roles to authenticated;
-grant select on championship_zones to authenticated;
+-- Associations (plan 18): read-only for the app; every write goes through the security-definer
+-- RPCs of rpc.sql (request, claim, edit, review), which check who may do what.
+grant select on associations to authenticated;
+grant select on association_managers to authenticated;
+grant select on association_manager_contacts to authenticated;
 grant select, update on players to authenticated;
 grant select, insert, update, delete on holes to authenticated;
 grant select, insert, update, delete on sessions to authenticated;
@@ -37,6 +43,9 @@ grant select, insert, update, delete on session_photos to authenticated;
 -- (tool/export_remote_seed.dart) need -- read what's already there, insert what's missing, and
 -- set a session's cover photo once its photos exist. Never a delete.
 grant select on user_roles to service_role;
+grant select on associations to service_role;
+grant select on association_managers to service_role;
+grant select on association_manager_contacts to service_role;
 grant select, insert on holes to service_role;
 grant select, insert on players to service_role;
 grant select, insert on legacy_player_emails to service_role;
@@ -55,11 +64,37 @@ grant select, insert on session_photos to service_role;
 create policy "user_roles_select_self" on user_roles for select to authenticated
   using (user_id = (select auth.uid()));
 
--- championship_zones: a classement isn't confidential data, unlike a member-only session's own
--- detail (plan 15) -- readable by any signed-in account. No write grant to authenticated at all:
--- the only writer is assign_championship_zone (security definer, owns the table).
-create policy "championship_zones_select" on championship_zones for select to authenticated
-  using (true);
+-- associations (plan 18): approved ones are the public directory; a pending or rejected request
+-- is visible only to its requester and to super_admins (who review it).
+create policy "associations_select" on associations for select to authenticated
+  using (
+    status = 'approved'
+    or created_by = (select auth.uid())
+    or is_super_admin()
+  );
+
+-- association_managers: an approved manager is public (the page shows their name); a claim is
+-- visible only to its author and to super_admins. Nothing private on this table: contact
+-- details and the claim's message are in association_manager_contacts.
+create policy "association_managers_select" on association_managers for select to authenticated
+  using (
+    status = 'approved'
+    or user_id = (select auth.uid())
+    or is_super_admin()
+  );
+
+-- association_manager_contacts: never public -- the manager (or claimant) themself and
+-- super_admins only.
+create policy "association_manager_contacts_select" on association_manager_contacts
+  for select to authenticated
+  using (
+    is_super_admin()
+    or exists (
+      select 1 from association_managers am
+      where am.id = manager_id
+        and am.user_id = (select auth.uid())
+    )
+  );
 
 -- players: shared read-only directory, write by the linked user only. No client insert/delete
 -- (Q24: created by the trigger at sign-up, or by the plan 13 import). This is also the

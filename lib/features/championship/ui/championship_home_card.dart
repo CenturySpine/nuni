@@ -15,18 +15,21 @@ import '../data/championship_repository.dart';
 import '../domain/championship_membership.dart';
 import '../domain/championship_season.dart';
 
-/// Opens the full classement on one zone/season (plan 15, Q72).
-void _openClassement(BuildContext context, String zoneId, String season) =>
-    context.push(
-      Uri(
-        path: '/championship',
-        queryParameters: {'zone': zoneId, 'season': season},
-      ).toString(),
-    );
+/// Opens the full classement on one association/season (plan 15, Q72).
+void _openClassement(
+  BuildContext context,
+  String associationId,
+  String season,
+) => context.push(
+  Uri(
+    path: '/championship',
+    queryParameters: {'association': associationId, 'season': season},
+  ).toString(),
+);
 
 /// Championship section of the home tab (plan 15): provisional standing
 /// card(s) for the current season (parcours 2), then the championship
-/// history -- one line per past zone/season, like the session history (Q72).
+/// history -- one line per past association/season, like the session history (Q72).
 /// Nothing at all if the caller has no championship session (no empty screen
 /// to explain).
 class ChampionshipHomeSection extends ConsumerWidget {
@@ -36,17 +39,25 @@ class ChampionshipHomeSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final membershipsAsync = ref.watch(myChampionshipMembershipsProvider);
     final season = currentChampionshipSeason();
+    final myAssociationId = ref.watch(myPlayerProvider).value?.associationId;
 
     return membershipsAsync.when(
       loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
       data: (memberships) {
-        final zoneIds = {
-          for (final m in memberships)
-            if (m.season == season) m.zoneId,
-        };
-        final past = pastMemberships(memberships, season);
-        if (zoneIds.isEmpty && past.isEmpty) return const SizedBox.shrink();
+        final associationIds = seasonAssociationIds(
+          memberships,
+          season,
+          myAssociationId,
+        );
+        final past = pastMemberships(
+          memberships,
+          season,
+          myAssociationId: myAssociationId,
+        );
+        if (associationIds.isEmpty && past.isEmpty) {
+          return const SizedBox.shrink();
+        }
 
         final l10n = AppLocalizations.of(context)!;
         return Padding(
@@ -55,8 +66,8 @@ class ChampionshipHomeSection extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               NuniSectionHeader(title: l10n.championshipTitle),
-              for (final zoneId in zoneIds) ...[
-                _ZoneCard(zoneId: zoneId, season: season),
+              for (final associationId in associationIds) ...[
+                _AssociationCard(associationId: associationId, season: season),
                 const SizedBox(height: 10),
               ],
               if (past.isNotEmpty) ...[
@@ -66,7 +77,10 @@ class ChampionshipHomeSection extends ConsumerWidget {
                   padding: const EdgeInsets.only(left: 4, bottom: 8),
                 ),
                 for (final m in past) ...[
-                  _PastChampionshipRow(zoneId: m.zoneId, season: m.season),
+                  _PastChampionshipRow(
+                    associationId: m.associationId,
+                    season: m.season,
+                  ),
                   const SizedBox(height: 10),
                 ],
               ],
@@ -78,30 +92,33 @@ class ChampionshipHomeSection extends ConsumerWidget {
   }
 }
 
-/// One past zone/season: the caller's final position among the players
+/// One past association/season: the caller's final position among the players
 /// ranked, and their total points.
 class _PastChampionshipRow extends ConsumerWidget {
-  const _PastChampionshipRow({required this.zoneId, required this.season});
+  const _PastChampionshipRow({
+    required this.associationId,
+    required this.season,
+  });
 
-  final String zoneId;
+  final String associationId;
   final String season;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final standings = ref
-        .watch(championshipZoneStandingsProvider(zoneId, season))
+        .watch(championshipStandingsProvider(associationId, season))
         .asData
         ?.value;
     final label = ref
-        .watch(championshipZoneLabelProvider(zoneId))
+        .watch(championshipAssociationLabelProvider(associationId))
         .asData
         ?.value;
     final myPlayerId = ref.watch(myPlayerProvider).asData?.value.id;
     final mine = standings?.where((s) => s.playerId == myPlayerId).firstOrNull;
 
     return NuniListCard(
-      onTap: () => _openClassement(context, zoneId, season),
+      onTap: () => _openClassement(context, associationId, season),
       leading: const NuniIconTile(
         icon: PhosphorIcons.crown,
         tone: NuniTone.neutral,
@@ -115,19 +132,21 @@ class _PastChampionshipRow extends ConsumerWidget {
   }
 }
 
-class _ZoneCard extends ConsumerWidget {
-  const _ZoneCard({required this.zoneId, required this.season});
+class _AssociationCard extends ConsumerWidget {
+  const _AssociationCard({required this.associationId, required this.season});
 
-  final String zoneId;
+  final String associationId;
   final String season;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final standingsAsync = ref.watch(
-      championshipZoneStandingsProvider(zoneId, season),
+      championshipStandingsProvider(associationId, season),
     );
-    final labelAsync = ref.watch(championshipZoneLabelProvider(zoneId));
+    final labelAsync = ref.watch(
+      championshipAssociationLabelProvider(associationId),
+    );
     final myPlayerAsync = ref.watch(myPlayerProvider);
 
     return standingsAsync.when(
@@ -147,7 +166,7 @@ class _ZoneCard extends ConsumerWidget {
         final highlight = context.nuni.primaryTone;
 
         return NuniCard(
-          onTap: () => _openClassement(context, zoneId, season),
+          onTap: () => _openClassement(context, associationId, season),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -226,7 +245,8 @@ class _ZoneCard extends ConsumerWidget {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () => _openClassement(context, zoneId, season),
+                  onPressed: () =>
+                      _openClassement(context, associationId, season),
                   child: Text(l10n.championshipSeeFullStandings),
                 ),
               ),

@@ -3,7 +3,9 @@
 ## Statut
 
 Demande PO du 2026-09-23. Questions Q77 à Q87 tranchées le même jour (`docs/QUESTIONS_PO.md`).
-Plan rédigé et validé par le PO le 2026-09-23 ; implémentation en cours.
+Plan rédigé et validé par le PO le 2026-09-23 ; implémenté le même jour, base distante
+reconstruite (données rattachées à Lyon Street Golf, tests RLS verts) ; testé et validé par le PO le
+2026-09-23.
 
 ## En bref, pour les membres
 
@@ -112,7 +114,8 @@ Les autres associations et équipes demanderont leur création dans l'app.
 - **Profil** : mon association, avec lien vers sa fiche.
 - **Création de session** : l'association de la session est affichée (lecture seule).
 - **Championnat** : l'encart de l'accueil, son historique et la page de classement affichent
-  l'association (abréviation, ou nom s'il n'y en a pas) au lieu du nom de zone.
+  l'association (abréviation, ou nom s'il n'y en a pas) au lieu du nom de zone. L'accueil garde
+  tous les championnats où j'ai joué, visiteur compris, mon association en premier (Q88).
 - **Demandes en attente** (`super_admin`) : page listant créations et revendications, avec pour
   chacune le demandeur, ses coordonnées, son message et les informations saisies ; « Approuver » /
   « Refuser ». Accessible depuis les Réglages, avec le nombre de demandes en attente.
@@ -123,14 +126,18 @@ Nouvelles tables :
 
 - `associations` : `id`, `name`, `short_name` (nullable), `city` (texte), `location` (point, sert
   à la suggestion par distance), `website_url`, `logo_path` (nullable), `status` (`pending` /
-  `approved` / `rejected`), `request_message` (message du demandeur), `created_by`,
-  `created_at`, `updated_at`, `reviewed_by`, `reviewed_at`.
+  `approved` / `rejected`), `created_by`, `created_at`, `updated_at`, `reviewed_by`,
+  `reviewed_at`.
 - `association_managers` : un responsable ou une revendication par ligne : `association_id`,
-  `user_id`, `status` (`pending` / `approved` / `rejected` / `revoked`), `request_message`, dates
-  de demande et de décision, `reviewed_by`. Au plus une ligne `approved` par association
+  `user_id`, `status` (`pending` / `approved` / `rejected` / `revoked`), dates de demande et de
+  décision, `reviewed_by`. Une demande de création crée aussi la revendication de son demandeur
+  (Q82), approuvée en même temps que l'association. Au plus une ligne `approved` par association
   (contrainte d'unicité partielle, Q78). Lisible par tous pour afficher le nom du responsable
   approuvé.
-- `association_manager_contacts` : `manager_id`, `email`, `phone`. **Table séparée et privée** :
+- `association_manager_contacts` : `manager_id`, `email`, `phone`, `request_message` (le message
+  de la demande, création ou revendication : placé ici plutôt que sur les deux tables publiques,
+  pour qu'il ne soit jamais lisible au-delà du demandeur et des `super_admin`). **Table séparée et
+  privée** :
   lisible et modifiable uniquement par le responsable concerné et par `super_admin`. Séparée
   plutôt que colonnes masquées : une requête de liste ordinaire ne peut pas les exposer par
   erreur, et les règles d'accès restent simples à tester.

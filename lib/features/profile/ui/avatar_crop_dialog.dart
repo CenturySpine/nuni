@@ -8,22 +8,24 @@ import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_loading.dart';
 
 /// Full-screen square crop of a freshly picked photo, shown in a round
-/// frame like the avatar it becomes. Returns the cropped bytes, or null if
-/// cancelled.
+/// frame like the avatar it becomes -- or a square one ([circle] false) for
+/// an association logo. Returns the cropped bytes, or null if cancelled.
 Future<Uint8List?> showAvatarCropDialog(
   BuildContext context,
-  Uint8List image,
-) => Navigator.of(context).push<Uint8List>(
+  Uint8List image, {
+  bool circle = true,
+}) => Navigator.of(context).push<Uint8List>(
   MaterialPageRoute(
     fullscreenDialog: true,
-    builder: (context) => _AvatarCropPage(image: image),
+    builder: (context) => _AvatarCropPage(image: image, circle: circle),
   ),
 );
 
 class _AvatarCropPage extends StatefulWidget {
-  const _AvatarCropPage({required this.image});
+  const _AvatarCropPage({required this.image, required this.circle});
 
   final Uint8List image;
+  final bool circle;
 
   @override
   State<_AvatarCropPage> createState() => _AvatarCropPageState();
@@ -60,7 +62,7 @@ class _AvatarCropPageState extends State<_AvatarCropPage> {
             controller: _controller,
             onCropped: _onCropped,
             aspectRatio: 1,
-            withCircleUi: true,
+            withCircleUi: widget.circle,
             interactive: true,
             baseColor: scheme.inverseSurface,
             maskColor: scheme.inverseSurface.withValues(alpha: 0.6),

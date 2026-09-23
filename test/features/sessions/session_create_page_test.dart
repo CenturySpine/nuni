@@ -5,6 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:nuni/core/location/location_service.dart';
+import 'package:nuni/features/associations/data/associations_repository.dart';
+import 'package:nuni/features/associations/domain/association.dart';
+import 'package:nuni/features/profile/data/profile_repository.dart';
+import 'package:nuni/features/profile/domain/player.dart';
 import 'package:nuni/features/sessions/data/sessions_repository.dart';
 import 'package:nuni/features/sessions/domain/ranking_direction.dart';
 import 'package:nuni/features/sessions/domain/scoring_mode.dart';
@@ -21,6 +25,23 @@ class _FakeLocationService implements LocationService {
   @override
   Future<Position?> getCurrentPosition() async => null;
 }
+
+const _lsg = Association(
+  id: 'lsg',
+  name: 'Lyon Street Golf',
+  shortName: 'LSG',
+  city: 'Lyon',
+  locationLat: 45.749,
+  locationLng: 4.8459,
+  status: AssociationStatus.approved,
+);
+const _member = Player(
+  id: 'p1',
+  name: 'Bruno',
+  locale: 'en',
+  userId: 'u1',
+  associationId: 'lsg',
+);
 
 void main() {
   late _MockSessionsRepository repository;
@@ -58,7 +79,7 @@ void main() {
     );
   });
 
-  Future<void> pumpForm(WidgetTester tester) async {
+  Future<void> pumpForm(WidgetTester tester, {Player player = _member}) async {
     await tester.binding.setSurfaceSize(const Size(800, 1600));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
@@ -66,6 +87,8 @@ void main() {
         overrides: [
           sessionsRepositoryProvider.overrideWithValue(repository),
           locationServiceProvider.overrideWithValue(_FakeLocationService()),
+          myPlayerProvider.overrideWith((ref) async => player),
+          associationsProvider.overrideWith((ref) async => [_lsg]),
         ],
         child: MaterialApp(
           localizationsDelegates: const [
@@ -124,5 +147,28 @@ void main() {
         lng: any(named: 'lng'),
       ),
     ).called(1);
+  });
+
+  testWidgets('shows the session\'s association, read-only (plan 18)', (
+    tester,
+  ) async {
+    await pumpForm(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Lyon Street Golf'), findsOneWidget);
+    expect(find.text("Session's club"), findsOneWidget);
+  });
+
+  testWidgets('without an association, creating is blocked (plan 18, Q81)', (
+    tester,
+  ) async {
+    await pumpForm(
+      tester,
+      player: const Player(id: 'p2', name: 'New', locale: 'en', userId: 'u2'),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('See the clubs'), findsOneWidget);
+    expect(find.text('Create the session'), findsNothing);
   });
 }

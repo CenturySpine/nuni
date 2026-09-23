@@ -26,6 +26,11 @@ Concrètement, pour un joueur :
 À partir d'ici, le document devient technique : modèle de données, mécanismes de calcul, écrans au
 sens développement. La partie ci-dessus reste la référence fonctionnelle.
 
+> **Mise à jour du 2026-09-23 (plan 18, Q77)** : le regroupement par zone géographique décrit
+> ci-dessous (rayon de 15 km, nom de zone déduit des villes) est remplacé par l'association de la
+> session : un championnat = une association × une saison. Le calcul des points, la saison et
+> l'historique ne changent pas. Les sections sur les zones restent comme historique.
+
 ## Objectif
 
 Permettre un classement individuel qui se déroule sur une année scolaire (ex. 2026-2027), limité

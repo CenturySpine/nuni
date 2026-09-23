@@ -17,7 +17,17 @@ values
   ('a0000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'member1@smoke.nuni', '{"full_name":"Smoke Member1"}', now(), now()),
   ('a0000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'member2@smoke.nuni', '{"full_name":"Smoke Member2"}', now(), now()),
   ('a0000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'outsider@smoke.nuni', '{"full_name":"Smoke Outsider"}', now(), now()),
-  ('a0000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'joiner@smoke.nuni', '{"full_name":"Smoke Joiner"}', now(), now());
+  ('a0000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'joiner@smoke.nuni', '{"full_name":"Smoke Joiner"}', now(), now()),
+  ('a0000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@smoke.nuni', '{"full_name":"Smoke Admin"}', now(), now());
+
+-- An approved association for the session owner (plan 18: creating a session requires one); the
+-- other fixture users have none. "admin" is a super_admin, to exercise the review RPCs.
+insert into associations (id, name, city, location, status)
+values ('c0000000-0000-0000-0000-000000000001', 'Smoke Asso', 'Smokeville',
+        st_setsrid(st_makepoint(2.35, 48.85), 4326)::geography, 'approved');
+update players set association_id = 'c0000000-0000-0000-0000-000000000001'
+where user_id = 'a0000000-0000-0000-0000-000000000001';
+insert into user_roles (user_id, role) values ('a0000000-0000-0000-0000-000000000006', 'super_admin');
 
 -- a private hole owned by the session owner (NOT by the "outsider" test user, otherwise the
 -- outsider would see it via plain ownership and the Q13 test would prove nothing): tests Q13
@@ -163,6 +173,144 @@ select 'join_session_attaches_correct_team',
   (select team_id from session_members where session_id = (select session_id from test_ids) and user_id = (select joiner_user from test_ids))
     = (select team1_id from test_ids);
 
+-- ===== Test 6: associations (plan 18) =====
+insert into test_results (test, passed)
+select 'session_takes_owner_association',
+  (select association_id from sessions where id = (select session_id from test_ids))
+    = 'c0000000-0000-0000-0000-000000000001';
+
+-- A player with no association can't create a session (Q81).
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000004","role":"authenticated"}';
+do $$
+begin
+  perform create_session('{"kind":"individual","scoring_mode":"stroke_play","ranking_direction":"asc"}');
+  insert into test_results (test, passed) values ('no_association_cannot_create_session', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('no_association_cannot_create_session', sqlerrm = 'association_required');
+end $$;
+
+-- The outsider asks for a new association: pending, visible to them, contacts readable by them.
+select request_association(jsonb_build_object(
+  'name', 'Smoke Pending', 'city', 'Smoketown', 'location', jsonb_build_object('lat', 45.0, 'lng', 4.0),
+  'email', 'outsider@smoke.nuni', 'phone', '0600000000', 'message', 'Please'
+));
+insert into test_results (test, passed)
+select 'requester_sees_own_pending_association',
+  (select count(*) from associations where name = 'Smoke Pending' and status = 'pending') = 1;
+insert into test_results (test, passed)
+select 'requester_reads_own_contacts',
+  (select count(*) from association_manager_contacts) = 1;
+
+-- Nobody joins a pending association, not even its requester (Q81).
+do $$
+begin
+  update players set association_id = (select id from associations where name = 'Smoke Pending')
+  where user_id = 'a0000000-0000-0000-0000-000000000004';
+  insert into test_results (test, passed) values ('cannot_join_pending_association', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('cannot_join_pending_association', sqlerrm = 'association_not_approved');
+end $$;
+
+-- No direct write on the association tables: RPCs only.
+do $$
+begin
+  insert into associations (name, city, location, status)
+  values ('Sneaky', 'X', st_setsrid(st_makepoint(0, 0), 4326)::geography, 'approved');
+  insert into test_results (test, passed) values ('no_direct_association_insert', false);
+exception when insufficient_privilege then
+  insert into test_results (test, passed) values ('no_direct_association_insert', true);
+end $$;
+reset role;
+reset request.jwt.claims;
+
+-- The session owner claims the local manager role of their association.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+select claim_association_manager(
+  'c0000000-0000-0000-0000-000000000001', 'owner@smoke.nuni', '0611111111', 'I run it'
+);
+-- The session's association is frozen for its owner (Q80): the update is silently reverted.
+update sessions set association_id = (select id from associations where name = 'Smoke Pending')
+where id = (select session_id from test_ids);
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'session_association_frozen_for_owner',
+  (select association_id from sessions where id = (select session_id from test_ids))
+    = 'c0000000-0000-0000-0000-000000000001';
+
+-- Another player sees neither the pending request, nor the claim, nor any contact detail, and
+-- can't approve or edit anything.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000002","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'other_player_cannot_see_pending_association',
+  (select count(*) from associations where name = 'Smoke Pending') = 0;
+insert into test_results (test, passed)
+select 'other_player_cannot_see_pending_claim',
+  (select count(*) from association_managers where association_id = 'c0000000-0000-0000-0000-000000000001') = 0;
+insert into test_results (test, passed)
+select 'other_player_cannot_read_contacts',
+  (select count(*) from association_manager_contacts) = 0;
+do $$
+begin
+  perform review_association((select id from associations where name = 'Smoke Pending' limit 1), true);
+  insert into test_results (test, passed) values ('player_cannot_review', false);
+exception when others then
+  insert into test_results (test, passed) values ('player_cannot_review', sqlerrm = 'not_super_admin');
+end $$;
+do $$
+begin
+  perform update_association('c0000000-0000-0000-0000-000000000001', '{"name":"Hijacked"}');
+  insert into test_results (test, passed) values ('non_manager_cannot_edit', false);
+exception when others then
+  insert into test_results (test, passed) values ('non_manager_cannot_edit', sqlerrm = 'not_association_manager');
+end $$;
+reset role;
+reset request.jwt.claims;
+
+-- The super_admin approves both: the requester joins their new association as its manager.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000006","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'super_admin_reads_all_pending_contacts',
+  (select count(*) from association_manager_contacts c
+   join association_managers am on am.id = c.manager_id
+   where am.user_id in ('a0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000004')) = 2;
+select review_association((select id from associations where name = 'Smoke Pending'), true);
+select review_association_manager(
+  (select id from association_managers
+   where association_id = 'c0000000-0000-0000-0000-000000000001' and status = 'pending'),
+  true
+);
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'approval_attaches_requester',
+  (select p.association_id from players p where p.user_id = 'a0000000-0000-0000-0000-000000000004')
+    = (select id from associations where name = 'Smoke Pending');
+
+-- The approved manager edits their association; others now see the manager, still no contacts.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+select update_association('c0000000-0000-0000-0000-000000000001', '{"short_name":"SMK"}');
+reset role;
+reset request.jwt.claims;
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000002","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'manager_edit_applied_and_public',
+  (select short_name from associations where id = 'c0000000-0000-0000-0000-000000000001') = 'SMK';
+insert into test_results (test, passed)
+select 'approved_manager_public_contacts_private',
+  (select count(*) from association_managers where association_id = 'c0000000-0000-0000-0000-000000000001') = 1
+  and (select count(*) from association_manager_contacts) = 0;
+reset role;
+reset request.jwt.claims;
+
 -- ===== Verdict =====
 select * from test_results order by n;
 
@@ -172,10 +320,14 @@ delete from holes where id in (select private_hole from test_ids);
 delete from players where user_id in (
   select owner_user from test_ids union select member1_user from test_ids union select member2_user from test_ids
   union select outsider_user from test_ids union select joiner_user from test_ids
+  union select 'a0000000-0000-0000-0000-000000000006'::uuid
 );
+delete from associations where id = 'c0000000-0000-0000-0000-000000000001' or name = 'Smoke Pending';
+delete from user_roles where user_id = 'a0000000-0000-0000-0000-000000000006';
 delete from auth.users where id in (
   select owner_user from test_ids union select member1_user from test_ids union select member2_user from test_ids
   union select outsider_user from test_ids union select joiner_user from test_ids
+  union select 'a0000000-0000-0000-0000-000000000006'::uuid
 );
 drop table test_ids;
 drop table test_results;

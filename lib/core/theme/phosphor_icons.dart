@@ -56,6 +56,15 @@ abstract final class PhosphorIcons {
   static const shuffle = IconData(0xe422, fontFamily: _regular);
   static const userPlus = IconData(0xe4d0, fontFamily: _regular);
   static const users = IconData(0xe4d6, fontFamily: _regular);
+  static const usersThree = IconData(0xe68e, fontFamily: _regular);
+  static const usersThreeFill = IconData(0xe68e, fontFamily: _fill);
+  static const envelopeSimple = IconData(0xe218, fontFamily: _regular);
+  static const phone = IconData(0xe3b8, fontFamily: _regular);
+  static const hourglass = IconData(0xe2b2, fontFamily: _regular);
+  static const globeSimple = IconData(0xe28e, fontFamily: _regular);
+  static const sealCheck = IconData(0xe606, fontFamily: _regular);
+  static const shieldCheck = IconData(0xe40c, fontFamily: _regular);
+  static const mapPinLine = IconData(0xe318, fontFamily: _regular);
   static const xCircle = IconData(0xe4f8, fontFamily: _regular);
 
   static const crown = IconData(0xe614, fontFamily: _regular);

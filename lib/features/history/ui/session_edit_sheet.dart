@@ -6,6 +6,7 @@ import '../../../core/errors/app_error_message.dart';
 import '../../../core/weather/weather_client.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
+import '../../associations/data/associations_repository.dart';
 import '../../sessions/data/sessions_repository.dart';
 import '../../sessions/domain/session.dart';
 import '../../sessions/ui/championship_toggle.dart';
@@ -170,15 +171,15 @@ class _SessionEditSheetState extends ConsumerState<SessionEditSheet> {
               isChampionship: _isChampionship,
             );
         if (_isChampionship && mounted) {
-          final zoneLabel = tagged.championshipZoneId == null
+          final associationLabel = tagged.associationId == null
               ? null
-              : await ref
-                    .read(sessionsRepositoryProvider)
-                    .championshipZoneLabel(tagged.championshipZoneId!);
+              : (await ref.read(
+                  associationByIdProvider(tagged.associationId!).future,
+                ))?.label;
           if (mounted) {
             await showChampionshipTagConfirmation(
               context,
-              zoneLabel: zoneLabel,
+              associationLabel: associationLabel,
               season: tagged.championshipSeason ?? '',
             );
           }
@@ -244,7 +245,6 @@ class _SessionEditSheetState extends ConsumerState<SessionEditSheet> {
           ),
           ChampionshipToggle(
             value: _isChampionship,
-            locationKnown: widget.session.locationLat != null,
             onChanged: _saving
                 ? null
                 : (value) => setState(() => _isChampionship = value),

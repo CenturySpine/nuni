@@ -70,12 +70,10 @@ class SessionsRepository {
 
   /// Tags/untags a session for the championship (plan 15, owner-only --
   /// `sessions_update_owner`, no status restriction: allowed even after
-  /// closure). A plain update, same as [attachWeather]/[updateSchedule]:
-  /// `championship_zone_id`/`championship_season` are entirely computed and
-  /// frozen by the `sessions_set_championship_zone` trigger, never sent
-  /// here. Turning it on without a known position raises
-  /// `championship_requires_location` (trigger), surfaced by the screen as
-  /// a disabled checkbox rather than a caught error in practice.
+  /// closure). A plain update, same as [attachWeather]/[updateSchedule]: the
+  /// championship is the session's association (plan 18, Q77) and its season
+  /// is computed by the `sessions_set_association_and_season` trigger, never
+  /// sent here.
   Future<Session> setChampionship({
     required String sessionId,
     required bool isChampionship,
@@ -88,13 +86,6 @@ class SessionsRepository {
         .single();
     return Session.fromJson(row);
   }
-
-  /// The zone's displayed name (Q41), for the tagging confirmation
-  /// ("Cette session compte pour le championnat de [zone]...").
-  Future<String?> championshipZoneLabel(String zoneId) => _client.rpc<String?>(
-    'championship_zone_label',
-    params: {'p_zone_id': zoneId},
-  );
 
   /// Edits a completed session's schedule and comment (plan 10, owner-only --
   /// `sessions_update_owner` has no status restriction). Weather recapture on

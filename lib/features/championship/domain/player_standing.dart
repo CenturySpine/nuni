@@ -1,6 +1,6 @@
 import 'championship_session_result.dart';
 
-/// One player's position in a championship zone/season classement (plan
+/// One player's position in a championship association/season classement (plan
 /// 15, decision 4-5).
 class PlayerStanding {
   const PlayerStanding({
@@ -18,7 +18,7 @@ class PlayerStanding {
   final int sessionsPlayed;
 }
 
-/// Season totals across every championship session of a zone/season: sums
+/// Season totals across every championship session of an association/season: sums
 /// each player's per-session points (ranking + fixed attendance, decision
 /// 4 -- every session played counts, no averaging or best-results-only),
 /// then ranks descending by total points. A tie is broken by sessions

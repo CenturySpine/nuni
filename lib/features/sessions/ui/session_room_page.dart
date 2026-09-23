@@ -23,6 +23,7 @@ import '../../../shared/nuni_icon_tile.dart';
 import '../../../shared/nuni_loading.dart';
 import '../../../shared/nuni_section_header.dart';
 import '../../../shared/nuni_status_pill.dart';
+import '../../associations/data/associations_repository.dart';
 import '../../live/ui/session_live_page.dart';
 import '../../profile/domain/player.dart';
 import '../data/sessions_repository.dart';
@@ -281,13 +282,15 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
       );
       ref.invalidate(sessionRoomProvider(widget.sessionId));
       if (value && mounted) {
-        final zoneLabel = tagged.championshipZoneId == null
+        final associationLabel = tagged.associationId == null
             ? null
-            : await repo.championshipZoneLabel(tagged.championshipZoneId!);
+            : (await ref.read(
+                associationByIdProvider(tagged.associationId!).future,
+              ))?.label;
         if (mounted) {
           await showChampionshipTagConfirmation(
             context,
-            zoneLabel: zoneLabel,
+            associationLabel: associationLabel,
             season: tagged.championshipSeason ?? '',
           );
         }
@@ -498,7 +501,6 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
             const SizedBox(height: 16),
             ChampionshipToggle(
               value: room.session.isChampionship,
-              locationKnown: room.session.locationLat != null,
               onChanged: _busy ? null : _toggleChampionship,
             ),
             const SizedBox(height: 8),

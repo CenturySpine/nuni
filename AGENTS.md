@@ -152,6 +152,13 @@ GitHub Actions (Q17).
   Tout joueur créé par l'app est lié dès l'inscription (trigger) ; pas de joueur créé à la volée,
   pas de réclamation de fiche (Q24). `user_id` nul = joueur importé de LsgScores, non
   sélectionnable dans une nouvelle session.
+- Associations (plan 18) : chaque joueur appartient à une association (`players.association_id`,
+  choisie à la première connexion), chaque session à celle de son créateur (posée par un
+  déclencheur, figée), et un championnat = une association × une saison (plus de zones
+  géographiques, Q77). Les tables d'associations sont en lecture seule pour l'app : toute écriture
+  passe par les RPC `security definer` de `rpc.sql` (demande, revendication, modification,
+  validation par `super_admin`). Le mail et le téléphone des responsables vivent dans
+  `association_manager_contacts`, jamais lisible au-delà du responsable et des `super_admin`.
 - Équipes : table de jointure `team_players` ; la taille d'équipe est une règle applicative.
 - Calcul des scores et du classement en Dart, testé unitairement ; la base ne stocke que les
   valeurs saisies.
@@ -161,7 +168,8 @@ GitHub Actions (Q17).
 
 - Secrets dans le dépôt (clés Supabase, jetons, identifiants OAuth). Le dépôt est **public**.
 - Table `scoring_modes`, table de lien user↔joueur, tables villes/zones comme prérequis d'une
-  session. Seule exception acceptée (Q64, 2026-09-23) : `legacy_player_emails`, table privée
+  session (l'association, plan 18, n'est pas un référentiel géographique : sa ville n'est qu'un
+  texte et un point pour la suggestion). Seule exception acceptée (Q64, 2026-09-23) : `legacy_player_emails`, table privée
   (aucun droit pour l'app) qui ne sert qu'à rattacher un joueur importé de LsgScores à son compte
   à l'inscription, et se vide au fur et à mesure.
 - Écrire dans l'ancien dépôt LsgScores.

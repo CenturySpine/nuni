@@ -17,21 +17,21 @@ insert into holes (
   photo_start_path, photo_end_path, visibility, legacy_id, created_at, updated_at
 ) values
   (
-    '6d5d4845-3b60-4c34-a015-c9b982897425',
+    '29c86477-031b-43b7-97d4-9a75f6eae2e6',
     '667e1434-75e2-4eb7-b122-ed8681905cea',
-    'Touch my ball',
-    'Cible: la boule de béton à droite au bout du chemin quand on regarde le bâtiment.',
-    3,
-    102,
-    'SRID=4326;POINT(4.87602897082559 45.7832769601808)',
-    'SRID=4326;POINT(4.87697042618982 45.7839166687711)',
-    null,
-    '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-26/start.jpg',
-    '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-26/end.jpg',
+    'Rhino peekaboo',
+    'Rhino depuis le spot sous la caméra, vers la grande fresque bleue',
+    5,
+    83,
+    'SRID=4326;POINT(4.87381949813446 45.7834239348651)',
+    'SRID=4326;POINT(4.87476116409719 45.7833677225368)',
+    '[{"lat":45.78332539792273,"lng":4.874141921525449},{"lat":45.783451710347684,"lng":4.874687196378039}]'::jsonb,
+    '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-8/start.jpg',
+    '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-8/end.jpg',
     'public',
-    26,
+    8,
     '2026-09-23T07:53:32.124299+00:00',
-    '2026-09-23T07:56:54.025157+00:00'
+    '2026-09-23T17:42:08.664663+00:00'
   ),
   (
     'a4fe03ec-5b9d-4e4e-9ff5-6bfeeb550d9c',
@@ -84,23 +84,6 @@ Cible: Plaque d''égout sur la partie en béton. Bonus -1 si la balle s''arrête
     5,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T07:59:54.509845+00:00'
-  ),
-  (
-    '29c86477-031b-43b7-97d4-9a75f6eae2e6',
-    '667e1434-75e2-4eb7-b122-ed8681905cea',
-    'Rhino peekaboo',
-    'Rhino depuis le spot sous la caméra, vers la grand fresque bleue',
-    5,
-    83,
-    'SRID=4326;POINT(4.87381949813446 45.7834239348651)',
-    'SRID=4326;POINT(4.87476116409719 45.7833677225368)',
-    '[{"lat":45.78332539792273,"lng":4.874141921525449},{"lat":45.783451710347684,"lng":4.874687196378039}]'::jsonb,
-    '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-8/start.jpg',
-    '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-8/end.jpg',
-    'public',
-    8,
-    '2026-09-23T07:53:32.124299+00:00',
-    '2026-09-23T08:00:44.862404+00:00'
   ),
   (
     '0b0e955b-0d57-4d54-841a-7f6c67b61d8a',
@@ -289,6 +272,23 @@ Cible: panneau en hauteur sur le mur ?',
     6,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T08:52:24.946336+00:00'
+  ),
+  (
+    '6d5d4845-3b60-4c34-a015-c9b982897425',
+    '667e1434-75e2-4eb7-b122-ed8681905cea',
+    'Touch my ball',
+    'Cible: la boule de béton à droite au bout du chemin quand on regarde le bâtiment.',
+    3,
+    102,
+    'SRID=4326;POINT(4.87602897082559 45.7832769601808)',
+    'SRID=4326;POINT(4.87697042618982 45.7839166687711)',
+    null,
+    '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-26/start.jpg',
+    '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-26/end.jpg',
+    'public',
+    26,
+    '2026-09-23T07:53:32.124299+00:00',
+    '2026-09-23T07:56:54.025157+00:00'
   ),
   (
     '9805d5c3-6e28-4b82-82f4-19a012c1d865',

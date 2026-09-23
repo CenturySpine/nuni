@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/errors/app_error_message.dart';
@@ -9,8 +10,11 @@ import '../../../shared/nuni_avatar.dart';
 import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_card.dart';
 import '../../../shared/nuni_error_banner.dart';
+import '../../../shared/nuni_list_card.dart';
 import '../../../shared/nuni_loading.dart';
 import '../../../shared/photo_field.dart';
+import '../../associations/data/associations_repository.dart';
+import '../../associations/ui/association_logo.dart';
 import '../../championship/data/championship_repository.dart';
 import '../../history/data/history_repository.dart';
 import '../../live/data/live_repository.dart';
@@ -51,7 +55,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       ..invalidate(myPlayerProvider)
       ..invalidate(historyEntriesProvider)
       ..invalidate(historyDetailProvider)
-      ..invalidate(championshipZoneStandingsProvider)
+      ..invalidate(championshipStandingsProvider)
       ..invalidate(liveSessionProvider)
       ..invalidate(sessionRoomProvider)
       ..invalidate(playerSearchProvider);
@@ -177,6 +181,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
               ),
               const SizedBox(height: 28),
+              _MyAssociationCard(associationId: player.associationId),
+              const SizedBox(height: 16),
               NuniCard(
                 child: TextField(
                   controller: _displayNameController,
@@ -193,6 +199,34 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// My association (plan 18), opening its page -- or the associations tab
+/// while I have none.
+class _MyAssociationCard extends ConsumerWidget {
+  const _MyAssociationCard({required this.associationId});
+
+  final String? associationId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final association = associationId == null
+        ? null
+        : ref.watch(associationByIdProvider(associationId!)).value;
+    return NuniListCard(
+      leading: association == null
+          ? null
+          : AssociationLogo(association: association),
+      title: association?.name ?? l10n.settingsNoAssociation,
+      subtitle: l10n.settingsMyAssociation,
+      onTap: () => context.push(
+        association == null
+            ? '/associations'
+            : '/associations/${association.id}',
       ),
     );
   }

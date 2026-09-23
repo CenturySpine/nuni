@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/errors/app_error_message.dart';
 import '../../../core/geocoding/reverse_geocoding_client.dart';
@@ -14,8 +15,13 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_card.dart';
 import '../../../shared/nuni_chip.dart';
+import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_form_section.dart';
+import '../../../shared/nuni_list_card.dart';
 import '../../../shared/nuni_segmented.dart';
+import '../../associations/data/associations_repository.dart';
+import '../../associations/ui/association_logo.dart';
+import '../../profile/data/profile_repository.dart';
 import '../data/libre_ranking_direction_pref.dart';
 import '../data/sessions_repository.dart';
 import '../domain/ranking_direction.dart';
@@ -124,15 +130,15 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
           isChampionship: true,
         );
         if (mounted) {
-          final zoneLabel = taggedSession.championshipZoneId == null
+          final associationLabel = taggedSession.associationId == null
               ? null
-              : await repo.championshipZoneLabel(
-                  taggedSession.championshipZoneId!,
-                );
+              : (await ref.read(
+                  associationByIdProvider(taggedSession.associationId!).future,
+                ))?.label;
           if (mounted) {
             await showChampionshipTagConfirmation(
               context,
-              zoneLabel: zoneLabel,
+              associationLabel: associationLabel,
               season: taggedSession.championshipSeason ?? '',
             );
           }
@@ -144,6 +150,20 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
       // away), so it won't pick up the new session on its own.
       ref.invalidate(myOngoingSessionsProvider);
       if (mounted) context.go('/session/${taggedSession.id}');
+    } on PostgrestException catch (error) {
+      // No approved association (plan 18, Q81): normally caught earlier by
+      // the screen, but the association may have changed meanwhile.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              error.message == 'association_required'
+                  ? l10n.sessionsCreateNeedsAssociation
+                  : describeError(error, l10n),
+            ),
+          ),
+        );
+      }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -164,12 +184,42 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final zoneSuggestions = ref.watch(zoneSuggestionsProvider(_debouncedCity));
+    final player = ref.watch(myPlayerProvider).value;
+    final associationId = player?.associationId;
+    final association = associationId == null
+        ? null
+        : ref.watch(associationByIdProvider(associationId)).value;
+
+    // Only an approved association's member creates sessions (plan 18, Q81).
+    if (player != null && associationId == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.sessionsCreateTitle)),
+        body: NuniEmptyState(
+          icon: PhosphorIcons.usersThree,
+          message: l10n.sessionsCreateNeedsAssociation,
+          action: NuniButton(
+            label: l10n.sessionsCreateSeeAssociations,
+            onPressed: () => context.go('/associations'),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.sessionsCreateTitle)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: [
+          // The session belongs to its creator's association (plan 18),
+          // shown read-only.
+          if (association != null) ...[
+            NuniListCard(
+              leading: AssociationLogo(association: association, size: 40),
+              title: association.name,
+              subtitle: l10n.sessionsCreateAssociation,
+            ),
+            const SizedBox(height: 20),
+          ],
           NuniFormSection(
             title: l10n.sessionsCreateSectionLocation,
             children: [
@@ -288,7 +338,6 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: ChampionshipToggle(
               value: _isChampionship,
-              locationKnown: _position != null,
               onChanged: (value) => setState(() => _isChampionship = value),
             ),
           ),

@@ -7,10 +7,17 @@ create index session_members_user_id_idx on session_members (user_id);
 -- teams/played_holes' (session_id, position).
 create index scores_session_id_idx on scores (session_id);
 create index team_players_session_id_idx on team_players (session_id);
--- Championship zone assignment (plan 15): only championship-tagged sessions are ever searched by
--- proximity (assign_championship_zone), a small and stable subset of all sessions.
-create index sessions_championship_location_idx on sessions using gist (location)
+-- Championship classement reads (championship_association_results, plan 18), filtered by
+-- association and season.
+create index sessions_championship_association_season_idx
+  on sessions (association_id, championship_season)
   where is_championship;
--- Championship classement reads (championship_zone_results), filtered by zone and season.
-create index sessions_championship_zone_season_idx
-  on sessions (championship_zone_id, championship_season);
+-- Q78: at most one approved local manager per association; one open claim per person and
+-- association.
+create unique index association_managers_one_approved_idx
+  on association_managers (association_id) where status = 'approved';
+create unique index association_managers_one_pending_claim_idx
+  on association_managers (association_id, user_id) where status = 'pending';
+-- Q81: one creation request waiting at a time per person.
+create unique index associations_one_pending_request_idx
+  on associations (created_by) where status = 'pending';

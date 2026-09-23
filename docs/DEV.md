@@ -92,16 +92,23 @@ npx supabase db query --linked -f supabase/seed_super_admin.sql
 #    des sessions y font référence. Sans effet si les lignes existent déjà.
 npx supabase db query --linked -f supabase/remote_seed.sql
 
-# 6. Obligatoire : rejouer les données (joueurs, sessions, championnats...) AVANT l'étape 7,
+# 5b. Obligatoire (plan 18) : rejouer les associations de départ (supabase/associations_seed.sql,
+#    committé, données publiques). Avant l'étape 6 : joueurs et sessions y font référence.
+npx supabase db query --linked -f supabase/associations_seed.sql
+
+# 6. Obligatoire : rejouer les données (associations créées ou modifiées dans l'app,
+#    responsables et leurs coordonnées, joueurs, sessions, championnats...) AVANT l'étape 7,
 #    pour que chaque compte retrouve sa fiche d'origine (même identifiant, nom modifié conservé).
-#    Déchiffrer dans build/ (ignoré par git), rejouer, puis effacer la copie en clair. Les zones
-#    de championnat sont recalculées à l'identique par la base (sessions réinsérées dans leur
-#    ordre de création). Sans effet si les lignes existent déjà.
+#    Déchiffrer dans build/ (ignoré par git), rejouer, puis effacer la copie en clair. Le
+#    championnat d'une session est son association (plan 18), rejouée telle quelle ; la saison est
+#    recalculée par la base. Sans effet si les lignes existent déjà (les associations de départ
+#    sont mises à jour, pour garder les modifications faites dans l'app).
 fvm dart run tool/export_remote_seed.dart --decrypt
 npx supabase db query --linked -f build/seed/data_seed.sql
 Remove-Item build/seed/data_seed.sql
 
 # 7. Obligatoire : créer la fiche "players" des comptes inscrits depuis le dernier export
+#    (sans association : l'app leur demande d'en choisir une à la prochaine ouverture)
 #    (supabase/backfill_players.sql, committé). Le déclencheur qui la peuple ne s'exécute qu'à
 #    l'inscription, jamais rétroactivement ; sans effet pour un compte qui a déjà sa fiche.
 npx supabase db query --linked -f supabase/backfill_players.sql

@@ -51,29 +51,38 @@ final class MyChampionshipMembershipsProvider
 String _$myChampionshipMembershipsHash() =>
     r'dc1d3c44647610659d5d2df843c006c8801ad77b';
 
-@ProviderFor(championshipZoneLabel)
-final championshipZoneLabelProvider = ChampionshipZoneLabelFamily._();
+/// A championship's name (plan 18, Q77): its association's abbreviation, or
+/// its name when it has none.
 
-final class ChampionshipZoneLabelProvider
+@ProviderFor(championshipAssociationLabel)
+final championshipAssociationLabelProvider =
+    ChampionshipAssociationLabelFamily._();
+
+/// A championship's name (plan 18, Q77): its association's abbreviation, or
+/// its name when it has none.
+
+final class ChampionshipAssociationLabelProvider
     extends $FunctionalProvider<AsyncValue<String?>, String?, FutureOr<String?>>
     with $FutureModifier<String?>, $FutureProvider<String?> {
-  ChampionshipZoneLabelProvider._({
-    required ChampionshipZoneLabelFamily super.from,
+  /// A championship's name (plan 18, Q77): its association's abbreviation, or
+  /// its name when it has none.
+  ChampionshipAssociationLabelProvider._({
+    required ChampionshipAssociationLabelFamily super.from,
     required String super.argument,
   }) : super(
          retry: null,
-         name: r'championshipZoneLabelProvider',
+         name: r'championshipAssociationLabelProvider',
          isAutoDispose: true,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
 
   @override
-  String debugGetCreateSourceHash() => _$championshipZoneLabelHash();
+  String debugGetCreateSourceHash() => _$championshipAssociationLabelHash();
 
   @override
   String toString() {
-    return r'championshipZoneLabelProvider'
+    return r'championshipAssociationLabelProvider'
         ''
         '($argument)';
   }
@@ -86,12 +95,13 @@ final class ChampionshipZoneLabelProvider
   @override
   FutureOr<String?> create(Ref ref) {
     final argument = this.argument as String;
-    return championshipZoneLabel(ref, argument);
+    return championshipAssociationLabel(ref, argument);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is ChampionshipZoneLabelProvider && other.argument == argument;
+    return other is ChampionshipAssociationLabelProvider &&
+        other.argument == argument;
   }
 
   @override
@@ -100,31 +110,40 @@ final class ChampionshipZoneLabelProvider
   }
 }
 
-String _$championshipZoneLabelHash() =>
-    r'ae468bfe0623ddc33d39c40cb05a617fba09be98';
+String _$championshipAssociationLabelHash() =>
+    r'57d15ae2d8432af4bc4f9f78f218824123f667e5';
 
-final class ChampionshipZoneLabelFamily extends $Family
+/// A championship's name (plan 18, Q77): its association's abbreviation, or
+/// its name when it has none.
+
+final class ChampionshipAssociationLabelFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<String?>, String> {
-  ChampionshipZoneLabelFamily._()
+  ChampionshipAssociationLabelFamily._()
     : super(
         retry: null,
-        name: r'championshipZoneLabelProvider',
+        name: r'championshipAssociationLabelProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
 
-  ChampionshipZoneLabelProvider call(String zoneId) =>
-      ChampionshipZoneLabelProvider._(argument: zoneId, from: this);
+  /// A championship's name (plan 18, Q77): its association's abbreviation, or
+  /// its name when it has none.
+
+  ChampionshipAssociationLabelProvider call(String associationId) =>
+      ChampionshipAssociationLabelProvider._(
+        argument: associationId,
+        from: this,
+      );
 
   @override
-  String toString() => r'championshipZoneLabelProvider';
+  String toString() => r'championshipAssociationLabelProvider';
 }
 
-@ProviderFor(championshipZoneStandings)
-final championshipZoneStandingsProvider = ChampionshipZoneStandingsFamily._();
+@ProviderFor(championshipStandings)
+final championshipStandingsProvider = ChampionshipStandingsFamily._();
 
-final class ChampionshipZoneStandingsProvider
+final class ChampionshipStandingsProvider
     extends
         $FunctionalProvider<
           AsyncValue<List<PlayerStanding>>,
@@ -134,23 +153,23 @@ final class ChampionshipZoneStandingsProvider
     with
         $FutureModifier<List<PlayerStanding>>,
         $FutureProvider<List<PlayerStanding>> {
-  ChampionshipZoneStandingsProvider._({
-    required ChampionshipZoneStandingsFamily super.from,
+  ChampionshipStandingsProvider._({
+    required ChampionshipStandingsFamily super.from,
     required (String, String) super.argument,
   }) : super(
          retry: null,
-         name: r'championshipZoneStandingsProvider',
+         name: r'championshipStandingsProvider',
          isAutoDispose: true,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
 
   @override
-  String debugGetCreateSourceHash() => _$championshipZoneStandingsHash();
+  String debugGetCreateSourceHash() => _$championshipStandingsHash();
 
   @override
   String toString() {
-    return r'championshipZoneStandingsProvider'
+    return r'championshipStandingsProvider'
         ''
         '$argument';
   }
@@ -164,13 +183,12 @@ final class ChampionshipZoneStandingsProvider
   @override
   FutureOr<List<PlayerStanding>> create(Ref ref) {
     final argument = this.argument as (String, String);
-    return championshipZoneStandings(ref, argument.$1, argument.$2);
+    return championshipStandings(ref, argument.$1, argument.$2);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is ChampionshipZoneStandingsProvider &&
-        other.argument == argument;
+    return other is ChampionshipStandingsProvider && other.argument == argument;
   }
 
   @override
@@ -179,30 +197,30 @@ final class ChampionshipZoneStandingsProvider
   }
 }
 
-String _$championshipZoneStandingsHash() =>
-    r'0935bd4edd37403fa5974a424476be9f97f9a955';
+String _$championshipStandingsHash() =>
+    r'536e0dc12b63bca5f005f5bded354f708366145e';
 
-final class ChampionshipZoneStandingsFamily extends $Family
+final class ChampionshipStandingsFamily extends $Family
     with
         $FunctionalFamilyOverride<
           FutureOr<List<PlayerStanding>>,
           (String, String)
         > {
-  ChampionshipZoneStandingsFamily._()
+  ChampionshipStandingsFamily._()
     : super(
         retry: null,
-        name: r'championshipZoneStandingsProvider',
+        name: r'championshipStandingsProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
 
-  ChampionshipZoneStandingsProvider call(String zoneId, String season) =>
-      ChampionshipZoneStandingsProvider._(
-        argument: (zoneId, season),
+  ChampionshipStandingsProvider call(String associationId, String season) =>
+      ChampionshipStandingsProvider._(
+        argument: (associationId, season),
         from: this,
       );
 
   @override
-  String toString() => r'championshipZoneStandingsProvider';
+  String toString() => r'championshipStandingsProvider';
 }

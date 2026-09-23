@@ -1012,3 +1012,13 @@ réelles.
 Suggestion : passer dès ce plan aux migrations additives (un nouveau fichier qui crée les tables,
 rattache l'existant à LSG et retire les zones), sans reconstruction. Moins risqué pour les données
 réelles, pas de rejeu des seeds. La règle 8 serait mise à jour en conséquence.
+
+**Q88 ☑ — L'accueil ne montre-t-il que les sessions et championnats de mon association ?**
+Constat (2026-09-23) : non. Les sessions listées sont celles dont je suis participant, quelle que
+soit leur association ; les championnats affichés sont tous ceux où j'ai joué au moins une session,
+visiteur compris (plan 18, décision 4).
+Suggestion : garder cet affichage (une session jouée ailleurs reste la mienne et doit rester
+accessible, par exemple pour la reprendre en direct), en mettant mon association en premier.
+Réponse PO (2026-09-23) : suggestion retenue. Affichage inchangé ; les encarts de championnat de
+l'accueil (saison en cours et championnats passés, au sein d'une même saison) et le sélecteur de la
+page de classement placent mon association en premier.

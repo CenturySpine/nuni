@@ -18,16 +18,21 @@ import '../data/championship_repository.dart';
 import '../domain/championship_season.dart';
 import '../domain/player_standing.dart';
 
-/// `/championship` (plan 15, parcours 3): full classement of one zone/season,
-/// with a zone switcher (Q45's scope: a player can appear in several zones
-/// the same season) and a season selector (past seasons, once there are
-/// any). Opens on [initialZoneId]/[initialSeason] when given (the home tab's
-/// cards and championship history, Q72), otherwise on the current season
-/// and, within it, the first zone the caller belongs to.
+/// `/championship` (plans 15 and 18): full classement of one
+/// association/season, with an association switcher (a visitor also appears
+/// in the championship of the association that hosted them, Q77) and a season
+/// selector (past seasons, once there are any). Opens on
+/// [initialAssociationId]/[initialSeason] when given (the home tab's cards and
+/// championship history, Q72), otherwise on the current season and, within
+/// it, the first association the caller played for.
 class ChampionshipPage extends ConsumerStatefulWidget {
-  const ChampionshipPage({super.key, this.initialZoneId, this.initialSeason});
+  const ChampionshipPage({
+    super.key,
+    this.initialAssociationId,
+    this.initialSeason,
+  });
 
-  final String? initialZoneId;
+  final String? initialAssociationId;
   final String? initialSeason;
 
   @override
@@ -35,7 +40,7 @@ class ChampionshipPage extends ConsumerStatefulWidget {
 }
 
 class _ChampionshipPageState extends ConsumerState<ChampionshipPage> {
-  late String? _zoneId = widget.initialZoneId;
+  late String? _associationId = widget.initialAssociationId;
   late String? _season = widget.initialSeason;
 
   @override
@@ -62,13 +67,24 @@ class _ChampionshipPageState extends ConsumerState<ChampionshipPage> {
             );
           }
 
-          final zoneIds = {for (final m in memberships) m.zoneId};
-          final zoneId = _zoneId != null && zoneIds.contains(_zoneId)
-              ? _zoneId!
-              : zoneIds.first;
+          // My association first (Q88): the switcher's first chip and the
+          // default when the page opens without a given association.
+          final myAssociationId = ref
+              .watch(myPlayerProvider)
+              .value
+              ?.associationId;
+          final associationIds = {
+            for (final m in memberships)
+              if (m.associationId == myAssociationId) m.associationId,
+            for (final m in memberships) m.associationId,
+          };
+          final associationId =
+              _associationId != null && associationIds.contains(_associationId)
+              ? _associationId!
+              : associationIds.first;
           final seasons = {
             for (final m in memberships)
-              if (m.zoneId == zoneId) m.season,
+              if (m.associationId == associationId) m.season,
           }.toList()..sort((a, b) => b.compareTo(a));
           final season = _season != null && seasons.contains(_season)
               ? _season!
@@ -76,13 +92,13 @@ class _ChampionshipPageState extends ConsumerState<ChampionshipPage> {
                     ? currentChampionshipSeason()
                     : seasons.first);
 
-          return _ZoneSeasonView(
-            zoneIds: zoneIds.toList(),
+          return _AssociationSeasonView(
+            associationIds: associationIds.toList(),
             seasons: seasons,
-            zoneId: zoneId,
+            associationId: associationId,
             season: season,
-            onZoneChanged: (id) => setState(() {
-              _zoneId = id;
+            onAssociationChanged: (id) => setState(() {
+              _associationId = id;
               _season = null;
             }),
             onSeasonChanged: (s) => setState(() => _season = s),
@@ -93,32 +109,34 @@ class _ChampionshipPageState extends ConsumerState<ChampionshipPage> {
   }
 }
 
-class _ZoneSeasonView extends ConsumerWidget {
-  const _ZoneSeasonView({
-    required this.zoneIds,
+class _AssociationSeasonView extends ConsumerWidget {
+  const _AssociationSeasonView({
+    required this.associationIds,
     required this.seasons,
-    required this.zoneId,
+    required this.associationId,
     required this.season,
-    required this.onZoneChanged,
+    required this.onAssociationChanged,
     required this.onSeasonChanged,
   });
 
-  final List<String> zoneIds;
+  final List<String> associationIds;
   final List<String> seasons;
-  final String zoneId;
+  final String associationId;
   final String season;
-  final ValueChanged<String> onZoneChanged;
+  final ValueChanged<String> onAssociationChanged;
   final ValueChanged<String> onSeasonChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final standingsAsync = ref.watch(
-      championshipZoneStandingsProvider(zoneId, season),
+      championshipStandingsProvider(associationId, season),
     );
     final myPlayerAsync = ref.watch(myPlayerProvider);
     final myPlayerId = myPlayerAsync.asData?.value.id;
-    final zoneLabelAsync = ref.watch(championshipZoneLabelProvider(zoneId));
+    final associationLabelAsync = ref.watch(
+      championshipAssociationLabelProvider(associationId),
+    );
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
@@ -137,7 +155,7 @@ class _ZoneSeasonView extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      zoneLabelAsync.asData?.value ?? zoneId,
+                      associationLabelAsync.asData?.value ?? associationId,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: Theme.of(context).colorScheme.onPrimary,
                       ),
@@ -157,16 +175,16 @@ class _ZoneSeasonView extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 16),
-        if (zoneIds.length > 1) ...[
+        if (associationIds.length > 1) ...[
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              for (final id in zoneIds)
-                _ZoneChip(
-                  zoneId: id,
-                  selected: id == zoneId,
-                  onTap: () => onZoneChanged(id),
+              for (final id in associationIds)
+                _AssociationChip(
+                  associationId: id,
+                  selected: id == associationId,
+                  onTap: () => onAssociationChanged(id),
                 ),
             ],
           ),
@@ -217,22 +235,24 @@ class _ZoneSeasonView extends ConsumerWidget {
   }
 }
 
-class _ZoneChip extends ConsumerWidget {
-  const _ZoneChip({
-    required this.zoneId,
+class _AssociationChip extends ConsumerWidget {
+  const _AssociationChip({
+    required this.associationId,
     required this.selected,
     required this.onTap,
   });
 
-  final String zoneId;
+  final String associationId;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final labelAsync = ref.watch(championshipZoneLabelProvider(zoneId));
+    final labelAsync = ref.watch(
+      championshipAssociationLabelProvider(associationId),
+    );
     return NuniChip(
-      label: labelAsync.asData?.value ?? zoneId,
+      label: labelAsync.asData?.value ?? associationId,
       selected: selected,
       onTap: onTap,
     );
