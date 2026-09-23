@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/l10n/locale_controller.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/palette_controller.dart';
 import 'l10n/generated/app_localizations.dart';
 
 class NuniApp extends ConsumerWidget {
@@ -14,10 +15,11 @@ class NuniApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     final locale = ref.watch(localeControllerProvider);
+    final palette = ref.watch(paletteControllerProvider);
 
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
-      theme: buildAppTheme(),
+      theme: buildAppTheme(palette),
       routerConfig: router,
       locale: locale,
       localizationsDelegates: const [

@@ -16,14 +16,15 @@ class AccentTone {
   final Color onContainer;
 }
 
-/// The NUNI "Pop" colour set (rebrand, 2026-09-23, docs/design/PALETTE.md):
-/// a light neutral base, a deep ink for text, one violet brand colour and
-/// three joyful accents (fairway green, tangerine, sunshine yellow) used
-/// sparingly for meaning (live, draft, leader, championship...). This is the
-/// only file allowed to contain raw `Color(0x...)` values.
+/// A NUNI colour set (rebrand, 2026-09-23, docs/design/PALETTE.md): a light
+/// neutral base, a deep ink for text, one brand colour and three joyful
+/// accents (fairway green, a highlight hue, sunshine yellow) used sparingly
+/// for meaning (live, draft, leader, championship...). This is the only file
+/// allowed to contain raw `Color(0x...)` values.
 @immutable
 class Palette {
   const Palette({
+    required this.id,
     required this.name,
     required this.background,
     required this.surface,
@@ -36,13 +37,16 @@ class Palette {
     required this.onPrimary,
     required this.primaryTone,
     required this.fairway,
-    required this.tangerine,
+    required this.highlight,
     required this.sunshine,
     required this.dangerTone,
     required this.heroStart,
     required this.heroEnd,
+    required this.logoNi,
   });
 
+  /// Stable key saved on the device when the user picks this palette.
+  final String id;
   final String name;
 
   /// Page background.
@@ -61,7 +65,7 @@ class Palette {
   final Color textSecondary;
   final Color textDisabled;
 
-  /// Brand violet: primary buttons, selection, links, focus.
+  /// Brand colour: primary buttons, selection, links, focus.
   final Color primary;
   final Color onPrimary;
   final AccentTone primaryTone;
@@ -69,8 +73,9 @@ class Palette {
   /// Green: golf, success, "live".
   final AccentTone fairway;
 
-  /// Orange: warm highlights, "in preparation", the latest played hole.
-  final AccentTone tangerine;
+  /// Second hue, contrasting with the brand colour: "in preparation",
+  /// notification badges, some avatar and icon tints.
+  final AccentTone highlight;
 
   /// Yellow: leader, crown, championship gold.
   final AccentTone sunshine;
@@ -82,6 +87,9 @@ class Palette {
   final Color heroStart;
   final Color heroEnd;
 
+  /// The "NI" row of the logo, drawn on the brand gradient ("NU" is white).
+  final Color logoNi;
+
   Color get danger => dangerTone.base;
   Color get success => fairway.onContainer;
 
@@ -89,8 +97,9 @@ class Palette {
   Color get selectionBackground => primaryTone.container;
 }
 
-/// The active palette. Never exposed as a user setting.
+/// The first rebrand palette: violet brand, tangerine highlight.
 const Palette nuniPop = Palette(
+  id: 'pop',
   name: 'NUNI Pop',
   background: Color(0xFFF4F5FA),
   surface: Color(0xFFFFFFFF),
@@ -111,7 +120,7 @@ const Palette nuniPop = Palette(
     container: Color(0xFFE2F6EA),
     onContainer: Color(0xFF0A7A47),
   ),
-  tangerine: AccentTone(
+  highlight: AccentTone(
     base: Color(0xFFFF7A45),
     container: Color(0xFFFFEDE3),
     onContainer: Color(0xFFB2441A),
@@ -128,10 +137,68 @@ const Palette nuniPop = Palette(
   ),
   heroStart: Color(0xFF5B4CF5),
   heroEnd: Color(0xFF7B4FF0),
+  logoNi: Color(0xFFFFC43D),
 );
 
-/// Every palette defined in code (checked for contrast by unit test).
-const List<Palette> allPalettes = [nuniPop];
+/// Same design with a true orange brand colour (PO, 2026-09-23: "un vrai
+/// orange", not red-leaning). A real orange caps white labels at ~3.4:1, so
+/// the brand fills are held to WCAG AA for bold/large text (3:1) instead of
+/// 4.5:1; small text on tints still uses the deep [primaryTone.onContainer].
+/// The highlight hue becomes a sky blue (orange's complement) so orange is
+/// not used twice.
+const Palette nuniSunset = Palette(
+  id: 'sunset',
+  name: 'NUNI Sunset',
+  background: Color(0xFFF4F5FA),
+  surface: Color(0xFFFFFFFF),
+  surfaceMuted: Color(0xFFF0F1F7),
+  border: Color(0xFFE3E5EF),
+  text: Color(0xFF14172B),
+  textSecondary: Color(0xFF5C6275),
+  textDisabled: Color(0xFFA2A6B6),
+  primary: Color(0xFFE66400),
+  onPrimary: Color(0xFFFFFFFF),
+  primaryTone: AccentTone(
+    base: Color(0xFFE66400),
+    container: Color(0xFFFFF0E0),
+    onContainer: Color(0xFFB34A00),
+  ),
+  fairway: AccentTone(
+    base: Color(0xFF12B76A),
+    container: Color(0xFFE2F6EA),
+    onContainer: Color(0xFF0A7A47),
+  ),
+  highlight: AccentTone(
+    base: Color(0xFF2E90FA),
+    container: Color(0xFFE3F0FF),
+    onContainer: Color(0xFF1B5FB8),
+  ),
+  sunshine: AccentTone(
+    base: Color(0xFFFFC43D),
+    container: Color(0xFFFFF4D4),
+    onContainer: Color(0xFF855D00),
+  ),
+  dangerTone: AccentTone(
+    base: Color(0xFFCF2E3A),
+    container: Color(0xFFFDECEC),
+    onContainer: Color(0xFFB42328),
+  ),
+  heroStart: Color(0xFFEC7000),
+  heroEnd: Color(0xFFE25A00),
+  logoNi: Color(0xFFFFEFB0),
+);
 
-/// The palette the app uses.
-const Palette activePalette = nuniPop;
+/// Every palette the user can pick in the settings, in display order
+/// (checked for contrast by unit test).
+const List<Palette> allPalettes = [nuniSunset, nuniPop];
+
+/// The palette used until the user picks one; also the PWA icons' colours.
+const Palette defaultPalette = nuniSunset;
+
+/// The palette saved under [id], or `null` for an unknown or missing id.
+Palette? paletteById(String? id) {
+  for (final palette in allPalettes) {
+    if (palette.id == id) return palette;
+  }
+  return null;
+}

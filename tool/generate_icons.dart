@@ -23,7 +23,7 @@ Future<void> _render(String path, int size) async {
   canvas.drawRect(
     rect,
     Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [nuniLogoBackgroundStart, nuniLogoBackgroundEnd],

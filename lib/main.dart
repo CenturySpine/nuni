@@ -5,6 +5,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'app.dart';
 import 'core/l10n/locale_controller.dart';
 import 'core/supabase/supabase_providers.dart';
+import 'core/theme/palette_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,10 +17,14 @@ void main() async {
   // already knows about a restored session -- no login "flash".
   await initializeSupabase();
   final persistedLocale = await loadPersistedLocale();
+  final persistedPalette = await loadPersistedPalette();
 
   runApp(
     ProviderScope(
-      overrides: [persistedLocaleProvider.overrideWithValue(persistedLocale)],
+      overrides: [
+        persistedLocaleProvider.overrideWithValue(persistedLocale),
+        persistedPaletteProvider.overrideWithValue(persistedPalette),
+      ],
       child: const NuniApp(),
     ),
   );

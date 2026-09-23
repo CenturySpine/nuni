@@ -267,6 +267,9 @@
 
   "settingsTitle": "Réglages",
   "settingsLanguage": "Langue",
+  "settingsColors": "Couleurs",
+  "settingsPaletteSunset": "Orange",
+  "settingsPalettePop": "Violet",
   "settingsLanguageSystem": "Système",
   "settingsLanguageFrench": "Français",
   "settingsLanguageEnglish": "English",

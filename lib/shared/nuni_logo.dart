@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../core/theme/app_theme.dart';
 import '../core/theme/logo_colors.dart';
 
 /// The NUNI logo: "NU" over "NI", same construction as `web/icons/nuni_logo.svg`
 /// (block letters built from shapes, no font, so it renders identically and
-/// scales losslessly). Q23: colours are fixed, not palette-dependent.
+/// scales losslessly). The tile and "NI" follow the palette the user picked
+/// (Q76; Q23 had them fixed when the app had a single palette).
 ///
-/// Always shown on its icon tile (violet gradient, rounded corners) so it
+/// Always shown on its icon tile (brand gradient, rounded corners) so it
 /// reads the same wherever it appears in the app as it does as the PWA icon
 /// on the home screen -- never the bare glyph on the page background.
 class NuniLogo extends StatelessWidget {
@@ -18,20 +20,17 @@ class NuniLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     // Proportions match the padding baked into web/icons/Icon-192.png.
     final glyphSize = size * 0.64;
+    final nuni = context.nuni;
     return Container(
       width: size,
       height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [nuniLogoBackgroundStart, nuniLogoBackgroundEnd],
-        ),
+        gradient: nuni.heroGradient,
         borderRadius: BorderRadius.circular(size * 0.26),
       ),
       child: CustomPaint(
-        painter: NuniLogoGlyphPainter(),
+        painter: NuniLogoGlyphPainter(ni: nuni.palette.logoNi),
         size: Size(glyphSize, glyphSize),
       ),
     );
@@ -41,13 +40,18 @@ class NuniLogo extends StatelessWidget {
 /// The bare "NU/NI" glyph, without its tile. Public so that
 /// `tool/generate_icons.dart` renders the PWA icons from this exact drawing.
 class NuniLogoGlyphPainter extends CustomPainter {
+  NuniLogoGlyphPainter({Color? ni}) : ni = ni ?? nuniLogoNi;
+
+  /// Colour of the "NI" row.
+  final Color ni;
+
   @override
   void paint(Canvas canvas, Size size) {
     canvas.save();
     canvas.scale(size.width / 100, size.height / 100);
 
     final nu = Paint()..color = nuniLogoNu;
-    final ni = Paint()..color = nuniLogoNi;
+    final niPaint = Paint()..color = ni;
 
     // "NU", top row.
     canvas.drawRect(const Rect.fromLTWH(24, 16, 7, 30), nu);
@@ -56,10 +60,10 @@ class NuniLogoGlyphPainter extends CustomPainter {
     canvas.drawPath(_letterU(top: 16, bottom: 35), nu);
 
     // "NI", bottom row.
-    canvas.drawRect(const Rect.fromLTWH(24, 54, 7, 30), ni);
-    canvas.drawPath(_diagonal(top: 54, bottom: 84), ni);
-    canvas.drawRect(const Rect.fromLTWH(39, 54, 7, 30), ni);
-    canvas.drawRect(const Rect.fromLTWH(61.5, 54, 7, 30), ni);
+    canvas.drawRect(const Rect.fromLTWH(24, 54, 7, 30), niPaint);
+    canvas.drawPath(_diagonal(top: 54, bottom: 84), niPaint);
+    canvas.drawRect(const Rect.fromLTWH(39, 54, 7, 30), niPaint);
+    canvas.drawRect(const Rect.fromLTWH(61.5, 54, 7, 30), niPaint);
 
     canvas.restore();
   }
@@ -94,5 +98,6 @@ class NuniLogoGlyphPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant NuniLogoGlyphPainter oldDelegate) => false;
+  bool shouldRepaint(covariant NuniLogoGlyphPainter oldDelegate) =>
+      oldDelegate.ni != ni;
 }

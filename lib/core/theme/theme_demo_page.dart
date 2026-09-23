@@ -18,7 +18,6 @@ import '../../shared/nuni_section_header.dart';
 import '../../shared/nuni_segmented.dart';
 import '../../shared/nuni_status_pill.dart';
 import 'app_theme.dart';
-import 'palettes.dart';
 import 'phosphor_icons.dart';
 
 /// Internal-only page (`/dev/theme`, wired only in debug builds) showing
@@ -69,7 +68,7 @@ class _ThemeDemoPageState extends State<ThemeDemoPage>
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text('Theme -- ${activePalette.name}')),
+      appBar: AppBar(title: Text('Theme -- ${nuni.palette.name}')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
         children: [
@@ -94,11 +93,11 @@ class _ThemeDemoPageState extends State<ThemeDemoPage>
             spacing: 12,
             runSpacing: 12,
             children: [
-              swatch('bg', activePalette.background),
-              swatch('text', activePalette.text),
-              swatch('primary', activePalette.primary),
+              swatch('bg', nuni.palette.background),
+              swatch('text', nuni.palette.text),
+              swatch('primary', nuni.palette.primary),
               swatch('fairway', nuni.fairway.base),
-              swatch('tangerine', nuni.tangerine.base),
+              swatch('highlight', nuni.highlight.base),
               swatch('sunshine', nuni.sunshine.base),
               swatch('danger', nuni.danger.base),
             ],
@@ -234,7 +233,7 @@ class _ThemeDemoPageState extends State<ThemeDemoPage>
             title: 'Paris · Canal Saint-Martin',
             badge: const NuniStatusPill(
               label: 'En préparation',
-              tone: NuniTone.tangerine,
+              tone: NuniTone.highlight,
             ),
             subtitle: 'Équipes · Participant',
             onTap: () {},

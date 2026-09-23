@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/theme/app_theme.dart';
 
-/// A ranking position in a round badge: gold for the leader, violet for the
+/// A ranking position in a round badge: gold for the leader, primary for the
 /// podium, neutral after that. The only way positions are drawn.
 class NuniRankBadge extends StatelessWidget {
   const NuniRankBadge({

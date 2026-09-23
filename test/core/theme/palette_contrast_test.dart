@@ -3,7 +3,17 @@ import 'package:nuni/core/theme/contrast.dart';
 import 'package:nuni/core/theme/palettes.dart';
 
 /// Every text/background pairing the theme actually draws must reach WCAG AA
-/// (4.5:1) -- docs/design/PALETTE.md, "NUNI Pop".
+/// (4.5:1) -- docs/design/PALETTE.md. Exception: the brand fills (white
+/// labels on the brand colour and gradient, brand-coloured links and tabs)
+/// carry bold/large text only and are held to AA large text (3:1), which a
+/// true orange can reach but not exceed by much (PO, 2026-09-23).
+const _brandPairs = {
+  'white on primary',
+  'white on hero start',
+  'white on hero end',
+  'primary on background',
+};
+
 void main() {
   for (final palette in allPalettes) {
     final pairs = {
@@ -28,7 +38,7 @@ void main() {
       for (final (name, tone) in [
         ('primary', palette.primaryTone),
         ('fairway', palette.fairway),
-        ('tangerine', palette.tangerine),
+        ('highlight', palette.highlight),
         ('sunshine', palette.sunshine),
         ('danger', palette.dangerTone),
       ])
@@ -36,8 +46,9 @@ void main() {
     };
 
     for (final MapEntry(key: name, value: (fg, bg)) in pairs.entries) {
-      test('${palette.name}: $name is AA (>= 4.5:1)', () {
-        expect(contrastRatio(fg, bg), greaterThanOrEqualTo(4.5));
+      final minimum = _brandPairs.contains(name) ? 3.0 : 4.5;
+      test('${palette.name}: $name is AA (>= $minimum:1)', () {
+        expect(contrastRatio(fg, bg), greaterThanOrEqualTo(minimum));
       });
     }
   }

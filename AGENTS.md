@@ -135,10 +135,12 @@ GitHub Actions (Q17).
 - Chaînes visibles par l'utilisateur : toujours dans les fichiers ARB `app_en.arb` et `app_fr.arb`,
   jamais en dur. Une fonctionnalité n'est terminée que si ses chaînes existent dans les deux
   langues.
-- Couleurs : aucune `Color(0x…)` hors `lib/core/theme/`. La palette est dans
-  `core/theme/palettes.dart` ("NUNI Pop", constante `activePalette`, Q74) ; les écrans lisent
-  les couleurs par `Theme.of(context).colorScheme` ou `context.nuni` (accents), jamais en dur.
-  Pas de réglage de thème exposé à l'utilisateur.
+- Couleurs : aucune `Color(0x…)` hors `lib/core/theme/`. Les palettes sont dans
+  `core/theme/palettes.dart` (liste `allPalettes` : "NUNI Sunset" orange, par défaut, et
+  "NUNI Pop" violet ; Q74, Q76). L'utilisateur choisit la sienne dans les réglages
+  (`PaletteController`, mémorisée sur l'appareil) ; les écrans lisent les couleurs par
+  `Theme.of(context).colorScheme` ou `context.nuni` (accents), jamais en dur, pour suivre ce
+  choix. Toute nouvelle palette reprend les mêmes rôles et passe le test de contraste.
 - Composants : les contrôles sont stylés une seule fois, dans `core/theme/app_theme.dart` ; les
   écrans assemblent les widgets de `lib/shared/` (`NuniButton`, `NuniCard`, `NuniListCard`,
   `NuniSectionHeader`, `NuniSegmented`, `NuniChip`, `NuniStatusPill`, `NuniIconTile`,
@@ -158,7 +160,6 @@ GitHub Actions (Q17).
 ## Interdits
 
 - Secrets dans le dépôt (clés Supabase, jetons, identifiants OAuth). Le dépôt est **public**.
-- Réglage de thème ou de palette exposé à l'utilisateur.
 - Table `scoring_modes`, table de lien user↔joueur, tables villes/zones comme prérequis d'une
   session. Seule exception acceptée (Q64, 2026-09-23) : `legacy_player_emails`, table privée
   (aucun droit pour l'app) qui ne sert qu'à rattacher un joueur importé de LsgScores à son compte

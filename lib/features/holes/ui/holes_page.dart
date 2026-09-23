@@ -285,7 +285,7 @@ class _HolesListView extends ConsumerWidget {
                         if (!hole.hasPosition)
                           NuniStatusPill(
                             label: l10n.holesPositionToSet,
-                            tone: NuniTone.tangerine,
+                            tone: NuniTone.highlight,
                           ),
                       ],
                     ),

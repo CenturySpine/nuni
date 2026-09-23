@@ -5,6 +5,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../core/l10n/locale_controller.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/palette_controller.dart';
+import '../../../core/theme/palettes.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_avatar.dart';
@@ -23,6 +25,7 @@ class SettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final locale = ref.watch(localeControllerProvider);
+    final palette = ref.watch(paletteControllerProvider);
     final player = ref.watch(myPlayerProvider).value;
     final danger = context.nuni.danger;
 
@@ -109,6 +112,28 @@ class SettingsPage extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 28),
+          NuniSectionHeader(title: l10n.settingsColors),
+          Row(
+            children: [
+              for (final (index, option) in allPalettes.indexed) ...[
+                if (index > 0) const SizedBox(width: 12),
+                Expanded(
+                  child: _PaletteOption(
+                    palette: option,
+                    label: switch (option.id) {
+                      'pop' => l10n.settingsPalettePop,
+                      _ => l10n.settingsPaletteSunset,
+                    },
+                    selected: option == palette,
+                    onTap: () => ref
+                        .read(paletteControllerProvider.notifier)
+                        .setPalette(option),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 28),
           NuniGroupedList(
             children: [
               ListTile(
@@ -141,6 +166,93 @@ class SettingsPage extends ConsumerWidget {
           const SizedBox(height: 16),
           const NuniLegalFooter(),
         ],
+      ),
+    );
+  }
+}
+
+/// One choice of the colour picker: a strip of the palette's brand gradient
+/// and accents, its name, and a check when selected.
+class _PaletteOption extends StatelessWidget {
+  const _PaletteOption({
+    required this.palette,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final Palette palette;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final nuni = context.nuni;
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: NuniCard(
+        onTap: onTap,
+        padding: const EdgeInsets.all(12),
+        borderColor: selected ? Theme.of(context).colorScheme.primary : null,
+        color: selected ? nuni.primaryTone.container : null,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 44,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [palette.heroStart, palette.heroEnd],
+                ),
+                borderRadius: BorderRadius.circular(NuniRadius.small),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              alignment: Alignment.centerRight,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final accent in [
+                    palette.highlight.base,
+                    palette.fairway.base,
+                    palette.sunshine.base,
+                  ])
+                    Container(
+                      width: 12,
+                      height: 12,
+                      margin: const EdgeInsets.only(left: 4),
+                      decoration: BoxDecoration(
+                        color: accent,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: palette.onPrimary,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                if (selected)
+                  Icon(
+                    PhosphorIcons.checkCircle,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

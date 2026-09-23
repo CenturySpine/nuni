@@ -14,7 +14,7 @@ enum NuniButtonVariant {
   onHeroSecondary,
 }
 
-/// The app's only button shape. `primary` is a filled violet button (one
+/// The app's only button shape. `primary` is a filled brand-colour button (one
 /// main action per screen), `secondary` a white outlined button, `danger` a
 /// soft red button for destructive actions (the confirmation dialog that
 /// follows carries the solid red one) -- no other button styles exist.

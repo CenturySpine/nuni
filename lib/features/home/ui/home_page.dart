@@ -201,7 +201,7 @@ class _SessionCard extends StatelessWidget {
     final status = switch (session.status) {
       SessionStatus.draft => NuniStatusPill(
         label: l10n.homeSessionStatusDraft,
-        tone: NuniTone.tangerine,
+        tone: NuniTone.highlight,
       ),
       SessionStatus.live => NuniStatusPill(
         label: l10n.homeSessionStatusLive,

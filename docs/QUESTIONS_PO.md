@@ -49,6 +49,23 @@ Plus Jakarta Sans (licence OFL, intégrée à l'app, fonctionne hors ligne), log
 jaune sur tuile en dégradé violet, icônes PWA régénérées. Le modèle "3 couleurs + dérivées" de
 Q1 et les cinq variantes de Q1b sont retirés du code. Détail et règles d'usage :
 [design/PALETTE.md](design/PALETTE.md), section "NUNI Pop".
+Complément PO (2026-09-23) : variante orange "NUNI Sunset" (même design, violet remplacé par
+un vrai orange, mandarine remplacée par un bleu ciel), devenue la palette par défaut ; voir Q76.
+
+**Q76 ☑ — Choix de la palette par l'utilisateur.**
+Demande PO (2026-09-23) : garder plusieurs palettes (violet "NUNI Pop" et orange "NUNI Sunset"
+pour commencer) et laisser chaque utilisateur choisir la sienne. Lève l'interdit "pas de
+réglage de thème exposé à l'utilisateur" (AGENTS.md).
+Réalisé : section "Couleurs" dans les réglages, sous la langue ; orange par défaut. Deux
+hypothèses appliquées, à confirmer :
+- Le choix est mémorisé **sur l'appareil**, comme la langue, et non sur le compte. Suggestion :
+  en rester là ; le suivre d'un appareil à l'autre demanderait une colonne en base (donc une
+  reconstruction du schéma distant, AGENTS.md règle 8) pour un gain faible, la plupart des
+  joueurs n'utilisant qu'un téléphone.
+- Le logo **dans l'app** suit la palette choisie (tuile et "NI"), sinon une tuile orange jure
+  dans une app violette (Q23 le voulait fixe quand il n'y avait qu'une palette). L'icône de
+  l'app installée sur l'écran d'accueil reste orange : elle est unique par installation et ne
+  peut pas changer selon un réglage.
 
 ## Backend Supabase (étape 3)
 
@@ -150,7 +167,8 @@ sessions en direct". Le cas réel est rare et l'interdiction n'apporterait qu'un
 
 ## Authentification (étapes 3, 5)
 
-**Q75 ☐ — Connexion en local renvoyée vers le domaine de production.**
+**Q75 ☑ — Connexion en local renvoyée vers le domaine de production.**
+Réponse PO (2026-09-23) : Redirect URLs Supabase vérifiées, `http://localhost:3000/**` en place.
 Constat PO (2026-09-23) : en debug, se connecter depuis `localhost:3000` ramène sur
 `https://nuni.centuryspine.org` après Google. Côté app, rien d'anormal : elle demande à Supabase
 de revenir sur l'adresse de la page (`http://localhost:3000`, `auth_repository.dart`). Supabase

@@ -16,7 +16,7 @@ class NuniAvatar extends StatelessWidget {
   static const _tones = [
     NuniTone.primary,
     NuniTone.fairway,
-    NuniTone.tangerine,
+    NuniTone.highlight,
     NuniTone.sunshine,
   ];
 

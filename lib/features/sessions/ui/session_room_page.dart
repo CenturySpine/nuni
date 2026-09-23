@@ -394,13 +394,13 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
           if (!isOwner) ...[
             const SizedBox(height: 16),
             NuniCard(
-              color: context.nuni.tangerine.container,
-              borderColor: context.nuni.tangerine.container,
+              color: context.nuni.highlight.container,
+              borderColor: context.nuni.highlight.container,
               child: Row(
                 children: [
                   Icon(
                     PhosphorIcons.clockCounterClockwise,
-                    color: context.nuni.tangerine.onContainer,
+                    color: context.nuni.highlight.onContainer,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -409,7 +409,7 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
                         room.playersByUserId[room.session.ownerId]?.name ?? '',
                       ),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: context.nuni.tangerine.onContainer,
+                        color: context.nuni.highlight.onContainer,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -641,7 +641,7 @@ class _TeamsSection extends StatelessWidget {
   static NuniTone _teamTone(int position) => const [
     NuniTone.primary,
     NuniTone.fairway,
-    NuniTone.tangerine,
+    NuniTone.highlight,
     NuniTone.sunshine,
   ][(position - 1) % 4];
 }

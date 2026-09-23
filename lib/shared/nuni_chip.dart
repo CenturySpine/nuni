@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_theme.dart';
 
 /// A selectable pill (scoring mode, game mode, quick radius, city
-/// filter...): white with a hairline when idle, violet tint and outline
+/// filter...): white with a hairline when idle, primary tint and outline
 /// when selected.
 class NuniChip extends StatelessWidget {
   const NuniChip({

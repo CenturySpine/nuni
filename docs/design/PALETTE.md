@@ -1,6 +1,37 @@
 # Palette NUNI — essais et décisions
 
-## NUNI Pop — identité active (Q74, 2026-09-23)
+## Palettes au choix de l'utilisateur (Q76, 2026-09-23)
+
+Deux palettes coexistent, même design, mêmes rôles de couleurs : "NUNI Sunset" (orange, par
+défaut) et "NUNI Pop" (violet). L'utilisateur choisit dans Réglages > Couleurs ; le choix est
+mémorisé sur l'appareil. Le logo dans l'app suit la palette ; l'icône de l'app installée et le
+favicon restent ceux de la palette par défaut (`defaultPalette`, `tool/generate_icons.dart`).
+Ajouter une palette : une constante `Palette` de plus dans `allPalettes`
+(`lib/core/theme/palettes.dart`), un nom traduit dans les ARB, et le test de contraste doit
+passer.
+
+## NUNI Sunset — orange, palette par défaut (PO, 2026-09-23)
+
+Même design que NUNI Pop (ci-dessous), seule la couleur principale change : le violet devient
+un vrai orange, et les couleurs qui en dépendent suivent. Même nombre de couleurs.
+
+| Rôle | Valeur | Usage |
+|---|---|---|
+| Orange (principale) | `#E66400` (teinte `#FFF0E0`, texte `#B34A00`) | bouton principal, sélection, liens, focus |
+| Dégradé de marque | `#EC7000` → `#E25A00` | bandeau de connexion, bandeau d'accueil, logo |
+| Bleu ciel (remplace la mandarine) | `#2E90FA` (teinte `#E3F0FF`, texte `#1B5FB8`) | en préparation, badges, certaines vignettes |
+| Logo | "NU" blanc, "NI" `#FFEFB0` sur le dégradé orange | |
+
+Fond, textes, vert, soleil et rouge sont inchangés. La mandarine devient bleu ciel pour ne pas
+avoir deux oranges ; le bleu est la couleur complémentaire de l'orange.
+
+Contraste : un vrai orange ne permet pas plus d'environ 3,4:1 avec un texte blanc (un orange à
+4,5:1 tire vers le rouge brique, refusé par le PO). Les aplats de marque (libellés blancs des
+boutons et du bandeau, liens et onglets orange) sont donc tenus au seuil WCAG AA des textes gras
+ou grands, 3:1 (bouton 3,4:1, liens sur le fond 3,1:1). Tous les autres couples restent à
+4,5:1. Le test `palette_contrast_test.dart` applique ces deux seuils.
+
+## NUNI Pop — violet, au choix (Q74, 2026-09-23)
 
 Refonte complète demandée par le PO : couleurs vives et joyeuses sans excès, direction
 artistique moderne et standard, contrôles uniformes. Remplace le modèle "3 couleurs + dérivées"

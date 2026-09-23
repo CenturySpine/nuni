@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/theme/app_theme.dart';
 
-/// The brand surface: the violet gradient with two soft circles and a
+/// The brand surface: the brand gradient with two soft circles and a
 /// dotted putt rolling straight to the foot of a street lamp -- a typical
 /// street golf target (PO, 2026-09-23). Used for the login hero and the home
 /// banner -- never for regular content cards.

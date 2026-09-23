@@ -294,6 +294,9 @@
 
   "settingsTitle": "Settings",
   "settingsLanguage": "Language",
+  "settingsColors": "Colours",
+  "settingsPaletteSunset": "Orange",
+  "settingsPalettePop": "Violet",
   "settingsLanguageSystem": "System",
   "settingsLanguageFrench": "Français",
   "settingsLanguageEnglish": "English",

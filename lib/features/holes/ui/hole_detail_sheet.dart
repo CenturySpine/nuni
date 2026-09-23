@@ -99,7 +99,7 @@ class _HoleDetailContent extends ConsumerWidget {
             if (!hole.hasPosition)
               NuniStatusPill(
                 label: l10n.holesPositionToSet,
-                tone: NuniTone.tangerine,
+                tone: NuniTone.highlight,
               ),
             NuniStatusPill(
               label: hole.visibility == HoleVisibility.public

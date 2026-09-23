@@ -30,7 +30,7 @@ class NuniColors extends ThemeExtension<NuniColors> {
   Color get success => palette.success;
   AccentTone get primaryTone => palette.primaryTone;
   AccentTone get fairway => palette.fairway;
-  AccentTone get tangerine => palette.tangerine;
+  AccentTone get highlight => palette.highlight;
   AccentTone get sunshine => palette.sunshine;
   AccentTone get danger => palette.dangerTone;
   Color get surfaceMuted => palette.surfaceMuted;
@@ -53,22 +53,23 @@ class NuniColors extends ThemeExtension<NuniColors> {
 }
 
 extension NuniThemeContext on BuildContext {
-  // Falls back to the active palette when no app theme is installed (bare
+  // Falls back to the default palette when no app theme is installed (bare
   // widget tests).
   NuniColors get nuni =>
-      Theme.of(this).extension<NuniColors>() ?? const NuniColors(activePalette);
+      Theme.of(this).extension<NuniColors>() ??
+      const NuniColors(defaultPalette);
 }
 
 /// Builds the app theme from [palette]: every Material component the app
 /// uses is styled here, so screens only pick widgets, never colours or
 /// shapes (docs/design/PALETTE.md, "Composants").
-ThemeData buildAppTheme([Palette palette = activePalette]) {
+ThemeData buildAppTheme([Palette palette = defaultPalette]) {
   final colorScheme = ColorScheme.light(
     primary: palette.primary,
     onPrimary: palette.onPrimary,
     primaryContainer: palette.primaryTone.container,
     onPrimaryContainer: palette.primaryTone.onContainer,
-    secondary: palette.tangerine.base,
+    secondary: palette.highlight.base,
     onSecondary: palette.text,
     secondaryContainer: palette.primaryTone.container,
     onSecondaryContainer: palette.primaryTone.onContainer,
@@ -481,7 +482,7 @@ ThemeData buildAppTheme([Palette palette = activePalette]) {
       circularTrackColor: Colors.transparent,
     ),
     badgeTheme: BadgeThemeData(
-      backgroundColor: palette.tangerine.base,
+      backgroundColor: palette.highlight.base,
       textColor: palette.text,
     ),
     extensions: [NuniColors(palette)],
@@ -489,13 +490,13 @@ ThemeData buildAppTheme([Palette palette = activePalette]) {
 }
 
 /// The accent a status, badge or icon tile is drawn in.
-enum NuniTone { primary, fairway, tangerine, sunshine, danger, neutral }
+enum NuniTone { primary, fairway, highlight, sunshine, danger, neutral }
 
 extension NuniToneColors on NuniColors {
   AccentTone tone(NuniTone tone) => switch (tone) {
     NuniTone.primary => palette.primaryTone,
     NuniTone.fairway => palette.fairway,
-    NuniTone.tangerine => palette.tangerine,
+    NuniTone.highlight => palette.highlight,
     NuniTone.sunshine => palette.sunshine,
     NuniTone.danger => palette.dangerTone,
     NuniTone.neutral => AccentTone(

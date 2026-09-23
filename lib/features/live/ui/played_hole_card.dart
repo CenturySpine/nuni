@@ -20,7 +20,7 @@ import 'score_entry_sheet.dart';
 /// the note below), tap-to-score inline for the teams [canEditTeam] allows.
 /// Stroke Play shows strokes alone (there's no separate points concept for
 /// it); Free shows points alone (no strokes are collected for it, Q7b).
-/// [highlighted] (the latest hole) gets a violet outline.
+/// [highlighted] (the latest hole) gets a primary outline.
 class PlayedHoleCard extends StatelessWidget {
   const PlayedHoleCard({
     super.key,
