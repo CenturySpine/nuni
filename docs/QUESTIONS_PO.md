@@ -809,9 +809,27 @@ couverture. Ce chemin dépend de l'identifiant NUNI de la session, qui change à
 reconstruction : c'est sans importance si Q63 est retenue.
 
 **Q71 ☑ — Marquage « championnat » des sessions importées (M5, Q48) : où dans l'app ?**
-Réponse PO (2026-09-23) : suggestion retenue.
+Réponse PO (2026-09-23) : suggestion retenue, puis précisée à l'implémentation (réponse PO du
+même jour) : rien à coder, la fiche d'édition existante de l'historique, ouverte au propriétaire,
+contient déjà l'interrupteur « championnat », et le PO est propriétaire de toutes les sessions
+importées (Q67).
 Suggestion : un interrupteur « Session de championnat » dans le détail d'une session de
 l'historique, visible du super_admin seul, appelant une RPC réservée à `is_super_admin()`. Le choix
 des sessions à marquer reste une action du PO dans l'app après l'import ; le rattachement à une zone
 est fait par le mécanisme existant (plan 15), puisque toutes les sessions importées auront une
 position.
+
+**Q72 — Plan 15 : comment accéder au classement d'une saison passée ?**
+Constat (2026-09-23, après le marquage des sessions importées) : l'encart de l'accueil n'affiche que
+la saison en cours (2026-2027 depuis le 1er septembre), comme le prévoit le plan 15 (parcours 2).
+Les 4 sessions marquées sont bien rattachées à une zone, saison 2025-2026. Or cet encart est le seul
+chemin vers l'écran de classement complet, qui a pourtant un sélecteur de saison : une saison
+passée devient inaccessible dès qu'aucune session championnat n'a encore été jouée dans la
+nouvelle, ce qui arrivera chaque année en septembre.
+Suggestion : l'encart de l'accueil affiche la saison en cours si le joueur y a au moins une session
+championnat, sinon sa saison la plus récente, avec la mention « saison terminée » à la place de
+« provisoire ». Aucun nouvel écran ni nouveau menu : l'encart ouvre le classement complet, où le
+sélecteur de saison existant permet ensuite de naviguer.
+Réponse PO (2026-09-23) : suggestion non retenue ; un historique des championnats sur l'accueil,
+comme l'historique des sessions. Conception détaillée dans le plan 15 (complément du 2026-09-23),
+validée et implémentée le même jour.

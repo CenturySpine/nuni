@@ -178,7 +178,7 @@ Ajoutée comme étape 7 (optionnelle) de la procédure de reconstruction de `doc
   enregistrement d'une position apparaît dans « Autour de moi ».
 - `flutter analyze` sans remarque, tests verts (dont `Hole.fromJson` sans position), chaînes EN/FR.
 
-## Étape 2 — Import des sessions (plan détaillé validé par le PO le 2026-09-23)
+## Étape 2 — Import des sessions (validée le 2026-09-23 ; livrée et testée par le PO le même jour)
 
 Décisions : Q62 à Q71 retenues (2026-09-23) ; Q63 avec une variante du PO : on continue à
 reconstruire la base, les trous réels étant conservés par le seed (`supabase/remote_seed.sql`,
@@ -265,8 +265,22 @@ prévenir le PO, reconstruire la base (schéma de l'étape 2 inclus), rejouer le
   p_value)` (`security definer`, réservée à `is_super_admin()`), et interrupteur « Session de
   championnat » dans le détail d'une session de l'historique, visible du super_admin seul. Le
   rattachement à une zone reste celui du déclencheur existant (plan 15).
+  **Constat à l'implémentation (2026-09-23), confirmé par le PO : rien à coder.** l'historique a déjà
+  une fiche d'édition de session (plan 10/15) avec l'interrupteur « championnat », ouverte au
+  propriétaire de la session. Q67 fait du PO le propriétaire de toutes les sessions importées :
+  il peut donc déjà les marquer sans nouvelle RPC ni nouvel écran.
 - Rattachement automatique à la première connexion (Q64) : table privée, déclencheur d'inscription
   modifié.
+
+### Résultat de l'import (2026-09-23)
+
+Base reconstruite puis import : contrôles du script tous OK (7 sessions, 29 équipes, 44 trous
+joués, 181 scores, totaux de coups par équipe identiques), 14 photos, 7 couvertures, 7 sessions
+localisées, 1 trou libre (session 219). 7 joueurs importés (6 avec photo) ; 3 joueurs rapprochés
+d'un compte NUNI existant ; 5 e-mails en attente de rattachement, 2 joueurs sans e-mail. Rejeu
+immédiat : rien d'inséré, rien de copié. Incident corrigé en cours de route : le déclencheur qui
+génère le code de session appelle `generate_session_code`, non exécutable par le rôle « service » ;
+droit ajouté dans `..._triggers.sql` et appliqué à l'identique sur la base.
 
 ### Critères d'acceptation de l'étape 2
 

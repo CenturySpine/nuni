@@ -13,6 +13,8 @@ alter table session_members enable row level security;
 alter table played_holes enable row level security;
 alter table scores enable row level security;
 alter table session_photos enable row level security;
+-- No policy at all: unreachable from the app (plan 13, Q64), see tables.sql.
+alter table legacy_player_emails enable row level security;
 
 -- Table privileges: RLS only filters rows, it doesn't grant the underlying operation. Supabase's
 -- default "grant to anon/authenticated/service_role" only applies to objects created by specific
@@ -31,10 +33,20 @@ grant select, insert, update, delete on played_holes to authenticated;
 grant select, insert, update, delete on scores to authenticated;
 grant select, insert, update, delete on session_photos to authenticated;
 -- service_role (bypasses RLS, but not table privileges, same reason as above): only what the
--- LsgScores import script needs (tool/migrate_lsgscores.dart, plan 13) -- find the super_admin
--- who owns imported rows, read the already-imported legacy_ids, insert the missing ones.
+-- LsgScores import script (tool/migrate_lsgscores.dart, plan 13) and the remote-seed export
+-- (tool/export_remote_seed.dart) need -- read what's already there, insert what's missing, and
+-- set a session's cover photo once its photos exist. Never a delete.
 grant select on user_roles to service_role;
 grant select, insert on holes to service_role;
+grant select, insert on players to service_role;
+grant select, insert on legacy_player_emails to service_role;
+grant select, insert, update on sessions to service_role;
+grant select, insert on teams to service_role;
+grant select, insert on team_players to service_role;
+grant select, insert on session_members to service_role;
+grant select, insert on played_holes to service_role;
+grant select, insert on scores to service_role;
+grant select, insert on session_photos to service_role;
 
 -- user_roles: a user reads only their own row (can I see admin-only UI?), never anyone else's.
 -- No insert/update/delete policy or grant at all (plan 16): the table is only ever written by

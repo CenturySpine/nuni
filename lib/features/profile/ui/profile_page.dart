@@ -7,6 +7,10 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../championship/data/championship_repository.dart';
+import '../../history/data/history_repository.dart';
+import '../../live/data/live_repository.dart';
+import '../../sessions/data/sessions_repository.dart';
 import '../data/profile_repository.dart';
 
 /// My player profile (plan 05): display name and avatar. There is no
@@ -37,6 +41,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           .read(profileRepositoryProvider)
           .updateMyPlayer(displayName: _displayNameController.text.trim());
       ref.invalidate(myPlayerProvider);
+      // Names are never copied anywhere, always read from players.name --
+      // but screens already loaded keep the old one until reloaded, so every
+      // cached read that shows player names is refreshed (PO, 2026-09-23).
+      ref
+        ..invalidate(historyEntriesProvider)
+        ..invalidate(historyDetailProvider)
+        ..invalidate(championshipZoneStandingsProvider)
+        ..invalidate(liveSessionProvider)
+        ..invalidate(sessionRoomProvider)
+        ..invalidate(playerSearchProvider);
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(l10n.profileSaved)));

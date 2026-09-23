@@ -102,6 +102,13 @@ npx supabase db query --linked -f supabase/remote_seed.sql
 #    Nécessite env/migration.json (clés service des deux projets, gabarit
 #    env/migration.example.json, jamais committé).
 fvm dart run tool/migrate_lsgscores.dart holes
+
+# 8. Réimporter les sessions de LsgScores (plan 13, étape 2), après les étapes 4 à 6 : sessions,
+#    équipes, joueurs, trous joués, scores, photos. Identifiants stables (dérivés de LsgScores) :
+#    une reconstruction suivie de cette étape redonne exactement les mêmes lignes, et les photos
+#    déjà copiées ne sont pas retéléchargées. Contrôles affichés en fin d'exécution. Faire d'abord
+#    un passage à blanc (--dry-run) après un changement du script.
+fvm dart run tool/migrate_lsgscores.dart sessions
 ```
 
 `auth.users` (les comptes Google eux-mêmes) n'est jamais touché par cette procédure : seul le

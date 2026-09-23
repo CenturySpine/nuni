@@ -17,18 +17,22 @@ import '../domain/player_standing.dart';
 /// `/championship` (plan 15, parcours 3): full classement of one zone/season,
 /// with a zone switcher (Q45's scope: a player can appear in several zones
 /// the same season) and a season selector (past seasons, once there are
-/// any). Defaults to the current season and, within it, the first zone the
-/// caller belongs to.
+/// any). Opens on [initialZoneId]/[initialSeason] when given (the home tab's
+/// cards and championship history, Q72), otherwise on the current season
+/// and, within it, the first zone the caller belongs to.
 class ChampionshipPage extends ConsumerStatefulWidget {
-  const ChampionshipPage({super.key});
+  const ChampionshipPage({super.key, this.initialZoneId, this.initialSeason});
+
+  final String? initialZoneId;
+  final String? initialSeason;
 
   @override
   ConsumerState<ChampionshipPage> createState() => _ChampionshipPageState();
 }
 
 class _ChampionshipPageState extends ConsumerState<ChampionshipPage> {
-  String? _zoneId;
-  String? _season;
+  late String? _zoneId = widget.initialZoneId;
+  late String? _season = widget.initialSeason;
 
   @override
   Widget build(BuildContext context) {

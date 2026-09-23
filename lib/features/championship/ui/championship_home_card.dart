@@ -7,11 +7,23 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_card.dart';
 import '../../profile/data/profile_repository.dart';
 import '../data/championship_repository.dart';
+import '../domain/championship_membership.dart';
 import '../domain/championship_season.dart';
 
-/// Provisional standing card(s) on the home tab (plan 15, parcours 2): one
-/// per zone the caller has a championship session in for the current
-/// season -- nothing at all if there is none (no empty screen to explain).
+/// Opens the full classement on one zone/season (plan 15, Q72).
+void _openClassement(BuildContext context, String zoneId, String season) =>
+    context.push(
+      Uri(
+        path: '/championship',
+        queryParameters: {'zone': zoneId, 'season': season},
+      ).toString(),
+    );
+
+/// Championship section of the home tab (plan 15): provisional standing
+/// card(s) for the current season (parcours 2), then the championship
+/// history -- one line per past zone/season, like the session history (Q72).
+/// Nothing at all if the caller has no championship session (no empty screen
+/// to explain).
 class ChampionshipHomeSection extends ConsumerWidget {
   const ChampionshipHomeSection({super.key});
 
@@ -28,26 +40,94 @@ class ChampionshipHomeSection extends ConsumerWidget {
           for (final m in memberships)
             if (m.season == season) m.zoneId,
         };
-        if (zoneIds.isEmpty) return const SizedBox.shrink();
+        final past = pastMemberships(memberships, season);
+        if (zoneIds.isEmpty && past.isEmpty) return const SizedBox.shrink();
 
         final l10n = AppLocalizations.of(context)!;
+        final titleStyle = Theme.of(context).textTheme.titleMedium;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
               padding: const EdgeInsets.only(left: 4, bottom: 8),
-              child: Text(
-                l10n.championshipTitle,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              child: Text(l10n.championshipTitle, style: titleStyle),
             ),
             for (final zoneId in zoneIds) ...[
               _ZoneCard(zoneId: zoneId, season: season),
               const SizedBox(height: 12),
             ],
+            if (past.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 8),
+                child: Text(
+                  l10n.championshipPastTitle,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+              for (final m in past) ...[
+                _PastChampionshipRow(zoneId: m.zoneId, season: m.season),
+                const SizedBox(height: 8),
+              ],
+            ],
           ],
         );
       },
+    );
+  }
+}
+
+/// One past zone/season: the caller's final position among the players
+/// ranked, and their total points.
+class _PastChampionshipRow extends ConsumerWidget {
+  const _PastChampionshipRow({required this.zoneId, required this.season});
+
+  final String zoneId;
+  final String season;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final standings = ref
+        .watch(championshipZoneStandingsProvider(zoneId, season))
+        .asData
+        ?.value;
+    final label = ref
+        .watch(championshipZoneLabelProvider(zoneId))
+        .asData
+        ?.value;
+    final myPlayerId = ref.watch(myPlayerProvider).asData?.value.id;
+    final mine = standings?.where((s) => s.playerId == myPlayerId).firstOrNull;
+
+    return NuniCard(
+      onTap: () => _openClassement(context, zoneId, season),
+      child: Row(
+        children: [
+          Icon(
+            PhosphorIcons.crown,
+            size: 20,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${label ?? l10n.championshipTitle} · $season',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                if (mine != null)
+                  Text(
+                    '${l10n.championshipFinalPosition(mine.position, standings!.length)}'
+                    ' · ${l10n.championshipPointsValue(mine.totalPoints)}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+              ],
+            ),
+          ),
+          const Icon(PhosphorIcons.caretRight, size: 18),
+        ],
+      ),
     );
   }
 }
@@ -80,7 +160,7 @@ class _ZoneCard extends ConsumerWidget {
         final neighbors = standings.sublist(start, end);
 
         return NuniCard(
-          onTap: () => context.push('/championship'),
+          onTap: () => _openClassement(context, zoneId, season),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

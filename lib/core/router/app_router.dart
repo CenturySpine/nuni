@@ -133,7 +133,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/championship',
-        builder: (context, state) => const ChampionshipPage(),
+        builder: (context, state) => ChampionshipPage(
+          initialZoneId: state.uri.queryParameters['zone'],
+          initialSeason: state.uri.queryParameters['season'],
+        ),
       ),
       if (kDebugMode)
         GoRoute(

@@ -306,6 +306,32 @@ Supabase : `sessionRankingPoints(rankedTeamIds) -> Map<teamId, int>`,
 - `fvm flutter analyze` sans avertissement, tests verts, build Vercel vert, chaînes traduites
   EN et FR (définition de "terminé", AGENTS.md).
 
+## Complément du 2026-09-23 : historique des championnats sur l'accueil (Q72, validé et implémenté le 2026-09-23)
+
+Constat : l'encart de l'accueil n'affiche que la saison en cours et c'est le seul chemin vers le
+classement complet ; une saison passée (ex. 2025-2026, sessions LsgScores importées puis marquées)
+devient inaccessible. Demande PO : un historique des championnats sur l'accueil, comme il existe
+un historique des sessions.
+
+Conception proposée :
+
+- Section « Championnat » de l'accueil, en deux parties :
+  1. Saison en cours : encarts actuels inchangés (classement provisoire autour du joueur).
+  2. « Championnats passés » : une ligne par couple zone/saison où le joueur a au moins une session
+     championnat, la plus récente en premier : nom de la zone, saison, position finale du joueur
+     et nombre de joueurs classés, total de points (ex. « INSA · 2025-2026 — 2e sur 8 · 42 pts »).
+     Toutes les saisons passées sont listées (quelques lignes par an au plus).
+- La section s'affiche dès que le joueur a une session championnat, quelle que soit la saison ;
+  rien sinon (inchangé).
+- Toucher un encart ou une ligne ouvre le classement complet directement sur cette zone et cette
+  saison (`/championship?zone=<id>&season=<saison>`) ; sans paramètre, comportement actuel.
+- Aucune donnée ni requête nouvelle : mêmes appartenances et même calcul de classement que
+  l'encart actuel.
+- Chaînes EN/FR : « Championnats passés », « {position}e sur {total} » et l'équivalent anglais.
+- Tests : section avec une saison en cours et une saison passée ; seule une saison passée ;
+  ouverture du classement sur la bonne zone/saison.
+
 ## Questions PO liées
 
-Q38 à Q45 — voir [QUESTIONS_PO.md](../QUESTIONS_PO.md). Toutes tranchées.
+Q38 à Q45 — voir [QUESTIONS_PO.md](../QUESTIONS_PO.md). Toutes tranchées. Q72 (complément du
+2026-09-23).

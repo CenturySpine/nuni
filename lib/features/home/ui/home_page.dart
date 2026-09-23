@@ -17,6 +17,7 @@ import '../../sessions/domain/my_session_entry.dart';
 import '../../sessions/domain/session.dart';
 import '../../sessions/domain/session_kind.dart';
 import '../../sessions/domain/session_member.dart';
+import '../../sessions/ui/session_kind_label.dart';
 
 /// Home tab body (plan 09): create, join, my ongoing sessions, recent
 /// sessions. Full history (beyond the short "Dernières sessions" list)
@@ -58,13 +59,13 @@ class HomePage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: NuniButton(
-                    variant: NuniButtonVariant.secondary,
-                    icon: PhosphorIcons.signIn,
-                    label: l10n.homeJoinAction,
-                    onPressed: () => _join(context),
-                  ),
+                // Natural width, the longer "create" label takes the rest:
+                // two equal halves overflowed on a phone (PO, 2026-09-23).
+                NuniButton(
+                  variant: NuniButtonVariant.secondary,
+                  icon: PhosphorIcons.signIn,
+                  label: l10n.homeJoinAction,
+                  onPressed: () => _join(context),
                 ),
               ],
             ),
@@ -141,10 +142,12 @@ class _SessionCard extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
     final date = session.startedAt ?? session.createdAt;
 
+    // No status for a completed session (PO, 2026-09-23): it only ever
+    // appears under "recent sessions", where it can only be finished.
     final statusLabel = switch (session.status) {
       SessionStatus.draft => l10n.homeSessionStatusDraft,
       SessionStatus.live => l10n.homeSessionStatusLive,
-      SessionStatus.completed => l10n.homeSessionStatusCompleted,
+      SessionStatus.completed => null,
     };
     final roleLabel = entry.role == MemberRole.owner
         ? l10n.homeRoleOwner
@@ -174,7 +177,12 @@ class _SessionCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 Text(
-                  '$statusLabel · $roleLabel · ${DateFormat.yMMMd(locale).format(date)}',
+                  [
+                    ?statusLabel,
+                    sessionKindLabel(l10n, session.kind),
+                    roleLabel,
+                    DateFormat.yMMMd(locale).format(date),
+                  ].join(' · '),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],

@@ -13,6 +13,7 @@ import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_loading.dart';
 import '../../live/domain/live_team.dart';
 import '../../sessions/ui/scoring_mode_label.dart';
+import '../../sessions/ui/session_kind_label.dart';
 import '../data/history_repository.dart';
 import '../domain/history_entry.dart';
 
@@ -156,6 +157,7 @@ class _HistoryCard extends ConsumerWidget {
                 ),
                 Text(
                   '${session.startedAt == null ? '' : DateFormat.yMMMd(locale).format(session.startedAt!.toLocal())} · '
+                  '${sessionKindLabel(l10n, session.kind)} · '
                   '${scoringModeLabel(l10n, session.scoringMode)}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),

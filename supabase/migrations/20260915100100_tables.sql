@@ -18,6 +18,17 @@ create table players (
   created_at timestamptz not null default now()
 );
 
+-- LsgScores e-mail of an imported player who has no NUNI account yet (plan 13, Q64): at sign-up,
+-- handle_new_user (triggers.sql) links the new account to this player instead of creating a
+-- second one, then deletes the row. Private: no grant to anon/authenticated at all, only the
+-- import script (service_role) and the security-definer trigger touch it -- the one accepted
+-- exception to "no user<->player link table" (AGENTS.md), since it links no account and empties
+-- itself as people sign up. Stored lower-cased.
+create table legacy_player_emails (
+  player_id uuid primary key references players (id) on delete cascade,
+  email text not null unique
+);
+
 -- App-wide role, distinct from session_members.role (plan 16). Only exceptions are stored: a
 -- user with no row here is an implicit 'player' -- no trigger populates one at sign-up, unlike
 -- players. Bootstrapped by supabase/seed_super_admin.sql, mandatory after every reconstruction

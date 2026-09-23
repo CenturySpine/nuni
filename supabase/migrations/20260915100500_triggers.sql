@@ -12,6 +12,7 @@ declare
   v_display_name text;
   v_avatar_url text;
   v_locale text;
+  v_legacy_player_id uuid;
 begin
   v_display_name := coalesce(
     new.raw_user_meta_data ->> 'full_name',
@@ -20,6 +21,26 @@ begin
   );
   v_avatar_url := new.raw_user_meta_data ->> 'avatar_url';
   v_locale := coalesce(left(new.raw_user_meta_data ->> 'locale', 2), 'fr');
+
+  -- A player imported from LsgScores with this e-mail (plan 13, Q64): the new account takes
+  -- over that player (its name and photo stay as imported, editable in the profile) instead of
+  -- getting a second one, and joins every imported session that player played in, on their team.
+  select lpe.player_id into v_legacy_player_id
+  from legacy_player_emails lpe
+  join players p on p.id = lpe.player_id
+  where lpe.email = lower(new.email)
+    and p.user_id is null;
+
+  if v_legacy_player_id is not null then
+    update players set user_id = new.id, locale = v_locale where id = v_legacy_player_id;
+    insert into session_members (session_id, user_id, team_id, role)
+    select tp.session_id, new.id, tp.team_id, 'player'
+    from team_players tp
+    where tp.player_id = v_legacy_player_id
+    on conflict (session_id, user_id) do nothing;
+    delete from legacy_player_emails where player_id = v_legacy_player_id;
+    return new;
+  end if;
 
   insert into players (name, avatar_url, locale, created_by, user_id)
   values (v_display_name, v_avatar_url, v_locale, new.id, new.id);
@@ -245,6 +266,9 @@ create trigger sessions_set_championship_zone_trigger
 revoke execute on function handle_new_user() from public, authenticated;
 revoke execute on function set_updated_at() from public, authenticated;
 revoke execute on function generate_session_code() from public, authenticated;
+-- ...except for the LsgScores import script (plan 13): sessions_set_code runs as the inserting
+-- role (not security definer), so a session inserted with the service key calls this directly.
+grant execute on function generate_session_code() to service_role;
 revoke execute on function sessions_set_code() from public, authenticated;
 revoke execute on function team_players_guard_single_team() from public, authenticated;
 revoke execute on function session_members_guard_frozen_teams() from public, authenticated;

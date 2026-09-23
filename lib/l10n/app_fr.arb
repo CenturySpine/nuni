@@ -17,9 +17,10 @@
   "homeRecentEmpty": "Aucune session terminée pour le moment.",
   "homeSessionStatusDraft": "En préparation",
   "homeSessionStatusLive": "En direct",
-  "homeSessionStatusCompleted": "Terminée",
   "homeRoleOwner": "Organisateur",
   "homeRolePlayer": "Participant",
+  "sessionKindIndividual": "Individuel",
+  "sessionKindTeam": "Équipe",
 
   "sessionsCreateTitle": "Nouvelle session",
   "sessionsCreateSectionLocation": "Lieu",
@@ -165,6 +166,9 @@
   "championshipPointsCardTitle": "Points de championnat",
   "championshipPointsValue": "{points} pts",
   "@championshipPointsValue": {"placeholders": {"points": {"type": "int"}}},
+  "championshipPastTitle": "Championnats passés",
+  "championshipFinalPosition": "{position, plural, =1{1er} other{{position}e}} sur {total}",
+  "@championshipFinalPosition": {"placeholders": {"position": {"type": "int"}, "total": {"type": "int"}}},
   "championshipSessionsPlayed": "{count, plural, one{1 session jouée} other{{count} sessions jouées}}",
   "@championshipSessionsPlayed": {"placeholders": {"count": {"type": "int"}}},
 
