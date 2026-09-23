@@ -227,6 +227,26 @@ class AssociationsRepository {
         params: {'p_manager_id': managerId, 'p_approve': approve},
       );
 
+  /// Deletes an association (super_admin only, Q89) -- refused while it has
+  /// sessions -- then, best effort, its logo files.
+  Future<void> delete(String associationId) async {
+    await _client.rpc<void>(
+      'delete_association',
+      params: {'p_association_id': associationId},
+    );
+    final bucket = _client.storage.from('association-logos');
+    try {
+      final files = await bucket.list(path: associationId);
+      if (files.isNotEmpty) {
+        await bucket.remove([
+          for (final file in files) '$associationId/${file.name}',
+        ]);
+      }
+    } on StorageException catch (error) {
+      debugPrint('Association logos not deleted: ${error.message}');
+    }
+  }
+
   Future<void> revokeManager(String managerId) => _client.rpc<void>(
     'revoke_association_manager',
     params: {'p_manager_id': managerId},

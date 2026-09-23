@@ -414,5 +414,12 @@
   "associationsAdminRefuseMessage": "Aucune notification n'est envoyée à {name} : utilisez ses coordonnées si besoin.",
   "@associationsAdminRefuseMessage": {"placeholders":{"name":{"type":"String"}}},
   "associationsAdminApproved": "Demande approuvée.",
-  "associationsAdminRefused": "Demande refusée."
+  "associationsAdminRefused": "Demande refusée.",
+  "associationsDelete": "Supprimer l'association",
+  "associationsDeleteTitle": "Supprimer {name} ?",
+  "@associationsDeleteTitle": {"placeholders":{"name":{"type":"String"}}},
+  "associationsDeleteMessage": "Ses membres n'auront plus d'association et devront en choisir une autre ; son responsable perd son rôle. Impossible si des sessions lui appartiennent.",
+  "associationsDeleted": "{name} a été supprimée.",
+  "@associationsDeleted": {"placeholders":{"name":{"type":"String"}}},
+  "associationsDeleteHasSessions": "Suppression impossible : des sessions appartiennent à cette association. Les supprimer effacerait des scores et des championnats d'autres joueurs."
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/authorization/authorization_repository.dart';
@@ -31,7 +32,7 @@ Future<void> openAssociationWebsite(String url) => launchUrl(
 /// `/associations/:id` (plan 18): the association's public card, and the
 /// actions that apply to the viewer -- join it (Q79), claim its local
 /// manager role (decision 7, Q78), edit it (its manager or a super_admin),
-/// remove its manager (super_admin).
+/// remove its manager or delete it (super_admin, Q89).
 class AssociationDetailPage extends ConsumerWidget {
   const AssociationDetailPage({super.key, required this.associationId});
 
@@ -130,6 +131,52 @@ class _DetailState extends ConsumerState<_Detail> {
           .revokeManager(manager.managerId);
       ref.invalidate(associationManagersProvider);
     }, l10n.associationsRevoked);
+  }
+
+  /// Refused by the server while the association has sessions (Q89): their
+  /// scores and championships belong to other players too.
+  Future<void> _delete() async {
+    final l10n = AppLocalizations.of(context)!;
+    final association = widget.association;
+    final confirmed = await NuniConfirmDialog.show(
+      context,
+      title: l10n.associationsDeleteTitle(association.name),
+      message: l10n.associationsDeleteMessage,
+      confirmLabel: l10n.associationsDelete,
+      danger: true,
+    );
+    if (!confirmed || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+    setState(() => _busy = true);
+    try {
+      await ref.read(associationsRepositoryProvider).delete(association.id);
+      ref
+        ..invalidate(associationsProvider)
+        ..invalidate(associationManagersProvider)
+        ..invalidate(pendingRequestsProvider)
+        ..invalidate(myPlayerProvider);
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.associationsDeleted(association.name))),
+      );
+      router.go('/associations');
+    } on PostgrestException catch (error) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            error.message == 'association_has_sessions'
+                ? l10n.associationsDeleteHasSessions
+                : describeError(error, l10n),
+          ),
+        ),
+      );
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(describeError(error, l10n))),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
@@ -282,11 +329,20 @@ class _DetailState extends ConsumerState<_Detail> {
           ),
           const SizedBox(height: 10),
         ],
-        if (isSuperAdmin && manager != null)
+        if (isSuperAdmin && manager != null) ...[
           NuniButton(
             label: l10n.associationsRevoke,
             variant: NuniButtonVariant.danger,
             onPressed: _busy ? null : () => _revoke(manager),
+          ),
+          const SizedBox(height: 10),
+        ],
+        if (isSuperAdmin)
+          NuniButton(
+            label: l10n.associationsDelete,
+            variant: NuniButtonVariant.danger,
+            icon: PhosphorIcons.trash,
+            onPressed: _busy ? null : _delete,
           ),
       ],
     );

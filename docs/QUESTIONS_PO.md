@@ -1022,3 +1022,14 @@ accessible, par exemple pour la reprendre en direct), en mettant mon association
 Réponse PO (2026-09-23) : suggestion retenue. Affichage inchangé ; les encarts de championnat de
 l'accueil (saison en cours et championnats passés, au sein d'une même saison) et le sélecteur de la
 page de classement placent mon association en premier.
+
+**Q89 ☐ — Suppression d'une association : que deviennent ses sessions et ses membres ?**
+Demande PO (2026-09-23) : pouvoir supprimer une association, action réservée aux `super_admin`.
+Constat : chaque session appartient à une association ; ses scores, photos et points de
+championnat concernent aussi d'autres joueurs.
+Suggestion appliquée (hypothèse, implémentée le 2026-09-23) : suppression refusée tant que des
+sessions appartiennent à l'association (message explicatif) ; sinon, suppression avec son
+responsable et ses coordonnées, et ses membres repassent sans association (l'app leur demande
+d'en choisir une à la prochaine ouverture). Alternative si le besoin se présente : un
+`super_admin` déplace d'abord les sessions vers une autre association (la fonction de correction
+existe côté serveur, Q80), puis supprime.

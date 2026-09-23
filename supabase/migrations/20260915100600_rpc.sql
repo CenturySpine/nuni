@@ -757,3 +757,29 @@ grant execute on function review_association(uuid, boolean) to authenticated;
 grant execute on function review_association_manager(uuid, boolean) to authenticated;
 grant execute on function revoke_association_manager(uuid) to authenticated;
 grant execute on function set_session_association(uuid, uuid) to authenticated;
+
+-- Deletes an association (super_admin only, PO 2026-09-23, Q89). Refused while it has sessions:
+-- they carry other players' scores and championships, which deleting would erase. Its members
+-- fall back to "no association" (the app asks them to choose again); its managers and their
+-- contact details go with it (cascade). Its logo files are removed by the app afterwards.
+create or replace function delete_association(p_association_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not is_super_admin() then
+    raise exception 'not_super_admin' using errcode = 'P0001';
+  end if;
+  if exists (select 1 from sessions where association_id = p_association_id) then
+    raise exception 'association_has_sessions' using errcode = 'P0001';
+  end if;
+
+  update players set association_id = null where association_id = p_association_id;
+  delete from associations where id = p_association_id;
+end;
+$$;
+
+revoke execute on function delete_association(uuid) from public;
+grant execute on function delete_association(uuid) to authenticated;

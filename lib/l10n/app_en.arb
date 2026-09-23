@@ -442,5 +442,12 @@
   "associationsAdminRefuseMessage": "{name} isn't notified automatically: contact them if needed with their details.",
   "@associationsAdminRefuseMessage": {"placeholders":{"name":{"type":"String"}}},
   "associationsAdminApproved": "Request approved.",
-  "associationsAdminRefused": "Request refused."
+  "associationsAdminRefused": "Request refused.",
+  "associationsDelete": "Delete the club",
+  "associationsDeleteTitle": "Delete {name}?",
+  "@associationsDeleteTitle": {"placeholders":{"name":{"type":"String"}}},
+  "associationsDeleteMessage": "Its members will have no club and will have to choose another; its manager loses the role. Not possible if sessions belong to it.",
+  "associationsDeleted": "{name} was deleted.",
+  "@associationsDeleted": {"placeholders":{"name":{"type":"String"}}},
+  "associationsDeleteHasSessions": "Can't delete: sessions belong to this club. Deleting them would erase other players' scores and championships."
 }

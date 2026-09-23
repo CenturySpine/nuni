@@ -311,6 +311,38 @@ select 'approved_manager_public_contacts_private',
 reset role;
 reset request.jwt.claims;
 
+-- Deleting an association (Q89): super_admin only, never one that has sessions.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000002","role":"authenticated"}';
+do $$
+begin
+  perform delete_association((select id from associations where name = 'Smoke Pending'));
+  insert into test_results (test, passed) values ('player_cannot_delete_association', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('player_cannot_delete_association', sqlerrm = 'not_super_admin');
+end $$;
+reset role;
+reset request.jwt.claims;
+
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000006","role":"authenticated"}';
+do $$
+begin
+  perform delete_association('c0000000-0000-0000-0000-000000000001');
+  insert into test_results (test, passed) values ('association_with_sessions_not_deleted', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('association_with_sessions_not_deleted', sqlerrm = 'association_has_sessions');
+end $$;
+select delete_association((select id from associations where name = 'Smoke Pending'));
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'deleted_association_detaches_members',
+  (select count(*) from associations where name = 'Smoke Pending') = 0
+  and (select association_id from players where user_id = 'a0000000-0000-0000-0000-000000000004') is null;
+
 -- ===== Verdict =====
 select * from test_results order by n;
 

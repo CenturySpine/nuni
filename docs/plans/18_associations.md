@@ -74,6 +74,9 @@ golf (disc golf, ou toute association qui veut l'utiliser pour son scoring inter
    en attente (créations et revendications) avec leur message et les coordonnées du demandeur,
    et permet d'approuver ou de refuser. Un compteur dans les Réglages y mène. Pas d'e-mail pour
    le moment.
+10. **Suppression d'une association (PO, 2026-09-23, Q89).** Réservée aux `super_admin`, depuis
+    la fiche de l'association. Refusée tant que des sessions lui appartiennent ; sinon ses
+    membres repassent sans association (écran de choix) et son responsable perd son rôle.
 
 ## Liste initiale (Q84)
 
