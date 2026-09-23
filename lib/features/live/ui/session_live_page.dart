@@ -53,6 +53,10 @@ class SessionLivePage extends ConsumerWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.sessionsLiveDeletedMessage)),
           );
+          // Home's lists are separate providers and would otherwise keep
+          // showing the deleted session.
+          ref.invalidate(myOngoingSessionsProvider);
+          ref.invalidate(myRecentSessionsProvider);
           context.go('/');
         }
       },
@@ -197,6 +201,10 @@ class _LiveViewState extends ConsumerState<_LiveView> {
       await ref
           .read(sessionsRepositoryProvider)
           .deleteSession(widget.sessionId);
+      // Home's "en cours" list is a separate provider: without this it
+      // keeps showing the session that was just deleted.
+      ref.invalidate(myOngoingSessionsProvider);
+      ref.invalidate(myRecentSessionsProvider);
       if (mounted) context.go('/');
     } catch (error) {
       if (mounted) {
