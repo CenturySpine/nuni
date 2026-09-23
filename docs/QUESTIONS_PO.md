@@ -903,3 +903,112 @@ par la procédure de reconstruction comme les autres. Le PO en garde une copie h
 son espace de stockage personnel), puisqu'un fichier local seul ne protège pas d'une perte du
 poste. Tant que l'ancien projet LsgScores existe, le script d'import reste en plus une seconde
 voie de restauration pour les sessions importées.
+
+## Associations (étape 18)
+
+Demande PO du 2026-09-23 : rattacher joueurs, sessions et championnats à une association, page
+des associations, responsables locaux et créations validés par un `super_admin`. Plan :
+[plans/18_associations.md](plans/18_associations.md).
+
+**Q77 ☑ — L'association remplace-t-elle les zones géographiques du championnat ?**
+Réponse PO (2026-09-23) : oui, suggestion retenue.
+Constat : aujourd'hui un championnat regroupe automatiquement les sessions jouées à moins de 15 km
+les unes des autres (plan 15). Avec des sessions rattachées à une association, les deux
+découpages coexisteraient et pourraient se contredire (deux associations d'une même ville dans une
+seule zone).
+Suggestion : oui. Un championnat = une association × une saison. On supprime les zones, le rayon
+de 15 km, l'effet de chaîne et le nom de zone déduit des villes ; le calcul des points ne change
+pas. Plus simple, et c'est exactement le cas que la demande veut couvrir.
+
+**Q78 ☑ — Combien de responsables locaux par association ?**
+Réponse PO (2026-09-23) : oui, un seul responsable approuvé à la fois.
+Suggestion : un seul approuvé à la fois. Tant qu'il y en a un, le bouton « Je suis le responsable
+local » est masqué ; un `super_admin` peut le révoquer, ce qui rouvre la revendication. Évite les
+modifications concurrentes et donne un seul contact clair. Plusieurs responsables pourront venir
+plus tard sans changer le modèle (une ligne par responsable).
+
+**Q79 ☑ — Un joueur peut-il changer d'association après son premier choix ?**
+Réponse PO (2026-09-23) : oui, suggestion retenue.
+Suggestion : oui, librement depuis la fiche d'une association (« Rejoindre cette association »),
+sans validation. Ses sessions passées gardent leur association (elles restent dans les
+championnats où elles ont été jouées) ; seules ses futures sessions suivent. Couvre un
+déménagement ou une erreur au premier choix.
+
+**Q80 ☑ — L'association d'une session peut-elle changer après sa création ?**
+Réponse PO (2026-09-23) : oui, suggestion retenue.
+Suggestion : non, figée à la création (celle du créateur à ce moment-là). Un `super_admin` peut la
+corriger en cas d'erreur. Évite qu'un championnat change sous les pieds des joueurs.
+
+**Q81 ☑ — Pendant qu'une demande de création est en attente, à quelle association appartient le
+demandeur ?**
+Réponse PO (2026-09-23) : suggestion non retenue. Pour rester simple, on ne crée de sessions
+que pour une association validée, approuvée et référencée. Le demandeur n'est donc rattaché à
+aucune association tant que sa demande attend : il peut consulter l'app et rejoindre des
+sessions, pas en créer. À l'approbation, il est rattaché à la nouvelle association ; en cas de
+refus, l'écran de choix réapparaît.
+Constat : l'écran de choix est obligatoire, mais l'association demandée n'existe pas encore.
+Suggestion : le demandeur est rattaché tout de suite à son association en attente, visible de lui
+seul et des super administrateurs ; il utilise l'app normalement et ses sessions y sont rattachées.
+Si la demande est refusée, l'écran de choix réapparaît à sa prochaine ouverture et ses sessions
+suivent l'association qu'il choisit alors.
+
+**Q82 ☑ — Le demandeur d'une création devient-il automatiquement le responsable local ?**
+Réponse PO (2026-09-23) : oui, c'était l'intention.
+La demande prévoit « nom, mail et tel du responsable ». Seul un compte NUNI peut modifier une
+association.
+Suggestion : oui, le responsable est le demandeur ; son nom est pré-rempli depuis son profil et
+il saisit son mail et son téléphone. Pour qu'une autre personne devienne responsable, elle crée
+son compte et revendique le rôle (ou le demandeur transmet après coup).
+
+**Q83 ☑ — Comment situer la ville d'une association ?**
+Réponse PO (2026-09-23) : oui, suggestion retenue.
+Constat : la suggestion par distance a besoin d'une position. L'app ne sait aujourd'hui que
+transformer une position en nom de ville (BigDataCloud), pas l'inverse.
+Suggestion : saisie du nom de la ville + un point posé sur une carte (même composant que la
+position d'un trou), centrée sur la position du demandeur. Pas de nouveau service externe.
+
+**Q84 ☑ — Quelle liste initiale d'associations ?**
+Réponse PO (2026-09-23) : pour commencer, six associations seulement : Lyon Street Golf
+(LSG, Lyon), Street Golf à l'Ouest (SGO, Morlaix), Wild Shrimp Crew (Grenoble), Médiéballes
+(Laon), Urban Green Lille (Lille), Strasbourg Street Golf (Strasbourg). Les autres demanderont
+leur création dans l'app.
+Source trouvée : la carte « Associations et équipes françaises » de la Fédération
+(streetgolf.fr/federation), qui charge un fichier public de nynjas.golf (35 contacts). Proposition
+dans le plan 18 : les 20 contacts de type « Association » (nom, ville, site, position ; aucune
+donnée personnelle reprise).
+Points à trancher : (a) inclure aussi les équipes (« Team » seul), dont Strasbourg Street Golf et
+Wild Shrimp Crew, membres du comité directeur de la Fédération ? (b) NYNJAS Golf apparaît sous 5
+antennes (Paris, Toulouse, Luchon, Solenzara, Tahiti) : une seule association (Paris) ou une par
+antenne ? (c) trois villes sont déduites de la position GPS (Reims, Charleville-Mézières, La
+Possession) et une (Laon) du nom : à confirmer.
+Suggestion : (a) non, elles demanderont leur création si elles utilisent l'app ; (b) une seule,
+NYNJAS Golf, à Paris ; (c) villes conservées telles que déduites.
+
+**Q85 ☑ — Où accéder à la page des associations ?**
+Réponse PO (2026-09-23) : suggestion non retenue. Un onglet « Associations » dans la barre de
+navigation du bas, pour mettre en avant le côté associatif et rendre visible le message « vous
+pouvez déclarer votre association et commencer à utiliser l'app ».
+Suggestion : une entrée « Associations » dans les Réglages, et un lien depuis mon association sur
+le profil. Pas de quatrième onglet dans la barre de navigation : c'est une page consultée
+rarement.
+
+**Q86 ☑ — Comment le super administrateur apprend-il qu'une demande attend ?**
+Réponse PO (2026-09-23) : oui, sans e-mail pour le moment, avec une page dédiée à la gestion
+des demandes. Complément : les formulaires de demande de création et de demande de responsable
+local ont un champ libre pour écrire un message au super administrateur.
+Suggestion : un compteur « Demandes en attente » dans ses Réglages, qui ouvre l'écran de
+validation. Pas d'e-mail : NUNI n'a aucun service d'envoi d'e-mails, en ajouter un (compte,
+réglages, délivrabilité) est disproportionné pour quelques demandes par an.
+
+**Q87 ☑ — Migration : reconstruction du schéma ou migration additive ?**
+Réponse PO (2026-09-23) : suggestion non retenue, pas encore. L'app n'a pas encore été utilisée
+de façon officielle ; le seed chiffré existe justement pour pouvoir encore réinitialiser puis
+re-remplir la base. On reste sur la règle 8 : fichiers de migration édités en place,
+reconstruction de la base distante (PO prévenu avant), rejeu des seeds.
+Constat : la règle 8 (AGENTS.md) veut qu'avant la mise en service on édite les fichiers de
+migration existants et reconstruise la base distante. Le plan 12 est clôturé et la première
+session réelle a lieu la semaine prochaine : l'app est de fait en service, avec des données
+réelles.
+Suggestion : passer dès ce plan aux migrations additives (un nouveau fichier qui crée les tables,
+rattache l'existant à LSG et retire les zones), sans reconstruction. Moins risqué pour les données
+réelles, pas de rejeu des seeds. La règle 8 serait mise à jour en conséquence.
