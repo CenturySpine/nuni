@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/errors/app_error_message.dart';
+import '../../../core/router/app_bottom_nav.dart';
 import '../../../core/supabase/supabase_providers.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../core/weather/weather_icon.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -12,7 +14,12 @@ import '../../../shared/nuni_card.dart';
 import '../../../shared/nuni_confirm_dialog.dart';
 import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
+import '../../../shared/nuni_grouped_list.dart';
+import '../../../shared/nuni_icon_tile.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../../shared/nuni_rank_badge.dart';
+import '../../../shared/nuni_section_header.dart';
+import '../../../shared/nuni_status_pill.dart';
 import '../../championship/domain/championship_session_result.dart';
 import '../../exports/ui/image_export_dialog.dart';
 import '../../exports/ui/pdf_export_action.dart';
@@ -59,6 +66,9 @@ class HistoryDetailPage extends ConsumerWidget {
               )
             : _DetailView(sessionId: sessionId, entry: entry),
       ),
+      // Always a way back to the tabs (PO, 2026-09-23): this page is also
+      // reached straight from a session that just ended.
+      bottomNavigationBar: const NuniStandaloneBottomNav(selectedIndex: 2),
     );
   }
 }
@@ -116,119 +126,164 @@ class _DetailView extends ConsumerWidget {
         .currentUser
         ?.id;
     final isOwner = entry.snapshot.isOwner(currentUserId);
+    final playedHoles = entry.snapshot.playedHoles;
 
     final subtitleParts = [
       if (session.city != null && session.city!.isNotEmpty) session.city!,
       if (session.zone != null && session.zone!.isNotEmpty) session.zone!,
-      if (session.startedAt != null)
-        DateFormat.yMMMd(locale).add_Hm().format(session.startedAt!.toLocal()),
     ];
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
       children: [
         Text(
           subtitleParts.isEmpty ? session.code : subtitleParts.join(' · '),
-          style: Theme.of(context).textTheme.titleLarge,
+          style: Theme.of(context).textTheme.headlineSmall,
         ),
-        Row(
+        if (session.startedAt != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            DateFormat.yMMMMd(locale)
+                .add_Hm()
+                .format(session.startedAt!.toLocal()),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
           children: [
-            Text(
-              scoringModeLabel(l10n, session.scoringMode),
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            if (session.weather != null) ...[
-              const SizedBox(width: 12),
-              Icon(
-                weatherIcon(session.weather!.code),
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+            NuniStatusPill(label: scoringModeLabel(l10n, session.scoringMode)),
+            if (session.isChampionship)
+              NuniStatusPill(
+                label: l10n.championshipTitle,
+                icon: PhosphorIcons.crown,
+                tone: NuniTone.sunshine,
               ),
-              const SizedBox(width: 4),
-              Text(
-                '${session.weather!.temperatureC.round()}°C',
-                style: Theme.of(context).textTheme.bodySmall,
+            if (session.weather != null)
+              NuniStatusPill(
+                label: '${session.weather!.temperatureC.round()}°C',
+                icon: weatherIcon(session.weather!.code),
+                tone: NuniTone.neutral,
               ),
-            ],
           ],
         ),
         if (session.comment != null && session.comment!.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Text(session.comment!, style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 14),
+          NuniCard(
+            color: context.nuni.surfaceMuted,
+            child: Text(
+              session.comment!,
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(fontStyle: FontStyle.italic),
+            ),
+          ),
         ],
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         RankingCard(
           session: session,
           teams: entry.snapshot.teams,
-          playedHoles: entry.snapshot.playedHoles,
+          playedHoles: playedHoles,
         ),
         if (session.isChampionship) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           _ChampionshipPointsCard(
             teams: entry.snapshot.teams,
             standings: entry.standings,
           ),
         ],
-        const SizedBox(height: 16),
-        for (final playedHole in entry.snapshot.playedHoles)
+        if (playedHoles.isNotEmpty) ...[
+          const SizedBox(height: 28),
+          NuniSectionHeader(
+            title: l10n.navHoles,
+            trailing: NuniStatusPill(
+              label: '${playedHoles.length}',
+              tone: NuniTone.neutral,
+            ),
+          ),
+        ],
+        for (final playedHole in playedHoles)
           Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.only(bottom: 10),
             child: PlayedHoleCard(
               playedHole: playedHole,
               teams: entry.snapshot.teams,
               scoringMode: session.scoringMode,
               canEditTeam: (_) => false,
-              playerNameForUserId: (userId) =>
-                  entry.snapshot.memberFor(userId)?.playerName,
               onScoreSubmit: (_, _, _) async {},
             ),
           ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 18),
         PhotoGallery(
           sessionId: sessionId,
           isOwner: isOwner,
           coverPhotoId: session.coverPhotoId,
         ),
-        const SizedBox(height: 24),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
+        const SizedBox(height: 28),
+        NuniGroupedList(
           children: [
-            OutlinedButton.icon(
-              onPressed: () => exportSessionPdf(
+            _ActionTile(
+              icon: PhosphorIcons.filePdf,
+              label: l10n.historyExportPdfAction,
+              onTap: () => exportSessionPdf(
                 context,
                 entry,
                 photoUrl: ref.read(historyRepositoryProvider).photoUrl,
               ),
-              icon: const Icon(PhosphorIcons.filePdf),
-              label: Text(l10n.historyExportPdfAction),
             ),
-            OutlinedButton.icon(
-              onPressed: () => showImageExportDialog(context, entry),
-              icon: const Icon(PhosphorIcons.imageSquare),
-              label: Text(l10n.historyExportImageAction),
+            _ActionTile(
+              icon: PhosphorIcons.imageSquare,
+              label: l10n.historyExportImageAction,
+              onTap: () => showImageExportDialog(context, entry),
             ),
             if (isOwner) ...[
-              OutlinedButton.icon(
-                onPressed: () => _edit(context, ref),
-                icon: const Icon(PhosphorIcons.pencilSimple),
-                label: Text(l10n.historyEditAction),
+              _ActionTile(
+                icon: PhosphorIcons.pencilSimple,
+                label: l10n.historyEditAction,
+                onTap: () => _edit(context, ref),
               ),
-              OutlinedButton.icon(
-                onPressed: () => _delete(context, ref),
-                icon: Icon(
-                  PhosphorIcons.trash,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                label: Text(
-                  l10n.sessionsRoomDeleteSession,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
+              _ActionTile(
+                icon: PhosphorIcons.trash,
+                label: l10n.sessionsRoomDeleteSession,
+                tone: NuniTone.danger,
+                onTap: () => _delete(context, ref),
               ),
             ],
           ],
         ),
       ],
+    );
+  }
+}
+
+/// One row of the actions list at the bottom of the page; a [NuniTone.danger]
+/// row also gets red text.
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.tone = NuniTone.primary,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final NuniTone tone;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: NuniIconTile(icon: icon, tone: tone, size: 36),
+      title: Text(
+        label,
+        style: tone == NuniTone.danger
+            ? TextStyle(color: context.nuni.danger.onContainer)
+            : null,
+      ),
+      trailing: const Icon(PhosphorIcons.caretRight, size: 18),
+      onTap: onTap,
     );
   }
 }
@@ -256,24 +311,42 @@ class _ChampionshipPointsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.championshipPointsCardTitle,
-            style: Theme.of(context).textTheme.titleSmall,
+          Row(
+            children: [
+              const NuniIconTile(
+                icon: PhosphorIcons.crown,
+                tone: NuniTone.sunshine,
+                size: 36,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  l10n.championshipPointsCardTitle,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           for (final standing in ordered)
             if (teamById[standing.teamId] case final team?)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   children: [
+                    NuniRankBadge(
+                      label: '${standing.position}',
+                      position: standing.position,
+                      size: 26,
+                    ),
+                    const SizedBox(width: 10),
                     Expanded(child: Text(team.playerNames())),
                     Text(
                       l10n.championshipPointsValue(
                         (rankingPoints[team.id] ?? 0) +
                             championshipAttendancePoints,
                       ),
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: Theme.of(context).textTheme.labelLarge,
                     ),
                   ],
                 ),

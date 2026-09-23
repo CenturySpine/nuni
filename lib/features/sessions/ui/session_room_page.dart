@@ -8,14 +8,21 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/errors/app_error_message.dart';
 import '../../../core/router/app_bottom_nav.dart';
 import '../../../core/supabase/supabase_providers.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../core/weather/weather_client.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/nuni_avatar.dart';
 import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_card.dart';
 import '../../../shared/nuni_confirm_dialog.dart';
 import '../../../shared/nuni_error_banner.dart';
+import '../../../shared/nuni_grouped_list.dart';
+import '../../../shared/nuni_hero.dart';
+import '../../../shared/nuni_icon_tile.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../../shared/nuni_section_header.dart';
+import '../../../shared/nuni_status_pill.dart';
 import '../../live/ui/session_live_page.dart';
 import '../../profile/domain/player.dart';
 import '../data/sessions_repository.dart';
@@ -355,42 +362,60 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
 
     return Scaffold(
       appBar: AppBar(
+        // Inviting lives on the code banner below.
         title: Text(l10n.sessionsRoomTitle),
-        actions: [
-          IconButton(
-            icon: const Icon(PhosphorIcons.shareNetwork),
-            tooltip: l10n.sessionsInviteTitle,
-            onPressed: () => InviteSheet.show(context, room.session.code),
-          ),
-        ],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
         children: [
-          NuniCard(
+          NuniHero(
             child: Row(
               children: [
-                Icon(
-                  PhosphorIcons.signpost,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     l10n.sessionsRoomCodeLabel(room.session.code),
-                    style: Theme.of(context).textTheme.headlineSmall,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1,
+                    ),
                   ),
+                ),
+                const SizedBox(width: 12),
+                NuniButton(
+                  variant: NuniButtonVariant.onHero,
+                  icon: PhosphorIcons.shareNetwork,
+                  label: l10n.sessionsInviteTitle,
+                  onPressed: () => InviteSheet.show(context, room.session.code),
                 ),
               ],
             ),
           ),
           if (!isOwner) ...[
             const SizedBox(height: 16),
-            Text(
-              l10n.sessionsRoomWaitingForOwner(
-                room.playersByUserId[room.session.ownerId]?.name ?? '',
+            NuniCard(
+              color: context.nuni.tangerine.container,
+              borderColor: context.nuni.tangerine.container,
+              child: Row(
+                children: [
+                  Icon(
+                    PhosphorIcons.clockCounterClockwise,
+                    color: context.nuni.tangerine.onContainer,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      l10n.sessionsRoomWaitingForOwner(
+                        room.playersByUserId[room.session.ownerId]?.name ?? '',
+                      ),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: context.nuni.tangerine.onContainer,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              style: Theme.of(context).textTheme.bodyLarge,
             ),
             if (myMember != null) ...[
               const SizedBox(height: 12),
@@ -537,11 +562,11 @@ class _TeamsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            l10n.sessionsRoomTeamsTitle,
-            style: Theme.of(context).textTheme.titleMedium,
+        NuniSectionHeader(
+          title: l10n.sessionsRoomTeamsTitle,
+          trailing: NuniStatusPill(
+            label: '${room.teams.length}',
+            tone: NuniTone.neutral,
           ),
         ),
         for (final team in room.teams) ...[
@@ -551,10 +576,16 @@ class _TeamsSection extends StatelessWidget {
               children: [
                 Row(
                   children: [
+                    NuniIconTile(
+                      icon: PhosphorIcons.users,
+                      size: 36,
+                      tone: _teamTone(team.position),
+                    ),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         l10n.sessionsRoomTeamLabel(team.position),
-                        style: Theme.of(context).textTheme.titleSmall,
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
                     if (isOwner)
@@ -565,15 +596,22 @@ class _TeamsSection extends StatelessWidget {
                       ),
                   ],
                 ),
+                const SizedBox(height: 6),
                 for (final member in room.membersOf(team.id))
                   Row(
                     children: [
+                      NuniAvatar(
+                        name: room.playerFor(member)?.name,
+                        imageUrl: room.playerFor(member)?.avatarUrl,
+                        size: 32,
+                      ),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           room.playerFor(member)?.name ?? '',
                           style: member.userId == currentUserId
                               ? Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(fontWeight: FontWeight.bold)
+                                    ?.copyWith(fontWeight: FontWeight.w700)
                               : null,
                         ),
                       ),
@@ -594,11 +632,18 @@ class _TeamsSection extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
         ],
       ],
     );
   }
+
+  static NuniTone _teamTone(int position) => const [
+    NuniTone.primary,
+    NuniTone.fairway,
+    NuniTone.tangerine,
+    NuniTone.sunshine,
+  ][(position - 1) % 4];
 }
 
 class _PoolSection extends StatelessWidget {
@@ -632,34 +677,41 @@ class _PoolSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            l10n.sessionsRoomPoolTitle,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+        NuniSectionHeader(
+          title: l10n.sessionsRoomPoolTitle,
+          trailing: pool.isEmpty
+              ? null
+              : NuniStatusPill(label: '${pool.length}', tone: NuniTone.neutral),
         ),
         if (pool.isEmpty)
-          NuniCard(child: Text(l10n.sessionsRoomPoolEmpty))
-        else
-          NuniCard(
-            child: Column(
-              children: [
-                for (final member in pool)
-                  _PoolRow(
-                    member: member,
-                    player: room.playerFor(member),
-                    isOwner: isOwner,
-                    busy: busy,
-                    isCurrentUser: member.userId == currentUserId,
-                    showSelection: showSelection,
-                    selected: selected.contains(member.userId),
-                    onToggle: (value) => onToggle(member.userId, value),
-                    onRemove: () => onRemove(member),
-                    onPromote: () => onPromote(member),
-                  ),
-              ],
+          SizedBox(
+            width: double.infinity,
+            child: NuniCard(
+              child: Text(
+                l10n.sessionsRoomPoolEmpty,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
             ),
+          )
+        else
+          NuniGroupedList(
+            children: [
+              for (final member in pool)
+                _PoolRow(
+                  member: member,
+                  player: room.playerFor(member),
+                  isOwner: isOwner,
+                  busy: busy,
+                  isCurrentUser: member.userId == currentUserId,
+                  showSelection: showSelection,
+                  selected: selected.contains(member.userId),
+                  onToggle: (value) => onToggle(member.userId, value),
+                  onRemove: () => onRemove(member),
+                  onPromote: () => onPromote(member),
+                ),
+            ],
           ),
       ],
     );
@@ -716,16 +768,35 @@ class _PoolRow extends StatelessWidget {
       ],
     );
 
+    final avatar = NuniAvatar(
+      name: player?.name,
+      imageUrl: player?.avatarUrl,
+      size: 36,
+    );
+
     if (isOwner && showSelection) {
-      return CheckboxListTile(
-        value: selected,
-        onChanged: busy ? null : (value) => onToggle(value ?? false),
+      return ListTile(
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Checkbox(
+              value: selected,
+              onChanged: busy ? null : (value) => onToggle(value ?? false),
+            ),
+            const SizedBox(width: 4),
+            avatar,
+          ],
+        ),
         title: Text(label),
-        controlAffinity: ListTileControlAffinity.leading,
-        secondary: actions,
+        trailing: actions,
+        onTap: busy ? null : () => onToggle(!selected),
       );
     }
 
-    return ListTile(title: Text(label), trailing: isOwner ? actions : null);
+    return ListTile(
+      leading: avatar,
+      title: Text(label),
+      trailing: isOwner ? actions : null,
+    );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/theme/app_theme.dart';
 import '../core/theme/phosphor_icons.dart';
 
 /// Inline error banner (failed load, offline write refused, ...), with an
@@ -15,23 +16,31 @@ class NuniErrorBanner extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
       decoration: BoxDecoration(
-        color: scheme.error.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: scheme.error),
+        color: scheme.errorContainer,
+        borderRadius: BorderRadius.circular(NuniRadius.control),
       ),
       child: Row(
         children: [
-          Icon(PhosphorIcons.warningCircle, color: scheme.error),
-          const SizedBox(width: 8),
+          Icon(PhosphorIcons.warningCircle, color: scheme.onErrorContainer),
+          const SizedBox(width: 10),
           Expanded(
-            child: Text(message, style: TextStyle(color: scheme.error)),
+            child: Text(
+              message,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: scheme.onErrorContainer,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
           if (onRetry != null)
             IconButton(
               onPressed: onRetry,
-              icon: Icon(PhosphorIcons.arrowClockwise, color: scheme.error),
+              icon: Icon(
+                PhosphorIcons.arrowClockwise,
+                color: scheme.onErrorContainer,
+              ),
             ),
         ],
       ),

@@ -11,6 +11,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/errors/app_error_message.dart';
 import '../../../core/location/location_service.dart';
 import '../../../core/supabase/supabase_providers.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
@@ -19,6 +20,7 @@ import '../../../shared/nuni_confirm_dialog.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_form_section.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../../shared/nuni_segmented.dart';
 import '../../../shared/photo_field.dart';
 import '../data/holes_repository.dart';
 import '../domain/hole.dart';
@@ -535,22 +537,22 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    NuniChip(
+                NuniSegmented<HoleVisibility>(
+                  segments: [
+                    NuniSegment(
+                      value: HoleVisibility.public,
                       label: l10n.holesFormVisibilityPublic,
-                      selected: _visibility == HoleVisibility.public,
-                      onTap: () =>
-                          setState(() => _visibility = HoleVisibility.public),
+                      icon: PhosphorIcons.globe,
                     ),
-                    const SizedBox(width: 8),
-                    NuniChip(
+                    NuniSegment(
+                      value: HoleVisibility.private,
                       label: l10n.holesFormVisibilityPrivate,
-                      selected: _visibility == HoleVisibility.private,
-                      onTap: () =>
-                          setState(() => _visibility = HoleVisibility.private),
+                      icon: PhosphorIcons.lockSimple,
                     ),
                   ],
+                  selected: _visibility,
+                  onChanged: (visibility) =>
+                      setState(() => _visibility = visibility),
                 ),
               ],
             ),
@@ -558,7 +560,9 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
             NuniFormSection(
               title: l10n.holesFormSectionPosition,
               children: [
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     NuniChip(
                       label: l10n.holesFormPointStart,
@@ -566,14 +570,12 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
                       onTap: () =>
                           setState(() => _activePoint = _ActivePoint.start),
                     ),
-                    const SizedBox(width: 8),
                     NuniChip(
                       label: l10n.holesFormPointEnd,
                       selected: _activePoint == _ActivePoint.end,
                       onTap: () =>
                           setState(() => _activePoint = _ActivePoint.end),
                     ),
-                    const SizedBox(width: 8),
                     NuniChip(
                       label: l10n.holesFormPointPath,
                       selected: _activePoint == _ActivePoint.path,
@@ -653,8 +655,9 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
                       widget.isEditing
                           ? l10n.holesFormPositionToSet
                           : l10n.holesFormPositionUnavailable,
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.error,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   )
@@ -663,6 +666,7 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       l10n.holesFormAccuracy(_accuracy!.round().toString()),
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ),
               ],
@@ -745,7 +749,7 @@ class _PositionPicker extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final initial = startPosition ?? endPosition;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(NuniRadius.control),
       child: SizedBox(
         height: 340,
         child: FlutterMap(
@@ -765,7 +769,7 @@ class _PositionPicker extends StatelessWidget {
                 polylines: [
                   Polyline(
                     points: [?startPosition, ...path, ?endPosition],
-                    color: scheme.error,
+                    color: scheme.secondary,
                     strokeWidth: 3,
                   ),
                 ],
@@ -779,9 +783,9 @@ class _PositionPicker extends StatelessWidget {
                     height: 14,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: scheme.error,
+                        color: scheme.secondary,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
+                        border: Border.all(color: scheme.onPrimary, width: 2),
                       ),
                     ),
                   ),

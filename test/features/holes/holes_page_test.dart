@@ -102,6 +102,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Vieux trou'), findsOneWidget);
-    expect(find.text('Par 2 · Position to set'), findsOneWidget);
+    expect(find.text('Par 2'), findsOneWidget);
+    expect(find.text('Position to set'), findsOneWidget);
   });
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 
+import '../core/theme/app_theme.dart';
 import '../core/theme/phosphor_icons.dart';
 
 /// Re-encodes [bytes] as JPEG, capped at [maxWidth] wide (never upscaled),
@@ -99,10 +100,10 @@ class _PhotoFieldState extends State<PhotoField> {
                 Container(
                   decoration: BoxDecoration(
                     color: scheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(NuniRadius.control),
                     border: hasImage
                         ? null
-                        : Border.all(color: scheme.outlineVariant),
+                        : Border.all(color: scheme.outlineVariant, width: 1.5),
                     image: !hasImage
                         ? null
                         : DecorationImage(
@@ -120,7 +121,7 @@ class _PhotoFieldState extends State<PhotoField> {
                           child: Icon(
                             PhosphorIcons.camera,
                             size: 32,
-                            color: scheme.onSurfaceVariant,
+                            color: scheme.primary,
                           ),
                         )
                       : null,

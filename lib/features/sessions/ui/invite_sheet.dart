@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../core/web/web_share_support.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -79,19 +80,25 @@ class InviteSheet extends StatelessWidget {
             const SizedBox(height: 16),
             DecoratedBox(
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
+                // QR codes need a plain white quiet zone to scan reliably.
+                color: Theme.of(context).colorScheme.onPrimary,
+                borderRadius: BorderRadius.circular(NuniRadius.card),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 child: QrImageView(data: link, size: 200),
               ),
             ),
             const SizedBox(height: 16),
             Text(
               code,
-              style: Theme.of(context).textTheme.headlineMedium
-                  ?.copyWith(letterSpacing: 4),
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                letterSpacing: 6,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
             const SizedBox(height: 20),
             NuniButton(

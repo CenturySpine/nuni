@@ -20,8 +20,17 @@ class AboutPage extends StatelessWidget {
           Center(
             child: Column(
               children: [
-                const NuniLogo(size: 72),
                 const SizedBox(height: 16),
+                const NuniLogo(size: 88),
+                const SizedBox(height: 16),
+                Text(l10n.appTitle, style: textTheme.headlineMedium),
+                Text(
+                  l10n.tagline,
+                  style: textTheme.titleSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 FutureBuilder<PackageInfo>(
                   future: PackageInfo.fromPlatform(),
                   builder: (context, snapshot) {

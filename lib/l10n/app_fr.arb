@@ -9,6 +9,8 @@
 
   "homeCreateSessionAction": "Créer une session",
   "homeJoinAction": "Rejoindre",
+  "homeHeroTitle": "On joue ?",
+  "homeHeroSubtitle": "Lancez une session ou rejoignez vos amis avec un code.",
   "homeJoinTitle": "Rejoindre une session",
   "homeJoinCodeLabel": "Code de la session",
   "homeSectionOngoing": "Mes sessions en cours",
@@ -95,7 +97,6 @@
   "sessionsLiveFreeHoleLabelField": "Libellé (facultatif)",
   "sessionsLiveDeleteHole": "Retirer ce trou",
   "sessionsLiveMissingScore": "Pas encore de score",
-  "sessionsLiveScoreUpdatedBy": "Par {name} à {time}",
 
   "sessionsLiveScoreStrokesLabel": "Coups de cette équipe",
   "sessionsLiveScorePointsLabel": "Points de cette équipe",
@@ -157,6 +158,8 @@
   "historyExportTotalHeader": "Total",
 
   "championshipTitle": "Championnat",
+
+  "championshipSeeFullStandings": "Voir tout le classement",
   "championshipEmpty": "Aucune session de championnat pour le moment.",
   "championshipToggleLabel": "Compte pour le championnat",
   "championshipToggleNoLocation": "Position inconnue pour cette session -- autorisez la géolocalisation pour activer cette option.",
@@ -232,10 +235,17 @@
   "authSwitchToSignUp": "S'inscrire",
   "authSwitchToLogin": "Se connecter",
   "authContinueWithGoogle": "Continuer avec Google",
+  "authHeroSubtitle": "Comptez vos parties de street golf à plusieurs, en direct.",
+  "authSwitchPromptToSignUp": "Pas encore de compte ?",
+  "authSwitchPromptToLogin": "Déjà un compte ?",
 
   "profileTitle": "Profil",
   "profileDisplayNameLabel": "Nom affiché",
   "profileSaved": "Profil mis à jour.",
+  "profilePhotoChange": "Changer la photo",
+  "profilePhotoCropTitle": "Recadrer la photo",
+  "profilePhotoCropConfirm": "Valider",
+  "profilePhotoUpdated": "Photo de profil mise à jour.",
 
   "commonCancel": "Annuler",
   "commonConfirm": "Confirmer",

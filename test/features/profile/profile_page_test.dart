@@ -28,7 +28,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Ada'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Ada'), findsOneWidget);
     expect(find.text('Save'), findsOneWidget);
   });
 }

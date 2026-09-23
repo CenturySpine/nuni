@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/nuni_card.dart';
+import '../../../shared/nuni_icon_tile.dart';
+import '../../../shared/nuni_status_pill.dart';
 import '../../holes/domain/hole.dart';
 import '../../sessions/domain/scoring_mode.dart';
-import 'game_mode_label.dart';
-import 'played_hole_label.dart';
 import '../domain/live_team.dart';
 import '../domain/played_hole.dart';
 import '../domain/score_calculator.dart';
+import 'game_mode_label.dart';
+import 'played_hole_label.dart';
 import 'score_entry_sheet.dart';
 
 /// One played hole (plan 08): every team's raw value (and, for Match
@@ -17,6 +20,7 @@ import 'score_entry_sheet.dart';
 /// the note below), tap-to-score inline for the teams [canEditTeam] allows.
 /// Stroke Play shows strokes alone (there's no separate points concept for
 /// it); Free shows points alone (no strokes are collected for it, Q7b).
+/// [highlighted] (the latest hole) gets a violet outline.
 class PlayedHoleCard extends StatelessWidget {
   const PlayedHoleCard({
     super.key,
@@ -24,7 +28,6 @@ class PlayedHoleCard extends StatelessWidget {
     required this.teams,
     required this.scoringMode,
     required this.canEditTeam,
-    required this.playerNameForUserId,
     required this.onScoreSubmit,
     this.highlighted = false,
     this.onDelete,
@@ -34,7 +37,6 @@ class PlayedHoleCard extends StatelessWidget {
   final List<LiveTeam> teams;
   final ScoringMode scoringMode;
   final bool Function(String teamId) canEditTeam;
-  final String? Function(String userId) playerNameForUserId;
   final Future<void> Function(String playedHoleId, String teamId, int value)
   onScoreSubmit;
   final bool highlighted;
@@ -51,78 +53,95 @@ class PlayedHoleCard extends StatelessWidget {
     final points = needsPoints
         ? calculateHolePoints(scoringMode, playedHole.valueByTeamId)
         : null;
+    final isPrivate = playedHole.hole?.visibility == HoleVisibility.private;
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      color: highlighted ? scheme.secondaryContainer : null,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  playedHole.hole?.visibility == HoleVisibility.private
-                      ? PhosphorIcons.lockSimple
-                      : PhosphorIcons.golf,
-                  size: 18,
-                  color: scheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    l10n.sessionsLiveHoleLabel(
-                      playedHole.position,
-                      playedHoleName(l10n, playedHole),
+    return NuniCard(
+      borderColor: highlighted ? scheme.primary : null,
+      padding: const EdgeInsets.fromLTRB(14, 14, 8, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              NuniIconTile(
+                icon: isPrivate ? PhosphorIcons.lockSimple : PhosphorIcons.golf,
+                tone: highlighted ? NuniTone.primary : NuniTone.fairway,
+                size: 40,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.sessionsLiveHoleLabel(
+                        playedHole.position,
+                        playedHoleName(l10n, playedHole),
+                      ),
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w700),
                     ),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        // A free hole has no par (plan 17).
+                        if (playedHole.hole case final hole?)
+                          NuniStatusPill(
+                            label: l10n.holesPar(hole.par),
+                            tone: NuniTone.fairway,
+                          ),
+                        NuniStatusPill(
+                          label: gameModeLabel(l10n, playedHole.gameMode),
+                          tone: NuniTone.neutral,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                if (onDelete != null)
-                  IconButton(
-                    icon: const Icon(PhosphorIcons.trash, size: 18),
-                    tooltip: l10n.sessionsLiveDeleteHole,
-                    onPressed: onDelete,
+              ),
+              if (onDelete != null)
+                IconButton(
+                  icon: Icon(
+                    PhosphorIcons.trash,
+                    size: 18,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  tooltip: l10n.sessionsLiveDeleteHole,
+                  onPressed: onDelete,
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: Column(
+              children: [
+                for (final team in teams)
+                  _TeamScoreRow(
+                    team: team,
+                    score: playedHole.scoreFor(team.id),
+                    holePoints: points?[team.id],
+                    editable: canEditTeam(team.id),
+                    isPoints: isPoints,
+                    showPoints: needsPoints,
+                    onTap: () async {
+                      final value = await showScoreEntrySheet(
+                        context,
+                        teamLabel: team.playerNames(),
+                        isPoints: isPoints,
+                        initialValue: playedHole.scoreFor(team.id)?.value,
+                      );
+                      if (value != null) {
+                        await onScoreSubmit(playedHole.id, team.id, value);
+                      }
+                    },
                   ),
               ],
             ),
-            Text(
-              [
-                // A free hole has no par (plan 17).
-                if (playedHole.hole case final hole?) l10n.holesPar(hole.par),
-                gameModeLabel(l10n, playedHole.gameMode),
-              ].join(' · '),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 8),
-            for (final team in teams)
-              _TeamScoreRow(
-                team: team,
-                score: playedHole.scoreFor(team.id),
-                holePoints: points?[team.id],
-                editable: canEditTeam(team.id),
-                isPoints: isPoints,
-                showPoints: needsPoints,
-                editorName: playedHole.scoreFor(team.id)?.updatedBy == null
-                    ? null
-                    : playerNameForUserId(
-                        playedHole.scoreFor(team.id)!.updatedBy!,
-                      ),
-                onTap: () async {
-                  final value = await showScoreEntrySheet(
-                    context,
-                    teamLabel: team.playerNames(),
-                    isPoints: isPoints,
-                    initialValue: playedHole.scoreFor(team.id)?.value,
-                  );
-                  if (value != null) {
-                    await onScoreSubmit(playedHole.id, team.id, value);
-                  }
-                },
-              ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -136,7 +155,6 @@ class _TeamScoreRow extends StatelessWidget {
     required this.editable,
     required this.isPoints,
     required this.showPoints,
-    required this.editorName,
     required this.onTap,
   });
 
@@ -146,83 +164,86 @@ class _TeamScoreRow extends StatelessWidget {
   final bool editable;
   final bool isPoints;
   final bool showPoints;
-  final String? editorName;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
-    final locale = Localizations.localeOf(context).toString();
+    final textTheme = Theme.of(context).textTheme;
+    final nuni = context.nuni;
 
     final Widget valueWidget;
     if (score == null) {
       valueWidget = Text(
         l10n.sessionsLiveMissingScore,
-        style: Theme.of(context).textTheme.labelLarge
-            ?.copyWith(color: scheme.error),
-      );
-    } else if (isPoints) {
-      valueWidget = Text(
-        l10n.sessionsLivePointsValue(score!.value),
-        style: Theme.of(context).textTheme.titleSmall,
-      );
-    } else if (showPoints) {
-      valueWidget = Text(
-        '${l10n.sessionsLiveStrokesValue(score!.value)} · ${l10n.sessionsLivePointsValue(holePoints ?? 0)}',
-        style: Theme.of(context).textTheme.titleSmall,
+        style: textTheme.labelMedium?.copyWith(color: scheme.error),
       );
     } else {
-      valueWidget = Text(
-        l10n.sessionsLiveStrokesValue(score!.value),
-        style: Theme.of(context).textTheme.titleSmall,
+      final main = isPoints
+          ? l10n.sessionsLivePointsValue(score!.value)
+          : l10n.sessionsLiveStrokesValue(score!.value);
+      valueWidget = Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            main,
+            style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          if (showPoints)
+            Text(
+              l10n.sessionsLivePointsValue(holePoints ?? 0),
+              style: textTheme.labelMedium?.copyWith(
+                color: nuni.primaryTone.onContainer,
+              ),
+            ),
+        ],
       );
     }
 
-    final row = Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                team.playerNames(),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              if (score != null && editorName != null)
+    final row = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: score == null && editable
+            ? nuni.danger.container.withValues(alpha: 0.6)
+            : nuni.surfaceMuted,
+        borderRadius: BorderRadius.circular(NuniRadius.small + 2),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  score!.updatedAt == null
-                      ? editorName!
-                      : l10n.sessionsLiveScoreUpdatedBy(
-                          editorName!,
-                          DateFormat.Hm(locale)
-                              .format(score!.updatedAt!.toLocal()),
-                        ),
-                  style: Theme.of(context).textTheme.bodySmall
-                      ?.copyWith(color: scheme.onSurfaceVariant),
+                  team.playerNames(),
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-            ],
+              ],
+            ),
           ),
-        ),
-        valueWidget,
-        if (editable) ...[
-          const SizedBox(width: 4),
-          Icon(
-            PhosphorIcons.pencilSimple,
-            size: 14,
-            color: scheme.onSurfaceVariant,
-          ),
+          const SizedBox(width: 8),
+          valueWidget,
+          if (editable) ...[
+            const SizedBox(width: 10),
+            Icon(PhosphorIcons.pencilSimple, size: 16, color: scheme.primary),
+          ],
         ],
-      ],
+      ),
     );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.only(top: 6),
       child: editable
-          ? InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: onTap,
-              child: row,
+          ? Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(NuniRadius.small + 2),
+                onTap: onTap,
+                child: row,
+              ),
             )
           : row,
     );

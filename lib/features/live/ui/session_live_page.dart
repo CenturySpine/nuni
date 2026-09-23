@@ -12,6 +12,7 @@ import '../../../shared/nuni_confirm_dialog.dart';
 import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../../shared/nuni_menu_row.dart';
 import '../../sessions/data/sessions_repository.dart';
 import '../../sessions/domain/ranking_direction.dart';
 import '../../sessions/domain/scoring_mode.dart';
@@ -264,15 +265,25 @@ class _LiveViewState extends ConsumerState<_LiveView> {
               itemBuilder: (context) => [
                 PopupMenuItem(
                   value: _MenuAction.members,
-                  child: Text(l10n.sessionsLiveMembersAction),
+                  child: NuniMenuRow(
+                    icon: PhosphorIcons.users,
+                    label: l10n.sessionsLiveMembersAction,
+                  ),
                 ),
                 PopupMenuItem(
                   value: _MenuAction.end,
-                  child: Text(l10n.sessionsLiveEndSession),
+                  child: NuniMenuRow(
+                    icon: PhosphorIcons.checkCircle,
+                    label: l10n.sessionsLiveEndSession,
+                  ),
                 ),
                 PopupMenuItem(
                   value: _MenuAction.delete,
-                  child: Text(l10n.sessionsRoomDeleteSession),
+                  child: NuniMenuRow(
+                    icon: PhosphorIcons.trash,
+                    label: l10n.sessionsRoomDeleteSession,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                 ),
               ],
             ),
@@ -301,8 +312,6 @@ class _LiveViewState extends ConsumerState<_LiveView> {
                   teams: snapshot.teams,
                   scoringMode: session.scoringMode,
                   canEditTeam: (teamId) => isOwner || myTeamId == teamId,
-                  playerNameForUserId: (userId) =>
-                      snapshot.memberFor(userId)?.playerName,
                   onScoreSubmit: _submitScore,
                   highlighted: entry.key == 0,
                   onDelete: isOwner
@@ -313,7 +322,7 @@ class _LiveViewState extends ConsumerState<_LiveView> {
         ],
       ),
       floatingActionButton: isOwner
-          ? FloatingActionButton(
+          ? FloatingActionButton.extended(
               onPressed: _busy
                   ? null
                   : () => showAddPlayedHoleSheet(
@@ -321,7 +330,8 @@ class _LiveViewState extends ConsumerState<_LiveView> {
                       sessionId: widget.sessionId,
                       kind: session.kind,
                     ),
-              child: const Icon(PhosphorIcons.plus),
+              icon: const Icon(PhosphorIcons.plus),
+              label: Text(l10n.sessionsLiveAddHoleTitle),
             )
           : null,
       bottomNavigationBar: const NuniStandaloneBottomNav(),

@@ -4,14 +4,19 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/errors/app_error_message.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../core/weather/weather_icon.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_card.dart';
+import '../../../shared/nuni_chip.dart';
 import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
+import '../../../shared/nuni_icon_tile.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../../shared/nuni_status_pill.dart';
 import '../../live/domain/live_team.dart';
+import '../../sessions/domain/session_kind.dart';
 import '../../sessions/ui/scoring_mode_label.dart';
 import '../../sessions/ui/session_kind_label.dart';
 import '../data/history_repository.dart';
@@ -64,22 +69,23 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
               ];
 
         return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
           children: [
             if (cities.length > 1) ...[
               Wrap(
                 spacing: 8,
+                runSpacing: 8,
                 children: [
-                  ChoiceChip(
-                    label: Text(l10n.historyFilterAllCities),
+                  NuniChip(
+                    label: l10n.historyFilterAllCities,
                     selected: _cityFilter == null,
-                    onSelected: (_) => setState(() => _cityFilter = null),
+                    onTap: () => setState(() => _cityFilter = null),
                   ),
                   for (final city in cities)
-                    ChoiceChip(
-                      label: Text(city),
+                    NuniChip(
+                      label: city,
                       selected: _cityFilter == city,
-                      onSelected: (_) => setState(() => _cityFilter = city),
+                      onTap: () => setState(() => _cityFilter = city),
                     ),
                 ],
               ),
@@ -87,7 +93,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             ],
             for (final entry in visible) ...[
               _HistoryCard(entry: entry),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
             ],
           ],
         );
@@ -114,37 +120,37 @@ class _HistoryCard extends ConsumerWidget {
       if (session.zone != null && session.zone!.isNotEmpty) session.zone!,
     ];
 
+    final textTheme = Theme.of(context).textTheme;
+
     return NuniCard(
       onTap: () => context.push('/history/${session.id}'),
+      padding: const EdgeInsets.all(12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (session.coverPhotoPath != null)
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(NuniRadius.control),
               child: Image.network(
                 ref
                     .read(historyRepositoryProvider)
                     .photoUrl(session.coverPhotoPath!),
-                width: 56,
-                height: 56,
+                width: 64,
+                height: 64,
                 fit: BoxFit.cover,
               ),
             )
           else
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                PhosphorIcons.golf,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            NuniIconTile(
+              icon: session.kind == SessionKind.team
+                  ? PhosphorIcons.users
+                  : PhosphorIcons.golf,
+              tone: session.kind == SessionKind.team
+                  ? NuniTone.primary
+                  : NuniTone.fairway,
+              size: 64,
             ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,34 +159,50 @@ class _HistoryCard extends ConsumerWidget {
                   subtitleParts.isEmpty
                       ? session.code
                       : subtitleParts.join(' · '),
-                  style: Theme.of(context).textTheme.titleSmall,
+                  style: textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   '${session.startedAt == null ? '' : DateFormat.yMMMd(locale).format(session.startedAt!.toLocal())} · '
                   '${sessionKindLabel(l10n, session.kind)} · '
                   '${scoringModeLabel(l10n, session.scoringMode)}',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: textTheme.bodySmall,
                 ),
-                if (leaders.isNotEmpty)
-                  Text(
-                    leaders
-                        .map((s) => teamById[s.teamId]?.playerNames() ?? '')
-                        .join(', '),
-                    style: Theme.of(context).textTheme.bodyMedium,
+                if (leaders.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        PhosphorIcons.crown,
+                        size: 16,
+                        color: context.nuni.sunshine.onContainer,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          leaders
+                              .map(
+                                (s) => teamById[s.teamId]?.playerNames() ?? '',
+                              )
+                              .join(', '),
+                          style: textTheme.labelLarge,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
+                ],
               ],
             ),
           ),
           if (session.weather != null) ...[
-            Icon(
-              weatherIcon(session.weather!.code),
-              size: 20,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              '${session.weather!.temperatureC.round()}°',
-              style: Theme.of(context).textTheme.bodySmall,
+            const SizedBox(width: 8),
+            NuniStatusPill(
+              label: '${session.weather!.temperatureC.round()}°',
+              icon: weatherIcon(session.weather!.code),
+              tone: NuniTone.neutral,
             ),
           ],
         ],

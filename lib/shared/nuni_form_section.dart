@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'nuni_card.dart';
+import 'nuni_section_header.dart';
 
 /// A titled cartouche grouping related form fields (essai visuel, PO
 /// 2026-09-16): a label above a [NuniCard], instead of a flat, undifferentiated
@@ -20,10 +21,7 @@ class NuniFormSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(title, style: Theme.of(context).textTheme.titleMedium),
-        ),
+        NuniSectionHeader(title: title),
         NuniCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

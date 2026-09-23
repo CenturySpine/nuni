@@ -108,6 +108,8 @@ Reprises de `QUESTIONS_PO.md` (Q38–Q42), toutes tranchées :
    dans sa zone pour la saison en cours : sa position actuelle, son total de points, et les deux ou
    trois joueurs autour de lui au classement. Un lien ouvre le classement complet. Si le joueur n'a
    aucune session championnat, l'encart ne s'affiche pas (pas d'écran vide à expliquer).
+   Modifié par le PO (2026-09-23) : l'encart affiche d'abord le podium (3 premières places), puis
+   la ligne du joueur s'il n'y figure pas, précédée de "⋯", et un lien "Voir tout le classement".
 3. **Écran de classement complet.** Liste ordonnée des joueurs d'une zone pour une saison : position,
    total de points, nombre de sessions championnat jouées. Sélecteur de saison, pour consulter les
    années précédentes une fois qu'il y en a. Si le joueur appartient à plusieurs zones, il peut

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../core/errors/app_error_message.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_card.dart';
@@ -13,6 +14,7 @@ import '../../../shared/nuni_chip.dart';
 import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../../shared/nuni_status_pill.dart';
 import '../data/holes_repository.dart';
 import '../domain/distance_format.dart';
 import '../domain/hole.dart';
@@ -75,7 +77,7 @@ class _HolesPageState extends ConsumerState<HolesPage>
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
             child: NuniCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,12 +98,22 @@ class _HolesPageState extends ConsumerState<HolesPage>
                     ],
                   ),
                   if (_mode == _HolesMode.nearby) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.holesRadiusLabel(
-                        formatDistanceM(displayRadiusM.toDouble()),
-                      ),
-                      style: Theme.of(context).textTheme.labelLarge,
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Icon(
+                          PhosphorIcons.crosshair,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.holesRadiusLabel(
+                            formatDistanceM(displayRadiusM.toDouble()),
+                          ),
+                          style: Theme.of(context).textTheme.labelLarge,
+                        ),
+                      ],
                     ),
                     Slider(
                       value: displayRadiusM.toDouble(),
@@ -135,32 +147,37 @@ class _HolesPageState extends ConsumerState<HolesPage>
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
+            // Segmented-style tabs: muted track, white thumb (theme).
             child: Container(
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8),
+                color: context.nuni.border,
+                borderRadius: BorderRadius.circular(NuniRadius.control),
               ),
               child: TabBar(
                 controller: _tabController,
-                indicator: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                indicatorSize: TabBarIndicatorSize.tab,
-                indicatorPadding: const EdgeInsets.all(4),
-                dividerColor: Colors.transparent,
-                labelColor: Theme.of(context).colorScheme.primary,
-                unselectedLabelColor: Theme.of(context)
-                    .colorScheme
-                    .onSurfaceVariant,
                 tabs: [
                   Tab(
-                    icon: const Icon(PhosphorIcons.list),
-                    text: l10n.holesListTab,
+                    height: 40,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(PhosphorIcons.list, size: 18),
+                        const SizedBox(width: 8),
+                        Text(l10n.holesListTab),
+                      ],
+                    ),
                   ),
                   Tab(
-                    icon: const Icon(PhosphorIcons.mapTrifold),
-                    text: l10n.holesMapTab,
+                    height: 40,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(PhosphorIcons.mapTrifold, size: 18),
+                        const SizedBox(width: 8),
+                        Text(l10n.holesMapTab),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -222,54 +239,66 @@ class _HolesListView extends ConsumerWidget {
     if (holes.isEmpty) {
       return NuniEmptyState(icon: PhosphorIcons.mapPin, message: emptyMessage);
     }
-    final scheme = Theme.of(context).colorScheme;
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
       itemCount: holes.length,
       separatorBuilder: (context, index) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
         final hole = holes[index];
         return NuniCard(
           onTap: () => showHoleDetailSheet(context, hole.id),
+          padding: const EdgeInsets.all(12),
           child: Row(
             children: [
               // Start and target photos, placeholders when missing (PO,
               // 2026-09-23).
               HolePhotoThumb(
                 url: url(hole.photoStartPath),
-                size: 44,
+                size: 48,
                 iconSize: 18,
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 6),
               HolePhotoThumb(
                 url: url(hole.photoEndPath),
-                size: 44,
+                size: 48,
                 iconSize: 18,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       hole.name,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w700),
                     ),
-                    Text(
-                      hole.hasPosition
-                          ? l10n.holesPar(hole.par)
-                          : '${l10n.holesPar(hole.par)} · ${l10n.holesPositionToSet}',
-                      style: Theme.of(context).textTheme.bodySmall,
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        NuniStatusPill(
+                          label: l10n.holesPar(hole.par),
+                          tone: NuniTone.fairway,
+                        ),
+                        if (!hole.hasPosition)
+                          NuniStatusPill(
+                            label: l10n.holesPositionToSet,
+                            tone: NuniTone.tangerine,
+                          ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              if (hole.distance != null)
-                Text(
-                  l10n.holesAway(formatDistanceM(hole.distance!)),
-                  style: Theme.of(context).textTheme.labelLarge
-                      ?.copyWith(color: scheme.primary),
+              if (hole.distance != null) ...[
+                const SizedBox(width: 8),
+                NuniStatusPill(
+                  label: l10n.holesAway(formatDistanceM(hole.distance!)),
+                  icon: PhosphorIcons.navigationArrow,
                 ),
+              ],
             ],
           ),
         );
@@ -317,7 +346,7 @@ class _HolesMapView extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: scheme.primary,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
+                    border: Border.all(color: scheme.onPrimary, width: 3),
                   ),
                 ),
               ),

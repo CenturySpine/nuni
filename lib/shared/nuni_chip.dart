@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// A selectable chip (scoring mode, game mode, quick radius, ...).
+import '../core/theme/app_theme.dart';
+
+/// A selectable pill (scoring mode, game mode, quick radius, city
+/// filter...): white with a hairline when idle, violet tint and outline
+/// when selected.
 class NuniChip extends StatelessWidget {
   const NuniChip({
     super.key,
@@ -15,13 +19,20 @@ class NuniChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final nuni = context.nuni;
     return ChoiceChip(
       label: Text(label),
       selected: selected,
       onSelected: onTap == null ? null : (_) => onTap!(),
-      selectedColor: scheme.primary.withValues(alpha: 0.12),
-      side: BorderSide(color: scheme.outline),
+      selectedColor: nuni.primaryTone.container,
+      side: BorderSide(
+        color: selected ? nuni.palette.primary : nuni.border,
+        width: 1.5,
+      ),
+      labelStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+        color: selected ? nuni.primaryTone.onContainer : null,
+        fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+      ),
       showCheckmark: false,
     );
   }

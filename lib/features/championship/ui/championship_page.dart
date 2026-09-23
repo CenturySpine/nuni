@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/errors/app_error_message.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_card.dart';
 import '../../../shared/nuni_chip.dart';
 import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
+import '../../../shared/nuni_hero.dart';
+import '../../../shared/nuni_icon_tile.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../../shared/nuni_rank_badge.dart';
 import '../../profile/data/profile_repository.dart';
 import '../data/championship_repository.dart';
 import '../domain/championship_season.dart';
@@ -117,11 +121,40 @@ class _ZoneSeasonView extends ConsumerWidget {
     final zoneLabelAsync = ref.watch(championshipZoneLabelProvider(zoneId));
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
       children: [
-        Text(
-          '${zoneLabelAsync.asData?.value ?? zoneId} · $season',
-          style: Theme.of(context).textTheme.titleMedium,
+        NuniHero(
+          child: Row(
+            children: [
+              const NuniIconTile(
+                icon: PhosphorIcons.crown,
+                tone: NuniTone.sunshine,
+                size: 48,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      zoneLabelAsync.asData?.value ?? zoneId,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                    Text(
+                      season,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onPrimary
+                            .withValues(alpha: 0.85),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
         if (zoneIds.length > 1) ...[
@@ -170,7 +203,7 @@ class _ZoneSeasonView extends ConsumerWidget {
                   children: [
                     for (final standing in standings)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.only(bottom: 10),
                         child: _StandingRow(
                           standing: standing,
                           isMe: standing.playerId == myPlayerId,
@@ -218,17 +251,17 @@ class _StandingRow extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return NuniCard(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      color: isMe ? context.nuni.primaryTone.container : null,
+      borderColor: isMe ? scheme.primary : null,
       child: Row(
         children: [
-          SizedBox(
-            width: 32,
-            child: Text(
-              '${standing.position}',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+          NuniRankBadge(
+            label: '${standing.position}',
+            position: standing.position,
+            size: 34,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,8 +269,8 @@ class _StandingRow extends StatelessWidget {
                 Text(
                   standing.playerName,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: isMe ? scheme.primary : null,
-                    fontWeight: isMe ? FontWeight.bold : null,
+                    color: isMe ? context.nuni.primaryTone.onContainer : null,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
@@ -249,7 +282,8 @@ class _StandingRow extends StatelessWidget {
           ),
           Text(
             l10n.championshipPointsValue(standing.totalPoints),
-            style: Theme.of(context).textTheme.titleMedium,
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w800),
           ),
         ],
       ),

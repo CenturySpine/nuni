@@ -5,11 +5,13 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/errors/app_error_message.dart';
 import '../../../core/supabase/supabase_providers.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../../shared/nuni_status_pill.dart';
 import '../data/holes_repository.dart';
 import '../domain/distance_format.dart';
 import '../domain/hole.dart';
@@ -37,7 +39,7 @@ class HoleDetailSheet extends ConsumerWidget {
     final holeAsync = ref.watch(holeByIdProvider(holeId));
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
         child: holeAsync.when(
           loading: () => const SizedBox(height: 200, child: NuniLoading()),
           error: (error, _) => NuniErrorBanner(
@@ -74,41 +76,53 @@ class _HoleDetailContent extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        Text(hole.name, style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
           children: [
-            Expanded(
-              child: Text.rich(
-                TextSpan(
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  children: [
-                    TextSpan(
-                      text: hole.name,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    TextSpan(
-                      text:
-                          ' · ${[l10n.holesPar(hole.par), if (hole.distanceM != null) l10n.holesDetailLength(hole.distanceM!), if (hole.distance != null) l10n.holesAway(formatDistanceM(hole.distance!)), if (!hole.hasPosition) l10n.holesPositionToSet].join(' · ')}',
-                    ),
-                  ],
-                ),
-              ),
+            NuniStatusPill(
+              label: l10n.holesPar(hole.par),
+              tone: NuniTone.fairway,
             ),
-            Icon(
-              hole.visibility == HoleVisibility.public
+            if (hole.distanceM != null)
+              NuniStatusPill(
+                label: l10n.holesDetailLength(hole.distanceM!),
+                tone: NuniTone.neutral,
+              ),
+            if (hole.distance != null)
+              NuniStatusPill(
+                label: l10n.holesAway(formatDistanceM(hole.distance!)),
+                icon: PhosphorIcons.navigationArrow,
+              ),
+            if (!hole.hasPosition)
+              NuniStatusPill(
+                label: l10n.holesPositionToSet,
+                tone: NuniTone.tangerine,
+              ),
+            NuniStatusPill(
+              label: hole.visibility == HoleVisibility.public
+                  ? l10n.holesFormVisibilityPublic
+                  : l10n.holesFormVisibilityPrivate,
+              icon: hole.visibility == HoleVisibility.public
                   ? PhosphorIcons.globe
                   : PhosphorIcons.lockSimple,
-              size: 18,
-              color: scheme.onSurfaceVariant,
+              tone: NuniTone.neutral,
             ),
           ],
         ),
         if (hole.description != null && hole.description!.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Text(hole.description!),
+          const SizedBox(height: 12),
+          Text(
+            hole.description!,
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: scheme.onSurfaceVariant),
+          ),
         ],
         // Both slots always shown, a placeholder standing in for a missing
         // photo (PO, 2026-09-23).
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
@@ -117,7 +131,7 @@ class _HoleDetailContent extends ConsumerWidget {
                 caption: l10n.holesFormPhotoStart,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Expanded(
               child: _PhotoWithCaption(
                 url: endUrl,
@@ -126,7 +140,7 @@ class _HoleDetailContent extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         Row(
           children: [
             if (isOwner) ...[
@@ -142,7 +156,7 @@ class _HoleDetailContent extends ConsumerWidget {
                   },
                 ),
               ),
-              if (hole.hasPosition) const SizedBox(width: 8),
+              if (hole.hasPosition) const SizedBox(width: 10),
             ],
             // No "go there" for a hole imported without a position (plan 13).
             if (hole.hasPosition)
@@ -175,8 +189,8 @@ class _PhotoWithCaption extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     children: [
       HolePhotoThumb(url: url, iconSize: 32),
-      const SizedBox(height: 4),
-      Text(caption, style: Theme.of(context).textTheme.bodySmall),
+      const SizedBox(height: 6),
+      Text(caption, style: Theme.of(context).textTheme.labelMedium),
     ],
   );
 }

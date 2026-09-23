@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme/phosphor_icons.dart';
+import 'nuni_icon_tile.dart';
 
 /// Placeholder for an empty list ("no live sessions", "no holes nearby", ...).
 class NuniEmptyState extends StatelessWidget {
@@ -18,18 +19,21 @@ class NuniEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final scheme = Theme.of(context).colorScheme;
+    // Scrolls rather than overflowing when shown in a short area (a list
+    // region of a bottom sheet).
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 48, color: scheme.onSurfaceVariant),
-            const SizedBox(height: 12),
+            NuniIconTile(icon: icon, size: 64),
+            const SizedBox(height: 14),
             Text(
               message,
-              style: textTheme.bodyMedium,
+              style: textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
             if (action != null) ...[const SizedBox(height: 16), action!],

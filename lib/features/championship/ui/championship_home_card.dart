@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_card.dart';
+import '../../../shared/nuni_icon_tile.dart';
+import '../../../shared/nuni_list_card.dart';
+import '../../../shared/nuni_rank_badge.dart';
+import '../../../shared/nuni_section_header.dart';
 import '../../profile/data/profile_repository.dart';
 import '../data/championship_repository.dart';
 import '../domain/championship_membership.dart';
@@ -44,32 +49,29 @@ class ChampionshipHomeSection extends ConsumerWidget {
         if (zoneIds.isEmpty && past.isEmpty) return const SizedBox.shrink();
 
         final l10n = AppLocalizations.of(context)!;
-        final titleStyle = Theme.of(context).textTheme.titleMedium;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 8),
-              child: Text(l10n.championshipTitle, style: titleStyle),
-            ),
-            for (final zoneId in zoneIds) ...[
-              _ZoneCard(zoneId: zoneId, season: season),
-              const SizedBox(height: 12),
-            ],
-            if (past.isNotEmpty) ...[
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 8),
-                child: Text(
-                  l10n.championshipPastTitle,
-                  style: Theme.of(context).textTheme.titleSmall,
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 28),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              NuniSectionHeader(title: l10n.championshipTitle),
+              for (final zoneId in zoneIds) ...[
+                _ZoneCard(zoneId: zoneId, season: season),
+                const SizedBox(height: 10),
+              ],
+              if (past.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                NuniSectionHeader(
+                  title: l10n.championshipPastTitle,
+                  padding: const EdgeInsets.only(left: 4, bottom: 8),
                 ),
-              ),
-              for (final m in past) ...[
-                _PastChampionshipRow(zoneId: m.zoneId, season: m.season),
-                const SizedBox(height: 8),
+                for (final m in past) ...[
+                  _PastChampionshipRow(zoneId: m.zoneId, season: m.season),
+                  const SizedBox(height: 10),
+                ],
               ],
             ],
-          ],
+          ),
         );
       },
     );
@@ -98,36 +100,17 @@ class _PastChampionshipRow extends ConsumerWidget {
     final myPlayerId = ref.watch(myPlayerProvider).asData?.value.id;
     final mine = standings?.where((s) => s.playerId == myPlayerId).firstOrNull;
 
-    return NuniCard(
+    return NuniListCard(
       onTap: () => _openClassement(context, zoneId, season),
-      child: Row(
-        children: [
-          Icon(
-            PhosphorIcons.crown,
-            size: 20,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${label ?? l10n.championshipTitle} · $season',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                if (mine != null)
-                  Text(
-                    '${l10n.championshipFinalPosition(mine.position, standings!.length)}'
-                    ' · ${l10n.championshipPointsValue(mine.totalPoints)}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-              ],
-            ),
-          ),
-          const Icon(PhosphorIcons.caretRight, size: 18),
-        ],
+      leading: const NuniIconTile(
+        icon: PhosphorIcons.crown,
+        tone: NuniTone.neutral,
       ),
+      title: '${label ?? l10n.championshipTitle} · $season',
+      subtitle: mine == null
+          ? null
+          : '${l10n.championshipFinalPosition(mine.position, standings!.length)}'
+                ' · ${l10n.championshipPointsValue(mine.totalPoints)}',
     );
   }
 }
@@ -155,9 +138,13 @@ class _ZoneCard extends ConsumerWidget {
         final myIndex = standings.indexWhere((s) => s.playerId == myPlayerId);
         if (myIndex == -1) return const SizedBox.shrink();
 
-        final start = (myIndex - 1).clamp(0, standings.length);
-        final end = (myIndex + 2).clamp(0, standings.length);
-        final neighbors = standings.sublist(start, end);
+        // Podium first, then my own row if I'm not on it (PO, 2026-09-23:
+        // the leader must always show); the full standings are one tap away.
+        const podiumSize = 3;
+        final podium = standings.take(podiumSize).toList();
+        final showMine = myIndex >= podiumSize;
+        final textTheme = Theme.of(context).textTheme;
+        final highlight = context.nuni.primaryTone;
 
         return NuniCard(
           onTap: () => _openClassement(context, zoneId, season),
@@ -166,52 +153,83 @@ class _ZoneCard extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Icon(
-                    PhosphorIcons.crown,
-                    color: Theme.of(context).colorScheme.primary,
+                  const NuniIconTile(
+                    icon: PhosphorIcons.crown,
+                    tone: NuniTone.sunshine,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Text(
                       '${labelAsync.asData?.value ?? l10n.championshipTitle} · $season',
-                      style: Theme.of(context).textTheme.titleSmall,
+                      style: textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                  Icon(PhosphorIcons.caretRight, size: 18),
+                  Icon(
+                    PhosphorIcons.caretRight,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ],
               ),
-              const SizedBox(height: 8),
-              for (final standing in neighbors)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
+              const SizedBox(height: 12),
+              for (final standing in [
+                ...podium,
+                if (showMine) standings[myIndex],
+              ]) ...[
+                if (showMine && standing == standings[myIndex])
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16, top: 2),
+                    child: Text('⋯', style: textTheme.titleMedium),
+                  ),
+                Container(
+                  margin: const EdgeInsets.only(top: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: standing.playerId == myPlayerId
+                        ? highlight.container
+                        : null,
+                    borderRadius: BorderRadius.circular(NuniRadius.small),
+                  ),
                   child: Row(
                     children: [
-                      SizedBox(
-                        width: 28,
-                        child: Text(
-                          '${standing.position}',
-                          style: standing.playerId == myPlayerId
-                              ? Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(fontWeight: FontWeight.bold)
-                              : Theme.of(context).textTheme.bodyMedium,
-                        ),
+                      NuniRankBadge(
+                        label: '${standing.position}',
+                        position: standing.position,
+                        size: 26,
                       ),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           standing.playerName,
                           style: standing.playerId == myPlayerId
-                              ? Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(fontWeight: FontWeight.bold)
-                              : Theme.of(context).textTheme.bodyMedium,
+                              ? textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: highlight.onContainer,
+                                )
+                              : textTheme.bodyMedium,
                         ),
                       ),
                       Text(
                         l10n.championshipPointsValue(standing.totalPoints),
-                        style: Theme.of(context).textTheme.bodySmall,
+                        style: textTheme.labelLarge,
                       ),
                     ],
                   ),
                 ),
+              ],
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => _openClassement(context, zoneId, season),
+                  child: Text(l10n.championshipSeeFullStandings),
+                ),
+              ),
             ],
           ),
         );

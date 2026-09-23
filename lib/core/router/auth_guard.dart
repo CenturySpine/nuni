@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -28,7 +29,12 @@ GoRouterRedirect authGuard(Ref ref) {
       return '/login';
     }
 
-    if (!isSignedIn && !_publicPaths.contains(path)) return '/login';
+    // The component gallery (debug builds only, see app_router.dart) needs
+    // no account.
+    final isDevPage = kDebugMode && path == '/dev/theme';
+    if (!isSignedIn && !_publicPaths.contains(path) && !isDevPage) {
+      return '/login';
+    }
     if (isSignedIn && _authPaths.contains(path)) {
       final pendingCode = ref.read(pendingJoinCodeProvider);
       if (pendingCode != null) {

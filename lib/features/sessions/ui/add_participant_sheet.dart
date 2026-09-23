@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/nuni_avatar.dart';
 import '../../../shared/nuni_loading.dart';
 import '../../profile/domain/player.dart';
 import '../data/sessions_repository.dart';
@@ -99,17 +100,9 @@ class _AddParticipantSheetState extends ConsumerState<_AddParticipantSheet> {
                     itemBuilder: (context, index) {
                       final player = visible[index];
                       return ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: player.avatarUrl == null
-                              ? null
-                              : NetworkImage(player.avatarUrl!),
-                          child: player.avatarUrl == null
-                              ? Text(
-                                  player.name.isEmpty
-                                      ? '?'
-                                      : player.name[0].toUpperCase(),
-                                )
-                              : null,
+                        leading: NuniAvatar(
+                          name: player.name,
+                          imageUrl: player.avatarUrl,
                         ),
                         title: Text(player.name),
                         onTap: () => Navigator.of(context).pop(player),

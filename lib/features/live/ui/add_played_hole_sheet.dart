@@ -3,13 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_error_message.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_chip.dart';
 import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
+import '../../../shared/nuni_icon_tile.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../../shared/nuni_status_pill.dart';
 import '../../holes/data/holes_repository.dart';
 import '../../holes/domain/distance_format.dart';
 import '../../holes/domain/hole.dart';
@@ -197,9 +200,12 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
         const SizedBox(height: 8),
         // Always offered, whatever the position, radius or search (plan 17).
         ListTile(
-          tileColor: Theme.of(context).colorScheme.secondaryContainer,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          leading: const Icon(PhosphorIcons.golf),
+          tileColor: Theme.of(context).colorScheme.primaryContainer,
+          leading: const NuniIconTile(
+            icon: PhosphorIcons.golf,
+            tone: NuniTone.fairway,
+            size: 40,
+          ),
           title: Text(l10n.sessionsLiveFreeHole),
           subtitle: Text(l10n.sessionsLiveFreeHoleHint),
           onTap: () => setState(() => _freeHole = true),
@@ -245,14 +251,14 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
                     tileColor: Theme.of(context)
                         .colorScheme
                         .surfaceContainerHighest,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
                     title: Text(hole.name),
                     subtitle: Text(l10n.holesPar(hole.par)),
                     trailing: hole.distance == null
                         ? null
-                        : Text(formatDistanceM(hole.distance!)),
+                        : NuniStatusPill(
+                            label: formatDistanceM(hole.distance!),
+                            icon: PhosphorIcons.navigationArrow,
+                          ),
                     onTap: () => setState(() => _selectedHole = hole),
                   );
                 },

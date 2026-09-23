@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_error_message.dart';
 import '../../../core/geocoding/reverse_geocoding_client.dart';
@@ -11,8 +11,10 @@ import '../../../core/location/location_service.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
+import '../../../shared/nuni_card.dart';
 import '../../../shared/nuni_chip.dart';
 import '../../../shared/nuni_form_section.dart';
+import '../../../shared/nuni_segmented.dart';
 import '../data/libre_ranking_direction_pref.dart';
 import '../data/sessions_repository.dart';
 import '../domain/ranking_direction.dart';
@@ -210,20 +212,21 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
           NuniFormSection(
             title: l10n.sessionsCreateSectionType,
             children: [
-              Row(
-                children: [
-                  NuniChip(
+              NuniSegmented<SessionKind>(
+                segments: [
+                  NuniSegment(
+                    value: SessionKind.individual,
                     label: l10n.sessionsCreateKindIndividual,
-                    selected: _kind == SessionKind.individual,
-                    onTap: () => setState(() => _kind = SessionKind.individual),
+                    icon: PhosphorIcons.golf,
                   ),
-                  const SizedBox(width: 8),
-                  NuniChip(
+                  NuniSegment(
+                    value: SessionKind.team,
                     label: l10n.sessionsCreateKindTeam,
-                    selected: _kind == SessionKind.team,
-                    onTap: () => setState(() => _kind = SessionKind.team),
+                    icon: PhosphorIcons.users,
                   ),
                 ],
+                selected: _kind,
+                onChanged: (kind) => setState(() => _kind = kind),
               ),
             ],
           ),
@@ -258,42 +261,47 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
                     );
                     final current =
                         preference.asData?.value ?? RankingDirection.desc;
-                    return Row(
-                      children: [
-                        NuniChip(
+                    return NuniSegmented<RankingDirection>(
+                      segments: [
+                        NuniSegment(
+                          value: RankingDirection.desc,
                           label: l10n.sessionsCreateFreeDirectionHighest,
-                          selected: current == RankingDirection.desc,
-                          onTap: () => ref
-                              .read(libreRankingDirectionPrefProvider.notifier)
-                              .set(RankingDirection.desc),
                         ),
-                        const SizedBox(width: 8),
-                        NuniChip(
+                        NuniSegment(
+                          value: RankingDirection.asc,
                           label: l10n.sessionsCreateFreeDirectionLowest,
-                          selected: current == RankingDirection.asc,
-                          onTap: () => ref
-                              .read(libreRankingDirectionPrefProvider.notifier)
-                              .set(RankingDirection.asc),
                         ),
                       ],
+                      selected: current,
+                      onChanged: (direction) => ref
+                          .read(libreRankingDirectionPrefProvider.notifier)
+                          .set(direction),
                     );
                   },
                 ),
               ],
             ],
           ),
-          const SizedBox(height: 8),
-          ChampionshipToggle(
-            value: _isChampionship,
-            locationKnown: _position != null,
-            onChanged: (value) => setState(() => _isChampionship = value),
-          ),
           const SizedBox(height: 16),
-          NuniButton(
+          NuniCard(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: ChampionshipToggle(
+              value: _isChampionship,
+              locationKnown: _position != null,
+              onChanged: (value) => setState(() => _isChampionship = value),
+            ),
+          ),
+        ],
+      ),
+      // The form's one action stays reachable without scrolling.
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: NuniButton(
             label: l10n.sessionsCreateSubmit,
             onPressed: _creating ? null : _create,
           ),
-        ],
+        ),
       ),
     );
   }
@@ -327,7 +335,11 @@ class _ScoringModeChip extends StatelessWidget {
       children: [
         NuniChip(label: label, selected: selected, onTap: onTap),
         IconButton(
-          icon: const Icon(PhosphorIcons.info, size: 18),
+          icon: Icon(
+            PhosphorIcons.info,
+            size: 18,
+            color: Theme.of(context).colorScheme.primary,
+          ),
           visualDensity: VisualDensity.compact,
           onPressed: onInfo,
         ),

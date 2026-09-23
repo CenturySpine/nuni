@@ -39,6 +39,17 @@ réglage de thème). Plus de page de démonstration avec bascule : la comparaiso
 fait, si besoin, en changeant la constante et en relançant l'app.
 Suivi détaillé des essais (sources, valeurs, contrastes, maquettes) : [design/PALETTE.md](design/PALETTE.md).
 
+**Q74 ☑ — Refonte visuelle complète (remplace Q1, Q1b et les couleurs de Q23).**
+Demande PO (2026-09-23) : refonte de toute l'identité visuelle, carte blanche, couleurs vives et
+joyeuses sans excès, direction artistique moderne et conforme aux standards, contrôles
+standardisés, aucun changement fonctionnel. Réalisé : palette "NUNI Pop" (fond `#F4F5FA`,
+cartouches blancs, texte `#14172B`, violet `#5B4CF5` comme couleur principale, trois accents
+vert `#12B76A`, mandarine `#FF7A45`, soleil `#FFC43D`, rouge `#CF2E3A` pour le danger), police
+Plus Jakarta Sans (licence OFL, intégrée à l'app, fonctionne hors ligne), logo NU blanc / NI
+jaune sur tuile en dégradé violet, icônes PWA régénérées. Le modèle "3 couleurs + dérivées" de
+Q1 et les cinq variantes de Q1b sont retirés du code. Détail et règles d'usage :
+[design/PALETTE.md](design/PALETTE.md), section "NUNI Pop".
+
 ## Backend Supabase (étape 3)
 
 **Q2 ☑ — Nouveau projet Supabase `nuni` ou nouveau schéma dans le projet existant ?**
@@ -127,6 +138,8 @@ Suggestion : chaque membre saisit sa propre équipe ; le créateur de la session
 les équipes (comportement actuel). Toute écriture est "dernier écrit gagne" avec affichage de qui a
 saisi et quand. Alternative plus ouverte : tout membre saisit toute équipe (utile si un seul
 téléphone sert de "marqueur"). Les deux sont un simple paramètre de politique RLS.
+Décision PO (2026-09-23) : la mention "Par X à HH:MM" sous chaque score n'est plus affichée
+(n'apporte rien). L'auteur et l'heure restent enregistrés en base.
 
 **Q9 ☑ — Une session en direct par créateur, ou plusieurs ?**
 Réponse PO (2026-09-14) : suggestion retenue, plusieurs sessions en direct par utilisateur, listées
@@ -136,6 +149,22 @@ Suggestion : autoriser plusieurs sessions en direct par utilisateur, l'accueil l
 sessions en direct". Le cas réel est rare et l'interdiction n'apporterait qu'une friction.
 
 ## Authentification (étapes 3, 5)
+
+**Q75 ☐ — Connexion en local renvoyée vers le domaine de production.**
+Constat PO (2026-09-23) : en debug, se connecter depuis `localhost:3000` ramène sur
+`https://nuni.centuryspine.org` après Google. Côté app, rien d'anormal : elle demande à Supabase
+de revenir sur l'adresse de la page (`http://localhost:3000`, `auth_repository.dart`). Supabase
+ne respecte cette demande que si l'adresse figure dans sa liste "Redirect URLs" ; sinon il
+renvoie silencieusement vers sa "Site URL" (la production). La comparaison est faite au
+caractère près, ou par motif avec `*` / `**` : une entrée `http://localhost:3000/` (barre
+finale), `http://127.0.0.1:3000` ou `https://localhost:3000` ne correspond pas à
+`http://localhost:3000`. Vérifié (curl sur `/auth/v1/authorize`) : l'app transmet bien
+`redirect_to=http://localhost:3000` ; le refus a lieu après le retour de Google, invisible
+sans accès au tableau de bord.
+Suggestion : dans Supabase, Authentication > URL Configuration > Redirect URLs, avoir
+exactement `http://localhost:3000/**` (motif recommandé par la documentation Supabase, accepte
+l'adresse avec ou sans chemin). Site URL inchangée (production). En debug, le serveur tourne
+toujours sur `localhost:3000`, aucun autre port.
 
 **Q20 ☑ — Client OAuth Google : réutiliser celui de LsgScores ou en créer un dédié à NUNI ?**
 Réponse PO (2026-09-14) : client dédié à NUNI. À créer par le PO dans la console Google Cloud

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:nuni/shared/nuni_logo.dart';
 import 'package:nuni/app.dart';
 import 'package:nuni/core/supabase/supabase_providers.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -50,8 +51,8 @@ void main() {
       await pumpApp(tester);
       await tester.pumpAndSettle();
 
-      expect(find.text('NUNI'), findsOneWidget);
-      expect(find.text('Home'), findsOneWidget);
+      expect(find.byType(NuniLogo), findsOneWidget);
+      expect(find.text('Home'), findsNWidgets(2));
       expect(find.text('Holes'), findsOneWidget);
       expect(find.text('History'), findsOneWidget);
     },

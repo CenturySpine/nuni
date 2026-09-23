@@ -26,8 +26,8 @@ abstract class PlayedHoleGeo with _$PlayedHoleGeo {
 
 /// One team's raw entered value for a played hole (plan 08): strokes for
 /// Stroke Play/Match Play/Redistribution, points directly for Free (Q7b).
-/// `updatedBy`/`updatedAt` back the "who entered this and when" display
-/// (Q8's retained suggestion).
+/// `updatedBy`/`updatedAt` record who entered it and when (Q8); no longer
+/// shown on screen (PO, 2026-09-23), kept as data.
 @freezed
 abstract class HoleScore with _$HoleScore {
   const factory HoleScore({

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 
 /// A square hole photo, or a framed placeholder when the hole has none (or
@@ -17,7 +18,9 @@ class HolePhotoThumb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final radius = BorderRadius.circular(size != null && size! < 64 ? 6 : 8);
+    final radius = BorderRadius.circular(
+      size != null && size! < 64 ? NuniRadius.small : NuniRadius.control,
+    );
     final placeholder = DecoratedBox(
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,

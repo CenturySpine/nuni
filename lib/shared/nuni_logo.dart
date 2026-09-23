@@ -6,9 +6,9 @@ import '../core/theme/logo_colors.dart';
 /// (block letters built from shapes, no font, so it renders identically and
 /// scales losslessly). Q23: colours are fixed, not palette-dependent.
 ///
-/// Always shown on its icon tile (off-white background, rounded corners) so
-/// it reads the same wherever it appears in the app as it does as the PWA
-/// icon on the home screen -- never the bare glyph on the page background.
+/// Always shown on its icon tile (violet gradient, rounded corners) so it
+/// reads the same wherever it appears in the app as it does as the PWA icon
+/// on the home screen -- never the bare glyph on the page background.
 class NuniLogo extends StatelessWidget {
   const NuniLogo({super.key, this.size = 64});
 
@@ -23,18 +23,24 @@ class NuniLogo extends StatelessWidget {
       height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: nuniLogoBackground,
-        borderRadius: BorderRadius.circular(size * 0.2),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [nuniLogoBackgroundStart, nuniLogoBackgroundEnd],
+        ),
+        borderRadius: BorderRadius.circular(size * 0.26),
       ),
       child: CustomPaint(
-        painter: _NuniLogoPainter(),
+        painter: NuniLogoGlyphPainter(),
         size: Size(glyphSize, glyphSize),
       ),
     );
   }
 }
 
-class _NuniLogoPainter extends CustomPainter {
+/// The bare "NU/NI" glyph, without its tile. Public so that
+/// `tool/generate_icons.dart` renders the PWA icons from this exact drawing.
+class NuniLogoGlyphPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     canvas.save();
@@ -88,5 +94,5 @@ class _NuniLogoPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _NuniLogoPainter oldDelegate) => false;
+  bool shouldRepaint(covariant NuniLogoGlyphPainter oldDelegate) => false;
 }

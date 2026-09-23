@@ -1,5 +1,53 @@
 # Palette NUNI — essais et décisions
 
+## NUNI Pop — identité active (Q74, 2026-09-23)
+
+Refonte complète demandée par le PO : couleurs vives et joyeuses sans excès, direction
+artistique moderne et standard, contrôles uniformes. Remplace le modèle "3 couleurs + dérivées"
+et les cinq variantes décrites plus bas (conservées comme historique).
+
+| Rôle | Valeur | Usage |
+|---|---|---|
+| Fond de page | `#F4F5FA` | toutes les pages |
+| Surface | `#FFFFFF` | cartouches, feuilles, dialogues, barre de navigation |
+| Surface atténuée | `#F0F1F7` | champs de saisie, lignes de score |
+| Bordure | `#E3E5EF` | contours de cartouches, séparateurs |
+| Texte | `#14172B` | 16,3:1 sur le fond |
+| Texte secondaire | `#5C6275` | 5,6:1 sur le fond |
+| Violet (principale) | `#5B4CF5` | bouton principal, sélection, liens, focus ; texte blanc dessus 5,5:1 |
+| Vert "fairway" | `#12B76A` (teinte `#E2F6EA`, texte `#0A7A47`) | golf, par, session en direct |
+| Mandarine | `#FF7A45` (teinte `#FFEDE3`, texte `#B2441A`) | en préparation, tracé du trou |
+| Soleil | `#FFC43D` (teinte `#FFF4D4`, texte `#855D00`) | leader, couronne, championnat |
+| Rouge | `#CF2E3A` (teinte `#FDECEC`, texte `#B42328`) | erreurs, suppressions ; 5,1:1 sur blanc, 4,7:1 sur le fond |
+| Dégradé de marque | `#5B4CF5` → `#7B4FF0` (texte blanc ≥ 5:1 partout) | bandeau de connexion, bandeau d'accueil, logo |
+
+Chaque teinte pâle porte son texte foncé à 4,8:1 au moins (vérifié par test unitaire,
+`test/core/theme/palette_contrast_test.dart`).
+
+Règle d'usage : chaque accent a trois tons (vif, teinte pâle de fond, texte foncé sur la
+teinte) ; un accent ne sert qu'à porter un sens (état, rang, catégorie), jamais à décorer.
+Le violet reste la seule couleur d'action.
+
+Typographie : Plus Jakarta Sans (OFL), graisses 400 à 800, embarquée dans l'app
+(`assets/fonts`). Titres en 800 légèrement resserrés, corps 15 px.
+
+Formes : rayon 14 px pour boutons et champs, 20 px pour les cartouches, 28 px pour dialogues et
+feuilles du bas ; cartouches plates avec bordure fine, sans ombre. Boutons de 52 px de haut.
+
+Composants standard (`lib/shared/`, stylés par `lib/core/theme/app_theme.dart`) : bouton
+principal / secondaire / danger, cartouche et cartouche-ligne (`NuniListCard` : vignette,
+titre, pastille d'état, sous-titre, chevron), en-tête de section, sélecteur segmenté (2 ou 3
+choix exclusifs), puce (filtres et choix multiples), interrupteur (réglage oui/non), pastille
+d'état, vignette d'icône teintée, avatar à initiales, badge de rang (or, violet, neutre),
+liste groupée (réglages, actions), bandeau de marque. Galerie : `/dev/theme` en debug.
+
+Logo : "NU" blanc, "NI" jaune soleil, sur tuile en dégradé violet (`web/icons/nuni_logo.svg`).
+Icônes PWA et favicon générés depuis le même dessin : `fvm flutter test tool/generate_icons.dart`.
+
+---
+
+## Historique des essais (avant Q74)
+
 Fichier unique de synthèse des essais de palette. Les fichiers de chaque essai (maquette HTML
 source, captures PNG) sont rangés dans `essais/<numéro>_<hex1>-<hex2>-<hex3>/`. Question
 associée : Q1 / Q1b dans [QUESTIONS_PO.md](../QUESTIONS_PO.md).

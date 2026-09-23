@@ -14,6 +14,8 @@
 
   "homeCreateSessionAction": "Create a session",
   "homeJoinAction": "Join",
+  "homeHeroTitle": "Ready to play?",
+  "homeHeroSubtitle": "Start a session or join your friends with a code.",
   "homeJoinTitle": "Join a session",
   "homeJoinCodeLabel": "Session code",
   "homeSectionOngoing": "My ongoing sessions",
@@ -113,8 +115,6 @@
   "sessionsLiveFreeHoleLabelField": "Name (optional)",
   "sessionsLiveDeleteHole": "Remove this hole",
   "sessionsLiveMissingScore": "No score yet",
-  "sessionsLiveScoreUpdatedBy": "By {name} at {time}",
-  "@sessionsLiveScoreUpdatedBy": {"placeholders": {"name": {"type": "String"}, "time": {"type": "String"}}},
 
   "sessionsLiveScoreStrokesLabel": "Strokes for this team",
   "sessionsLiveScorePointsLabel": "Points for this team",
@@ -176,6 +176,8 @@
   "historyExportTotalHeader": "Total",
 
   "championshipTitle": "Championship",
+
+  "championshipSeeFullStandings": "See full standings",
   "championshipEmpty": "No championship session yet.",
   "championshipToggleLabel": "Counts for the championship",
   "championshipToggleNoLocation": "Location unknown for this session -- allow geolocation to enable this.",
@@ -260,10 +262,17 @@
   "authSwitchToSignUp": "Sign Up",
   "authSwitchToLogin": "Log In",
   "authContinueWithGoogle": "Continue with Google",
+  "authHeroSubtitle": "Score your street golf rounds together, live.",
+  "authSwitchPromptToSignUp": "New to NUNI?",
+  "authSwitchPromptToLogin": "Already have an account?",
 
   "profileTitle": "Profile",
   "profileDisplayNameLabel": "Display name",
   "profileSaved": "Profile updated.",
+  "profilePhotoChange": "Change photo",
+  "profilePhotoCropTitle": "Crop your photo",
+  "profilePhotoCropConfirm": "Use photo",
+  "profilePhotoUpdated": "Profile photo updated.",
 
   "commonCancel": "Cancel",
   "commonConfirm": "Confirm",

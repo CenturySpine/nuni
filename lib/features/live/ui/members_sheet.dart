@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/errors/app_error_message.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/nuni_avatar.dart';
 import '../../sessions/data/sessions_repository.dart';
 import '../../sessions/domain/session_member.dart';
 import '../data/live_repository.dart';
@@ -76,6 +77,7 @@ class _MembersSheetState extends ConsumerState<MembersSheet> {
           for (final member in widget.members)
             ListTile(
               contentPadding: EdgeInsets.zero,
+              leading: NuniAvatar(name: member.playerName),
               title: Text(member.playerName),
               subtitle: member.role == MemberRole.owner
                   ? Text(l10n.homeRoleOwner)

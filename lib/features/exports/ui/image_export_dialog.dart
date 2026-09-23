@@ -7,6 +7,7 @@ import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/errors/app_error_message.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
@@ -244,7 +245,7 @@ class _PhotoStripTile extends StatelessWidget {
           height: 56,
           decoration: BoxDecoration(
             color: scheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(NuniRadius.control),
             border: Border.all(
               color: selected ? scheme.primary : Colors.transparent,
               width: 2,

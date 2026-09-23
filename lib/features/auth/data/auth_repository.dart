@@ -14,8 +14,9 @@ class AuthRepository {
 
   /// Redirect flow (plan 05): popups are blocked in PWAs installed on iOS,
   /// so this is the only option, not a stylistic choice. Returns to the
-  /// current origin, which must be in the Supabase project's allow-list
-  /// (already true for localhost:3000 and nuni.centuryspine.org, plan 03).
+  /// current origin, which must match an entry of the Supabase project's
+  /// Redirect URLs (e.g. `http://localhost:3000/**`); otherwise Supabase
+  /// silently falls back to its Site URL, i.e. production (Q75).
   Future<void> signInWithGoogle() {
     return _client.auth.signInWithOAuth(
       OAuthProvider.google,

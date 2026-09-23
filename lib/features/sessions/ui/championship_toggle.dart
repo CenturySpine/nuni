@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
 
-/// The championship checkbox (plan 15, parcours 1), shared between
+/// The championship switch (plan 15, parcours 1), shared between
 /// creation, the waiting room and post-completion settings: disabled with
 /// an explanatory message when the session has no known location yet --
 /// mirrors the trigger-side guard (`championship_requires_location`) so the
@@ -22,14 +22,13 @@ class ChampionshipToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return CheckboxListTile(
+    return SwitchListTile(
       contentPadding: EdgeInsets.zero,
-      controlAffinity: ListTileControlAffinity.leading,
       title: Text(l10n.championshipToggleLabel),
       subtitle: locationKnown ? null : Text(l10n.championshipToggleNoLocation),
       value: value,
       onChanged: (locationKnown && onChanged != null)
-          ? (checked) => onChanged!(checked ?? false)
+          ? (checked) => onChanged!(checked)
           : null,
     );
   }

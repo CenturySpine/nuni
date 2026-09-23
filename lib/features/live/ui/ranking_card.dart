@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_card.dart';
+import '../../../shared/nuni_icon_tile.dart';
+import '../../../shared/nuni_rank_badge.dart';
 import '../../sessions/domain/scoring_mode.dart';
 import '../../sessions/domain/session.dart';
 import '../domain/live_team.dart';
@@ -35,6 +38,7 @@ class _RankingCardState extends State<RankingCard> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     final mode = widget.session.scoringMode;
     final standings = computeStandings(
       scoringMode: mode,
@@ -59,53 +63,80 @@ class _RankingCardState extends State<RankingCard> {
         children: [
           Row(
             children: [
-              Icon(PhosphorIcons.crown, color: scheme.primary),
-              const SizedBox(width: 8),
+              const NuniIconTile(
+                icon: PhosphorIcons.crown,
+                tone: NuniTone.sunshine,
+              ),
+              const SizedBox(width: 14),
               Expanded(
-                child: Text(
-                  l10n.sessionsLiveRankingTitle,
-                  style: Theme.of(context).textTheme.titleMedium,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.sessionsLiveRankingTitle,
+                      style: textTheme.titleMedium,
+                    ),
+                    if (!_expanded && leaders.isNotEmpty)
+                      Text(
+                        leaders.length == 1
+                            ? l10n.sessionsLiveRankingLeader(
+                                teamById[leaders.single.teamId]
+                                        ?.playerNames() ??
+                                    '',
+                              )
+                            : l10n.sessionsLiveRankingLeaderTied(
+                                leaders
+                                    .map(
+                                      (s) =>
+                                          teamById[s.teamId]?.playerNames() ??
+                                          '',
+                                    )
+                                    .join(', '),
+                              ),
+                        style: textTheme.bodySmall,
+                      ),
+                  ],
                 ),
               ),
               if (standings.isNotEmpty)
                 AnimatedRotation(
-                  turns: _expanded ? 0.5 : 0,
+                  turns: _expanded ? 0.75 : 0.25,
                   duration: const Duration(milliseconds: 150),
-                  child: const Icon(PhosphorIcons.caretRight),
+                  child: Icon(
+                    PhosphorIcons.caretRight,
+                    size: 18,
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
             ],
           ),
-          if (!_expanded && leaders.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text(
-              leaders.length == 1
-                  ? l10n.sessionsLiveRankingLeader(
-                      teamById[leaders.single.teamId]?.playerNames() ?? '',
-                    )
-                  : l10n.sessionsLiveRankingLeaderTied(
-                      leaders
-                          .map((s) => teamById[s.teamId]?.playerNames() ?? '')
-                          .join(', '),
-                    ),
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
           if (incomplete) ...[
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Icon(
-                  PhosphorIcons.warningCircle,
-                  size: 16,
-                  color: scheme.error,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  l10n.sessionsLiveRankingIncomplete,
-                  style: Theme.of(context).textTheme.bodySmall
-                      ?.copyWith(color: scheme.error),
-                ),
-              ],
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: scheme.errorContainer,
+                borderRadius: BorderRadius.circular(NuniRadius.small),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    PhosphorIcons.warningCircle,
+                    size: 16,
+                    color: scheme.onErrorContainer,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.sessionsLiveRankingIncomplete,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: scheme.onErrorContainer,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
           if (_expanded) ...[
@@ -138,35 +169,43 @@ class _StandingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     final metric = mode == ScoringMode.strokePlay
         ? l10n.sessionsLiveStrokesValue(standing.totalStrokes)
         : l10n.sessionsLivePointsValue(standing.totalPoints ?? 0);
+    final leader = standing.position == 1;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+    return Container(
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+        color: leader ? context.nuni.sunshine.container : null,
+        borderRadius: BorderRadius.circular(NuniRadius.small),
+      ),
       child: Row(
         children: [
-          SizedBox(
-            width: 28,
-            child: Text(
-              l10n.sessionsLiveRankingPosition(standing.position),
-              style: Theme.of(context).textTheme.titleSmall
-                  ?.copyWith(color: scheme.primary),
-            ),
+          NuniRankBadge(
+            label: '${standing.position}',
+            position: standing.position,
+            size: 28,
           ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               team?.playerNames() ?? '',
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: textTheme.bodyMedium?.copyWith(
+                fontWeight: leader ? FontWeight.w700 : FontWeight.w500,
+              ),
             ),
           ),
-          Text(metric, style: Theme.of(context).textTheme.labelLarge),
+          Text(metric, style: textTheme.labelLarge),
           if (!standing.isComplete) ...[
             const SizedBox(width: 6),
             Text(
               '${standing.holesScored}/${standing.holesTotal}',
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: scheme.onSurfaceVariant),
+              style: textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
             ),
           ],
         ],

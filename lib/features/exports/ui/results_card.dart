@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../core/weather/weather_icon.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -48,7 +49,10 @@ class ResultsCard extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
     final teamById = {for (final t in entry.snapshot.teams) t.id: t};
     final onPhoto = backgroundImageBytes != null;
-    final foreground = onPhoto ? Colors.white : null;
+    // White text everywhere: on the photo (behind dark panels) or on the
+    // brand gradient.
+    final foreground = Theme.of(context).colorScheme.onPrimary;
+    final gold = context.nuni.sunshine.base;
     final ratio = photoAspectRatio ?? 1;
     final cardWidth = 1080.0;
     final cardHeight = onPhoto ? 1080.0 / ratio : 1080.0;
@@ -66,7 +70,7 @@ class ResultsCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.38),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(NuniRadius.control),
             ),
             child: child,
           );
@@ -75,9 +79,7 @@ class ResultsCard extends StatelessWidget {
       width: cardWidth,
       height: cardHeight,
       decoration: BoxDecoration(
-        color: onPhoto
-            ? null
-            : Theme.of(context).colorScheme.surfaceContainerHighest,
+        gradient: onPhoto ? null : context.nuni.heroGradient,
         // The card's own size already matches the photo's ratio exactly
         // (above), so `cover` neither crops it nor needs letterboxing --
         // it lands pixel-for-pixel.
@@ -114,7 +116,7 @@ class ResultsCard extends StatelessWidget {
                         scoringModeLabel(l10n, session.scoringMode),
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(
-                              color: foreground?.withValues(alpha: 0.9),
+                              color: foreground.withValues(alpha: 0.9),
                             ),
                       ),
                     ],
@@ -161,9 +163,10 @@ class ResultsCard extends StatelessWidget {
                             '${standing.position}',
                             style: Theme.of(context).textTheme.headlineSmall
                                 ?.copyWith(
-                                  color:
-                                      foreground ??
-                                      Theme.of(context).colorScheme.primary,
+                                  color: standing.position == 1
+                                      ? gold
+                                      : foreground,
+                                  fontWeight: FontWeight.w800,
                                 ),
                           ),
                         ),
