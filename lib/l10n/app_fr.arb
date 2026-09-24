@@ -469,5 +469,16 @@
   "statsBestDuo": "Meilleur duo",
   "statsBestDuoDetail": "{wins, plural, =1{1 victoire} other{{wins} victoires}} sur {sessions}",
   "profileStatsPublic": "Statistiques publiques",
-  "profileStatsPublicHelp": "Affiche vos statistiques sur votre fiche publique. Masquées, elles n'y apparaissent plus, mais vos sessions et scores restent visibles comme avant."
+  "profileStatsPublicHelp": "Affiche vos statistiques sur votre fiche publique. Masquées, elles n'y apparaissent plus, mais vos sessions et scores restent visibles comme avant.",
+  "holeStatsPassages": "Passages",
+  "holeStatsAverageStrokes": "Coups en moyenne",
+  "holeStatsToPar": "Écart au par",
+  "holeStatsRecord": "Record du trou",
+  "holeStatsRecordDetail": "{strokes, plural, =1{1 coup} other{{strokes} coups}} · {date}",
+  "holeStatsKing": "Roi du trou",
+  "holeStatsNoKing": "Pas encore de roi du trou : il faut {count} passages d’un même joueur.",
+  "holeStatsDistribution": "Répartition des scores",
+  "holeStatsDistributionCaption": "Passages par nombre de coups ; la colonne du par est en couleur.",
+  "holeStatsEmpty": "Ce trou n’a pas encore été joué dans une session qui compte.",
+  "holeStatsNoIndividual": "Pas encore de score individuel sur ce trou : les sessions par équipes et en « Libre » ne comptent pas les coups."
 }

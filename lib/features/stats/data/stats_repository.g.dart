@@ -104,3 +104,90 @@ final class PlayerHistoryFamily extends $Family
   @override
   String toString() => r'playerHistoryProvider';
 }
+
+/// A hole's sessions, reloaded on every opening of its sheet (auto-disposed).
+
+@ProviderFor(holeHistory)
+final holeHistoryProvider = HoleHistoryFamily._();
+
+/// A hole's sessions, reloaded on every opening of its sheet (auto-disposed).
+
+final class HoleHistoryProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<LiveSessionSnapshot>>,
+          List<LiveSessionSnapshot>,
+          FutureOr<List<LiveSessionSnapshot>>
+        >
+    with
+        $FutureModifier<List<LiveSessionSnapshot>>,
+        $FutureProvider<List<LiveSessionSnapshot>> {
+  /// A hole's sessions, reloaded on every opening of its sheet (auto-disposed).
+  HoleHistoryProvider._({
+    required HoleHistoryFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'holeHistoryProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$holeHistoryHash();
+
+  @override
+  String toString() {
+    return r'holeHistoryProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<LiveSessionSnapshot>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<LiveSessionSnapshot>> create(Ref ref) {
+    final argument = this.argument as String;
+    return holeHistory(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is HoleHistoryProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$holeHistoryHash() => r'fe9ea33776cad4fa30e813267816216caec4c393';
+
+/// A hole's sessions, reloaded on every opening of its sheet (auto-disposed).
+
+final class HoleHistoryFamily extends $Family
+    with
+        $FunctionalFamilyOverride<FutureOr<List<LiveSessionSnapshot>>, String> {
+  HoleHistoryFamily._()
+    : super(
+        retry: null,
+        name: r'holeHistoryProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// A hole's sessions, reloaded on every opening of its sheet (auto-disposed).
+
+  HoleHistoryProvider call(String holeId) =>
+      HoleHistoryProvider._(argument: holeId, from: this);
+
+  @override
+  String toString() => r'holeHistoryProvider';
+}

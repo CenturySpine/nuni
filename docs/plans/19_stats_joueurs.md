@@ -115,7 +115,9 @@ Les mêmes que le plan 21 (« Définitions communes »), qui s'appuiera sur ce p
 
 **Période (demande PO du 2026-09-24)** : en tête du bloc, des pastilles « Toutes saisons » puis
 chaque saison où le joueur a une session comptée, la plus récente d'abord. Toutes les parties
-ci-dessous sont recalculées pour la période choisie. « Toutes saisons » par défaut. Les
+ci-dessous sont recalculées pour la période choisie. À l'ouverture : la saison la plus récente
+jouée (demande PO du 2026-09-24, avec le plan 20 ; « Toutes saisons » par défaut auparavant) ;
+une nouvelle saison sans session laisse la place à la précédente plutôt qu'à un bloc vide. Les
 pastilles s'affichent même quand le joueur n'a joué qu'une saison (cas de toutes les données
 réelles au 2026-09-24, toutes en 2025-2026) : elles disent aussi de quelle saison viennent les
 chiffres.

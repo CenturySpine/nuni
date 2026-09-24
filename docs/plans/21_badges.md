@@ -55,7 +55,8 @@ Récompenser des exploits et la régularité pour donner une raison de rejouer e
    base ; il est recalculé depuis l'historique à chaque affichage. Changer un seuil = modifier le
    code et redéployer, et le nouveau seuil s'applique aussitôt à tout l'historique.
 9. **Record de trou (Q94).** Seuls les scores d'équipes d'un seul joueur comptent ; à égalité,
-   le premier à l'avoir réalisé garde le record. Concerne J1 et J2.
+   le plus récent prend le record (Q94 révisée le 2026-09-24) : égaler un record suffit à le
+   détenir. Concerne J1 et J2.
 10. **Heure (Q115).** Les heures (I5, I6) et les dates (semaines, saisons, mois) sont lues à
     l'heure locale de l'appareil, comme l'historique.
 11. **Données importées (Q116).** Elles comptent aussi pour la famille H : le PO a créé ces

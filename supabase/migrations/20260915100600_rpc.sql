@@ -410,15 +410,41 @@ $$;
 revoke execute on function championship_association_results(uuid, text) from public;
 grant execute on function championship_association_results(uuid, text) to authenticated;
 
--- Every completed session one player played in (plan 19; plans 20 and 21 build on it), shaped
--- like a `session_snapshot` call so the client reuses `LiveSessionSnapshot` and
--- `computeStandings`, oldest first. security definer, same reasoning as
--- championship_association_results: a player's statistics must be the same whoever looks, and
--- RLS only shows a session to its participants and association. Deliberately no check on
--- players.stats_public / badges_public (Q133): hiding them is a display choice, the sessions and
--- scores behind them stay readable. What the calculations never read is left out: session and
--- played-hole comments, the cover photo, the members' accounts. Which sessions count
--- ("eligible", Q117/Q123) is decided in Dart, written once (lib/features/stats/domain/).
+-- A completed session shaped like a `session_snapshot` call, stripped of what statistics never
+-- read: session and played-hole comments, the cover photo, the members' accounts. Shared by
+-- player_history (plan 19) and hole_history (plan 20); not callable by the app itself, only
+-- through those two.
+create or replace function stats_snapshot(p_session_id uuid)
+returns jsonb
+language sql
+security invoker
+stable
+set search_path = public
+as $$
+  select jsonb_set(
+    jsonb_set(
+      snap #- '{session,comment}' #- '{session,cover_photo_id}' #- '{session,cover_photo_path}',
+      '{members}', '[]'::jsonb
+    ),
+    '{played_holes}',
+    (
+      select coalesce(jsonb_agg(ph - 'comment' order by (ph->>'position')::int), '[]'::jsonb)
+      from jsonb_array_elements(snap->'played_holes') ph
+    )
+  )
+  from (select session_snapshot(p_session_id) as snap) s;
+$$;
+
+revoke execute on function stats_snapshot(uuid) from public, anon, authenticated;
+
+-- Every completed session one player played in (plan 19; plan 21 builds on it), shaped like a
+-- `session_snapshot` call so the client reuses `LiveSessionSnapshot` and `computeStandings`,
+-- oldest first. security definer, same reasoning as championship_association_results: a
+-- player's statistics must be the same whoever looks, and RLS only shows a session to its
+-- participants and association. Deliberately no check on players.stats_public /
+-- badges_public (Q133): hiding them is a display choice, the sessions and scores behind them
+-- stay readable. Which sessions count ("eligible", Q117/Q123) is decided in Dart, written once
+-- (lib/features/stats/domain/).
 create or replace function player_history(p_player_id uuid)
 returns jsonb
 language sql
@@ -426,32 +452,38 @@ security definer
 stable
 set search_path = public
 as $$
-  select coalesce(jsonb_agg(
-    jsonb_set(
-      jsonb_set(
-        h.snap #- '{session,comment}' #- '{session,cover_photo_id}' #- '{session,cover_photo_path}',
-        '{members}', '[]'::jsonb
-      ),
-      '{played_holes}',
-      (
-        select coalesce(jsonb_agg(ph - 'comment' order by (ph->>'position')::int), '[]'::jsonb)
-        from jsonb_array_elements(h.snap->'played_holes') ph
-      )
-    )
-    order by h.played_at
-  ), '[]'::jsonb)
-  from (
-    select session_snapshot(s.id) as snap, coalesce(s.started_at, s.created_at) as played_at
-    from sessions s
-    where s.status = 'completed'
-      and exists (
-        select 1 from team_players tp where tp.session_id = s.id and tp.player_id = p_player_id
-      )
-  ) h;
+  select coalesce(jsonb_agg(stats_snapshot(s.id) order by coalesce(s.started_at, s.created_at)), '[]'::jsonb)
+  from sessions s
+  where s.status = 'completed'
+    and exists (
+      select 1 from team_players tp where tp.session_id = s.id and tp.player_id = p_player_id
+    );
 $$;
 
 revoke execute on function player_history(uuid) from public;
 grant execute on function player_history(uuid) to authenticated;
+
+-- Every completed session one directory hole was played in (plan 20), oldest first, same shape
+-- and same security definer reasoning as player_history: a hole's statistics and record are
+-- common to every association (Q95), while RLS only shows a session to its own association.
+-- A clone is another hole with its own statistics (Q135): only hole_id matches.
+create or replace function hole_history(p_hole_id uuid)
+returns jsonb
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select coalesce(jsonb_agg(stats_snapshot(s.id) order by coalesce(s.started_at, s.created_at)), '[]'::jsonb)
+  from sessions s
+  where s.status = 'completed'
+    and exists (
+      select 1 from played_holes ph where ph.session_id = s.id and ph.hole_id = p_hole_id
+    );
+$$;
+
+revoke execute on function hole_history(uuid) from public;
+grant execute on function hole_history(uuid) to authenticated;
 
 -- Adds a played hole (owner-only -- RLS `played_holes_owner_write`): appends at the next
 -- position. A plain client-side insert would need a "next position" round trip first (like

@@ -9,7 +9,6 @@ import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_avatar.dart';
 import '../../../shared/nuni_card.dart';
-import '../../../shared/nuni_chip.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_icon_tile.dart';
 import '../../../shared/nuni_loading.dart';
@@ -21,6 +20,7 @@ import '../../profile/domain/player.dart';
 import '../data/stats_repository.dart';
 import '../domain/player_stats.dart';
 import 'season_chart.dart';
+import 'stats_widgets.dart';
 
 /// "+0,8", "-0,3" or "0,0" in the current language: strokes against par,
 /// signed, one decimal.
@@ -125,7 +125,8 @@ class PlayerStatsSection extends ConsumerWidget {
 }
 
 /// All time or one season (PO, 2026-09-24): chips on top, then the whole
-/// block recomputed for the choice. All time by default. The chips show even
+/// block recomputed for the choice, the most recent season at first
+/// ([displayedSeason]). The chips show even
 /// for a single season: they also say which season the numbers come from.
 class _SeasonBreakdown extends StatefulWidget {
   const _SeasonBreakdown({required this.playerId, required this.history});
@@ -138,14 +139,20 @@ class _SeasonBreakdown extends StatefulWidget {
 }
 
 class _SeasonBreakdownState extends State<_SeasonBreakdown> {
-  /// Null = all time.
-  String? _season;
+  /// What the viewer picked; the most recent season until then
+  /// ([displayedSeason]).
+  bool _allTime = false;
+  String? _picked;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final seasons = playedSeasons(widget.playerId, widget.history);
-    final season = seasons.contains(_season) ? _season : null;
+    final season = displayedSeason(
+      seasons: seasons,
+      allTime: _allTime,
+      picked: _picked,
+    );
     final stats = computePlayerStats(
       widget.playerId,
       widget.history,
@@ -155,22 +162,13 @@ class _SeasonBreakdownState extends State<_SeasonBreakdown> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (seasons.isNotEmpty) ...[
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              NuniChip(
-                label: l10n.statsAllTime,
-                selected: season == null,
-                onTap: () => setState(() => _season = null),
-              ),
-              for (final s in seasons)
-                NuniChip(
-                  label: s,
-                  selected: s == season,
-                  onTap: () => setState(() => _season = s),
-                ),
-            ],
+          SeasonChips(
+            seasons: seasons,
+            selected: season,
+            onSelected: (s) => setState(() {
+              _allTime = s == null;
+              _picked = s;
+            }),
           ),
           const SizedBox(height: 12),
         ],
@@ -317,38 +315,6 @@ class _StatsBody extends StatelessWidget {
   }
 }
 
-/// A number and its label, for the key figures rows.
-class _Figure extends StatelessWidget {
-  const _Figure({required this.value, required this.label});
-
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Column(
-      children: [
-        Text(
-          value,
-          style: textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _KeyFigures extends StatelessWidget {
   const _KeyFigures({required this.stats});
 
@@ -368,7 +334,7 @@ class _KeyFigures extends StatelessWidget {
             (stats.holesPlayed, l10n.statsHolesPlayed),
           ])
             Expanded(
-              child: _Figure(value: '$value', label: label),
+              child: StatFigure(value: '$value', label: label),
             ),
         ],
       ),
@@ -612,7 +578,7 @@ class _TeamCard extends StatelessWidget {
                 (team.podiums, l10n.statsPodiums),
               ])
                 Expanded(
-                  child: _Figure(value: '$value', label: label),
+                  child: StatFigure(value: '$value', label: label),
                 ),
             ],
           ),

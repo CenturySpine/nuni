@@ -25,6 +25,19 @@ class StatsRepository {
         LiveSessionSnapshot.fromJson(row as Map<String, Object?>),
     ];
   }
+
+  /// Every completed session [holeId] was played in (plan 20), whatever the
+  /// association: a hole's statistics are common to all (Q95).
+  Future<List<LiveSessionSnapshot>> fetchHoleHistory(String holeId) async {
+    final List<dynamic> rows = await _client.rpc(
+      'hole_history',
+      params: {'p_hole_id': holeId},
+    );
+    return [
+      for (final row in rows)
+        LiveSessionSnapshot.fromJson(row as Map<String, Object?>),
+    ];
+  }
 }
 
 final statsRepositoryProvider = Provider<StatsRepository>(
@@ -37,3 +50,8 @@ final statsRepositoryProvider = Provider<StatsRepository>(
 @riverpod
 Future<List<LiveSessionSnapshot>> playerHistory(Ref ref, String playerId) =>
     ref.watch(statsRepositoryProvider).fetchPlayerHistory(playerId);
+
+/// A hole's sessions, reloaded on every opening of its sheet (auto-disposed).
+@riverpod
+Future<List<LiveSessionSnapshot>> holeHistory(Ref ref, String holeId) =>
+    ref.watch(statsRepositoryProvider).fetchHoleHistory(holeId);

@@ -544,6 +544,32 @@ select 'player_history_empty_without_sessions',
 reset role;
 reset request.jwt.claims;
 
+-- ===== Plan 20: a hole's history, common to every association (Q95) =====
+-- "foreign" (another association) reads the session the hole was played in, stripped like
+-- player_history (no session or played-hole comment, no members).
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000008","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'hole_history_readable_by_anyone',
+  jsonb_array_length(hole_history((select private_hole from test_ids))) = 1
+  and jsonb_array_length(hole_history((select private_hole from test_ids))->0->'members') = 0
+  and not (hole_history((select private_hole from test_ids))->0->'session' ? 'comment')
+  and not exists (
+    select 1 from jsonb_array_elements(hole_history((select private_hole from test_ids))->0->'played_holes') ph
+    where ph ? 'comment'
+  );
+-- A clone has its own statistics (Q135): never played, empty history.
+insert into test_results (test, passed)
+select 'hole_history_empty_for_unplayed_clone',
+  jsonb_array_length(hole_history((select id from holes where cloned_from = (select private_hole from test_ids) limit 1))) = 0;
+reset role;
+reset request.jwt.claims;
+-- The shared stripping helper is not callable by the app.
+insert into test_results (test, passed)
+select 'stats_snapshot_not_callable',
+  not has_function_privilege('authenticated', 'stats_snapshot(uuid)', 'execute')
+  and not has_function_privilege('anon', 'stats_snapshot(uuid)', 'execute');
+
 -- ===== Verdict =====
 select * from test_results order by n;
 

@@ -68,6 +68,8 @@ abstract final class PhosphorIcons {
   static const xCircle = IconData(0xe4f8, fontFamily: _regular);
 
   static const crown = IconData(0xe614, fontFamily: _regular);
+  static const crownFill = IconData(0xe614, fontFamily: _fill);
+  static const medalFill = IconData(0xe320, fontFamily: _fill);
   static const qrCode = IconData(0xe3e6, fontFamily: _regular);
   static const shareNetwork = IconData(0xe408, fontFamily: _regular);
   static const signIn = IconData(0xe428, fontFamily: _regular);

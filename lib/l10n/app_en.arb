@@ -512,5 +512,19 @@
   "statsBestDuoDetail": "{wins, plural, =1{1 win} other{{wins} wins}} out of {sessions}",
   "@statsBestDuoDetail": {"placeholders": {"wins": {"type": "int"}, "sessions": {"type": "int"}}},
   "profileStatsPublic": "Public statistics",
-  "profileStatsPublicHelp": "Shows your statistics on your public page. Hidden, they no longer appear there, but your sessions and scores stay visible as before."
+  "profileStatsPublicHelp": "Shows your statistics on your public page. Hidden, they no longer appear there, but your sessions and scores stay visible as before.",
+  "holeStatsPassages": "Rounds",
+  "@holeStatsPassages": {"description":"Hole statistics: individual scores recorded on this hole (French: passages)."},
+  "holeStatsAverageStrokes": "Avg strokes",
+  "holeStatsToPar": "vs par",
+  "holeStatsRecord": "Hole record",
+  "holeStatsRecordDetail": "{strokes, plural, =1{1 stroke} other{{strokes} strokes}} · {date}",
+  "@holeStatsRecordDetail": {"placeholders":{"strokes":{"type":"int"},"date":{"type":"String"}}},
+  "holeStatsKing": "King of the hole",
+  "holeStatsNoKing": "No king of the hole yet: a player needs {count} rounds on it.",
+  "@holeStatsNoKing": {"placeholders":{"count":{"type":"int"}}},
+  "holeStatsDistribution": "Score distribution",
+  "holeStatsDistributionCaption": "Rounds per number of strokes; the par column is highlighted.",
+  "holeStatsEmpty": "This hole hasn’t been played in a session that counts yet.",
+  "holeStatsNoIndividual": "No individual score on this hole yet: team and Free sessions don’t count strokes."
 }

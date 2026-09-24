@@ -1080,6 +1080,9 @@ sur un trou joué une fois en faisait durablement le « pire trou ») : « meill
 (plan 19) et « roi du trou » (plan 20) seulement à partir de **3 passages** du joueur sur le
 trou. Les autres statistiques restent sans seuil ; le « X » compte toujours dans l'écart moyen
 au par et la répartition. Tant qu'aucun trou n'atteint 3 passages, la fiche le dit.
+Précision PO (2026-09-24, essai du plan 20) : à moyenne égale, le « roi du trou » est le joueur
+qui a joué le trou le plus récemment (et non celui qui a le plus de passages), « toujours pour
+inciter les gens à jouer des sessions », comme le record (Q94 révisée).
 Première réponse PO (2026-09-24), remplacée : suggestion non retenue. Aucun seuil : statistiques joueur et trou
 affichées dès le premier trou joué (meilleur / pire trou et « roi du trou » compris).
 Suggestion : « meilleur / pire trou » et « roi du trou » à partir de 3 passages sur le trou ;
@@ -1087,7 +1090,14 @@ la moyenne générale dès 1 trou. En dessous du seuil, l'app affiche « pas enc
 parties ». Évite qu'un seul coup de chance fasse un record durable.
 
 **Q94 ☑ — Statistiques trou : quels passages comptent pour le record d'un trou ?**
-Réponse PO (2026-09-24) : suggestion retenue.
+Réponse PO révisée (2026-09-24, après essai du plan 20) : à égalité, c'est **le plus récent**
+qui prend le record. Raison : « un gros birdie risque de lock le titre pour toujours », alors
+qu'accorder le titre au plus récent incite les joueurs à performer. Dans un même passage, l'ordre
+alphabétique départage. Le reste de la suggestion est inchangé (scores d'un seul joueur, moyenne
+et répartition selon la même règle). Conséquence pour le plan 21 : égaler un record suffit à
+obtenir J1 (« a détenu le record d'un trou »).
+Première réponse PO (2026-09-24), révisée : suggestion retenue telle quelle (le premier garde le
+record).
 Suggestion : même règle que Q90, uniquement les scores d'équipes d'un seul joueur. Le record
 est le plus petit nombre de coups ; en cas d'égalité, le premier à l'avoir réalisé le garde. La
 moyenne et la répartition du trou suivent la même règle.
@@ -1507,3 +1517,13 @@ la palette choisie. Aucune dépendance à suivre, poids de l'app inchangé, rend
 charte. Une bibliothèque (`fl_chart`, la référence Flutter) ne se justifierait qu'avec des
 graphiques interactifs ou nombreux, ce que les plans 19 à 21 ne prévoient pas. Tant que la
 question est ouverte, le plan 19 applique cette suggestion.
+
+**Q135 ☑ — Statistiques d'un trou cloné : repartent-elles de zéro ?**
+Réponse PO (2026-09-24) : suggestion retenue.
+Constat : depuis le plan 26, n'importe qui peut cloner un trou (`holes.cloned_from`) pour en
+faire sa version (départ, par ou description différents). Le clone est un nouveau trou : les
+sessions jouées sur l'original restent rattachées à l'original.
+Suggestion : chaque trou a ses propres statistiques, record et roi ; un clone part de zéro et
+l'original garde les siens. Un clone sert justement à changer le trou (autre départ, autre
+par) : additionner les scores de deux parcours différents fausserait le record et la
+difficulté. C'est aussi le plus simple (aucun regroupement à maintenir si l'original change).

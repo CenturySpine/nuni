@@ -14,6 +14,7 @@ import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_loading.dart';
 import '../../../shared/nuni_status_pill.dart';
+import '../../stats/ui/hole_stats_section.dart';
 import '../data/holes_repository.dart';
 import '../domain/distance_format.dart';
 import '../domain/hole.dart';
@@ -39,8 +40,10 @@ class HoleDetailSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final holeAsync = ref.watch(holeByIdProvider(holeId));
+    // Scrollable: the statistics (plan 20) make the sheet taller than
+    // the screen.
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
         child: holeAsync.when(
           loading: () => const SizedBox(height: 200, child: NuniLoading()),
@@ -169,6 +172,9 @@ class _HoleDetailContent extends ConsumerWidget {
         ),
         const SizedBox(height: 10),
         _CloneButton(hole: hole),
+        // Below the actions, so they stay in view when the sheet opens.
+        const SizedBox(height: 24),
+        HoleStatsSection(holeId: hole.id, par: hole.par),
       ],
     );
   }
