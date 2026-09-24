@@ -1034,3 +1034,165 @@ responsable et ses coordonnées, et ses membres repassent sans association (l'ap
 d'en choisir une à la prochaine ouverture). Alternative si le besoin se présente : un
 `super_admin` déplace d'abord les sessions vers une autre association (la fonction de correction
 existe côté serveur, Q80), puis supprime.
+
+## Plans 19 à 25 — fiches synthétiques (2026-09-24)
+
+Short list du PO (2026-09-24) : hors ligne, suppression de compte (plan 14, Q27–Q31 déjà
+posées), statistiques joueur, statistiques trou, badges, calendrier et inscriptions, export
+image vitrine, identité street. Priorité pour lundi 2026-09-28 : badges, statistiques joueur et
+trou.
+
+**Q90 ☑ — Statistiques joueur : quelles sessions comptent pour les statistiques de coups ?**
+Réponse PO (2026-09-24) : suggestion retenue, restreinte aux **sessions individuelles** (un
+trou en mode `individual` dans une session par équipes ne compte pas). Les statistiques peuvent
+en plus comporter des « méta-statistiques » sur le jeu en équipe (équipier le plus fréquent,
+etc. ; détail en Q107).
+Constat : la base stocke un score par équipe et par trou (`scores.team_id`), jamais par joueur.
+Un coup n'appartient à un joueur que si son équipe n'en compte qu'un.
+Suggestion : les statistiques de coups (moyenne, rapport au par, meilleur trou) ne prennent que
+les trous joués par une équipe d'un seul joueur (session individuelle, ou mode de jeu
+`individual`). Les sessions par équipes comptent pour les sessions jouées, victoires et
+podiums. Attribuer à chaque joueur le score de son équipe fausserait les moyennes (un scramble
+à 4 joue mieux qu'un joueur seul). Tant que la question est ouverte, le plan 19 applique cette
+suggestion.
+
+**Q91 ☑ — Qui peut voir les statistiques d'un joueur ?**
+Réponse PO (2026-09-24) : suggestion retenue, statistiques publiques par défaut ; chaque
+utilisateur peut les rendre privées depuis son profil (étendue du masquage : Q106).
+Constat : la RLS ne montre une session qu'à ses membres. Des statistiques calculées sur « ce
+que je vois » différeraient d'une personne à l'autre.
+Suggestion : les statistiques de tout joueur sont visibles de tout utilisateur connecté,
+calculées sur toutes ses sessions terminées, via une RPC `security definer` qui ne renvoie que
+des scores (ni photos ni commentaires). C'est le modèle déjà retenu pour le classement du
+championnat. Alternative plus restrictive : visibles seulement des membres de la même
+association.
+
+**Q92 ☑ — Les sessions importées de LsgScores comptent-elles dans les statistiques et badges ?**
+Réponse PO (2026-09-24) : suggestion retenue. Les statistiques existent ainsi avant même le
+début de la saison 2026-2027.
+Suggestion : oui. Elles sont vérifiées (plan 13) et elles donnent l'historique qui rend les
+statistiques intéressantes dès le premier jour. Un joueur importé sans compte (`user_id` nul) a
+aussi ses statistiques, consultables depuis l'historique.
+
+**Q93 ☑ — Seuil minimal avant d'afficher une statistique ?**
+Réponse PO (2026-09-24) : suggestion non retenue. Aucun seuil : statistiques joueur et trou
+affichées dès le premier trou joué (meilleur / pire trou et « roi du trou » compris).
+Suggestion : « meilleur / pire trou » et « roi du trou » à partir de 3 passages sur le trou ;
+la moyenne générale dès 1 trou. En dessous du seuil, l'app affiche « pas encore assez de
+parties ». Évite qu'un seul coup de chance fasse un record durable.
+
+**Q94 ☐ — Statistiques trou : quels passages comptent pour le record d'un trou ?**
+Suggestion : même règle que Q90, uniquement les scores d'équipes d'un seul joueur. Le record
+est le plus petit nombre de coups ; en cas d'égalité, le premier à l'avoir réalisé le garde. La
+moyenne et la répartition du trou suivent la même règle.
+
+**Q95 ☑ — Un trou public joué par plusieurs associations : record commun ou par association ?**
+Réponse PO (2026-09-24) : pas de statistiques par association, cela n'a pas de sens
+géographiquement : un trou a des statistiques et un record communs. La partie « trou privé » de
+la suggestion n'a pas été tranchée : reprise en Q110.
+Suggestion : record commun, avec le nom du joueur et son association. Le trou est le même
+objet dans le référentiel ; un record par association diluerait le défi. Un trou privé n'a de
+statistiques que pour son propriétaire.
+
+**Q96 ☐ — Badges : catalogue de la première version ?**
+Réponse PO (2026-09-24) : principe accepté ; lister les badges de façon exhaustive dans le plan
+21 pour que le PO fasse le tri. Catalogue de 78 badges en 11 familles rédigé le 2026-09-24 dans
+`docs/plans/21_badges.md`, en attente du tri.
+Suggestion : les 5 familles du plan 21 (premiers pas, exploits, victoires, explorateur,
+fidélité), une quinzaine de badges au total, tous calculables avec les données existantes. Mieux
+vaut peu de badges atteignables que beaucoup de badges impossibles : un badge jamais obtenu
+n'incite à rien.
+
+**Q97 ☑ — Badges : rétroactifs sur l'historique ?**
+Réponse PO (2026-09-24, par Q92 qui portait sur statistiques et badges) : oui, sessions
+importées comprises.
+Suggestion : oui, automatiquement, puisque les badges sont recalculés à partir de l'historique
+(aucune table). Conséquence : au premier lancement, les anciens joueurs découvrent d'un coup
+tous leurs badges ; l'app les annonce en un seul écran, pas un par un.
+
+**Q98 ☑ — Badges : visibles des autres joueurs ?**
+Réponse PO (2026-09-24, avec Q106) : oui par défaut, sur la fiche du joueur ; l'utilisateur peut
+les masquer (réglage commun ou séparé des statistiques : Q108).
+Suggestion : oui, sur la fiche de statistiques du joueur, avec la même visibilité que Q91. Un
+badge sert aussi à être montré.
+
+**Q99 ☐ — Hors ligne : quel périmètre ?**
+Suggestion : seulement la saisie et la correction des scores d'une session déjà ouverte.
+Créer, rejoindre, ajouter un trou et clore restent en ligne. C'est le geste répété sur le
+terrain ; le reste est rare et dépend de la géolocalisation ou d'autres joueurs.
+
+**Q100 ☐ — Hors ligne : deux téléphones saisissent le même score sans réseau ?**
+Suggestion : garder la règle actuelle, la dernière saisie envoyée gagne, sans message de
+conflit. En pratique, une équipe saisit sur un seul téléphone ; gérer les conflits coûterait
+cher pour un cas rare.
+
+**Q101 ☐ — Calendrier : qui peut planifier une session ?**
+Suggestion : tout joueur de l'association, comme aujourd'hui tout joueur peut créer une
+session. Un responsable d'association peut supprimer une session planifiée.
+
+**Q102 ☐ — Calendrier : comment rappeler l'événement aux inscrits ?**
+Suggestion : un bouton « Ajouter à mon agenda » (fichier `.ics`), sans notification push. Les
+notifications d'une PWA restent peu fiables sur iPhone et demandent une infrastructure
+d'envoi ; l'agenda du téléphone fait déjà très bien le rappel.
+
+**Q103 ☐ — Export vitrine : quels modèles pour la première version ?**
+Suggestion : format story 9:16 avec deux modèles, « Podium » et « Classement complet ».
+« Exploit » arrive après les plans 19 et 21, dont il dépend.
+
+**Q104 ☐ — Identité street : quelle typographie pour les chiffres ?**
+Suggestion : une police condensée et grasse gratuite (famille « Bebas Neue » ou « Barlow
+Condensed », licence OFL), réservée aux scores et aux rangs, texte courant inchangé. Choix
+final sur maquette dans `/dev/theme`.
+
+**Q105 ☐ — Identité street : quelle place pour les animations et vibrations ?**
+Suggestion : réservées à quatre moments (birdie ou mieux, changement de leader, badge obtenu,
+podium de fin), courtes (moins d'une seconde), et désactivables dans les réglages. Au-delà,
+elles fatiguent et ralentissent la saisie.
+
+**Q106 ☑ — Statistiques privées (Q91) : qu'est-ce qui est masqué, et pour qui ?**
+Réponse PO (2026-09-24) : « privé » ne porte que sur des informations du profil du joueur. La
+fiche d'un joueur est toujours visible, avec seulement son pseudo et sa photo. Les statistiques
+et les badges sont des informations en plus sur cette fiche, visibles par défaut quand on la
+consulte ; l'utilisateur peut régler leur visibilité (nombre de réglages : Q108). Les classements
+de session et de championnat ne sont pas concernés.
+Constat : il n'existe pas aujourd'hui de fiche joueur consultable par les autres (`/profile` est
+mon propre profil) ; le plan 19 la crée (`/players/:id`). Le réglage demande une modification de
+schéma, donc une reconstruction de la base distante (règle 8, Q87).
+Suggestion initiale (non retenue telle quelle) : masquer fiche et badges pour tous sauf le
+joueur, auteur d'un record de trou affiché « Joueur masqué ».
+
+**Q107 ☑ — Méta-statistiques d'équipe (Q90) : lesquelles pour la première version ?**
+Réponse PO (2026-09-24) : suggestion retenue.
+Suggestion : sessions par équipes jouées, victoires et podiums en équipe, équipier le plus
+fréquent, meilleur duo (meilleur taux de victoire ensemble, au moins 3 sessions communes). Tout
+se calcule depuis `team_players` et les classements, sans attribuer de coups à un joueur.
+
+**Q108 ☑ — Visibilité du profil : un seul réglage ou un par section (statistiques, badges) ?**
+Réponse PO (2026-09-24) : suggestion retenue, deux interrupteurs indépendants.
+Suggestion : deux interrupteurs indépendants, « Statistiques publiques » et « Badges publics »,
+tous deux activés par défaut (`players.stats_public` et `players.badges_public`). Cas d'usage
+réel : fier de ses badges mais pas de sa moyenne. Le coût est le même qu'un seul réglage (deux
+colonnes au lieu d'une, même écran).
+
+**Q109 ☑ — Record d'un trou détenu par un joueur aux statistiques privées : quel nom afficher ?**
+Réponse PO (2026-09-24) : suggestion retenue, pseudo et photo affichés.
+Constat : le record appartient à la fiche du trou (plan 20), pas au profil du joueur. Avec la
+définition de Q106, le pseudo et la photo sont toujours publics.
+Suggestion : afficher le pseudo et la photo du détenteur (informations publiques) avec son
+score, comme un classement de session. Le masquer rendrait le record anonyme sans protéger
+grand-chose, puisque le résultat est déjà visible des participants de la session. Ses
+statistiques détaillées restent masquées sur sa fiche.
+
+**Q110 ☐ — Statistiques d'un trou privé : visibles par qui ?**
+Constat : un trou privé n'est visible que de son propriétaire et des membres des sessions où il
+a été joué (RLS `holes`, Q13).
+Suggestion : les statistiques d'un trou privé suivent la visibilité du trou lui-même : qui
+peut ouvrir sa fiche voit ses statistiques. Aucune règle nouvelle, pas de fuite d'un trou privé
+par ses statistiques.
+
+**Q111 ☐ — Badge lié à un état qui change (record battu) : perdu ou gardé ?**
+Constat : les badges J1 à J3 (plan 21) dépendent d'un record ou d'une moyenne qui peut être
+dépassé plus tard.
+Suggestion : gardé à vie (« a détenu le record »). Un badge qui disparaît est vécu comme une
+punition et rend l'affichage instable ; la fiche du trou montre déjà le détenteur actuel. Le
+calcul rejoue l'historique dans l'ordre chronologique.

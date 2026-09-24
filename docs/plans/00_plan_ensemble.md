@@ -41,6 +41,13 @@ liées. Les questions sont centralisées dans [QUESTIONS_PO.md](../QUESTIONS_PO.
 | 16 ✅ | Rôles applicatifs (super_admin / player), implémenté et vérifié le 2026-09-22 (Q46–Q47) : schéma distant reconstruit, `user_roles` ne contient que le PO en `super_admin`, `flutter analyze`/tests/build Vercel verts | [16_roles_applicatifs.md](16_roles_applicatifs.md) | Rôle applicatif `super_admin` pour le PO seul, `player` par défaut pour tous les autres comptes, fondation pour de futures actions structurantes — aucun écran ni politique existante modifiés à ce stade |
 | 17 ✅ | Trou générique (Q56–Q59), livré avec l'étape 1 du plan 13, testé par le PO le 2026-09-23 | [17_trou_generique.md](17_trou_generique.md) | « Trou libre » toujours proposé dans une session en direct, sans position ni référentiel, avec libellé facultatif |
 | 18 ✅ | Associations (demande PO du 2026-09-23, Q77–Q89 tranchées, implémenté, base reconstruite, testé et validé par le PO ; clôturé le 2026-09-23) | [18_associations.md](18_associations.md) | Joueurs, sessions et championnats rattachés à une association ; choix à la première connexion ; page des associations ; responsables locaux et créations validés par un super_admin ; historique rattaché à Lyon Street Golf |
+| 19 | Statistiques joueur (fiche synthétique 2026-09-24, priorité 1 avec 20 et 21 ; Q90–Q93 et Q106–Q108 tranchées) | [19_stats_joueurs.md](19_stats_joueurs.md) | Fiche joueur publique (pseudo, photo) avec statistiques masquables : chiffres clés, rapport au par, meilleur et pire trou, courbe de saison |
+| 20 | Statistiques trou (fiche synthétique 2026-09-24, priorité 1 ; Q93, Q95, Q109 tranchées, Q94 et Q110 ouvertes) | [20_stats_trous.md](20_stats_trous.md) | Section statistiques dans la fiche trou : moyenne, écart au par, record, roi du trou |
+| 21 | Badges (fiche synthétique 2026-09-24, priorité 1, après le socle de 19–20 ; Q97–Q98 tranchées, catalogue de 78 badges à trier (Q96), Q111 ouverte) | [21_badges.md](21_badges.md) | Badges calculés depuis l'historique, affichés sur le profil et annoncés en fin de session |
+| 22 | Saisie des scores hors ligne (fiche synthétique 2026-09-24 ; Q99–Q100) | [22_hors_ligne.md](22_hors_ligne.md) | Aucun score perdu sans réseau : file d'attente locale rejouée au retour du réseau |
+| 23 | Calendrier et inscriptions (fiche synthétique 2026-09-24 ; Q101–Q102) | [23_calendrier_inscriptions.md](23_calendrier_inscriptions.md) | Sessions planifiées, réponses « je viens », démarrage à partir des inscrits |
+| 24 | Export image vitrine (fiche synthétique 2026-09-24 ; Q103) | [24_export_vitrine.md](24_export_vitrine.md) | Images de résultats au format story, modèles podium et classement |
+| 25 | Identité visuelle street (fiche synthétique 2026-09-24 ; Q104–Q105) | [25_identite_street.md](25_identite_street.md) | Typographie des chiffres, classement façon tableau sportif, moments célébrés, validés d'abord dans `/dev/theme` |
 
 ## Ordre et dépendances
 
@@ -63,6 +70,12 @@ liées. Les questions sont centralisées dans [QUESTIONS_PO.md](../QUESTIONS_PO.
 - 16 ne dépend d'aucune autre étape (schéma seul, aucun écran) ; prépare une alternative pour le
   plan 13 (M5, tagage rétroactif "championnat" des sessions importées) sans l'imposer — ce choix
   reste ouvert au moment où le plan 13 sera détaillé.
+
+- 19 à 25 (short list PO du 2026-09-24, avec le plan 14) : fiches synthétiques, plans détaillés
+  rédigés un par un. Priorité PO pour le 2026-09-28 : 19, 20 et 21. 19 et 20 partagent un socle
+  de calcul (`lib/features/stats/`) et une RPC de lecture ; 21 s'appuie dessus et vient donc après
+  eux. 24 dépend de 19 et 21 pour son modèle « Exploit ». 25 est préférable après 19–21, dont les
+  écrans en profitent le plus. 22 et 23 sont indépendants.
 
 ## Jalons de validation avec le product owner
 
