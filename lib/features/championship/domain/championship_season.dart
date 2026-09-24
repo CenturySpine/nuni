@@ -8,3 +8,10 @@ String championshipSeasonFor(DateTime date) {
 }
 
 String currentChampionshipSeason() => championshipSeasonFor(DateTime.now());
+
+/// The last moment of a season ("2024-2025" ends on 31 August 2025, local
+/// time): a season is finished once this has passed (plan 21, E3 to E5).
+DateTime championshipSeasonEnd(String season) {
+  final endYear = int.parse(season.split('-').last);
+  return DateTime(endYear, 8, 31, 23, 59, 59);
+}

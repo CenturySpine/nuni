@@ -19,6 +19,7 @@ import '../../championship/data/championship_repository.dart';
 import '../../history/data/history_repository.dart';
 import '../../live/data/live_repository.dart';
 import '../../sessions/data/sessions_repository.dart';
+import '../../badges/ui/player_badges_section.dart';
 import '../../stats/ui/player_stats_section.dart';
 import '../data/profile_repository.dart';
 import '../domain/player.dart';
@@ -207,6 +208,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               // My statistics (plan 19), with the switch deciding whether my
               // public page shows them too.
               PlayerStatsSection(
+                player: player,
+                isMe: true,
+                showVisibilitySwitch: true,
+              ),
+              const SizedBox(height: 24),
+              // My badges (plan 21), with their own public switch.
+              PlayerBadgesSection(
                 player: player,
                 isMe: true,
                 showVisibilitySwitch: true,

@@ -170,6 +170,11 @@ GitHub Actions (Q17).
   (`set_session_championship`) ; l'organisateur ne peut plus le changer.
 - Calcul des scores et du classement en Dart, testé unitairement ; la base ne stocke que les
   valeurs saisies.
+- Badges (plan 21) : calculés en Dart à chaque affichage (`lib/features/badges/domain/`, une
+  règle par famille dans `rules/`), jamais stockés en base. Seule la mémoire des badges déjà
+  annoncés ou vus vit sur l'appareil (`SeenBadgesStore`). L'annonce passe par `BadgeAnnouncer`,
+  monté une fois dans `app.dart`. Toute icône de badge est une constante de
+  `phosphor_icons.dart` (`badge…` et `badge…Fill`), sinon la version publiée ne l'embarque pas.
 - Statistiques, records et badges (plans 19 à 21) : seulement les **sessions éligibles**,
   terminées, d'au moins 3 joueurs et d'au moins 3 trous joués (Q117, Q123). Définition écrite
   une seule fois dans `lib/features/stats/domain/`. Le classement d'une session n'est pas

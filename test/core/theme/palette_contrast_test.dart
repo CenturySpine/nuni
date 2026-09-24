@@ -45,6 +45,17 @@ void main() {
         '$name tone text on its tint': (tone.onContainer, tone.container),
     };
 
+    // Badge tier rings (plan 21): graphics, not text -- WCAG 1.4.11, 3:1.
+    for (final (name, ring) in [
+      ('bronze', tierBronze),
+      ('silver', tierSilver),
+      ('gold', tierGold),
+    ]) {
+      test('${palette.name}: $name ring on surface is >= 3:1', () {
+        expect(contrastRatio(ring, palette.surface), greaterThanOrEqualTo(3));
+      });
+    }
+
     for (final MapEntry(key: name, value: (fg, bg)) in pairs.entries) {
       final minimum = _brandPairs.contains(name) ? 3.0 : 4.5;
       test('${palette.name}: $name is AA (>= $minimum:1)', () {

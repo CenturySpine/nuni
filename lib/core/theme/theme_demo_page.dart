@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../shared/nuni_avatar.dart';
+import '../../shared/nuni_badge_medal.dart';
 import '../../shared/nuni_button.dart';
 import '../../shared/nuni_card.dart';
 import '../../shared/nuni_chip.dart';
@@ -100,6 +101,113 @@ class _ThemeDemoPageState extends State<ThemeDemoPage>
               swatch('highlight', nuni.highlight.base),
               swatch('sunshine', nuni.sunshine.base),
               swatch('danger', nuni.danger.base),
+            ],
+          ),
+          gap,
+          // Plan 21: family colours, tier rings and stars, earned or not.
+          const NuniSectionHeader(title: 'Badges'),
+          Text('Familles (obtenus)', style: text.bodySmall),
+          const SizedBox(height: 8),
+          const Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              NuniBadgeMedal(
+                icon: PhosphorIcons.badgeFlagBanner,
+                earnedIcon: PhosphorIcons.badgeFlagBannerFill,
+                tone: NuniTone.fairway,
+              ),
+              NuniBadgeMedal(
+                icon: PhosphorIcons.badgeGolf,
+                earnedIcon: PhosphorIcons.badgeGolfFill,
+              ),
+              NuniBadgeMedal(
+                icon: PhosphorIcons.badgeLightning,
+                earnedIcon: PhosphorIcons.badgeLightningFill,
+                tone: NuniTone.sunshine,
+              ),
+              NuniBadgeMedal(
+                icon: PhosphorIcons.badgeLamp,
+                earnedIcon: PhosphorIcons.badgeLampFill,
+                tone: NuniTone.highlight,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Série : bronze, argent, or, or ★, or ★★',
+            style: text.bodySmall,
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              for (final (tier, stars) in [
+                (NuniMedalTier.bronze, 0),
+                (NuniMedalTier.silver, 0),
+                (NuniMedalTier.gold, 0),
+                (NuniMedalTier.gold, 1),
+                (NuniMedalTier.gold, 2),
+              ])
+                NuniBadgeMedal(
+                  icon: PhosphorIcons.badgeCalendarCheck,
+                  earnedIcon: PhosphorIcons.badgeCalendarCheckFill,
+                  tone: NuniTone.fairway,
+                  tier: tier,
+                  stars: stars,
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text('À obtenir', style: text.bodySmall),
+          const SizedBox(height: 8),
+          const Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              NuniBadgeMedal(
+                icon: PhosphorIcons.badgeCloudSnow,
+                earnedIcon: PhosphorIcons.badgeCloudSnowFill,
+                tone: NuniTone.fairway,
+                earned: false,
+              ),
+              NuniBadgeMedal(
+                icon: PhosphorIcons.badgeTrophy,
+                earnedIcon: PhosphorIcons.badgeTrophyFill,
+                tone: NuniTone.sunshine,
+                tier: NuniMedalTier.silver,
+                earned: false,
+              ),
+              NuniBadgeMedal(
+                icon: PhosphorIcons.badgeCalendarCheck,
+                earnedIcon: PhosphorIcons.badgeCalendarCheckFill,
+                tone: NuniTone.fairway,
+                tier: NuniMedalTier.gold,
+                stars: 2,
+                earned: false,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text('Détail (120 px)', style: text.bodySmall),
+          const SizedBox(height: 8),
+          const Row(
+            children: [
+              NuniBadgeMedal(
+                icon: PhosphorIcons.badgeCrown,
+                earnedIcon: PhosphorIcons.badgeCrownFill,
+                tier: NuniMedalTier.gold,
+                size: 120,
+              ),
+              SizedBox(width: 16),
+              NuniBadgeMedal(
+                icon: PhosphorIcons.badgeBird,
+                earnedIcon: PhosphorIcons.badgeBirdFill,
+                tier: NuniMedalTier.bronze,
+                size: 120,
+                earned: false,
+              ),
             ],
           ),
           gap,

@@ -1527,3 +1527,74 @@ Suggestion : chaque trou a ses propres statistiques, record et roi ; un clone pa
 l'original garde les siens. Un clone sert justement à changer le trou (autre départ, autre
 par) : additionner les scores de deux parcours différents fausserait le record et la
 difficulté. C'est aussi le plus simple (aucun regroupement à maintenir si l'original change).
+
+**Q136 ☑ — Badges J1 à J3 : les records et rois de saison comptent-ils ?**
+Réponse PO (2026-09-24) : suggestion retenue, « badge d'exploit » : records et rois « toutes
+saisons » seulement. Les records de saison restent affichés sur la fiche du trou, sans badge.
+Constat : depuis le plan 20, la fiche d'un trou s'ouvre sur la saison la plus récente jouée, avec
+son record et son roi de saison ; « Toutes saisons » montre ceux de tous les temps. Le plan 21
+prévoit J1 « A détenu le record d'un trou », J2 « A détenu 5 records en même temps » et J3 « A été
+roi du trou ».
+Suggestion : seulement les records et rois « toutes saisons ». Au début de chaque saison, le
+premier joueur à passer sur un trou en détient forcément le record de saison : J1 serait gratuit
+chaque septembre, et J2 s'obtiendrait en jouant 5 trous au premier jour de la saison. Contrepartie
+assumée : le détenteur affiché par défaut sur la fiche (celui de la saison) peut ne pas avoir J1,
+tant qu'il n'a pas aussi le record de tous les temps. Tant que la question est ouverte, le plan 21
+applique cette suggestion.
+
+**Q137 ☑ — Plan 21 : livrer les badges en deux lots ?**
+Réponse PO (2026-09-24) : suggestion retenue.
+Constat : 64 des 74 badges (familles A à G, I et K) se calculent avec ce qui existe déjà
+(`player_history`, classement du championnat). Les 10 autres (H, contributions ; J, records)
+demandent deux nouvelles lectures en base, donc une reconstruction de la base distante (règle 8).
+Suggestion : lot 1 = médaillon validé dans `/dev/theme`, puis les 64 badges, le bloc « Badges »
+(profil et fiche publique, interrupteur) et l'annonce en fin de session, sans toucher à la base ;
+lot 2 = familles H et J, avec la reconstruction. Chaque lot est essayé puis committé à part : un
+premier résultat visible plus tôt, et un changement de base isolé, plus simple à vérifier. Tant
+que la question est ouverte, le plan 21 applique cette suggestion.
+
+**Q138 ☑ — Badges : égalités et sessions par équipes (demande du PO)**
+Réponse PO (2026-09-25), après l'essai du lot 1 du plan 21 : pour rendre l'accès aux badges plus
+dur, 1) les égalités ne comptent plus : un badge de place ne compte que si le joueur est seul
+devant ou seul derrière ; 2) les sessions par équipes ne comptent plus pour les badges qui
+reposent sur un classement (victoire, podium, dernière place), sauf « Collectif » (D12).
+Précision du PO le même jour : elles comptent pour tous les badges qui ne dépendent pas des
+scores (assiduité, régularité, météo, exploration, sessions de championnat, jeu en équipe). Le classement d'une session et les statistiques (plan
+19) ne changent pas : victoires et podiums y gardent les ex æquo.
+
+**Q139 ☑ — Badges : le podium et le top 5 gardent-ils les ex æquo ?**
+Réponse PO (2026-09-25) : non, suggestion non retenue. En équipe comme en individuel, tout
+badge de classement est strict : podium, victoire, top 3 ou top 5 de saison, dernière place ;
+aucun ex æquo ne compte.
+Constat : Q138 retire les égalités « devant ou derrière ». Le podium (D5, D6) et le top 3 ou
+top 5 d'une saison de championnat (E4, E5) ne sont ni la première ni la dernière place.
+Suggestion : les garder avec leurs ex æquo. Deux joueurs à égalité à la 2e place sont tous les
+deux sur le podium sans ambiguïté ; les en priver donnerait le podium au 3e seul et pas aux
+deux 2es. La règle « seul » reste pour tout ce qui désigne un premier ou un dernier : victoire,
+titre de champion, lanterne rouge. Tant que la question est ouverte, le plan 21 applique cette
+suggestion.
+
+**Q140 ☑ — Badge « Solo » : le supprimer ?**
+Réponse PO (2026-09-25) : réglé par Q141 : « Solo » et « Collectif » sont supprimés.
+Constat : depuis Q138, seules les sessions individuelles comptent pour les victoires ; « Solo »
+(D11, 1re victoire en session individuelle) s'obtient donc exactement en même temps que
+« Première victoire » (D1).
+Suggestion : supprimer « Solo » (63 badges au lieu de 64 dans le lot 1). Deux badges identiques
+n'ajoutent rien à chercher et gonflent le compteur. « Collectif » (D12, victoire en session par
+équipes) reste, puisqu'il est le seul à récompenser une victoire en équipe. Tant que la question
+est ouverte, le badge est gardé.
+
+**Q141 ☑ — Badges de classement : une version « équipe » de chacun ?**
+Réponse PO (2026-09-25) : suggestion retenue. Même règle stricte (aucun ex æquo) en équipe.
+Constat : depuis Q138, les sessions par équipes ne comptent pour aucun badge de classement, sauf
+« Collectif » (D12). Le PO propose de dupliquer chaque badge de classement en version équipe, en
+acceptant qu'elle soit plus facile à obtenir (un bon coéquipier aide). Les deux sessions par
+équipes réelles comptent 3 et 4 équipes : un podium ou une dernière place en équipe y a un sens.
+Suggestion : oui, une version équipe de D1 à D10 (victoires, hat-trick, podiums, de bout en
+bout, remontada, photo-finish, hold-up) et de K1, K3 (dernière place), rangée dans la famille
+« Jeu en équipe », avec la même icône que la version individuelle. « Solo » et « Collectif »
+disparaissent : ils deviennent la « Première victoire » de chaque version. Le lot 1 passe de
+64 à 74 badges. Les mêmes règles s'appliquent (seul devant ou derrière, Q138). Tant que la
+question est ouverte, le plan 21 garde la règle actuelle (pas de version équipe).
+Précision du PO le même jour : chaque famille affiche une pastille « Individuel », « Équipe » ou
+« Individuel et équipe », selon les sessions que ses badges lisent.

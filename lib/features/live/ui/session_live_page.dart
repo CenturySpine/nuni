@@ -22,6 +22,8 @@ import '../../sessions/domain/scoring_mode.dart';
 import '../../sessions/domain/session.dart';
 import '../../sessions/ui/invite_sheet.dart';
 import '../../sessions/ui/scoring_mode_label.dart';
+import '../../profile/data/profile_repository.dart';
+import '../../stats/data/stats_repository.dart';
 import '../data/live_repository.dart';
 import '../domain/live_session_snapshot.dart';
 import 'add_played_hole_sheet.dart';
@@ -99,6 +101,12 @@ class SessionLivePage extends ConsumerWidget {
         // intermediate "session terminée" screen with a button to it.
         if (snapshot.session.status == SessionStatus.completed) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
+            // My history changed: recompute my badges, so new ones are
+            // announced over the recap (plan 21).
+            final myPlayerId = ref.read(myPlayerProvider).value?.id;
+            if (myPlayerId != null) {
+              ref.invalidate(playerHistoryProvider(myPlayerId));
+            }
             if (context.mounted) context.go('/history/${snapshot.session.id}');
           });
           return const Scaffold(

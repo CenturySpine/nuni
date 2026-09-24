@@ -3,9 +3,49 @@
 ## Statut
 
 Fiche synthétique (2026-09-24), catalogue trié par le PO le même jour (Q96) ; Q97, Q98 et Q111 à
-Q114 tranchées le 2026-09-24. **Plan détaillé rédigé le 2026-09-24, en attente de validation du
-PO** (règle 1, AGENTS.md). Plus d'hypothèse en attente propre au plan 21 (Q126 porte sur le
+Q114 tranchées le 2026-09-24. Plan détaillé rédigé le 2026-09-24. Plus d'hypothèse en attente propre au plan 21 (Q126 porte sur le
 championnat, plan 26). Q94, Q115 à Q117, Q120 et Q123 à Q128 tranchées le 2026-09-24. Dépend du plan 26 (par de chaque trou joué) et des plans 19 et 20 (fiche joueur, lectures des statistiques) : implémenté juste après eux.
+
+**Relu le 2026-09-24 après la clôture des plans 19 (`ddde5ae`) et 20 (`34e00bb`), et validé par
+le PO le même jour** (règle 1, AGENTS.md). Alignements faits sans question (ce qui a été livré ou décidé depuis) : noms
+réels des lectures et du socle de calcul, règles du record et du roi révisées au plan 20, bloc
+« Badges » aussi sur mon profil avec son interrupteur (même choix que le bloc « Statistiques »),
+Q126 tranchée. Q136 (J1 à J3 : records et rois « toutes saisons » seulement, badges d'exploit)
+et Q137 (livraison en deux lots) tranchées le même jour. Plus de question ouverte.
+
+**Lot 1 implémenté, essayé et validé par le PO le 2026-09-25, committé.** Médaillon validé
+par le PO dans `/dev/theme` le 2026-09-24. Fait : 64 badges (familles A à G, I et K) dans
+`lib/features/badges/domain/` (`badge.dart`, `badge_facts.dart`, `compute_badges.dart`,
+`rules/`), 42 tests (un cas obtenu et un cas non obtenu par badge, cas limites) ; données
+(`playerBadges`, `myBadges`, mémoire des badges vus par appareil) ; bloc « Badges » sur mon
+profil (interrupteur « Badges publics ») et sur la fiche publique ; feuille de détail ; annonce
+(première ouverture en une feuille, nouveaux badges et badges proches en fin de session) ;
+128 chaînes de badges EN/FR. `flutter analyze --fatal-infos` sans remarque, 339 tests verts.
+Vérifié dans le navigateur sur les données réelles : 21 badges sur 64 pour le compte du PO,
+progressions cohérentes avec ses statistiques (7 / 10 sessions, 44 / 50 trous), feuille de
+première ouverture, fiche publique d'un autre joueur (badges obtenus seulement). Non vérifié
+dans le navigateur : l'annonce en fin de session (il faudrait terminer une vraie session, qui
+compterait ensuite dans les statistiques et les badges).
+Décision du PO après sa relecture du lot 1 (Q138, 2026-09-25) : les égalités en tête ou en
+dernière place ne comptent plus, et les sessions par équipes ne comptent plus pour les badges
+de classement (précisé par le PO le même jour : elles comptent pour tous les autres) ;
+appliqué et testé (48 tests). Puis, le même jour : chaque badge de classement a une version
+équipe (Q141 : D1 à D10, K1 et K3, rangés dans « Jeu en équipe », même icône, même règle
+stricte), « Solo » et « Collectif » sont supprimés (Q140) : le lot 1 compte 74 badges. Chaque
+famille porte une pastille « Individuel », « Équipe » ou « Individuel et équipe » (demande du
+PO). Recalcul sur les données réelles du PO : 17 badges sur 74, hors places de championnat.
+Précisions d'implémentation (interprétations des conditions, validées par le PO le 2026-09-25) :
+- C1 à C4 : « au par ou mieux », « birdie ou mieux »… : un eagle compte aussi comme birdie, pour
+  qu'un joueur dont le premier coup sous le par est un eagle obtienne aussi « Petit oiseau ».
+- B5 (Vétéran) : jugé au moment de chaque session (une session jouée plus d'un an après la
+  première remplit les deux conditions à cet instant) ; il ne dépend donc plus du jour où l'on
+  regarde, et reste acquis (Q111).
+- D8 (Remontada), K1 et K3 (dernier) : un classement où toutes les équipes sont à égalité n'a pas
+  de dernier.
+- I7 (Marathon) : 9 trous joués dans la session, que le joueur les ait tous saisis ou non.
+- E3 à E5 : date d'obtention = le 31 août qui clôt la saison.
+- Pastille « Nouveau » : badges obtenus et pas encore vus dans le bloc au lancement de l'app ;
+  elle reste affichée jusqu'au lancement suivant.
 
 ## En bref, pour les joueurs
 
@@ -28,9 +68,13 @@ Récompenser des exploits et la régularité pour donner une raison de rejouer e
 
 ## Prérequis
 
-- Plan 19 (statistiques joueur) livré : fiche joueur `/players/:id`, colonne
-  `players.badges_public` (Q108) et lecture de l'historique d'un joueur par RPC.
-- Plan 20 (statistiques trou) livré : lecture des passages individuels sur un trou (record).
+- Plan 19 (statistiques joueur) livré : fiche joueur `/players/:id`, bloc « Statistiques »
+  partagé entre mon profil et la fiche publique, colonne `players.badges_public` (Q108, déjà en
+  base, sans interrupteur), RPC `player_history`, définitions communes écrites une fois dans
+  `lib/features/stats/domain/eligible_session.dart` (`isEligibleSession`, `countsStrokes`,
+  `sessionDate`, `teamOf`).
+- Plan 20 (statistiques trou) livré : RPC `hole_history`, règles du record et du roi dans
+  `lib/features/stats/domain/hole_stats.dart`.
 - Plans 15 et 18 (championnat par association et saison) livrés.
 - Plan 26 livré : par de chaque trou joué, trous tous publics, `holes.cloned_from`.
 
@@ -69,7 +113,7 @@ Récompenser des exploits et la régularité pour donner une raison de rejouer e
     records de trou (plan 20) ne comptent que les sessions d'au moins 3 joueurs et d'au moins
     3 trous joués : cela écarte le jeu seul, les duels, les sessions abandonnées, et limite la
     triche, puisque les scores sont saisis devant un groupe. Une seule règle partout, donc le
-    détenteur affiché d'un record est bien celui qui obtient J1 à J3. Les autres définitions de
+    détenteur affiché d'un record « toutes saisons » est bien celui qui obtient J1 à J3 (Q136). Les autres définitions de
     Q117 sont dans « Définitions communes ».
 15. **Nombre de joueurs, pas d'équipes (Q124).** Seul compte le nombre de joueurs (voir
     « Session éligible »).
@@ -96,6 +140,12 @@ question ouverte.
   = 3 équipes individuelles, et une session par équipes en compte au moins 4 (2 équipes).
   Les sessions en brouillon ou en cours, et toutes les autres, ne comptent pour aucun badge.
 - **Session jouée** par un joueur : session éligible où il figure dans une équipe.
+  **Classements : sessions individuelles seulement** (Q138, PO 2026-09-25, pour rendre les
+  badges plus durs) : une session par équipes ne compte pour aucun badge de classement
+  (victoire, podium, dernière place : D1 à D11, K1, K3), sauf « Collectif » (D12). Elle compte
+  pour tous les badges qui ne dépendent pas des scores : assiduité, régularité, sessions de
+  championnat (E1, E2), jeu en équipe, exploration, conditions de jeu. Les coups (C, K2, K4)
+  étaient déjà limités aux sessions individuelles (Q90).
 - **Trou joué** : trou d'une session jouée où l'équipe du joueur a un score saisi.
 - **Date d'une session** : `started_at` (à défaut `created_at`). L'ordre chronologique suit
   cette date.
@@ -112,9 +162,13 @@ question ouverte.
   (`lib/features/live/domain/team_standing.dart`), qui met les ex æquo à la même place. Le
   classement « après le trou n » est le même calcul limité aux n premiers trous. Un badge et
   l'écran de session disent donc toujours la même chose.
-- **Victoire** : place 1 au classement final, ex æquo compris (tous les ex æquo gagnent), sauf
-  Hold-up (Q113). **Podium** : places 1 à 3.
-- **Dernier** (K1, K3, D8) : la plus mauvaise place du classement, ex æquo compris.
+- **Victoire** : **seul** à la place 1 du classement final (Q138, PO 2026-09-25) : une égalité
+  en tête ne donne aucune victoire pour les badges, alors que le classement de la session, lui,
+  garde ses ex æquo. De bout en bout (D7) : seul en tête après chaque trou. **Podium** : seul à
+  sa place, entre la 1re et la 3e (Q139, PO 2026-09-25 : aucun ex æquo pour un badge de
+  classement, en individuel comme en équipe).
+- **Dernier** (K1, K3, D8) : **seul** à la plus mauvaise place du classement (Q138).
+- **Championnat** (E3 à E5) : seul à sa place du classement de la saison (Q139).
 - **Semaine** : du lundi au dimanche. **Saisons de l'année** (B4) : saisons météorologiques par
   mois, hiver = décembre à février, printemps = mars à mai, été = juin à août, automne =
   septembre à novembre.
@@ -133,8 +187,8 @@ question ouverte.
   seconde année. Place = celle du classement de saison existant (`seasonStandings`,
   `lib/features/championship/domain/player_standing.dart`), ex æquo compris. Ce classement
   reste celui du championnat, toutes sessions de championnat comprises : le filtre des sessions
-  éligibles s'applique à E1 et E2, pas au classement lui-même, sauf décision contraire du PO
-  (Q126, ouverte).
+  éligibles s'applique à E1 et E2, pas au classement lui-même (Q126, tranchée : pas de règle
+  d'éligibilité pour le classement du championnat).
 - **Date d'obtention** : la date de la session (ou du trou, de la photo, de la fin de saison) qui
   fait franchir le seuil. Elle est affichée dans le détail du badge.
 
@@ -174,7 +228,8 @@ son icône ; le palier donne l'anneau (voir « Présentation »). 57 icônes dis
 | B5 | Vétéran | 1re session il y a plus d'un an, et au moins 1 session dans les 3 derniers mois | `hourglass-high` |
 | B6 | Toute l'année | Au moins 1 session dans chacun des 12 mois (années cumulées) | `calendar-star` |
 
-B5 est le seul badge qui dépend du jour où on regarde ; une fois obtenu, il reste acquis (Q111).
+B5 est jugé au moment de chaque session (voir « Statut », précisions du lot 1) : il ne dépend
+pas du jour où on regarde ; une fois obtenu, il reste acquis (Q111).
 
 ### C. Exploits de coups (sessions individuelles)
 
@@ -211,8 +266,9 @@ trou non saisi entre deux trous interrompt la série (Q117).
 | D8 | Remontada | Victoire en étant dernier à la moitié de la session | `rocket-launch` |
 | D9 | Photo-finish | Victoire avec 1 coup ou 1 point d'écart | `timer` |
 | D10 | Hold-up | Strictement derrière le 1er avant le dernier trou, et 1er seul (sans ex æquo) à la fin de la session (Q113) | `vault` |
-| D11 | Solo | 1re victoire en session individuelle | `person` |
-| D12 | Collectif | 1re victoire en session par équipes | `users-three` |
+
+D11 (Solo) et D12 (Collectif) sont supprimés le 2026-09-25 (Q140, Q141) : les victoires en
+individuel et en équipe ont chacune leur série.
 
 ### E. Championnat
 
@@ -233,6 +289,11 @@ trou non saisi entre deux trous interrompt la série (Q117).
 | F3 | Duo de choc | 5 sessions avec le même équipier | `hand-fist` |
 
 Équipier : un autre joueur de la même équipe dans une session par équipes.
+
+Version équipe des badges de classement (Q141, 2026-09-25) : F4 à F13 reprennent D1 à D10, F14
+et F15 reprennent K1 et K3, mêmes seuils, mêmes icônes et même règle stricte (seul à sa place,
+Q138, Q139), mais seulement dans les sessions par équipes ; les versions de D et K ne lisent
+que les sessions individuelles.
 
 ### G. Explorateur
 
@@ -285,7 +346,16 @@ H6 et H7 que les photos de sessions éligibles ; H1 et H2 ne dépendent d'aucune
 | J3 | Roi du trou | A été « roi du trou » (meilleure moyenne) sur un trou | `crown` |
 
 Calcul en rejouant chronologiquement tous les passages individuels des trous que le joueur a
-joués ; un badge obtenu est gardé à vie (Q111).
+joués ; un badge obtenu est gardé à vie (Q111). Mêmes règles que la fiche trou (plan 20), écrites
+une seule fois : record = plus petit nombre de coups, le plus récent à égalité (Q94 révisée) ;
+roi = meilleure moyenne au par parmi les joueurs à 3 passages ou plus, le dernier à avoir joué le
+trou à égalité (Q93). Le calcul de `hole_stats.dart` devient un rejeu passage par passage, dont
+la fiche trou lit l'état final et les badges chaque état intermédiaire : la fiche et les badges
+ne peuvent pas diverger.
+
+Période (Q136, tranchée) : records et rois « toutes saisons » seulement, badges d'exploit. Un record de
+saison ne donne pas J1 : au début de chaque saison, le premier à jouer un trou en détient
+automatiquement le record de saison, et le badge serait gratuit.
 
 ### K. Badges humoristiques
 
@@ -319,8 +389,10 @@ joués ; un badge obtenu est gardé à vie (Q111).
   obtenus ou non, chacun avec sa condition : un joueur découvre ainsi Lève-tôt ou Sous la neige
   avant de les avoir. En fin de session, la feuille « Nouveaux badges » montre aussi jusqu'à
   3 badges proches, ceux dont la progression est la plus avancée (Q128, décision 19).
-- **Fiche joueur** (`/players/:id`, plan 19), section « Badges » : compteur « 23 / 74 », puis une
-  grille par famille (en-tête `NuniSectionHeader`). Sur la fiche d'un autre joueur, seuls les
+- **Bloc « Badges »** (`PlayerBadgesSection`, comme `PlayerStatsSection` au plan 19) : affiché sur
+  mon profil (`/profile`, sous les statistiques, avec l'interrupteur « Badges publics » dans le
+  bloc) et sur la fiche publique (`/players/:id`) si l'interrupteur l'autorise. Compteur
+  « 23 / 74 », puis une grille par famille (en-tête `NuniSectionHeader`). Sur la fiche d'un autre joueur, seuls les
   badges obtenus ; une famille sans badge obtenu est cachée. Badges masqués : mention
   « Badges privés ».
 - **Détail** : un appui ouvre une feuille du bas avec le médaillon, le nom, la condition, et pour
@@ -354,12 +426,14 @@ joués ; un badge obtenu est gardé à vie (Q111).
   (Q116) : dates de création de ses trous (hors clones, Q120), nombre de joueurs différents par trou créé,
   dates de fin de ses sessions créées et terminées, dates de ses photos. Rien pour un joueur
   sans compte. Pas de filtre selon `badges_public` (Q133).
-- **Records (famille J)** : la lecture des passages individuels par trou du plan 20, appelée en
-  une fois pour tous les trous joués par le joueur.
+- **Records (famille J)** : la RPC du plan 20 devient `holes_history(p_hole_ids uuid[])` (même
+  contenu, plusieurs trous d'un coup ; la fiche trou lui passe un seul trou) : un seul appel pour
+  tous les trous du référentiel joués par le joueur, lus dans son historique.
 - **Championnat (E3 à E5)** : `championship_association_results` existante, pour chaque couple
   association × saison terminée où le joueur a joué une session de championnat, puis
   `seasonStandings`.
-- **Code** :
+- **Code** : les définitions communes (session éligible, coups, date, équipe du joueur) sont
+  celles de `lib/features/stats/domain/`, jamais réécrites.
   - `lib/features/badges/domain/badge.dart` : énumérations `BadgeFamily` et `BadgeId` (famille,
     série, palier, seuil, icône) ; `BadgeResult` (obtenu, date, session, progression).
   - `lib/features/badges/domain/badge_facts.dart` : modèle d'entrée, construit une fois depuis les
@@ -379,6 +453,13 @@ joués ; un badge obtenu est gardé à vie (Q111).
   seconde après la réponse de la base.
 
 ## Étapes (développement)
+
+Livraison en deux lots (Q137, tranchée), chacun essayé par le PO puis committé :
+- **Lot 1**, sans changement de base : étapes 1, 2, 4, 5, 6 et 7 pour les familles A à G, I et K
+  (64 badges), avec le bloc « Badges » et l'interrupteur « Badges publics » (colonne déjà en
+  base).
+- **Lot 2** : étape 3 (RPC `player_contributions`, `holes_history` qui remplace
+  `hole_history`, reconstruction) et familles H et J (10 badges).
 
 1. **Domaine et règles** : énumérations, `BadgeFacts`, les onze fichiers de règles, avec leurs
    tests (`test/features/badges/domain/`) : pour chaque badge un cas obtenu et un cas non
@@ -442,4 +523,5 @@ Tranchées : Q92, Q94 (règle du record), Q96 (catalogue), Q97 (rétroactivité)
 (présentation), Q115 (heure de l'appareil), Q116 (données importées comprises), Q120 (clones
 hors H1 et H2), Q133 (masquage d'affichage seulement), Q117 (sessions éligibles et définitions de détail), Q123 (même règle pour
 statistiques et records), Q124 (nombre de joueurs), Q125 (21 h et 9 h). Q127 (pas de contrôle plus
-strict), Q128 (badges proches en fin de session). Liée, sur le championnat : Q126 (plan 26).
+strict), Q128 (badges proches en fin de session). Liée, sur le championnat : Q126 (plan 26,
+tranchée). Q136 (records « toutes saisons » pour J1 à J3) et Q137 (deux lots), tranchées.

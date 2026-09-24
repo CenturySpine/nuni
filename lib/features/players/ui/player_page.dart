@@ -9,6 +9,7 @@ import '../../../shared/nuni_avatar.dart';
 import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../badges/ui/player_badges_section.dart';
 import '../../stats/ui/player_stats_section.dart';
 import '../data/players_repository.dart';
 
@@ -63,6 +64,11 @@ class PlayerPage extends ConsumerWidget {
                   ),
                   const SizedBox(height: 32),
                   PlayerStatsSection(
+                    player: player,
+                    isMe: myUserId != null && player.userId == myUserId,
+                  ),
+                  const SizedBox(height: 24),
+                  PlayerBadgesSection(
                     player: player,
                     isMe: myUserId != null && player.userId == myUserId,
                   ),

@@ -386,6 +386,14 @@ const List<Palette> allPalettes = [
   nuniOlive,
 ];
 
+/// Badge tier rings (plan 21, Q114): bronze, silver and gold, the same in
+/// every palette -- a medal's metal must not change with the theme. Drawn as
+/// rings around a medal, so they are held to the non-text contrast minimum
+/// (3:1) against every palette's surface (palette_contrast_test.dart).
+const Color tierBronze = Color(0xFF9A5B2A);
+const Color tierSilver = Color(0xFF7A8490);
+const Color tierGold = Color(0xFFB07F0A);
+
 /// The palette used until the user picks one; also the PWA icons' colours.
 const Palette defaultPalette = nuniSunset;
 

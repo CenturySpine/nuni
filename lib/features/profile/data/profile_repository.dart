@@ -82,6 +82,16 @@ class ProfileRepository {
         .eq('user_id', userId);
   }
 
+  /// Whether my badges show on my public page (plan 21, Q108): display
+  /// only, the data behind them stays readable (Q133).
+  Future<void> updateMyBadgesPublic(bool badgesPublic) async {
+    final userId = _client.auth.currentUser!.id;
+    await _client
+        .from('players')
+        .update({'badges_public': badgesPublic})
+        .eq('user_id', userId);
+  }
+
   Future<void> updateMyLocale(String locale) async {
     final userId = _client.auth.currentUser!.id;
     await _client

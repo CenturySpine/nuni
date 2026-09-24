@@ -6,6 +6,7 @@ import 'core/l10n/locale_controller.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/palette_controller.dart';
+import 'features/badges/ui/badge_announcer.dart';
 import 'l10n/generated/app_localizations.dart';
 
 class NuniApp extends ConsumerWidget {
@@ -21,6 +22,11 @@ class NuniApp extends ConsumerWidget {
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       theme: buildAppTheme(palette),
       routerConfig: router,
+      // New badges are announced above any page (plan 21).
+      builder: (context, child) => BadgeAnnouncer(
+        navigatorKey: router.routerDelegate.navigatorKey,
+        child: child ?? const SizedBox.shrink(),
+      ),
       locale: locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,
