@@ -361,6 +361,16 @@ update association_managers set status = 'revoked'
 where association_id = 'c0000000-0000-0000-0000-000000000001' and status = 'approved';
 insert into association_managers (association_id, user_id, status)
 values ('c0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000009', 'approved');
+-- A draft (waiting room) stays with its participants (plan 26, decision 19)...
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000007","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'association_member_cannot_read_draft',
+  (select count(*) from sessions where id = (select session_id from test_ids)) = 0;
+reset role;
+reset request.jwt.claims;
+-- ...until it starts.
+update sessions set status = 'live', started_at = now() where id = (select session_id from test_ids);
 -- A member of the session's association who didn't play reads it, cannot score.
 set role authenticated;
 set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000007","role":"authenticated"}';
@@ -495,6 +505,42 @@ set role authenticated;
 set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000008","role":"authenticated"}';
 insert into test_results (test, passed)
 select 'history_hides_other_association_sessions', jsonb_array_length(history_snapshots()) = 0;
+reset role;
+reset request.jwt.claims;
+
+-- ===== Plan 19: a player's history, readable by everyone (Q133) =====
+-- member1 hides their statistics: a display choice only, the history stays readable.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000002","role":"authenticated"}';
+update players set stats_public = false where user_id = (select member1_user from test_ids);
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'player_can_hide_own_stats',
+  (select not stats_public from players where id = (select member1_player from test_ids));
+-- "foreign" (another association) reads member1's history: the completed session, without the
+-- members' accounts or the session comment.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000008","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'player_history_readable_by_anyone',
+  jsonb_array_length(player_history((select member1_player from test_ids))) = 1
+  and jsonb_array_length(player_history((select member1_player from test_ids))->0->'members') = 0
+  and not (player_history((select member1_player from test_ids))->0->'session' ? 'comment');
+-- ...but cannot change member1's switches.
+update players set stats_public = true, badges_public = false
+where id = (select member1_player from test_ids);
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'player_cannot_change_others_switches',
+  (select not stats_public and badges_public from players where id = (select member1_player from test_ids));
+-- A player with no completed session has an empty history.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000008","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'player_history_empty_without_sessions',
+  jsonb_array_length(player_history((select id from players where user_id = 'a0000000-0000-0000-0000-000000000008'))) = 0;
 reset role;
 reset request.jwt.claims;
 

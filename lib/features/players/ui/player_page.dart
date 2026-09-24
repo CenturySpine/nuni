@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/errors/app_error_message.dart';
+import '../../../core/supabase/supabase_providers.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_avatar.dart';
 import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../stats/ui/player_stats_section.dart';
 import '../data/players_repository.dart';
 
 /// `/players/:id` (plan 26, volet C): a player's public page -- photo and
-/// display name only for now (PO, 2026-09-24). Statistics (plan 19) and
+/// display name, then their statistics (plan 19) unless they hid them;
 /// badges (plan 21) will be added below. Open to every signed-in account,
 /// for any player, imported ones included.
 class PlayerPage extends ConsumerWidget {
@@ -23,6 +25,7 @@ class PlayerPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final playerAsync = ref.watch(playerByIdProvider(playerId));
+    final myUserId = ref.watch(supabaseClientProvider).auth.currentUser?.id;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.playerPageTitle)),
@@ -57,6 +60,11 @@ class PlayerPage extends ConsumerWidget {
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
+                  ),
+                  const SizedBox(height: 32),
+                  PlayerStatsSection(
+                    player: player,
+                    isMe: myUserId != null && player.userId == myUserId,
                   ),
                 ],
               ),

@@ -13,6 +13,8 @@ _Player _$PlayerFromJson(Map<String, dynamic> json) => _Player(
   locale: json['locale'] as String,
   associationId: json['association_id'] as String?,
   userId: json['user_id'] as String?,
+  statsPublic: json['stats_public'] as bool? ?? true,
+  badgesPublic: json['badges_public'] as bool? ?? true,
 );
 
 Map<String, dynamic> _$PlayerToJson(_Player instance) => <String, dynamic>{
@@ -22,4 +24,6 @@ Map<String, dynamic> _$PlayerToJson(_Player instance) => <String, dynamic>{
   'locale': instance.locale,
   'association_id': instance.associationId,
   'user_id': instance.userId,
+  'stats_public': instance.statsPublic,
+  'badges_public': instance.badgesPublic,
 };

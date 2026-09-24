@@ -1075,7 +1075,12 @@ statistiques intéressantes dès le premier jour. Un joueur importé sans compte
 aussi ses statistiques, consultables depuis l'historique.
 
 **Q93 ☑ — Seuil minimal avant d'afficher une statistique ?**
-Réponse PO (2026-09-24) : suggestion non retenue. Aucun seuil : statistiques joueur et trou
+Réponse PO révisée (2026-09-24, après essai du plan 19 sur les données réelles : un seul « X »
+sur un trou joué une fois en faisait durablement le « pire trou ») : « meilleur / pire trou »
+(plan 19) et « roi du trou » (plan 20) seulement à partir de **3 passages** du joueur sur le
+trou. Les autres statistiques restent sans seuil ; le « X » compte toujours dans l'écart moyen
+au par et la répartition. Tant qu'aucun trou n'atteint 3 passages, la fiche le dit.
+Première réponse PO (2026-09-24), remplacée : suggestion non retenue. Aucun seuil : statistiques joueur et trou
 affichées dès le premier trou joué (meilleur / pire trou et « roi du trou » compris).
 Suggestion : « meilleur / pire trou » et « roi du trou » à partir de 3 passages sur le trou ;
 la moyenne générale dès 1 trou. En dessous du seuil, l'app affiche « pas encore assez de
@@ -1464,3 +1469,41 @@ seule. Les brouillons (salle d'attente) restent visibles de leurs seuls particip
 nouvel écran, et c'est là qu'on cherche une partie en train de se jouer. Tant que la question
 est ouverte, le plan 26 applique cette suggestion.
 
+
+## Statistiques joueur (plan 19, 2026-09-24)
+
+**Q133 ☑ — Statistiques masquées mais badges publics : que peut-on lire de la base ?**
+Réponse PO (2026-09-24) : le masquage sert à ne pas afficher publiquement ses aspects
+négatifs, pas à protéger des données : les sessions et leurs scores sont lisibles, et n'importe
+qui pourrait refaire les calculs. Donc l'historique d'un joueur est lisible en base sans
+contrainte par tout compte connecté ; les interrupteurs « Statistiques publiques » et « Badges
+publics » ne décident que de l'affichage des sections sur la fiche publique. La page
+Confidentialité (`/privacy`) le mentionne et l'explique. Remplace, pour les statistiques et les
+badges, le masquage côté serveur prévu par la fiche du plan 19 et le plan 21 (« même par un
+appel direct »).
+Constat (question d'origine) : les badges se calculent en Dart (règle du projet) à partir de l'historique du joueur,
+le même que ses statistiques. Pour afficher les badges d'un joueur qui a masqué ses statistiques
+mais pas ses badges, l'app doit recevoir cet historique ; quelqu'un qui appelle la base
+directement pourrait alors recalculer les statistiques. Par ailleurs, depuis le plan 26, les
+membres d'une association lisent déjà toutes ses sessions démarrées.
+Suggestion : la RPC `player_history` renvoie l'historique si l'appelant est le joueur, ou si
+l'un des deux interrupteurs est public ; la fiche n'affiche que les sections publiques. La
+garantie « rien n'est lisible, même par appel direct » ne vaut donc que si les deux sont
+masqués. L'alternative, calculer les badges dans la base, écrirait les 74 règles en SQL, contre
+la règle « calcul en Dart, testé unitairement » et sans bénéfice réel puisque les partenaires de
+club voient déjà les sessions. Tant que la question est ouverte, les plans 19 et 21 appliquent
+cette suggestion.
+
+**Q134 ☑ — Courbe de la saison : dessin maison ou bibliothèque de graphiques ?**
+Réponse PO finale (2026-09-24), après un aperçu des deux graphiques sur données fictives : la
+courbe de saison reste dans le plan 19, et le plan 20 aura l'histogramme de répartition des
+scores ; dessin maison (suggestion retenue).
+Première réponse PO (2026-09-24), révisée : pas de graphique pour le moment.
+Constat : l'app n'a aucune bibliothèque de graphiques. La fiche joueur n'a besoin que d'une
+courbe simple (un point par session, une ligne pour le par) ; le plan 20 envisage un histogramme
+simple.
+Suggestion : dessin maison (`CustomPainter` de Flutter, une centaine de lignes), aux couleurs de
+la palette choisie. Aucune dépendance à suivre, poids de l'app inchangé, rendu identique à la
+charte. Une bibliothèque (`fl_chart`, la référence Flutter) ne se justifierait qu'avec des
+graphiques interactifs ou nombreux, ce que les plans 19 à 21 ne prévoient pas. Tant que la
+question est ouverte, le plan 19 applique cette suggestion.

@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Player {
 
- String get id; String get name;@JsonKey(name: 'avatar_url') String? get avatarUrl; String get locale;@JsonKey(name: 'association_id') String? get associationId;@JsonKey(name: 'user_id') String? get userId;
+ String get id; String get name;@JsonKey(name: 'avatar_url') String? get avatarUrl; String get locale;@JsonKey(name: 'association_id') String? get associationId;@JsonKey(name: 'user_id') String? get userId;@JsonKey(name: 'stats_public') bool get statsPublic;@JsonKey(name: 'badges_public') bool get badgesPublic;
 /// Create a copy of Player
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +30,20 @@ $PlayerCopyWith<Player> get copyWith => _$PlayerCopyWithImpl<Player>(this as Pla
 @override
 bool operator ==(Object other) {
   final _this = this as Player;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Player&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.avatarUrl, _this.avatarUrl) || other.avatarUrl == _this.avatarUrl)&&(identical(other.locale, _this.locale) || other.locale == _this.locale)&&(identical(other.associationId, _this.associationId) || other.associationId == _this.associationId)&&(identical(other.userId, _this.userId) || other.userId == _this.userId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Player&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.avatarUrl, _this.avatarUrl) || other.avatarUrl == _this.avatarUrl)&&(identical(other.locale, _this.locale) || other.locale == _this.locale)&&(identical(other.associationId, _this.associationId) || other.associationId == _this.associationId)&&(identical(other.userId, _this.userId) || other.userId == _this.userId)&&(identical(other.statsPublic, _this.statsPublic) || other.statsPublic == _this.statsPublic)&&(identical(other.badgesPublic, _this.badgesPublic) || other.badgesPublic == _this.badgesPublic));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Player;
-  return Object.hash(runtimeType,_this.id,_this.name,_this.avatarUrl,_this.locale,_this.associationId,_this.userId);
+  return Object.hash(runtimeType,_this.id,_this.name,_this.avatarUrl,_this.locale,_this.associationId,_this.userId,_this.statsPublic,_this.badgesPublic);
 }
 
 @override
 String toString() {
   final _this = this as Player;
-  return 'Player(id: ${_this.id}, name: ${_this.name}, avatarUrl: ${_this.avatarUrl}, locale: ${_this.locale}, associationId: ${_this.associationId}, userId: ${_this.userId})';
+  return 'Player(id: ${_this.id}, name: ${_this.name}, avatarUrl: ${_this.avatarUrl}, locale: ${_this.locale}, associationId: ${_this.associationId}, userId: ${_this.userId}, statsPublic: ${_this.statsPublic}, badgesPublic: ${_this.badgesPublic})';
 }
 
 
@@ -54,7 +54,7 @@ abstract mixin class $PlayerCopyWith<$Res>  {
   factory $PlayerCopyWith(Player value, $Res Function(Player) _then) = _$PlayerCopyWithImpl;
 @useResult
 $Res call({
- String id, String name,@JsonKey(name: 'avatar_url') String? avatarUrl, String locale,@JsonKey(name: 'association_id') String? associationId,@JsonKey(name: 'user_id') String? userId
+ String id, String name,@JsonKey(name: 'avatar_url') String? avatarUrl, String locale,@JsonKey(name: 'association_id') String? associationId,@JsonKey(name: 'user_id') String? userId,@JsonKey(name: 'stats_public') bool statsPublic,@JsonKey(name: 'badges_public') bool badgesPublic
 });
 
 
@@ -71,7 +71,7 @@ class _$PlayerCopyWithImpl<$Res>
 
 /// Create a copy of Player
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? avatarUrl = freezed,Object? locale = null,Object? associationId = freezed,Object? userId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? avatarUrl = freezed,Object? locale = null,Object? associationId = freezed,Object? userId = freezed,Object? statsPublic = null,Object? badgesPublic = null,}) {
   return _then(Player(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -79,7 +79,9 @@ as String,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignor
 as String?,locale: null == locale ? _self.locale : locale // ignore: cast_nullable_to_non_nullable
 as String,associationId: freezed == associationId ? _self.associationId : associationId // ignore: cast_nullable_to_non_nullable
 as String?,userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,statsPublic: null == statsPublic ? _self.statsPublic : statsPublic // ignore: cast_nullable_to_non_nullable
+as bool,badgesPublic: null == badgesPublic ? _self.badgesPublic : badgesPublic // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -164,10 +166,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'avatar_url')  String? avatarUrl,  String locale, @JsonKey(name: 'association_id')  String? associationId, @JsonKey(name: 'user_id')  String? userId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'avatar_url')  String? avatarUrl,  String locale, @JsonKey(name: 'association_id')  String? associationId, @JsonKey(name: 'user_id')  String? userId, @JsonKey(name: 'stats_public')  bool statsPublic, @JsonKey(name: 'badges_public')  bool badgesPublic)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Player() when $default != null:
-return $default(_that.id,_that.name,_that.avatarUrl,_that.locale,_that.associationId,_that.userId);case _:
+return $default(_that.id,_that.name,_that.avatarUrl,_that.locale,_that.associationId,_that.userId,_that.statsPublic,_that.badgesPublic);case _:
   return orElse();
 
 }
@@ -185,10 +187,10 @@ return $default(_that.id,_that.name,_that.avatarUrl,_that.locale,_that.associati
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'avatar_url')  String? avatarUrl,  String locale, @JsonKey(name: 'association_id')  String? associationId, @JsonKey(name: 'user_id')  String? userId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'avatar_url')  String? avatarUrl,  String locale, @JsonKey(name: 'association_id')  String? associationId, @JsonKey(name: 'user_id')  String? userId, @JsonKey(name: 'stats_public')  bool statsPublic, @JsonKey(name: 'badges_public')  bool badgesPublic)  $default,) {final _that = this;
 switch (_that) {
 case _Player():
-return $default(_that.id,_that.name,_that.avatarUrl,_that.locale,_that.associationId,_that.userId);case _:
+return $default(_that.id,_that.name,_that.avatarUrl,_that.locale,_that.associationId,_that.userId,_that.statsPublic,_that.badgesPublic);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +207,10 @@ return $default(_that.id,_that.name,_that.avatarUrl,_that.locale,_that.associati
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name, @JsonKey(name: 'avatar_url')  String? avatarUrl,  String locale, @JsonKey(name: 'association_id')  String? associationId, @JsonKey(name: 'user_id')  String? userId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name, @JsonKey(name: 'avatar_url')  String? avatarUrl,  String locale, @JsonKey(name: 'association_id')  String? associationId, @JsonKey(name: 'user_id')  String? userId, @JsonKey(name: 'stats_public')  bool statsPublic, @JsonKey(name: 'badges_public')  bool badgesPublic)?  $default,) {final _that = this;
 switch (_that) {
 case _Player() when $default != null:
-return $default(_that.id,_that.name,_that.avatarUrl,_that.locale,_that.associationId,_that.userId);case _:
+return $default(_that.id,_that.name,_that.avatarUrl,_that.locale,_that.associationId,_that.userId,_that.statsPublic,_that.badgesPublic);case _:
   return null;
 
 }
@@ -220,7 +222,7 @@ return $default(_that.id,_that.name,_that.avatarUrl,_that.locale,_that.associati
 @JsonSerializable()
 
 class _Player implements Player {
-  const _Player({required this.id, required this.name, @JsonKey(name: 'avatar_url') this.avatarUrl, required this.locale, @JsonKey(name: 'association_id') this.associationId, @JsonKey(name: 'user_id') this.userId});
+  const _Player({required this.id, required this.name, @JsonKey(name: 'avatar_url') this.avatarUrl, required this.locale, @JsonKey(name: 'association_id') this.associationId, @JsonKey(name: 'user_id') this.userId, @JsonKey(name: 'stats_public') this.statsPublic = true, @JsonKey(name: 'badges_public') this.badgesPublic = true});
   factory _Player.fromJson(Map<String, dynamic> json) => _$PlayerFromJson(json);
 
 @override final  String id;
@@ -229,6 +231,8 @@ class _Player implements Player {
 @override final  String locale;
 @override@JsonKey(name: 'association_id') final  String? associationId;
 @override@JsonKey(name: 'user_id') final  String? userId;
+@override@JsonKey(name: 'stats_public') final  bool statsPublic;
+@override@JsonKey(name: 'badges_public') final  bool badgesPublic;
 
 /// Create a copy of Player
 /// with the given fields replaced by the non-null parameter values.
@@ -243,18 +247,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Player&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.locale, locale) || other.locale == locale)&&(identical(other.associationId, associationId) || other.associationId == associationId)&&(identical(other.userId, userId) || other.userId == userId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Player&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.locale, locale) || other.locale == locale)&&(identical(other.associationId, associationId) || other.associationId == associationId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.statsPublic, statsPublic) || other.statsPublic == statsPublic)&&(identical(other.badgesPublic, badgesPublic) || other.badgesPublic == badgesPublic));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,name,avatarUrl,locale,associationId,userId);
+    return Object.hash(runtimeType,id,name,avatarUrl,locale,associationId,userId,statsPublic,badgesPublic);
 }
 
 @override
 String toString() {
-    return 'Player(id: $id, name: $name, avatarUrl: $avatarUrl, locale: $locale, associationId: $associationId, userId: $userId)';
+    return 'Player(id: $id, name: $name, avatarUrl: $avatarUrl, locale: $locale, associationId: $associationId, userId: $userId, statsPublic: $statsPublic, badgesPublic: $badgesPublic)';
 }
 
 
@@ -265,7 +269,7 @@ abstract mixin class _$PlayerCopyWith<$Res> implements $PlayerCopyWith<$Res> {
   factory _$PlayerCopyWith(_Player value, $Res Function(_Player) _then) = __$PlayerCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name,@JsonKey(name: 'avatar_url') String? avatarUrl, String locale,@JsonKey(name: 'association_id') String? associationId,@JsonKey(name: 'user_id') String? userId
+ String id, String name,@JsonKey(name: 'avatar_url') String? avatarUrl, String locale,@JsonKey(name: 'association_id') String? associationId,@JsonKey(name: 'user_id') String? userId,@JsonKey(name: 'stats_public') bool statsPublic,@JsonKey(name: 'badges_public') bool badgesPublic
 });
 
 
@@ -282,7 +286,7 @@ class __$PlayerCopyWithImpl<$Res>
 
 /// Create a copy of Player
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? avatarUrl = freezed,Object? locale = null,Object? associationId = freezed,Object? userId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? avatarUrl = freezed,Object? locale = null,Object? associationId = freezed,Object? userId = freezed,Object? statsPublic = null,Object? badgesPublic = null,}) {
   return _then(_Player(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -290,7 +294,9 @@ as String,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignor
 as String?,locale: null == locale ? _self.locale : locale // ignore: cast_nullable_to_non_nullable
 as String,associationId: freezed == associationId ? _self.associationId : associationId // ignore: cast_nullable_to_non_nullable
 as String?,userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,statsPublic: null == statsPublic ? _self.statsPublic : statsPublic // ignore: cast_nullable_to_non_nullable
+as bool,badgesPublic: null == badgesPublic ? _self.badgesPublic : badgesPublic // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

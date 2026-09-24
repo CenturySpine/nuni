@@ -18,8 +18,10 @@ Plan 06 (trous) livré ; socle de calcul `lib/features/stats/` du plan 19.
 
 - Nombre de passages, moyenne de coups, écart moyen au par (« ce par 3 se joue en 4,2 »).
 - Record du trou (meilleur score individuel) avec son auteur et sa date, et le « roi du trou »
-  (meilleure moyenne, dès un passage, Q93).
-- Répartition des scores (histogramme simple).
+  (meilleure moyenne, parmi les joueurs qui ont au moins 3 passages sur le trou : Q93 révisée
+  le 2026-09-24, même seuil que le meilleur et le pire trou du plan 19).
+- Répartition des scores (histogramme simple : passages par nombre de coups), confirmée par le
+  PO le 2026-09-24 après aperçu (Q134), dessin maison comme la courbe du plan 19.
 - Affichage dans la fiche trou existante (`hole_detail_sheet.dart`), section « Statistiques ».
 - Les trous libres (plan 17) n'ont pas de statistiques : ils n'existent pas dans le référentiel.
 

@@ -19,6 +19,7 @@ import '../../championship/data/championship_repository.dart';
 import '../../history/data/history_repository.dart';
 import '../../live/data/live_repository.dart';
 import '../../sessions/data/sessions_repository.dart';
+import '../../stats/ui/player_stats_section.dart';
 import '../data/profile_repository.dart';
 import '../domain/player.dart';
 import 'avatar_crop_dialog.dart';
@@ -201,6 +202,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               NuniButton(
                 label: l10n.commonSave,
                 onPressed: _saving ? null : _save,
+              ),
+              const SizedBox(height: 24),
+              // My statistics (plan 19), with the switch deciding whether my
+              // public page shows them too.
+              PlayerStatsSection(
+                player: player,
+                isMe: true,
+                showVisibilitySwitch: true,
               ),
             ],
           );

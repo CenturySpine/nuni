@@ -278,12 +278,10 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
     'manager_id, email, phone, request_message',
     'manager_id',
   );
-  final players = await all(
-    'players',
-    'id, name, avatar_url, locale, association_id, created_by, user_id, '
-        'legacy_id, created_at',
-    'created_at',
-  );
+  // Every column (plan 19), same reason as the played holes below:
+  // `stats_public` and `badges_public` don't exist yet on a base still on the
+  // previous schema, and a "private" choice must survive a reconstruction.
+  final players = await all('players', '*', 'created_at');
   final emails = await all(
     'legacy_player_emails',
     'player_id, email',

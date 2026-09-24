@@ -45,6 +45,11 @@ create table players (
   created_by uuid not null references auth.users (id),
   user_id uuid unique references auth.users (id),
   legacy_id bigint unique,
+  -- Whether the statistics and badges sections show on the player's public page (plans 19 and
+  -- 21, Q108). Display only (Q133): the sessions and scores they're computed from stay readable
+  -- by every signed-in account either way (player_history, rpc.sql).
+  stats_public boolean not null default true,
+  badges_public boolean not null default true,
   created_at timestamptz not null default now()
 );
 

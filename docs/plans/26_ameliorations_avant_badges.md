@@ -10,6 +10,10 @@ session ; Q118 à Q122 tranchées), B (sessions et championnat visibles par l'as
 marquage « championnat » réservé aux responsables ; Q126, Q129 à Q132 tranchées) et C (profil
 public d'un joueur, pseudo et photo seulement). Plus de question ouverte.
 
+**Clôturé le 2026-09-24** : base distante reconstruite depuis le poste du PO (seeds régénérés,
+commit `637f253`, puis rejoués, comptages identiques à l'export), parcours testé et validé par
+le PO le même jour.
+
 **Implémenté le 2026-09-24 (session Claude Code web), poussé sur `main` le même jour.** Vérifié :
 `flutter analyze --fatal-infos` sans remarque, 222 tests Flutter verts, build web de production
 compilé ; schéma, RLS, RPC et déclencheurs rejoués sur une base PostgreSQL 16 + PostGIS locale

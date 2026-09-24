@@ -40,9 +40,10 @@ Récompenser des exploits et la régularité pour donner une raison de rejouer e
    accepté), plus « Sous la neige » ajouté le 2026-09-24 (Q117) : 74 badges. Détail plus bas.
 2. **Rétroactivité (Q92, Q97).** Les sessions importées de LsgScores comptent. À la première
    ouverture, les badges déjà obtenus sont annoncés en un seul écran, pas un par un.
-3. **Visibilité (Q98, Q106, Q108).** Visibles par tous sur la fiche du joueur, masquables par
-   l'interrupteur « Badges publics » du profil, indépendant des statistiques. Masqués, ils ne
-   sont renvoyés par la base qu'au joueur lui-même, même par un appel direct.
+3. **Visibilité (Q98, Q106, Q108, Q133).** Visibles par tous sur la fiche du joueur, masquables
+   par l'interrupteur « Badges publics » du profil, indépendant des statistiques. Le masquage ne
+   porte que sur l'affichage (Q133) : les données dont les badges sont calculés restent
+   lisibles en base par tout compte connecté.
 4. **Gardé à vie (Q111).** Un badge obtenu n'est jamais retiré, même si le record qui l'a donné
    est battu.
 5. **Seuils (Q96, Q112).** Abaissés au tri ; Marathon à 9 trous.
@@ -343,14 +344,15 @@ joués ; un badge obtenu est gardé à vie (Q111).
 
 - **Historique du joueur** : la RPC du plan 19, qui renvoie chaque session jouée au format
   `session_snapshot` (équipes, trous joués avec par, scores de toutes les équipes, météo,
-  association, championnat). Tous les badges des familles A à G, I et K en découlent. Elle
-  applique déjà `badges_public` côté serveur (Q108).
+  association, championnat). Tous les badges des familles A à G, I et K en découlent. Lisible
+  par tout compte connecté ; la fiche lit `badges_public` pour afficher ou non la section
+  (Q133).
 - **Contributions (famille H)** : nouvelle RPC `security definer`
   `player_contributions(p_player_id uuid)`, dans `supabase/migrations/…_rpc.sql` (règle 8 : fichier
   thématique existant). Elle renvoie, pour le compte lié au joueur, données importées comprises
   (Q116) : dates de création de ses trous (hors clones, Q120), nombre de joueurs différents par trou créé,
-  dates de fin de ses sessions créées et terminées, dates de ses photos. Rien si le joueur a
-  masqué ses badges et que l'appelant n'est pas lui ; rien pour un joueur sans compte.
+  dates de fin de ses sessions créées et terminées, dates de ses photos. Rien pour un joueur
+  sans compte. Pas de filtre selon `badges_public` (Q133).
 - **Records (famille J)** : la lecture des passages individuels par trou du plan 20, appelée en
   une fois pour tous les trous joués par le joueur.
 - **Championnat (E3 à E5)** : `championship_association_results` existante, pour chaque couple
@@ -384,8 +386,9 @@ joués ; un badge obtenu est gardé à vie (Q111).
 2. **Médaillon** : couleurs bronze, argent, or dans `palettes.dart` et test de contraste ;
    `NuniBadgeMedal` ; ajout à `/dev/theme`. **Point de validation visuelle par le PO** avant la
    suite.
-3. **Données** : RPC `player_contributions` et tests d'accès (badges masqués → rien pour un
-   autre joueur, même en appel direct) ; `badges_repository.dart`. Changement de schéma avant
+3. **Données** : RPC `player_contributions` et son test dans `rls_smoke.sql` ;
+   interrupteur « Badges publics » du profil (colonne créée par le plan 19) ;
+   `badges_repository.dart`. Changement de schéma avant
    la mise en service des badges : reconstruction de la base distante selon la règle 8, **PO
    prévenu avant**, seeds régénérés puis rejoués.
 4. **Écrans** : section « Badges » de la fiche joueur, grille, détail, progression.
@@ -415,7 +418,7 @@ joués ; un badge obtenu est gardé à vie (Q111).
 - Les badges d'un joueur sont identiques quel que soit l'appareil ou la personne qui les
   consulte (hors I5 et I6 si les appareils ne sont pas dans le même fuseau horaire, Q115).
 - La fiche d'un autre joueur ne montre que ses badges obtenus ; badges masqués → « Badges
-  privés », et la base ne renvoie rien à un autre compte, même par un appel direct (test).
+  privés » (masquage d'affichage, Q133).
 - Ma fiche montre en plus les badges à obtenir, en gris, avec la progression pour les
   compteurs.
 - Clore une session qui fait franchir un seuil affiche la feuille « Nouveaux badges » ; le même
@@ -436,6 +439,6 @@ joués ; un badge obtenu est gardé à vie (Q111).
 Tranchées : Q92, Q94 (règle du record), Q96 (catalogue), Q97 (rétroactivité), Q98, Q106, Q108
 (visibilité), Q111 (gardé à vie), Q112 (Marathon à 9 trous), Q113 (Hold-up), Q114
 (présentation), Q115 (heure de l'appareil), Q116 (données importées comprises), Q120 (clones
-hors H1 et H2), Q117 (sessions éligibles et définitions de détail), Q123 (même règle pour
+hors H1 et H2), Q133 (masquage d'affichage seulement), Q117 (sessions éligibles et définitions de détail), Q123 (même règle pour
 statistiques et records), Q124 (nombre de joueurs), Q125 (21 h et 9 h). Q127 (pas de contrôle plus
 strict), Q128 (badges proches en fin de session). Liée, sur le championnat : Q126 (plan 26).

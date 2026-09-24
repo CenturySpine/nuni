@@ -21,6 +21,10 @@ abstract class Player with _$Player {
     // unless a creation request of mine is pending (Q81).
     @JsonKey(name: 'association_id') String? associationId,
     @JsonKey(name: 'user_id') String? userId,
+    // Whether the statistics and badges sections show on the public page
+    // (plans 19 and 21, Q108) -- display only, the data stays readable (Q133).
+    @JsonKey(name: 'stats_public') @Default(true) bool statsPublic,
+    @JsonKey(name: 'badges_public') @Default(true) bool badgesPublic,
   }) = _Player;
 
   factory Player.fromJson(Map<String, Object?> json) => _$PlayerFromJson(json);

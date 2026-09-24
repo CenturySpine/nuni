@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nuni/features/profile/data/profile_repository.dart';
 import 'package:nuni/features/profile/domain/player.dart';
 import 'package:nuni/features/profile/ui/profile_page.dart';
+import 'package:nuni/features/stats/data/stats_repository.dart';
 import 'package:nuni/l10n/generated/app_localizations.dart';
 
 void main() {
@@ -13,7 +14,10 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [myPlayerProvider.overrideWith((ref) async => player)],
+        overrides: [
+          myPlayerProvider.overrideWith((ref) async => player),
+          playerHistoryProvider('p1').overrideWith((ref) async => const []),
+        ],
         child: MaterialApp(
           localizationsDelegates: const [
             AppLocalizations.delegate,

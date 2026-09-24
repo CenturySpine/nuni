@@ -410,6 +410,49 @@ $$;
 revoke execute on function championship_association_results(uuid, text) from public;
 grant execute on function championship_association_results(uuid, text) to authenticated;
 
+-- Every completed session one player played in (plan 19; plans 20 and 21 build on it), shaped
+-- like a `session_snapshot` call so the client reuses `LiveSessionSnapshot` and
+-- `computeStandings`, oldest first. security definer, same reasoning as
+-- championship_association_results: a player's statistics must be the same whoever looks, and
+-- RLS only shows a session to its participants and association. Deliberately no check on
+-- players.stats_public / badges_public (Q133): hiding them is a display choice, the sessions and
+-- scores behind them stay readable. What the calculations never read is left out: session and
+-- played-hole comments, the cover photo, the members' accounts. Which sessions count
+-- ("eligible", Q117/Q123) is decided in Dart, written once (lib/features/stats/domain/).
+create or replace function player_history(p_player_id uuid)
+returns jsonb
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select coalesce(jsonb_agg(
+    jsonb_set(
+      jsonb_set(
+        h.snap #- '{session,comment}' #- '{session,cover_photo_id}' #- '{session,cover_photo_path}',
+        '{members}', '[]'::jsonb
+      ),
+      '{played_holes}',
+      (
+        select coalesce(jsonb_agg(ph - 'comment' order by (ph->>'position')::int), '[]'::jsonb)
+        from jsonb_array_elements(h.snap->'played_holes') ph
+      )
+    )
+    order by h.played_at
+  ), '[]'::jsonb)
+  from (
+    select session_snapshot(s.id) as snap, coalesce(s.started_at, s.created_at) as played_at
+    from sessions s
+    where s.status = 'completed'
+      and exists (
+        select 1 from team_players tp where tp.session_id = s.id and tp.player_id = p_player_id
+      )
+  ) h;
+$$;
+
+revoke execute on function player_history(uuid) from public;
+grant execute on function player_history(uuid) to authenticated;
+
 -- Adds a played hole (owner-only -- RLS `played_holes_owner_write`): appends at the next
 -- position. A plain client-side insert would need a "next position" round trip first (like
 -- `_nextTeamPosition` in the Dart repository) and would race two owners adding at once; doing

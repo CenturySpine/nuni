@@ -72,6 +72,16 @@ class ProfileRepository {
     return url;
   }
 
+  /// Shows or hides my statistics on my public page (plan 19, Q108) --
+  /// display only, the sessions behind them stay readable (Q133).
+  Future<void> updateMyStatsPublic(bool statsPublic) async {
+    final userId = _client.auth.currentUser!.id;
+    await _client
+        .from('players')
+        .update({'stats_public': statsPublic})
+        .eq('user_id', userId);
+  }
+
   Future<void> updateMyLocale(String locale) async {
     final userId = _client.auth.currentUser!.id;
     await _client
