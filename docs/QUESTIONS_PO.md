@@ -1094,10 +1094,12 @@ Suggestion : record commun, avec le nom du joueur et son association. Le trou es
 objet dans le référentiel ; un record par association diluerait le défi. Un trou privé n'a de
 statistiques que pour son propriétaire.
 
-**Q96 ☐ — Badges : catalogue de la première version ?**
+**Q96 ☑ — Badges : catalogue de la première version ?**
 Réponse PO (2026-09-24) : principe accepté ; lister les badges de façon exhaustive dans le plan
 21 pour que le PO fasse le tri. Catalogue de 78 badges en 11 familles rédigé le 2026-09-24 dans
-`docs/plans/21_badges.md`, en attente du tri.
+`docs/plans/21_badges.md`, trié par le PO le même jour : 6 supprimés, 1 ajouté (Hold-up),
+9 seuils abaissés, 1 renommé ; tout badge non marqué « X » est accepté, soit 73 badges
+retenus (détail dans le plan 21).
 Suggestion : les 5 familles du plan 21 (premiers pas, exploits, victoires, explorateur,
 fidélité), une quinzaine de badges au total, tous calculables avec les données existantes. Mieux
 vaut peu de badges atteignables que beaucoup de badges impossibles : un badge jamais obtenu
@@ -1190,9 +1192,47 @@ Suggestion : les statistiques d'un trou privé suivent la visibilité du trou lu
 peut ouvrir sa fiche voit ses statistiques. Aucune règle nouvelle, pas de fuite d'un trou privé
 par ses statistiques.
 
-**Q111 ☐ — Badge lié à un état qui change (record battu) : perdu ou gardé ?**
+**Q111 ☑ — Badge lié à un état qui change (record battu) : perdu ou gardé ?**
+Réponse PO (2026-09-24) : suggestion retenue, un badge obtenu est gardé à vie.
 Constat : les badges J1 à J3 (plan 21) dépendent d'un record ou d'une moyenne qui peut être
 dépassé plus tard.
 Suggestion : gardé à vie (« a détenu le record »). Un badge qui disparaît est vécu comme une
 punition et rend l'affichage instable ; la fiche du trou montre déjà le détenteur actuel. Le
 calcul rejoue l'historique dans l'ordre chronologique.
+
+**Q112 ☑ — Badge Marathon : à partir de combien de trous ?**
+Réponse PO (2026-09-24) : suggestion retenue, 9 trous.
+Constat : au tri de Q96, le PO a jugé 18 trous beaucoup trop (« quand on fait 9 trous dans une
+session c'est déjà énorme ») sans donner de nouveau seuil.
+Suggestion : 9 trous. Le commentaire du PO décrit 9 trous comme exceptionnel, ce qui est le
+rôle d'un badge « Marathon » ; un seuil plus bas le rendrait banal. Tant que la question est
+ouverte, le plan 21 applique 9 trous.
+
+**Q113 ☑ — Badge Hold-up : un joueur ex æquo en tête avant le dernier trou compte-t-il ?**
+Réponse PO (2026-09-24) : Hold-up exige d'être **strictement derrière** le 1er avant le
+dernier trou (un ex æquo en tête ne compte pas) et **1er seul** à la fin de la session (pas
+d'ex æquo). Aucune égalité ne déclenche le badge, ni avant le dernier trou, ni à la fin.
+Constat : Hold-up (ajouté par le PO au tri de Q96) = victoire alors que le joueur n'était pas
+1er avant le dernier trou. Avec une égalité en tête avant ce trou, « pas 1er » est ambigu.
+Suggestion : un ex æquo en tête compte comme 1er, donc pas de Hold-up. C'est la même règle que
+pour la victoire (tous les ex æquo gagnent) : le badge récompense un vrai renversement, pas le
+fait de départager une égalité. Tant que la question est ouverte, le plan 21 applique cette
+règle.
+
+**Q114 ☑ — Badges : quelle présentation visuelle ?**
+Réponse PO (2026-09-24) : suggestion retenue pour commencer ; c'est du visuel, il pourra
+évoluer.
+Constat : 73 badges ; dessiner une illustration par badge coûte cher et reste difficile à
+garder cohérent. L'app embarque déjà la police d'icônes Phosphor complète (environ 1 500
+icônes, chacune en contour et en plein, `assets/fonts/Phosphor*.ttf`).
+Suggestion : un médaillon rond unique pour tous les badges, avec une icône Phosphor au centre
+et la couleur de sa famille (A à K), tirée de la palette choisie par l'utilisateur. Les séries
+à paliers (5, 10, 25… sessions ; birdie, eagle, albatros ; 1re, 5e, 25e victoire…) partagent
+une icône et se distinguent par un anneau bronze, argent ou or et le chiffre du seuil : environ
+56 icônes distinctes au lieu de 73, toutes trouvables dans Phosphor (oiseau, trophée,
+couronne, nuage de pluie, flocon, vent, lune, appareil photo, carte…). Badge obtenu : icône
+pleine et colorée ; à obtenir (sur sa propre fiche) : icône en contour grise, avec la
+progression pour les compteurs (« 7 / 10 sessions »). Fiche joueur : grille par famille ; un
+appui ouvre le détail (nom, condition, date et session d'obtention). Les émojis sont écartés
+(rendu différent selon le téléphone, hors charte), les illustrations sur mesure aussi (coût,
+cohérence). Choix final sur maquette dans `/dev/theme`.
