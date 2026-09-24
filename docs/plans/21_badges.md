@@ -44,8 +44,8 @@ Règles communes, conséquences de décisions déjà prises :
 | ☐ | A6 | Centurion | 100 sessions |  |
 | ☐ | A7 | Cinquante trous | 50 trous joués (toutes sessions) |  |
 | ☐ | A8 | Cent trous | 100 trous joués |  |
-| ☐ | A9 | Cinq cents trous | 500 trous joués |  |
-| ☐ | A10 | Mille trous | 1 000 trous joués |  |
+| ☐ | A9 | Cinq cents trous | 500 trous joués | X |
+| ☐ | A10 | Mille trous | 1 000 trous joués | X |
 
 ### B. Fidélité et régularité
 
@@ -89,7 +89,8 @@ Règles communes, conséquences de décisions déjà prises :
 | ☐ | D7 | De bout en bout | Victoire en étant 1er après chaque trou de la session |  |
 | ☐ | D8 | Remontada | Victoire en étant dernier à la moitié de la session |  |
 | ☐ | D9 | Photo-finish | Victoire avec 1 coup ou 1 point d'écart |  |
-| ☐ | D10 | Polyvalent | Au moins 1 victoire dans chacun des modes Stroke Play, Match Play et Redistribution |  |
+| ☐ | D9b| Hold-up | Victoire sur le dernier trou de la session alors que le joueur n'était pas premier du classement avant | <- ajouté, refaire la numérotation |
+| ☐ | D10 | Polyvalent | Au moins 1 victoire dans chacun des modes Stroke Play, Match Play et Redistribution | X |
 | ☐ | D11 | Solo | 1re victoire en session individuelle |  |
 | ☐ | D12 | Collectif | 1re victoire en session par équipes |  |
 
@@ -98,28 +99,28 @@ Règles communes, conséquences de décisions déjà prises :
 | Garder | # | Badge | Condition | Commentaire |
 |---|---|---|---|---|
 | ☐ | E1 | Compétiteur | 1re session de championnat |  |
-| ☐ | E2 | Saison pleine | 10 sessions de championnat dans une même saison |  |
+| ☐ | E2 | Saison pleine | 10 sessions de championnat dans une même saison | Réduire à 5 (sur LSG, on a que 9 sessions de championnat dans l'année) |
 | ☐ | E3 | Champion | 1er du championnat d'une saison terminée (après le 31 août) |  |
 | ☐ | E4 | Podium de saison | Top 3 d'une saison terminée |  |
-| ☐ | E5 | Top 10 | Top 10 d'une saison terminée |  |
+| ☐ | E5 | Top 10 | Top 10 d'une saison terminée | Top 5 -> il y a peu d'equipe / asso qui ont autant de joueurs réguliers donc trop de monde serait dans le "top 10" |
 
 ### F. Jeu en équipe (méta-statistiques, Q107)
 
 | Garder | # | Badge | Condition | Commentaire |
 |---|---|---|---|---|
 | ☐ | F1 | Coéquipier | 1re session par équipes |  |
-| ☐ | F2 | Rassembleur | 10 équipiers différents |  |
-| ☐ | F3 | Tout le monde se connaît | 25 équipiers différents |  |
-| ☐ | F4 | Duo de choc | 10 sessions avec le même équipier |  |
-| ☐ | F5 | Toutes les formules | Au moins 1 trou joué dans chaque mode de jeu (individuel, scramble, greensome, best ball) |  |
+| ☐ | F2 | Rassembleur | 10 équipiers différents | 5 Coéquipier différents c'est deja pas mal |
+| ☐ | F3 | Tout le monde se connaît | 25 équipiers différents | X |
+| ☐ | F4 | Duo de choc | 10 sessions avec le même équipier | 5 sessions avec le même  |
+| ☐ | F5 | Toutes les formules | Au moins 1 trou joué dans chaque mode de jeu (individuel, scramble, greensome, best ball) | X |
 
 ### G. Explorateur
 
 | Garder | # | Badge | Condition | Commentaire |
 |---|---|---|---|---|
-| ☐ | G1 | Curieux | 10 trous différents du référentiel joués |  |
-| ☐ | G2 | Explorateur | 25 trous différents |  |
-| ☐ | G3 | Cartographe | 50 trous différents |  |
+| ☐ | G1 | Curieux | 10 trous différents du référentiel joués |  Réduire à 5 |
+| ☐ | G2 | Explorateur | 25 trous différents | Réduire à 15 |
+| ☐ | G3 | Cartographe | 50 trous différents | X |
 | ☐ | G4 | Globe-trotter | Sessions dans 3 villes différentes |  |
 | ☐ | G5 | Invité | 1 session créée par une autre association que la sienne |  |
 | ☐ | G6 | Improvisateur | 10 trous libres joués (plan 17) |  |
@@ -129,12 +130,12 @@ Règles communes, conséquences de décisions déjà prises :
 | Garder | # | Badge | Condition | Commentaire |
 |---|---|---|---|---|
 | ☐ | H1 | Poseur de drapeau | 1er trou public créé |  |
-| ☐ | H2 | Paysagiste | 10 trous publics créés |  |
+| ☐ | H2 | Paysagiste | 10 trous publics créés | réduire à 5 |
 | ☐ | H3 | Architecte | Un trou créé par le joueur, joué par 10 joueurs différents |  |
 | ☐ | H4 | Organisateur | 1re session créée et terminée |  |
 | ☐ | H5 | Chef de partie | 10 sessions créées et terminées |  |
 | ☐ | H6 | Reporter | 1re photo ajoutée à une session |  |
-| ☐ | H7 | Photographe | 25 photos ajoutées |  |
+| ☐ | H7 | Photographe | 25 photos ajoutées | 10 photos ajoutées |
 
 H1 à H7 ne concernent que les joueurs ayant un compte : les joueurs importés sans compte n'ont
 jamais créé de trou, de session ou de photo dans NUNI.
@@ -149,7 +150,7 @@ jamais créé de trou, de session ou de photo dans NUNI.
 | ☐ | I4 | Coup de vent | Session démarrée avec un vent au-dessus de 30 km/h |  |
 | ☐ | I5 | Oiseau de nuit | Session démarrée après 21 h |  |
 | ☐ | I6 | Lève-tôt | Session démarrée avant 8 h |  |
-| ☐ | I7 | Marathon | Session d'au moins 18 trous |  |
+| ☐ | I7 | Marathon | Session d'au moins 18 trous | 18 c'est beaucoup trop -> quand on fait 9 trous dans une session c'est deja enorme |
 
 Les sessions importées de LsgScores ont une météo seulement si l'ancienne app l'avait relevée ;
 sinon elles ne comptent pas pour I1 à I4.
@@ -169,7 +170,7 @@ J1 à J3 dépendent d'un état qui peut changer (un record battu) : voir Q111.
 | Garder | # | Badge | Condition | Commentaire |
 |---|---|---|---|---|
 | ☐ | K1 | Lanterne rouge | 1re place de dernier d'une session |  |
-| ☐ | K2 | Carton plein | 1er « X » (10 coups) sur un trou |  |
+| ☐ | K2 | Carton plein | 1er « X » (10 coups) sur un trou | Renommer -> "Réservé aux adultes" (référence au "X") |
 | ☐ | K3 | Persévérant | 5 fois dernier d'une session terminée |  |
 | ☐ | K4 | Montagnes russes | Birdie et « X » dans la même session |  |
 
