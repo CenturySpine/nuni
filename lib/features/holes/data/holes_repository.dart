@@ -80,7 +80,6 @@ class HolesRepository {
     double? endLat,
     double? endLng,
     List<HolePathPoint>? path,
-    required HoleVisibility visibility,
     String? photoStartPath,
     String? photoEndPath,
   }) async {
@@ -96,7 +95,6 @@ class HolesRepository {
           'start': 'SRID=4326;POINT($lng $lat)',
           'end_point': _pointOrNull(endLat, endLng),
           'path': _pathOrNull(path),
-          'visibility': visibility.name,
           'photo_start_path': photoStartPath,
           'photo_end_path': photoEndPath,
         })
@@ -116,7 +114,6 @@ class HolesRepository {
     double? endLat,
     double? endLng,
     List<HolePathPoint>? path,
-    required HoleVisibility visibility,
     String? photoStartPath,
     String? photoEndPath,
   }) async {
@@ -130,11 +127,48 @@ class HolesRepository {
           'start': 'SRID=4326;POINT($lng $lat)',
           'end_point': _pointOrNull(endLat, endLng),
           'path': _pathOrNull(path),
-          'visibility': visibility.name,
           'photo_start_path': photoStartPath,
           'photo_end_path': photoEndPath,
         })
         .eq('id', id);
+  }
+
+  /// Clones [hole] for the caller (plan 26): the `clone_hole` RPC copies its
+  /// fields under a "Clone - " name with the caller as owner, then the
+  /// original's photos are copied into the caller's own storage folder (Q119)
+  /// -- the only folder the storage rules let them write to, and the clone
+  /// no longer depends on files the original's owner may replace. Returns
+  /// the clone's id. A photo that fails to copy is left out rather than
+  /// failing the whole clone: the clone is already created and editable.
+  Future<String> cloneHole(Hole hole) async {
+    final row = await _client.rpc<Map<String, dynamic>>(
+      'clone_hole',
+      params: {'p_hole_id': hole.id},
+    );
+    final cloneId = row['id'] as String;
+    final ownerId = _client.auth.currentUser!.id;
+
+    Future<String?> copy(String? source, String name) async {
+      if (source == null) return null;
+      final target = '$ownerId/$cloneId/$name.jpg';
+      try {
+        await _client.storage.from('holes').copy(source, target);
+        return target;
+      } on StorageException catch (error) {
+        debugPrint('Hole photo not copied to the clone: ${error.message}');
+        return null;
+      }
+    }
+
+    final photoStart = await copy(hole.photoStartPath, 'start');
+    final photoEnd = await copy(hole.photoEndPath, 'end');
+    if (photoStart != null || photoEnd != null) {
+      await _client
+          .from('holes')
+          .update({'photo_start_path': photoStart, 'photo_end_path': photoEnd})
+          .eq('id', cloneId);
+    }
+    return cloneId;
   }
 
   static String? _pointOrNull(double? lat, double? lng) =>

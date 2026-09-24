@@ -6,14 +6,14 @@ import '../../../core/errors/app_error_message.dart';
 import '../../../core/weather/weather_client.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
-import '../../associations/data/associations_repository.dart';
 import '../../sessions/data/sessions_repository.dart';
 import '../../sessions/domain/session.dart';
-import '../../sessions/ui/championship_toggle.dart';
 import '../data/history_repository.dart';
 import '../domain/schedule_validation.dart';
 
-/// "Modifier" (plan 10, creator only): date, start/end time and comment.
+/// "Modifier" (plan 10, creator only): date, start/end time and comment. The
+/// championship flag moved to the detail page itself (plan 26): it belongs
+/// to the local manager, who is usually not the creator.
 /// Weather is recaptured only when the start date/time actually changes
 /// (PO, 2026-09-17) -- an end-time-only edit, or saving with the same
 /// start, leaves the weather already captured at kick-off untouched.
@@ -39,7 +39,6 @@ class _SessionEditSheetState extends ConsumerState<SessionEditSheet> {
   late TimeOfDay _startTime;
   late TimeOfDay _endTime;
   late final TextEditingController _commentController;
-  late bool _isChampionship;
   bool _saving = false;
   String? _error;
 
@@ -52,7 +51,6 @@ class _SessionEditSheetState extends ConsumerState<SessionEditSheet> {
     _startTime = TimeOfDay.fromDateTime(startedAt);
     _endTime = TimeOfDay.fromDateTime(endedAt);
     _commentController = TextEditingController(text: widget.session.comment);
-    _isChampionship = widget.session.isChampionship;
   }
 
   @override
@@ -163,29 +161,6 @@ class _SessionEditSheetState extends ConsumerState<SessionEditSheet> {
         }
       }
 
-      if (_isChampionship != widget.session.isChampionship) {
-        final tagged = await ref
-            .read(sessionsRepositoryProvider)
-            .setChampionship(
-              sessionId: widget.session.id,
-              isChampionship: _isChampionship,
-            );
-        if (_isChampionship && mounted) {
-          final associationLabel = tagged.associationId == null
-              ? null
-              : (await ref.read(
-                  associationByIdProvider(tagged.associationId!).future,
-                ))?.label;
-          if (mounted) {
-            await showChampionshipTagConfirmation(
-              context,
-              associationLabel: associationLabel,
-              season: tagged.championshipSeason ?? '',
-            );
-          }
-        }
-      }
-
       ref.invalidate(historyDetailProvider(widget.session.id));
       ref.invalidate(historyEntriesProvider);
       if (mounted) Navigator.of(context).pop(true);
@@ -242,12 +217,6 @@ class _SessionEditSheetState extends ConsumerState<SessionEditSheet> {
             title: Text(l10n.historyEditEndTimeLabel),
             subtitle: Text(_endTime.format(context)),
             onTap: _saving ? null : _pickEndTime,
-          ),
-          ChampionshipToggle(
-            value: _isChampionship,
-            onChanged: _saving
-                ? null
-                : (value) => setState(() => _isChampionship = value),
           ),
           const SizedBox(height: 8),
           TextField(

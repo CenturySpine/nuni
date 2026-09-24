@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nuni/features/exports/domain/session_export_model.dart';
 import 'package:nuni/features/history/domain/history_entry.dart';
-import 'package:nuni/features/holes/domain/hole.dart';
 import 'package:nuni/features/live/domain/game_mode.dart';
 import 'package:nuni/features/live/domain/live_session_snapshot.dart';
 import 'package:nuni/features/live/domain/live_team.dart';
@@ -38,13 +37,13 @@ PlayedHole _hole(int position, String name, Map<String, int> valueByTeamId) =>
       id: 'h$position',
       position: position,
       gameMode: GameMode.individual,
+      par: 3,
       hole: PlayedHoleGeo(
         id: 'hole$position',
         name: name,
         par: 3,
         startLat: 0,
         startLng: 0,
-        visibility: HoleVisibility.public,
       ),
       scores: [
         for (final entry in valueByTeamId.entries)

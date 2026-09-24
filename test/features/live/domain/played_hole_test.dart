@@ -5,11 +5,18 @@ import 'package:nuni/features/live/ui/played_hole_label.dart';
 import 'package:nuni/l10n/generated/app_localizations.dart';
 
 void main() {
-  Map<String, Object?> row({Map<String, Object?>? hole, String? label}) => {
+  Map<String, Object?> row({
+    Map<String, Object?>? hole,
+    String? label,
+    int par = 3,
+    String? comment,
+  }) => {
     'id': 'ph1',
     'position': 3,
     'game_mode': 'individual',
     'label': label,
+    'par': par,
+    'comment': comment,
     'hole': hole,
     'scores': [
       {'team_id': 't1', 'value': 4},
@@ -22,7 +29,6 @@ void main() {
     'par': 3,
     'start_lat': 48.8534,
     'start_lng': 2.3488,
-    'visibility': 'public',
   };
 
   test('reads a directory hole from a session_snapshot entry', () {
@@ -39,6 +45,29 @@ void main() {
     expect(playedHole.isFreeHole, isTrue);
     expect(playedHole.customName, 'Test escalier');
     expect(playedHole.valueByTeamId, {'t1': 4});
+  });
+
+  test('reads the session par and comment (plan 26)', () {
+    final playedHole = PlayedHole.fromJson(
+      row(hole: directoryHole, par: 5, comment: 'From the bench'),
+    );
+
+    expect(playedHole.par, 5);
+    expect(playedHole.comment, 'From the bench');
+  });
+
+  test('differingOfficialPar recalls the hole par only when it differs', () {
+    expect(
+      PlayedHole.fromJson(row(hole: directoryHole)).differingOfficialPar,
+      isNull,
+    );
+    expect(
+      PlayedHole.fromJson(row(hole: directoryHole, par: 4))
+          .differingOfficialPar,
+      3,
+    );
+    // A free hole has no official par to recall.
+    expect(PlayedHole.fromJson(row(par: 4)).differingOfficialPar, isNull);
   });
 
   test('an unlabelled free hole is named "Free hole" / "Trou libre"', () {

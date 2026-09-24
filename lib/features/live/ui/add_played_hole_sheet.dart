@@ -21,13 +21,16 @@ import '../data/live_repository.dart';
 import '../domain/game_mode.dart';
 import 'game_mode_info_sheet.dart';
 import 'game_mode_label.dart';
+import 'played_hole_settings_sheet.dart';
 
 enum _Mode { nearby, mine }
 
 /// "Ajouter un trou" (plan 08, owner-only): pick a hole nearby or from
 /// "all my holes" (same directory as the Holes tab, plan 06), or create one
 /// on the spot, or play a generic "free hole" (plan 17) -- then choose its
-/// game mode and add it to the session.
+/// par for this session (plan 26: the hole's own par preset, none for a free
+/// hole, which requires one), an optional comment and its game mode, and add
+/// it to the session.
 Future<void> showAddPlayedHoleSheet(
   BuildContext context, {
   required String sessionId,
@@ -62,6 +65,10 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
   // Generic "free hole" picked instead of a directory hole (plan 17).
   bool _freeHole = false;
   final _labelController = TextEditingController();
+  final _commentController = TextEditingController();
+  // This session's par (plan 26): preset from the picked hole, none for a
+  // free hole until the organizer picks one (decision 5).
+  int? _par;
   late GameMode _gameMode;
   bool _saving = false;
 
@@ -77,6 +84,7 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
   void dispose() {
     _searchController.dispose();
     _labelController.dispose();
+    _commentController.dispose();
     super.dispose();
   }
 
@@ -86,12 +94,19 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
     final hole = await ref.read(holesRepositoryProvider).fetchById(id);
     ref.invalidate(nearbyHolesProvider);
     ref.invalidate(myHolesProvider);
-    if (mounted) setState(() => _selectedHole = hole);
+    if (mounted) _selectHole(hole);
   }
+
+  void _selectHole(Hole hole) => setState(() {
+    _selectedHole = hole;
+    _par = hole.par;
+  });
 
   Future<void> _submit() async {
     final hole = _selectedHole;
     if (hole == null && !_freeHole) return;
+    final par = _par;
+    if (par == null) return;
     setState(() => _saving = true);
     try {
       await ref
@@ -101,6 +116,8 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
             holeId: hole?.id,
             gameMode: _gameMode,
             label: _freeHole ? _labelController.text : null,
+            par: par,
+            comment: _commentController.text,
           );
       if (mounted) Navigator.of(context).pop();
     } catch (error) {
@@ -208,7 +225,10 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
           ),
           title: Text(l10n.sessionsLiveFreeHole),
           subtitle: Text(l10n.sessionsLiveFreeHoleHint),
-          onTap: () => setState(() => _freeHole = true),
+          onTap: () => setState(() {
+            _freeHole = true;
+            _par = null;
+          }),
         ),
         const SizedBox(height: 8),
         Expanded(
@@ -259,7 +279,7 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
                             label: formatDistanceM(hole.distance!),
                             icon: PhosphorIcons.navigationArrow,
                           ),
-                    onTap: () => setState(() => _selectedHole = hole),
+                    onTap: () => _selectHole(hole),
                   );
                 },
               );
@@ -275,9 +295,9 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
     AppLocalizations l10n,
     String title,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
+    // Scrollable: par chips, comment and game mode may not fit a small screen
+    // with the keyboard open.
+    return ListView(
       children: [
         Row(
           children: [
@@ -286,6 +306,7 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
               onPressed: () => setState(() {
                 _selectedHole = null;
                 _freeHole = false;
+                _par = null;
               }),
               tooltip: l10n.commonBack,
             ),
@@ -305,6 +326,22 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
           ),
           const SizedBox(height: 16),
         ],
+        PlayedHoleParPicker(
+          value: _par,
+          officialPar: _selectedHole?.par,
+          onChanged: _saving ? null : (par) => setState(() => _par = par),
+        ),
+        if (_freeHole && _par == null) ...[
+          const SizedBox(height: 4),
+          Text(
+            l10n.sessionsPlayedHoleParRequired,
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: Theme.of(context).colorScheme.error),
+          ),
+        ],
+        const SizedBox(height: 16),
+        PlayedHoleCommentField(controller: _commentController),
+        const SizedBox(height: 16),
         if (widget.kind == SessionKind.team) ...[
           Row(
             children: [
@@ -340,7 +377,7 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
         ],
         NuniButton(
           label: l10n.sessionsLiveAddHoleSubmit,
-          onPressed: _saving ? null : _submit,
+          onPressed: _saving || _par == null ? null : _submit,
         ),
       ],
     );

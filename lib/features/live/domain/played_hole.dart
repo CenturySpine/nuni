@@ -1,6 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../holes/domain/hole.dart';
 import 'game_mode.dart';
 
 part 'played_hole.freezed.dart';
@@ -17,7 +16,6 @@ abstract class PlayedHoleGeo with _$PlayedHoleGeo {
     required int par,
     @JsonKey(name: 'start_lat') double? startLat,
     @JsonKey(name: 'start_lng') double? startLng,
-    required HoleVisibility visibility,
   }) = _PlayedHoleGeo;
 
   factory PlayedHoleGeo.fromJson(Map<String, Object?> json) =>
@@ -45,7 +43,10 @@ abstract class HoleScore with _$HoleScore {
 /// a `played_holes` row, its `holes` row and every team's score for it.
 /// [hole] is null for a generic "free hole" (plan 17), which may carry a
 /// [label] instead -- show it with `playedHoleName` (ui/played_hole_label.dart)
-/// rather than `hole.name`.
+/// rather than `hole.name`. [par] is this session's par (plan 26, Q118):
+/// copied from the hole when added, possibly changed by the organizer, and
+/// always set, free holes included -- read it, never `hole.par`, in any
+/// calculation. [comment] is a note for this session only.
 @freezed
 abstract class PlayedHole with _$PlayedHole {
   const factory PlayedHole({
@@ -54,6 +55,8 @@ abstract class PlayedHole with _$PlayedHole {
     @JsonKey(name: 'game_mode') required GameMode gameMode,
     PlayedHoleGeo? hole,
     String? label,
+    required int par,
+    String? comment,
     required List<HoleScore> scores,
   }) = _PlayedHole;
 
@@ -82,4 +85,11 @@ extension PlayedHoleName on PlayedHole {
   /// The directory hole's name, or a free hole's label (plan 17, Q57); null
   /// for an unlabelled free hole, whose name is translated by the UI.
   String? get customName => hole?.name ?? label;
+
+  /// The directory hole's own par when this session plays it with another
+  /// one (plan 26), for a discreet "official par" hint; null otherwise.
+  int? get differingOfficialPar {
+    final official = hole?.par;
+    return official != null && official != par ? official : null;
+  }
 }

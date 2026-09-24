@@ -106,18 +106,9 @@ create policy "players_update_self" on players for update to authenticated
   using (user_id = (select auth.uid()))
   with check (user_id = (select auth.uid()));
 
--- holes: public holes, my own holes, or (Q13) holes played in a session I'm a member of.
+-- holes: every hole is public (plan 26, Q110) -- read by everyone, written by its owner only.
 create policy "holes_select" on holes for select to authenticated
-  using (
-    visibility = 'public'
-    or owner_id = (select auth.uid())
-    or exists (
-      select 1
-      from played_holes ph
-      where ph.hole_id = holes.id
-        and is_session_member(ph.session_id)
-    )
-  );
+  using (true);
 
 create policy "holes_insert_self" on holes for insert to authenticated
   with check (owner_id = (select auth.uid()));
@@ -129,10 +120,12 @@ create policy "holes_update_owner" on holes for update to authenticated
 create policy "holes_delete_owner" on holes for delete to authenticated
   using (owner_id = (select auth.uid()));
 
--- sessions: read by members, insert by the author, modify/delete by the owner
--- (owner = a session_members row with role 'owner': the creator or a promoted co-organizer).
+-- sessions: read by members and by every member of the session's association (plan 26,
+-- can_read_session), insert by the author, modify/delete by the owner (owner = a session_members
+-- row with role 'owner': the creator or a promoted co-organizer). The championship flag is
+-- guarded apart (triggers.sql): only a local manager or a super_admin changes it.
 create policy "sessions_select" on sessions for select to authenticated
-  using (is_session_member(id));
+  using (can_read_session(id));
 
 create policy "sessions_insert_self" on sessions for insert to authenticated
   with check (owner_id = (select auth.uid()));
@@ -144,9 +137,9 @@ create policy "sessions_update_owner" on sessions for update to authenticated
 create policy "sessions_delete_owner" on sessions for delete to authenticated
   using (is_session_owner(id));
 
--- teams: read by members, write by the owner while the session is still draft (Q15).
+-- teams: read like the session (can_read_session), write by the owner while draft (Q15).
 create policy "teams_select" on teams for select to authenticated
-  using (is_session_member(session_id));
+  using (can_read_session(session_id));
 
 create policy "teams_owner_draft_write" on teams for all to authenticated
   using (
@@ -160,9 +153,7 @@ create policy "teams_owner_draft_write" on teams for all to authenticated
 
 -- team_players: same rule as teams, scoped through the team's session.
 create policy "team_players_select" on team_players for select to authenticated
-  using (
-    is_session_member((select t.session_id from teams t where t.id = team_id))
-  );
+  using (can_read_session(session_id));
 
 create policy "team_players_owner_draft_write" on team_players for all to authenticated
   using (
@@ -189,7 +180,7 @@ create policy "team_players_owner_draft_write" on team_players for all to authen
 -- trigger, regardless of who performs the update), remove a member at any time. A member can
 -- leave on their own while the session is still draft.
 create policy "session_members_select" on session_members for select to authenticated
-  using (is_session_member(session_id));
+  using (can_read_session(session_id));
 
 create policy "session_members_owner_add_draft" on session_members for insert to authenticated
   with check (
@@ -216,22 +207,21 @@ create policy "session_members_self_leave_draft" on session_members for delete t
 create policy "session_members_owner_remove" on session_members for delete to authenticated
   using (is_session_owner(session_id));
 
--- played_holes: read by members, write by the owner (added/removed while the session is live).
+-- played_holes: read like the session, write by the owner (added/removed while the session is
+-- live; par and comment editable at any time, plan 26, Q121).
 create policy "played_holes_select" on played_holes for select to authenticated
-  using (is_session_member(session_id));
+  using (can_read_session(session_id));
 
 create policy "played_holes_owner_write" on played_holes for all to authenticated
   using (is_session_owner(session_id))
   with check (is_session_owner(session_id));
 
--- scores (Q8): read by members. The owner/co-organizer writes any team's score; a member writes
+-- scores (Q8): read like the session. The owner/co-organizer writes any team's score; a member writes
 -- only the score of the team they are rattached to (session_members.team_id). A member cannot
 -- delete a score directly: removing one goes through the owner deleting the played_hole (cascade),
 -- covered by the owner policy below.
 create policy "scores_select" on scores for select to authenticated
-  using (
-    is_session_member((select ph.session_id from played_holes ph where ph.id = played_hole_id))
-  );
+  using (can_read_session(session_id));
 
 create policy "scores_owner_write" on scores for all to authenticated
   using (
@@ -272,9 +262,9 @@ create policy "scores_member_own_team_update" on scores for update to authentica
     )
   );
 
--- session_photos: read by members, write by the session owner.
+-- session_photos: read like the session, write by the session owner.
 create policy "session_photos_select" on session_photos for select to authenticated
-  using (is_session_member(session_id));
+  using (can_read_session(session_id));
 
 create policy "session_photos_owner_write" on session_photos for all to authenticated
   using (is_session_owner(session_id))

@@ -12,7 +12,10 @@ import '../../../shared/nuni_confirm_dialog.dart';
 import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../../shared/nuni_card.dart';
 import '../../../shared/nuni_menu_row.dart';
+import '../../championship/data/championship_rights.dart';
+import '../../sessions/ui/championship_toggle.dart';
 import '../../sessions/data/sessions_repository.dart';
 import '../../sessions/domain/ranking_direction.dart';
 import '../../sessions/domain/scoring_mode.dart';
@@ -24,6 +27,7 @@ import '../domain/live_session_snapshot.dart';
 import 'add_played_hole_sheet.dart';
 import 'members_sheet.dart';
 import 'played_hole_card.dart';
+import 'played_hole_settings_sheet.dart';
 import 'ranking_card.dart';
 
 /// The live screen (plan 08): shown by `SessionRoomPage` once `status` has
@@ -167,6 +171,14 @@ class _LiveViewState extends ConsumerState<_LiveView> {
     );
   }
 
+  /// Local manager or super_admin only (plan 26, decision 11); the realtime
+  /// snapshot picks the new flag up on its own.
+  Future<void> _toggleChampionship(bool value) => _run(
+    () => ref
+        .read(sessionsRepositoryProvider)
+        .setChampionship(sessionId: widget.sessionId, isChampionship: value),
+  );
+
   Future<void> _endSession() async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await NuniConfirmDialog.show(
@@ -227,6 +239,13 @@ class _LiveViewState extends ConsumerState<_LiveView> {
         ?.id;
     final isOwner = snapshot.isOwner(currentUserId);
     final myTeamId = snapshot.myTeamId(currentUserId);
+    // A member of the session's association who doesn't take part follows it
+    // read-only (plan 26, decision 13): no scoring, no invitation.
+    final isSpectator = snapshot.memberFor(currentUserId) == null;
+    final associationId = session.associationId;
+    final canTagChampionship =
+        associationId != null &&
+        (ref.watch(canTagChampionshipProvider(associationId)).value ?? false);
     final locale = Localizations.localeOf(context).toString();
 
     final subtitleParts = [
@@ -254,11 +273,12 @@ class _LiveViewState extends ConsumerState<_LiveView> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(PhosphorIcons.shareNetwork),
-            tooltip: l10n.sessionsInviteTitle,
-            onPressed: () => InviteSheet.show(context, session.code),
-          ),
+          if (!isSpectator)
+            IconButton(
+              icon: const Icon(PhosphorIcons.shareNetwork),
+              tooltip: l10n.sessionsInviteTitle,
+              onPressed: () => InviteSheet.show(context, session.code),
+            ),
           if (isOwner)
             PopupMenuButton<_MenuAction>(
               onSelected: (action) => switch (action) {
@@ -300,6 +320,28 @@ class _LiveViewState extends ConsumerState<_LiveView> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
         children: [
+          if (isSpectator) ...[
+            NuniCard(
+              child: Row(
+                children: [
+                  const Icon(PhosphorIcons.eye, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(l10n.sessionsLiveSpectatorNotice)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (canTagChampionship) ...[
+            NuniCard(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: ChampionshipToggle(
+                value: session.isChampionship,
+                onChanged: _busy ? null : _toggleChampionship,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           RankingCard(
             session: session,
             teams: snapshot.teams,
@@ -324,6 +366,9 @@ class _LiveViewState extends ConsumerState<_LiveView> {
                   highlighted: entry.key == 0,
                   onDelete: isOwner
                       ? (_busy ? null : () => _deleteHole(entry.value.id))
+                      : null,
+                  onEdit: isOwner
+                      ? () => showPlayedHoleSettingsSheet(context, entry.value)
                       : null,
                 ),
               ),

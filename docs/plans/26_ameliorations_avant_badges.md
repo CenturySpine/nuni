@@ -10,6 +10,36 @@ session ; Q118 à Q122 tranchées), B (sessions et championnat visibles par l'as
 marquage « championnat » réservé aux responsables ; Q126, Q129 à Q132 tranchées) et C (profil
 public d'un joueur, pseudo et photo seulement). Plus de question ouverte.
 
+**Implémenté le 2026-09-24 (session Claude Code web), poussé sur `main` le même jour.** Vérifié :
+`flutter analyze --fatal-infos` sans remarque, 222 tests Flutter verts, build web de production
+compilé ; schéma, RLS, RPC et déclencheurs rejoués sur une base PostgreSQL 16 + PostGIS locale
+qui imite Supabase (rôles, `auth.uid()`), avec `supabase/tests/rls_smoke.sql` : 42 tests verts
+sur deux passages (dont 14 nouveaux pour ce plan), nettoyage complet ; `remote_seed.sql` rejoué
+sur cette base. **Non vérifié** : aucun essai dans un navigateur (pas de projet Supabase ni de
+`env/dev.json` dans cet environnement), et la base distante n'est pas reconstruite (étape 7,
+PO prévenu avant, sur son poste). Écarts avec le plan, décidés à l'implémentation, sans effet
+sur l'usage :
+- `association_live_sessions()` n'existe pas : une requête directe suffit, la lecture étant
+  ouverte par `can_read_session`.
+- `can_read_session` n'ouvre une session aux membres de l'association qu'une fois démarrée
+  (décision 19 : la salle d'attente reste aux participants).
+- L'interrupteur « Championnat » quitte la feuille « Modifier » de l'historique (réservée à
+  l'organisateur) pour le détail de la session, visible du responsable et du super_admin.
+- Le par d'un trou joué est posé par un déclencheur (`played_holes_set_par`) quand l'insertion
+  n'en porte pas : par du trou, 3 pour un trou libre sans utilisateur connecté (rejeu des seeds,
+  import LsgScores, Q122), refus sinon. Les seeds actuels se rejouent donc sans être régénérés
+  au nouveau format ; l'outil d'export lit désormais toutes les colonnes et fonctionne avant
+  comme après la reconstruction.
+- `supabase/remote_seed.sql` corrigé à la main pour suivre l'outil (colonne `visibility`
+  retirée, `cloned_from` ajoutée, vide) : les 19 trous étaient publics.
+- Accueil : tirer vers le bas rafraîchit les listes (les sessions en cours de l'association
+  démarrent sans action de l'utilisateur).
+- Captures des écrans (données fictives) validées par le PO le 2026-09-24 ; seul changement
+  demandé : un engrenage au lieu d'un crayon pour modifier un trou joué. Feu vert du PO pour le
+  push, l'export des seeds et la reconstruction.
+- Constat hors plan : `supabase/seed.sql` (données locales Docker, jamais utilisées sur le
+  projet distant) échoue déjà avant ce plan (`association_required`, plan 18) ; non corrigé.
+
 ## En bref, pour les joueurs
 
 - Il n'y a plus de trou privé : tout trou est visible par tous et jouable dans n'importe quelle
@@ -133,7 +163,8 @@ Plans 06 (trous), 08 (session en direct), 10 (historique), 15 (championnat), 16 
     bouton d'ajout reste inactif tant qu'il n'est pas choisi), commentaire facultatif.
 - **Carte du trou joué** (`played_hole_card.dart`) : affiche le par du trou joué (et « par
   officiel 3 » en petit s'il diffère), le commentaire sous le nom ; pour l'organisateur, une
-  action « Modifier » ouvre la même feuille par + commentaire. La pastille « privé » disparaît.
+  icône engrenage (PO, 2026-09-24 : les crayons servent déjà à saisir les scores) ouvre la même
+  feuille par + commentaire. La pastille « privé » disparaît.
 - **Historique** (`history_detail_page.dart`) : par du trou joué et commentaire affichés ;
   l'organisateur peut les corriger (Q121).
 - **Historique, liste** (`history_page.dart`) : sessions terminées de mon association ; repère
@@ -190,8 +221,8 @@ Fichiers thématiques existants modifiés (règle 8), pas de nouvelle migration.
     l'association de la session (`is_association_manager`) ; `create_session` ignore
     `is_championship` si l'appelant n'est ni l'un ni l'autre ; `history_snapshots` renvoie les
     sessions terminées de l'association de l'appelant, avec pour chacune un indicateur « j'y
-    ai joué » (le filtre « Mes sessions » est appliqué dans l'app) ; nouvelle
-    `association_live_sessions()` pour l'accueil (Q132).
+    ai joué » calculé dans l'app (le filtre « Mes sessions » aussi) ; les sessions en cours de
+    l'association pour l'accueil (Q132) sont lues par une requête directe.
 - Volet C : aucun changement de base (`players_select` lit déjà tous les joueurs).
 
 ## Code
@@ -224,13 +255,15 @@ Fichiers thématiques existants modifiés (règle 8), pas de nouvelle migration.
 
 La reconstruction suit `docs/DEV.md` (règle 8), **PO prévenu avant de la lancer** :
 
-1. Adapter `tool/export_remote_seed.dart` pour qu'il écrive les seeds au nouveau format à
-   partir de la base actuelle : plus de `visibility` sur les trous ; `par` de chaque trou joué =
-   par officiel du trou, ou 3 pour un trou libre (Q122) ; `comment` vide.
-2. Régénérer les seeds, relire le diff, les committer avec l'accord du PO.
-3. Reconstruire le schéma distant, rejouer les seeds.
-4. `tool/migrate_lsgscores.dart` : retirer `visibility`, poser `played_holes.par` depuis le trou
-   importé (outil gardé pour un éventuel rejeu).
+1. Fait : `tool/export_remote_seed.dart` lit toutes les colonnes des trous et des trous joués ;
+   il écrit `cloned_from` et ignore `visibility`. Un trou joué exporté sans par (base encore à
+   l'ancien schéma) reçoit au rejeu le par de son trou, ou 3 pour un trou libre (Q122), par le
+   déclencheur `played_holes_set_par`.
+2. À faire par le PO sur son poste, **avant** la reconstruction : régénérer les seeds
+   (`fvm dart run tool/export_remote_seed.dart`), relire le diff, les committer.
+3. À faire par le PO : reconstruire le schéma distant, rejouer les seeds (`docs/DEV.md`).
+4. Fait : `tool/migrate_lsgscores.dart` n'écrit plus `visibility` ; le par des trous joués
+   importés vient du déclencheur.
 
 ## Étapes (développement)
 

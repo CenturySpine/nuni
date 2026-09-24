@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PlayedHoleGeo {
 
- String get id; String get name; int get par;@JsonKey(name: 'start_lat') double? get startLat;@JsonKey(name: 'start_lng') double? get startLng; HoleVisibility get visibility;
+ String get id; String get name; int get par;@JsonKey(name: 'start_lat') double? get startLat;@JsonKey(name: 'start_lng') double? get startLng;
 /// Create a copy of PlayedHoleGeo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +30,20 @@ $PlayedHoleGeoCopyWith<PlayedHoleGeo> get copyWith => _$PlayedHoleGeoCopyWithImp
 @override
 bool operator ==(Object other) {
   final _this = this as PlayedHoleGeo;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlayedHoleGeo&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.par, _this.par) || other.par == _this.par)&&(identical(other.startLat, _this.startLat) || other.startLat == _this.startLat)&&(identical(other.startLng, _this.startLng) || other.startLng == _this.startLng)&&(identical(other.visibility, _this.visibility) || other.visibility == _this.visibility));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlayedHoleGeo&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.par, _this.par) || other.par == _this.par)&&(identical(other.startLat, _this.startLat) || other.startLat == _this.startLat)&&(identical(other.startLng, _this.startLng) || other.startLng == _this.startLng));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as PlayedHoleGeo;
-  return Object.hash(runtimeType,_this.id,_this.name,_this.par,_this.startLat,_this.startLng,_this.visibility);
+  return Object.hash(runtimeType,_this.id,_this.name,_this.par,_this.startLat,_this.startLng);
 }
 
 @override
 String toString() {
   final _this = this as PlayedHoleGeo;
-  return 'PlayedHoleGeo(id: ${_this.id}, name: ${_this.name}, par: ${_this.par}, startLat: ${_this.startLat}, startLng: ${_this.startLng}, visibility: ${_this.visibility})';
+  return 'PlayedHoleGeo(id: ${_this.id}, name: ${_this.name}, par: ${_this.par}, startLat: ${_this.startLat}, startLng: ${_this.startLng})';
 }
 
 
@@ -54,7 +54,7 @@ abstract mixin class $PlayedHoleGeoCopyWith<$Res>  {
   factory $PlayedHoleGeoCopyWith(PlayedHoleGeo value, $Res Function(PlayedHoleGeo) _then) = _$PlayedHoleGeoCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, int par,@JsonKey(name: 'start_lat') double? startLat,@JsonKey(name: 'start_lng') double? startLng, HoleVisibility visibility
+ String id, String name, int par,@JsonKey(name: 'start_lat') double? startLat,@JsonKey(name: 'start_lng') double? startLng
 });
 
 
@@ -71,15 +71,14 @@ class _$PlayedHoleGeoCopyWithImpl<$Res>
 
 /// Create a copy of PlayedHoleGeo
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? par = null,Object? startLat = freezed,Object? startLng = freezed,Object? visibility = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? par = null,Object? startLat = freezed,Object? startLng = freezed,}) {
   return _then(PlayedHoleGeo(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,par: null == par ? _self.par : par // ignore: cast_nullable_to_non_nullable
 as int,startLat: freezed == startLat ? _self.startLat : startLat // ignore: cast_nullable_to_non_nullable
 as double?,startLng: freezed == startLng ? _self.startLng : startLng // ignore: cast_nullable_to_non_nullable
-as double?,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
-as HoleVisibility,
+as double?,
   ));
 }
 
@@ -164,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  int par, @JsonKey(name: 'start_lat')  double? startLat, @JsonKey(name: 'start_lng')  double? startLng,  HoleVisibility visibility)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  int par, @JsonKey(name: 'start_lat')  double? startLat, @JsonKey(name: 'start_lng')  double? startLng)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PlayedHoleGeo() when $default != null:
-return $default(_that.id,_that.name,_that.par,_that.startLat,_that.startLng,_that.visibility);case _:
+return $default(_that.id,_that.name,_that.par,_that.startLat,_that.startLng);case _:
   return orElse();
 
 }
@@ -185,10 +184,10 @@ return $default(_that.id,_that.name,_that.par,_that.startLat,_that.startLng,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  int par, @JsonKey(name: 'start_lat')  double? startLat, @JsonKey(name: 'start_lng')  double? startLng,  HoleVisibility visibility)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  int par, @JsonKey(name: 'start_lat')  double? startLat, @JsonKey(name: 'start_lng')  double? startLng)  $default,) {final _that = this;
 switch (_that) {
 case _PlayedHoleGeo():
-return $default(_that.id,_that.name,_that.par,_that.startLat,_that.startLng,_that.visibility);case _:
+return $default(_that.id,_that.name,_that.par,_that.startLat,_that.startLng);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +204,10 @@ return $default(_that.id,_that.name,_that.par,_that.startLat,_that.startLng,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  int par, @JsonKey(name: 'start_lat')  double? startLat, @JsonKey(name: 'start_lng')  double? startLng,  HoleVisibility visibility)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  int par, @JsonKey(name: 'start_lat')  double? startLat, @JsonKey(name: 'start_lng')  double? startLng)?  $default,) {final _that = this;
 switch (_that) {
 case _PlayedHoleGeo() when $default != null:
-return $default(_that.id,_that.name,_that.par,_that.startLat,_that.startLng,_that.visibility);case _:
+return $default(_that.id,_that.name,_that.par,_that.startLat,_that.startLng);case _:
   return null;
 
 }
@@ -220,7 +219,7 @@ return $default(_that.id,_that.name,_that.par,_that.startLat,_that.startLng,_tha
 @JsonSerializable()
 
 class _PlayedHoleGeo implements PlayedHoleGeo {
-  const _PlayedHoleGeo({required this.id, required this.name, required this.par, @JsonKey(name: 'start_lat') this.startLat, @JsonKey(name: 'start_lng') this.startLng, required this.visibility});
+  const _PlayedHoleGeo({required this.id, required this.name, required this.par, @JsonKey(name: 'start_lat') this.startLat, @JsonKey(name: 'start_lng') this.startLng});
   factory _PlayedHoleGeo.fromJson(Map<String, dynamic> json) => _$PlayedHoleGeoFromJson(json);
 
 @override final  String id;
@@ -228,7 +227,6 @@ class _PlayedHoleGeo implements PlayedHoleGeo {
 @override final  int par;
 @override@JsonKey(name: 'start_lat') final  double? startLat;
 @override@JsonKey(name: 'start_lng') final  double? startLng;
-@override final  HoleVisibility visibility;
 
 /// Create a copy of PlayedHoleGeo
 /// with the given fields replaced by the non-null parameter values.
@@ -243,18 +241,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlayedHoleGeo&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.par, par) || other.par == par)&&(identical(other.startLat, startLat) || other.startLat == startLat)&&(identical(other.startLng, startLng) || other.startLng == startLng)&&(identical(other.visibility, visibility) || other.visibility == visibility));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlayedHoleGeo&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.par, par) || other.par == par)&&(identical(other.startLat, startLat) || other.startLat == startLat)&&(identical(other.startLng, startLng) || other.startLng == startLng));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,name,par,startLat,startLng,visibility);
+    return Object.hash(runtimeType,id,name,par,startLat,startLng);
 }
 
 @override
 String toString() {
-    return 'PlayedHoleGeo(id: $id, name: $name, par: $par, startLat: $startLat, startLng: $startLng, visibility: $visibility)';
+    return 'PlayedHoleGeo(id: $id, name: $name, par: $par, startLat: $startLat, startLng: $startLng)';
 }
 
 
@@ -265,7 +263,7 @@ abstract mixin class _$PlayedHoleGeoCopyWith<$Res> implements $PlayedHoleGeoCopy
   factory _$PlayedHoleGeoCopyWith(_PlayedHoleGeo value, $Res Function(_PlayedHoleGeo) _then) = __$PlayedHoleGeoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, int par,@JsonKey(name: 'start_lat') double? startLat,@JsonKey(name: 'start_lng') double? startLng, HoleVisibility visibility
+ String id, String name, int par,@JsonKey(name: 'start_lat') double? startLat,@JsonKey(name: 'start_lng') double? startLng
 });
 
 
@@ -282,15 +280,14 @@ class __$PlayedHoleGeoCopyWithImpl<$Res>
 
 /// Create a copy of PlayedHoleGeo
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? par = null,Object? startLat = freezed,Object? startLng = freezed,Object? visibility = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? par = null,Object? startLat = freezed,Object? startLng = freezed,}) {
   return _then(_PlayedHoleGeo(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,par: null == par ? _self.par : par // ignore: cast_nullable_to_non_nullable
 as int,startLat: freezed == startLat ? _self.startLat : startLat // ignore: cast_nullable_to_non_nullable
 as double?,startLng: freezed == startLng ? _self.startLng : startLng // ignore: cast_nullable_to_non_nullable
-as double?,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
-as HoleVisibility,
+as double?,
   ));
 }
 
@@ -580,7 +577,7 @@ as DateTime?,
 /// @nodoc
 mixin _$PlayedHole {
 
- String get id; int get position;@JsonKey(name: 'game_mode') GameMode get gameMode; PlayedHoleGeo? get hole; String? get label; List<HoleScore> get scores;
+ String get id; int get position;@JsonKey(name: 'game_mode') GameMode get gameMode; PlayedHoleGeo? get hole; String? get label; int get par; String? get comment; List<HoleScore> get scores;
 /// Create a copy of PlayedHole
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -594,20 +591,20 @@ $PlayedHoleCopyWith<PlayedHole> get copyWith => _$PlayedHoleCopyWithImpl<PlayedH
 @override
 bool operator ==(Object other) {
   final _this = this as PlayedHole;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlayedHole&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.position, _this.position) || other.position == _this.position)&&(identical(other.gameMode, _this.gameMode) || other.gameMode == _this.gameMode)&&(identical(other.hole, _this.hole) || other.hole == _this.hole)&&(identical(other.label, _this.label) || other.label == _this.label)&&const DeepCollectionEquality().equals(other.scores, _this.scores));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlayedHole&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.position, _this.position) || other.position == _this.position)&&(identical(other.gameMode, _this.gameMode) || other.gameMode == _this.gameMode)&&(identical(other.hole, _this.hole) || other.hole == _this.hole)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.par, _this.par) || other.par == _this.par)&&(identical(other.comment, _this.comment) || other.comment == _this.comment)&&const DeepCollectionEquality().equals(other.scores, _this.scores));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as PlayedHole;
-  return Object.hash(runtimeType,_this.id,_this.position,_this.gameMode,_this.hole,_this.label,const DeepCollectionEquality().hash(_this.scores));
+  return Object.hash(runtimeType,_this.id,_this.position,_this.gameMode,_this.hole,_this.label,_this.par,_this.comment,const DeepCollectionEquality().hash(_this.scores));
 }
 
 @override
 String toString() {
   final _this = this as PlayedHole;
-  return 'PlayedHole(id: ${_this.id}, position: ${_this.position}, gameMode: ${_this.gameMode}, hole: ${_this.hole}, label: ${_this.label}, scores: ${_this.scores})';
+  return 'PlayedHole(id: ${_this.id}, position: ${_this.position}, gameMode: ${_this.gameMode}, hole: ${_this.hole}, label: ${_this.label}, par: ${_this.par}, comment: ${_this.comment}, scores: ${_this.scores})';
 }
 
 
@@ -618,7 +615,7 @@ abstract mixin class $PlayedHoleCopyWith<$Res>  {
   factory $PlayedHoleCopyWith(PlayedHole value, $Res Function(PlayedHole) _then) = _$PlayedHoleCopyWithImpl;
 @useResult
 $Res call({
- String id, int position,@JsonKey(name: 'game_mode') GameMode gameMode, PlayedHoleGeo? hole, String? label, List<HoleScore> scores
+ String id, int position,@JsonKey(name: 'game_mode') GameMode gameMode, PlayedHoleGeo? hole, String? label, int par, String? comment, List<HoleScore> scores
 });
 
 
@@ -635,13 +632,15 @@ class _$PlayedHoleCopyWithImpl<$Res>
 
 /// Create a copy of PlayedHole
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? position = null,Object? gameMode = null,Object? hole = freezed,Object? label = freezed,Object? scores = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? position = null,Object? gameMode = null,Object? hole = freezed,Object? label = freezed,Object? par = null,Object? comment = freezed,Object? scores = null,}) {
   return _then(PlayedHole(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,position: null == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
 as int,gameMode: null == gameMode ? _self.gameMode : gameMode // ignore: cast_nullable_to_non_nullable
 as GameMode,hole: freezed == hole ? _self.hole : hole // ignore: cast_nullable_to_non_nullable
 as PlayedHoleGeo?,label: freezed == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as String?,par: null == par ? _self.par : par // ignore: cast_nullable_to_non_nullable
+as int,comment: freezed == comment ? _self.comment : comment // ignore: cast_nullable_to_non_nullable
 as String?,scores: null == scores ? _self.scores : scores // ignore: cast_nullable_to_non_nullable
 as List<HoleScore>,
   ));
@@ -740,10 +739,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  int position, @JsonKey(name: 'game_mode')  GameMode gameMode,  PlayedHoleGeo? hole,  String? label,  List<HoleScore> scores)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  int position, @JsonKey(name: 'game_mode')  GameMode gameMode,  PlayedHoleGeo? hole,  String? label,  int par,  String? comment,  List<HoleScore> scores)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PlayedHole() when $default != null:
-return $default(_that.id,_that.position,_that.gameMode,_that.hole,_that.label,_that.scores);case _:
+return $default(_that.id,_that.position,_that.gameMode,_that.hole,_that.label,_that.par,_that.comment,_that.scores);case _:
   return orElse();
 
 }
@@ -761,10 +760,10 @@ return $default(_that.id,_that.position,_that.gameMode,_that.hole,_that.label,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  int position, @JsonKey(name: 'game_mode')  GameMode gameMode,  PlayedHoleGeo? hole,  String? label,  List<HoleScore> scores)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  int position, @JsonKey(name: 'game_mode')  GameMode gameMode,  PlayedHoleGeo? hole,  String? label,  int par,  String? comment,  List<HoleScore> scores)  $default,) {final _that = this;
 switch (_that) {
 case _PlayedHole():
-return $default(_that.id,_that.position,_that.gameMode,_that.hole,_that.label,_that.scores);case _:
+return $default(_that.id,_that.position,_that.gameMode,_that.hole,_that.label,_that.par,_that.comment,_that.scores);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -781,10 +780,10 @@ return $default(_that.id,_that.position,_that.gameMode,_that.hole,_that.label,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  int position, @JsonKey(name: 'game_mode')  GameMode gameMode,  PlayedHoleGeo? hole,  String? label,  List<HoleScore> scores)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  int position, @JsonKey(name: 'game_mode')  GameMode gameMode,  PlayedHoleGeo? hole,  String? label,  int par,  String? comment,  List<HoleScore> scores)?  $default,) {final _that = this;
 switch (_that) {
 case _PlayedHole() when $default != null:
-return $default(_that.id,_that.position,_that.gameMode,_that.hole,_that.label,_that.scores);case _:
+return $default(_that.id,_that.position,_that.gameMode,_that.hole,_that.label,_that.par,_that.comment,_that.scores);case _:
   return null;
 
 }
@@ -796,7 +795,7 @@ return $default(_that.id,_that.position,_that.gameMode,_that.hole,_that.label,_t
 @JsonSerializable()
 
 class _PlayedHole implements PlayedHole {
-  const _PlayedHole({required this.id, required this.position, @JsonKey(name: 'game_mode') required this.gameMode, this.hole, this.label, required  List<HoleScore> scores}): _scores = scores;
+  const _PlayedHole({required this.id, required this.position, @JsonKey(name: 'game_mode') required this.gameMode, this.hole, this.label, required this.par, this.comment, required  List<HoleScore> scores}): _scores = scores;
   factory _PlayedHole.fromJson(Map<String, dynamic> json) => _$PlayedHoleFromJson(json);
 
 @override final  String id;
@@ -804,6 +803,8 @@ class _PlayedHole implements PlayedHole {
 @override@JsonKey(name: 'game_mode') final  GameMode gameMode;
 @override final  PlayedHoleGeo? hole;
 @override final  String? label;
+@override final  int par;
+@override final  String? comment;
  final  List<HoleScore> _scores;
 @override List<HoleScore> get scores {
   if (_scores is EqualUnmodifiableListView) return _scores;
@@ -825,18 +826,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlayedHole&&(identical(other.id, id) || other.id == id)&&(identical(other.position, position) || other.position == position)&&(identical(other.gameMode, gameMode) || other.gameMode == gameMode)&&(identical(other.hole, hole) || other.hole == hole)&&(identical(other.label, label) || other.label == label)&&const DeepCollectionEquality().equals(other.scores, _scores));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlayedHole&&(identical(other.id, id) || other.id == id)&&(identical(other.position, position) || other.position == position)&&(identical(other.gameMode, gameMode) || other.gameMode == gameMode)&&(identical(other.hole, hole) || other.hole == hole)&&(identical(other.label, label) || other.label == label)&&(identical(other.par, par) || other.par == par)&&(identical(other.comment, comment) || other.comment == comment)&&const DeepCollectionEquality().equals(other.scores, _scores));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,position,gameMode,hole,label,const DeepCollectionEquality().hash(_scores));
+    return Object.hash(runtimeType,id,position,gameMode,hole,label,par,comment,const DeepCollectionEquality().hash(_scores));
 }
 
 @override
 String toString() {
-    return 'PlayedHole(id: $id, position: $position, gameMode: $gameMode, hole: $hole, label: $label, scores: $scores)';
+    return 'PlayedHole(id: $id, position: $position, gameMode: $gameMode, hole: $hole, label: $label, par: $par, comment: $comment, scores: $scores)';
 }
 
 
@@ -847,7 +848,7 @@ abstract mixin class _$PlayedHoleCopyWith<$Res> implements $PlayedHoleCopyWith<$
   factory _$PlayedHoleCopyWith(_PlayedHole value, $Res Function(_PlayedHole) _then) = __$PlayedHoleCopyWithImpl;
 @override @useResult
 $Res call({
- String id, int position,@JsonKey(name: 'game_mode') GameMode gameMode, PlayedHoleGeo? hole, String? label, List<HoleScore> scores
+ String id, int position,@JsonKey(name: 'game_mode') GameMode gameMode, PlayedHoleGeo? hole, String? label, int par, String? comment, List<HoleScore> scores
 });
 
 
@@ -864,13 +865,15 @@ class __$PlayedHoleCopyWithImpl<$Res>
 
 /// Create a copy of PlayedHole
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? position = null,Object? gameMode = null,Object? hole = freezed,Object? label = freezed,Object? scores = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? position = null,Object? gameMode = null,Object? hole = freezed,Object? label = freezed,Object? par = null,Object? comment = freezed,Object? scores = null,}) {
   return _then(_PlayedHole(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,position: null == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
 as int,gameMode: null == gameMode ? _self.gameMode : gameMode // ignore: cast_nullable_to_non_nullable
 as GameMode,hole: freezed == hole ? _self.hole : hole // ignore: cast_nullable_to_non_nullable
 as PlayedHoleGeo?,label: freezed == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as String?,par: null == par ? _self.par : par // ignore: cast_nullable_to_non_nullable
+as int,comment: freezed == comment ? _self.comment : comment // ignore: cast_nullable_to_non_nullable
 as String?,scores: null == scores ? _self._scores : scores // ignore: cast_nullable_to_non_nullable
 as List<HoleScore>,
   ));

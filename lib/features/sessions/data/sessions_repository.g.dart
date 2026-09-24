@@ -317,3 +317,48 @@ final class MyRecentSessionsProvider
 }
 
 String _$myRecentSessionsHash() => r'5265b7d1470f51c0b3dea8e4d559a26b83a3a235';
+
+/// Live sessions of my association I'm not in (plan 26, Q132), for home.
+
+@ProviderFor(associationLiveSessions)
+final associationLiveSessionsProvider = AssociationLiveSessionsProvider._();
+
+/// Live sessions of my association I'm not in (plan 26, Q132), for home.
+
+final class AssociationLiveSessionsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Session>>,
+          List<Session>,
+          FutureOr<List<Session>>
+        >
+    with $FutureModifier<List<Session>>, $FutureProvider<List<Session>> {
+  /// Live sessions of my association I'm not in (plan 26, Q132), for home.
+  AssociationLiveSessionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'associationLiveSessionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$associationLiveSessionsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Session>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Session>> create(Ref ref) {
+    return associationLiveSessions(ref);
+  }
+}
+
+String _$associationLiveSessionsHash() =>
+    r'e22e1b69648b75781e22b7121211f98c98643569';

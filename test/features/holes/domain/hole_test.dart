@@ -13,7 +13,6 @@ void main() {
       'start_lng': 2.3488,
       'photo_start_path': null,
       'photo_end_path': null,
-      'visibility': 'public',
       'owner_id': 'u1',
     });
 
@@ -23,7 +22,7 @@ void main() {
     expect(hole.distanceM, 120);
     expect(hole.startLat, 48.8534);
     expect(hole.startLng, 2.3488);
-    expect(hole.visibility, HoleVisibility.public);
+    expect(hole.clonedFrom, isNull);
     expect(hole.ownerId, 'u1');
     expect(hole.distance, isNull);
   });
@@ -38,12 +37,10 @@ void main() {
         'distance_m': null,
         'start_lat': 48.8534,
         'start_lng': 2.3488,
-        'visibility': 'private',
         'owner_id': 'u1',
         'distance': 240.7,
       });
 
-      expect(hole.visibility, HoleVisibility.private);
       expect(hole.distanceM, isNull);
       expect(hole.distance, 240.7);
     },
@@ -56,12 +53,23 @@ void main() {
       'par': 3,
       'start_lat': null,
       'start_lng': null,
-      'visibility': 'public',
       'owner_id': 'u1',
     });
 
     expect(hole.startLat, isNull);
     expect(hole.hasPosition, isFalse);
+  });
+
+  test('Hole.fromJson reads the hole a clone comes from (plan 26)', () {
+    final hole = Hole.fromJson({
+      'id': 'h3',
+      'name': 'Clone - Le Ficus',
+      'par': 3,
+      'owner_id': 'u2',
+      'cloned_from': 'h1',
+    });
+
+    expect(hole.clonedFrom, 'h1');
   });
 
   test('hasPosition is true once the start is set', () {
@@ -71,7 +79,6 @@ void main() {
       par: 3,
       startLat: 48.8534,
       startLng: 2.3488,
-      visibility: HoleVisibility.public,
       ownerId: 'u1',
     );
 

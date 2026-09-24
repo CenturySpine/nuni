@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide Session;
 
 import '../../../core/supabase/supabase_providers.dart';
 import '../../../core/weather/weather.dart';
+import '../../profile/data/profile_repository.dart';
 import '../../profile/domain/player.dart';
 import '../domain/my_session_entry.dart';
 import '../domain/ranking_direction.dart';
@@ -68,22 +69,21 @@ class SessionsRepository {
     return Session.fromJson(row);
   }
 
-  /// Tags/untags a session for the championship (plan 15, owner-only --
-  /// `sessions_update_owner`, no status restriction: allowed even after
-  /// closure). A plain update, same as [attachWeather]/[updateSchedule]: the
-  /// championship is the session's association (plan 18, Q77) and its season
-  /// is computed by the `sessions_set_association_and_season` trigger, never
-  /// sent here.
+  /// Tags/untags a session for the championship (plan 26, decision 11):
+  /// only a super_admin or the approved local manager of the session's
+  /// association, at any time, played in or not -- the
+  /// `set_session_championship` RPC checks it, and raises
+  /// `not_championship_manager` for anyone else. The championship is the
+  /// session's association (plan 18, Q77) and its season is computed by a
+  /// trigger, never sent here.
   Future<Session> setChampionship({
     required String sessionId,
     required bool isChampionship,
   }) async {
-    final row = await _client
-        .from('sessions')
-        .update({'is_championship': isChampionship})
-        .eq('id', sessionId)
-        .select()
-        .single();
+    final row = await _client.rpc<Map<String, dynamic>>(
+      'set_session_championship',
+      params: {'p_session_id': sessionId, 'p_value': isChampionship},
+    );
     return Session.fromJson(row);
   }
 
@@ -157,6 +157,28 @@ class SessionsRepository {
   /// applied as a hypothesis).
   Future<List<MySessionEntry>> myRecentSessions({int limit = 5}) =>
       _mySessionsByStatus(const ['completed'], limit: limit);
+
+  /// Live sessions of the caller's association they don't take part in
+  /// (plan 26, Q132), most recent first: shown on home after the caller's
+  /// own, opened read-only. Readable since plan 26 (`can_read_session`).
+  Future<List<Session>> associationLiveSessions(String associationId) async {
+    final userId = _client.auth.currentUser!.id;
+    final memberRows = await _client
+        .from('session_members')
+        .select('session_id')
+        .eq('user_id', userId);
+    final mine = {for (final row in memberRows) row['session_id'] as String};
+    final rows = await _client
+        .from('sessions')
+        .select()
+        .eq('association_id', associationId)
+        .eq('status', 'live')
+        .order('started_at', ascending: false);
+    return [
+      for (final row in rows)
+        if (!mine.contains(row['id'])) Session.fromJson(row),
+    ];
+  }
 
   /// Two plain queries instead of a nested PostgREST embed filter, same
   /// tradeoff as `_recentPlayerIds`: `session_members` has no status column
@@ -544,3 +566,14 @@ Future<List<MySessionEntry>> myOngoingSessions(Ref ref) =>
 @riverpod
 Future<List<MySessionEntry>> myRecentSessions(Ref ref) =>
     ref.watch(sessionsRepositoryProvider).myRecentSessions();
+
+/// Live sessions of my association I'm not in (plan 26, Q132), for home.
+@riverpod
+Future<List<Session>> associationLiveSessions(Ref ref) async {
+  final associationId = (await ref.watch(myPlayerProvider.future))
+      .associationId;
+  if (associationId == null) return const [];
+  return ref
+      .watch(sessionsRepositoryProvider)
+      .associationLiveSessions(associationId);
+}

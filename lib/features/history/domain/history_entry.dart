@@ -27,6 +27,14 @@ class HistoryEntry {
     return endedAt.difference(startedAt);
   }
 
+  /// Whether [playerId] played in this session (plan 26, Q129): the history
+  /// lists the whole association's sessions, marking the caller's own.
+  bool playedBy(String? playerId) =>
+      playerId != null &&
+      snapshot.teams.any(
+        (team) => team.players.any((p) => p.playerId == playerId),
+      );
+
   List<TeamStanding> get leaders => [
     for (final s in standings)
       if (s.position == 1) s,

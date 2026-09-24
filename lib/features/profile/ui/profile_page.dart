@@ -181,6 +181,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
               ),
               const SizedBox(height: 28),
+              // How others see me (plan 26, volet C).
+              NuniListCard(
+                title: l10n.profileSeePublicPage,
+                onTap: () => context.push('/players/${player.id}'),
+              ),
+              const SizedBox(height: 16),
               _MyAssociationCard(associationId: player.associationId),
               const SizedBox(height: 16),
               NuniCard(

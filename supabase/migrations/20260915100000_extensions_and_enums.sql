@@ -3,7 +3,6 @@
 create extension if not exists postgis;
 create extension if not exists pgcrypto;
 
-create type hole_visibility as enum ('public', 'private');
 create type session_status as enum ('draft', 'live', 'completed');
 create type session_kind as enum ('individual', 'team');
 create type scoring_mode as enum ('stroke_play', 'match_play', 'redistribution', 'free');

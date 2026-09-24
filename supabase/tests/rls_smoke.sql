@@ -2,7 +2,7 @@
 -- the linked remote project with a role that owns the schema (bypasses RLS for the fixture setup
 -- and cleanup) --
 --   npx supabase db query --linked -f supabase/tests/rls_smoke.sql
--- Creates disposable fixture data (auth.users, a session, a private hole), exercises policies and
+-- Creates disposable fixture data (auth.users, a session, a hole), exercises policies and
 -- RPCs by impersonating each user via SET ROLE authenticated + request.jwt.claims, records
 -- pass/fail into test_results, prints it, then deletes everything it created. Every row in the
 -- final SELECT must have passed = true.
@@ -18,7 +18,10 @@ values
   ('a0000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'member2@smoke.nuni', '{"full_name":"Smoke Member2"}', now(), now()),
   ('a0000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'outsider@smoke.nuni', '{"full_name":"Smoke Outsider"}', now(), now()),
   ('a0000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'joiner@smoke.nuni', '{"full_name":"Smoke Joiner"}', now(), now()),
-  ('a0000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@smoke.nuni', '{"full_name":"Smoke Admin"}', now(), now());
+  ('a0000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@smoke.nuni', '{"full_name":"Smoke Admin"}', now(), now()),
+  ('a0000000-0000-0000-0000-000000000007', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'fan@smoke.nuni', '{"full_name":"Smoke Fan"}', now(), now()),
+  ('a0000000-0000-0000-0000-000000000008', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'foreign@smoke.nuni', '{"full_name":"Smoke Foreign"}', now(), now()),
+  ('a0000000-0000-0000-0000-000000000009', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'manager@smoke.nuni', '{"full_name":"Smoke Manager"}', now(), now());
 
 -- An approved association for the session owner (plan 18: creating a session requires one); the
 -- other fixture users have none. "admin" is a super_admin, to exercise the review RPCs.
@@ -28,13 +31,21 @@ values ('c0000000-0000-0000-0000-000000000001', 'Smoke Asso', 'Smokeville',
 update players set association_id = 'c0000000-0000-0000-0000-000000000001'
 where user_id = 'a0000000-0000-0000-0000-000000000001';
 insert into user_roles (user_id, role) values ('a0000000-0000-0000-0000-000000000006', 'super_admin');
+-- Plan 26: "fan" belongs to the session's association without playing in it, "manager" is its
+-- local manager from test 7 on (not playing either), "foreign" belongs to another association.
+insert into associations (id, name, city, location, status)
+values ('c0000000-0000-0000-0000-000000000002', 'Smoke Other', 'Othertown',
+        st_setsrid(st_makepoint(4.0, 45.0), 4326)::geography, 'approved');
+update players set association_id = 'c0000000-0000-0000-0000-000000000001'
+where user_id in ('a0000000-0000-0000-0000-000000000007', 'a0000000-0000-0000-0000-000000000009');
+update players set association_id = 'c0000000-0000-0000-0000-000000000002'
+where user_id = 'a0000000-0000-0000-0000-000000000008';
 
--- a private hole owned by the session owner (NOT by the "outsider" test user, otherwise the
--- outsider would see it via plain ownership and the Q13 test would prove nothing): tests Q13
--- (visible to session members once played, still invisible to a non-member).
-insert into holes (id, owner_id, name, par, start, visibility)
-values ('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'Smoke private hole', 3,
-        st_setsrid(st_makepoint(2.35, 48.85), 4326)::geography, 'private');
+-- A hole owned by the session owner (every hole is public since plan 26, Q110), par 4 so the
+-- played hole's copied par is distinguishable from the free-hole default of 3.
+insert into holes (id, owner_id, name, par, start)
+values ('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'Smoke hole', 4,
+        st_setsrid(st_makepoint(2.35, 48.85), 4326)::geography);
 
 create table test_ids as
 select
@@ -104,20 +115,20 @@ insert into test_results (test, passed)
 select 'outsider_cannot_read_session',
   (select count(*) from sessions where id = (select session_id from test_ids)) = 0;
 insert into test_results (test, passed)
-select 'outsider_cannot_read_played_hole_via_q13',
-  (select count(*) from holes where id = (select private_hole from test_ids)) = 0;
+select 'everyone_reads_every_hole',
+  (select count(*) from holes where id = (select private_hole from test_ids)) = 1;
 reset role;
 reset request.jwt.claims;
 
--- ===== Test 2: a member can read the session and, via Q13, the private hole played in it =====
+-- ===== Test 2: a member can read the session; the played hole copied the hole's par =====
 set role authenticated;
 set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000002","role":"authenticated"}';
 insert into test_results (test, passed)
 select 'member_can_read_session',
   (select count(*) from sessions where id = (select session_id from test_ids)) = 1;
 insert into test_results (test, passed)
-select 'member_can_read_private_hole_played_in_session_q13',
-  (select count(*) from holes where id = (select private_hole from test_ids)) = 1;
+select 'played_hole_par_copied_from_hole',
+  (select par from played_holes where id = (select played_hole_id from test_ids)) = 4;
 reset role;
 reset request.jwt.claims;
 
@@ -343,23 +354,175 @@ select 'deleted_association_detaches_members',
   (select count(*) from associations where name = 'Smoke Pending') = 0
   and (select association_id from players where user_id = 'a0000000-0000-0000-0000-000000000004') is null;
 
+-- ===== Test 7: association visibility, championship tagging, par and clones (plan 26) =====
+-- From here the local manager is "manager", who doesn't play: the owner's approved claim from
+-- test 6 is revoked, so the owner is a plain organizer again.
+update association_managers set status = 'revoked'
+where association_id = 'c0000000-0000-0000-0000-000000000001' and status = 'approved';
+insert into association_managers (association_id, user_id, status)
+values ('c0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000009', 'approved');
+-- A member of the session's association who didn't play reads it, cannot score.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000007","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'association_member_reads_session',
+  (select count(*) from sessions where id = (select session_id from test_ids)) = 1
+  and (select count(*) from played_holes where session_id = (select session_id from test_ids)) = 1
+  and (select count(*) from scores where session_id = (select session_id from test_ids)) >= 1
+  and (select count(*) from teams where session_id = (select session_id from test_ids)) = 2;
+do $probe$
+begin
+  begin
+    update scores set value = 1 where session_id = (select session_id from test_ids);
+    insert into test_results (test, passed)
+    select 'association_member_cannot_score',
+      not exists (select 1 from scores where session_id = (select session_id from test_ids) and value = 1);
+  exception when others then
+    insert into test_results (test, passed) values ('association_member_cannot_score', true);
+  end;
+end;
+$probe$;
+reset role;
+reset request.jwt.claims;
+
+-- A member of another association who didn't play doesn't see it.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000008","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'other_association_cannot_read_session',
+  (select count(*) from sessions where id = (select session_id from test_ids)) = 0
+  and (select count(*) from played_holes where session_id = (select session_id from test_ids)) = 0;
+reset role;
+reset request.jwt.claims;
+
+-- The super_admin keeps a fallback read right (Q130).
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000006","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'super_admin_reads_any_session',
+  (select count(*) from sessions where id = (select session_id from test_ids)) = 1;
+reset role;
+reset request.jwt.claims;
+
+-- The organizer can no longer tag the championship, neither directly nor through the RPC.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+update sessions set is_championship = true where id = (select session_id from test_ids);
+insert into test_results (test, passed)
+select 'organizer_update_keeps_championship_flag',
+  not (select is_championship from sessions where id = (select session_id from test_ids));
+do $$
+begin
+  perform set_session_championship((select session_id from test_ids), true);
+  insert into test_results (test, passed) values ('organizer_cannot_tag_championship', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('organizer_cannot_tag_championship', sqlerrm = 'not_championship_manager');
+end $$;
+
+-- A free hole needs a par from the app; a directory hole takes an explicit par and a comment.
+do $$
+begin
+  perform add_played_hole((select session_id from test_ids), null, 'individual');
+  insert into test_results (test, passed) values ('free_hole_without_par_refused', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('free_hole_without_par_refused', sqlerrm = 'par_required');
+end $$;
+select add_played_hole((select session_id from test_ids), (select private_hole from test_ids),
+  'individual', null, 6, '  from the bench  ');
+insert into test_results (test, passed)
+select 'played_hole_par_and_comment_set',
+  exists (
+    select 1 from played_holes
+    where session_id = (select session_id from test_ids) and position = 2
+      and par = 6 and comment = 'from the bench'
+  );
+select add_played_hole((select session_id from test_ids), null, 'individual', 'Test', 5);
+insert into test_results (test, passed)
+select 'free_hole_with_par_added',
+  exists (
+    select 1 from played_holes
+    where session_id = (select session_id from test_ids) and position = 3
+      and hole_id is null and par = 5
+  );
+reset role;
+reset request.jwt.claims;
+
+-- The local manager tags it without playing; the organizer's later updates keep the flag.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000009","role":"authenticated"}';
+select set_session_championship((select session_id from test_ids), true);
+reset role;
+reset request.jwt.claims;
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+update sessions set comment = 'x', is_championship = false where id = (select session_id from test_ids);
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'manager_tags_championship',
+  (select is_championship from sessions where id = (select session_id from test_ids));
+
+-- Anyone clones any hole and owns the clone; only the owner edits the original.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000002","role":"authenticated"}';
+select clone_hole((select private_hole from test_ids));
+insert into test_results (test, passed)
+select 'clone_owned_by_caller',
+  exists (
+    select 1 from holes
+    where cloned_from = (select private_hole from test_ids)
+      and owner_id = (select member1_user from test_ids)
+      and name = 'Clone - Smoke hole' and par = 4
+  );
+update holes set name = 'Hijacked' where id = (select private_hole from test_ids);
+insert into test_results (test, passed)
+select 'non_owner_cannot_edit_hole',
+  (select name from holes where id = (select private_hole from test_ids)) = 'Smoke hole';
+reset role;
+reset request.jwt.claims;
+
+-- Once completed, the session is in the history of its association's members only (Q129).
+update sessions set status = 'completed', ended_at = now() where id = (select session_id from test_ids);
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000007","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'history_lists_association_sessions', jsonb_array_length(history_snapshots()) = 1;
+reset role;
+reset request.jwt.claims;
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000008","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'history_hides_other_association_sessions', jsonb_array_length(history_snapshots()) = 0;
+reset role;
+reset request.jwt.claims;
+
 -- ===== Verdict =====
 select * from test_results order by n;
 
 -- ===== Cleanup =====
 delete from sessions where id in (select session_id from test_ids);
+delete from holes where cloned_from in (select private_hole from test_ids);
 delete from holes where id in (select private_hole from test_ids);
+delete from association_managers where association_id = 'c0000000-0000-0000-0000-000000000001';
 delete from players where user_id in (
   select owner_user from test_ids union select member1_user from test_ids union select member2_user from test_ids
   union select outsider_user from test_ids union select joiner_user from test_ids
   union select 'a0000000-0000-0000-0000-000000000006'::uuid
+  union select 'a0000000-0000-0000-0000-000000000007'::uuid
+  union select 'a0000000-0000-0000-0000-000000000008'::uuid
+  union select 'a0000000-0000-0000-0000-000000000009'::uuid
 );
-delete from associations where id = 'c0000000-0000-0000-0000-000000000001' or name = 'Smoke Pending';
+delete from associations where id in ('c0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000002') or name = 'Smoke Pending';
 delete from user_roles where user_id = 'a0000000-0000-0000-0000-000000000006';
 delete from auth.users where id in (
   select owner_user from test_ids union select member1_user from test_ids union select member2_user from test_ids
   union select outsider_user from test_ids union select joiner_user from test_ids
   union select 'a0000000-0000-0000-0000-000000000006'::uuid
+  union select 'a0000000-0000-0000-0000-000000000007'::uuid
+  union select 'a0000000-0000-0000-0000-000000000008'::uuid
+  union select 'a0000000-0000-0000-0000-000000000009'::uuid
 );
 drop table test_ids;
 drop table test_results;

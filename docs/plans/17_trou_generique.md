@@ -1,5 +1,9 @@
 # Plan 17 — Trou générique (« Trou libre »)
 
+> **Mise à jour du 2026-09-24 (plan 26, décision 5)** : un trou libre exige désormais un par à
+> l'ajout, sans valeur préréglée ; ceux joués avant ont reçu 3 (Q122). Remplace « ni par ni
+> distance » de Q57.
+
 ## Statut
 
 Demande PO du 2026-09-23, décisions Q56 à Q59 retenues le même jour. Plan détaillé rédigé le

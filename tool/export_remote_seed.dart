@@ -50,13 +50,13 @@ Future<void> main(List<String> args) async {
     env['NUNI_SUPABASE_SERVICE_KEY']! as String,
   );
   try {
+    // Every column, not a fixed list (plan 26): the same run reads a base
+    // still on the previous schema (with `visibility`, without
+    // `cloned_from`) just before a reconstruction, and the new one after --
+    // `_render` picks the columns it writes and ignores the others.
     final rows = await nuni
         .from('holes')
-        .select(
-          'id, owner_id, name, description, par, distance_m, start_lat, '
-          'start_lng, end_lat, end_lng, path, photo_start_path, '
-          'photo_end_path, visibility, legacy_id, created_at, updated_at',
-        )
+        .select()
         .order('created_at', ascending: true);
     final kept = [
       for (final row in rows)
@@ -196,7 +196,7 @@ String _render(List<Map<String, dynamic>> holes) {
       '  id, owner_id, name, description, par, distance_m, start, end_point, path,',
     )
     ..writeln(
-      '  photo_start_path, photo_end_path, visibility, legacy_id, created_at, updated_at',
+      '  photo_start_path, photo_end_path, cloned_from, legacy_id, created_at, updated_at',
     )
     ..writeln(') values');
   for (var i = 0; i < holes.length; i++) {
@@ -213,7 +213,9 @@ String _render(List<Map<String, dynamic>> holes) {
       h['path'] == null ? 'null' : '${_text(jsonEncode(h['path']))}::jsonb',
       _text(h['photo_start_path']),
       _text(h['photo_end_path']),
-      _text(h['visibility']),
+      // Absent before plan 26; rows are in creation order, so an original
+      // is always inserted before its clones.
+      _text(h['cloned_from']),
       _number(h['legacy_id']),
       _text(h['created_at']),
       _text(h['updated_at']),
@@ -306,12 +308,11 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
     'session_id, user_id, team_id, role, joined_at',
     'joined_at',
   );
-  final playedHoles = await all(
-    'played_holes',
-    'id, session_id, hole_id, label, game_mode, position, legacy_id, '
-        'created_at',
-    'created_at',
-  );
+  // Every column (plan 26), same reason as the holes above: `par` and
+  // `comment` don't exist yet on a base still on the previous schema. Replayed
+  // without a par, a played hole gets its hole's par, or 3 for a free hole
+  // (Q122), from the `played_holes_set_par` trigger.
+  final playedHoles = await all('played_holes', '*', 'created_at');
   final scores = await all(
     'scores',
     'played_hole_id, team_id, value, updated_by, updated_at',

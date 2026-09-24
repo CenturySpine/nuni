@@ -6,7 +6,6 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_card.dart';
 import '../../../shared/nuni_icon_tile.dart';
 import '../../../shared/nuni_status_pill.dart';
-import '../../holes/domain/hole.dart';
 import '../../sessions/domain/scoring_mode.dart';
 import '../domain/live_team.dart';
 import '../domain/played_hole.dart';
@@ -20,7 +19,9 @@ import 'score_entry_sheet.dart';
 /// the note below), tap-to-score inline for the teams [canEditTeam] allows.
 /// Stroke Play shows strokes alone (there's no separate points concept for
 /// it); Free shows points alone (no strokes are collected for it, Q7b).
-/// [highlighted] (the latest hole) gets a primary outline.
+/// [highlighted] (the latest hole) gets a primary outline. The par shown is
+/// the session's (plan 26), with the directory hole's own par as a hint when
+/// they differ; [onEdit] (the organizer) opens the par + comment sheet.
 class PlayedHoleCard extends StatelessWidget {
   const PlayedHoleCard({
     super.key,
@@ -31,6 +32,7 @@ class PlayedHoleCard extends StatelessWidget {
     required this.onScoreSubmit,
     this.highlighted = false,
     this.onDelete,
+    this.onEdit,
   });
 
   final PlayedHole playedHole;
@@ -41,6 +43,7 @@ class PlayedHoleCard extends StatelessWidget {
   onScoreSubmit;
   final bool highlighted;
   final VoidCallback? onDelete;
+  final VoidCallback? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +56,8 @@ class PlayedHoleCard extends StatelessWidget {
     final points = needsPoints
         ? calculateHolePoints(scoringMode, playedHole.valueByTeamId)
         : null;
-    final isPrivate = playedHole.hole?.visibility == HoleVisibility.private;
+    final officialPar = playedHole.differingOfficialPar;
+    final comment = playedHole.comment;
 
     return NuniCard(
       borderColor: highlighted ? context.nuni.primaryInk : null,
@@ -64,7 +68,7 @@ class PlayedHoleCard extends StatelessWidget {
           Row(
             children: [
               NuniIconTile(
-                icon: isPrivate ? PhosphorIcons.lockSimple : PhosphorIcons.golf,
+                icon: PhosphorIcons.golf,
                 tone: highlighted ? NuniTone.primary : NuniTone.fairway,
                 size: 40,
               ),
@@ -86,11 +90,18 @@ class PlayedHoleCard extends StatelessWidget {
                       spacing: 6,
                       runSpacing: 4,
                       children: [
-                        // A free hole has no par (plan 17).
-                        if (playedHole.hole case final hole?)
+                        // Every played hole has a par, free holes included
+                        // (plan 26).
+                        NuniStatusPill(
+                          label: l10n.holesPar(playedHole.par),
+                          tone: NuniTone.fairway,
+                        ),
+                        if (officialPar != null)
                           NuniStatusPill(
-                            label: l10n.holesPar(hole.par),
-                            tone: NuniTone.fairway,
+                            label: l10n.sessionsPlayedHoleOfficialPar(
+                              officialPar,
+                            ),
+                            tone: NuniTone.neutral,
                           ),
                         NuniStatusPill(
                           label: gameModeLabel(l10n, playedHole.gameMode),
@@ -98,9 +109,31 @@ class PlayedHoleCard extends StatelessWidget {
                         ),
                       ],
                     ),
+                    if (comment != null && comment.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        comment,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontStyle: FontStyle.italic,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
+              // A gear, not a pencil (PO, 2026-09-24): the score rows below
+              // already use pencils for entering a score.
+              if (onEdit != null)
+                IconButton(
+                  icon: Icon(
+                    PhosphorIcons.gear,
+                    size: 18,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  tooltip: l10n.sessionsPlayedHoleEdit,
+                  onPressed: onEdit,
+                ),
               if (onDelete != null)
                 IconButton(
                   icon: Icon(

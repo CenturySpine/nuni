@@ -6,6 +6,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_card.dart';
 import '../../../shared/nuni_icon_tile.dart';
 import '../../../shared/nuni_rank_badge.dart';
+import '../../players/ui/player_names_link.dart';
 import '../../sessions/domain/scoring_mode.dart';
 import '../../sessions/domain/session.dart';
 import '../domain/live_team.dart';
@@ -190,9 +191,10 @@ class _StandingRow extends StatelessWidget {
             size: 28,
           ),
           const SizedBox(width: 12),
+          // Each name opens the player's public page (plan 26, volet C).
           Expanded(
-            child: Text(
-              team?.playerNames() ?? '',
+            child: PlayerNamesLink(
+              players: team?.players ?? const [],
               style: textTheme.bodyMedium?.copyWith(
                 fontWeight: leader ? FontWeight.w700 : FontWeight.w500,
               ),

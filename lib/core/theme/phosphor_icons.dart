@@ -89,4 +89,9 @@ abstract final class PhosphorIcons {
   static const imageSquare = IconData(0xe2cc, fontFamily: _regular);
   static const star = IconData(0xe46a, fontFamily: _regular);
   static const starFill = IconData(0xe46a, fontFamily: _fill);
+
+  // Plan 26: spectator notice, participation marker, played-hole settings.
+  static const eye = IconData(0xe220, fontFamily: _regular);
+  static const gear = IconData(0xe270, fontFamily: _regular);
+  static const userCheck = IconData(0xeafa, fontFamily: _regular);
 }

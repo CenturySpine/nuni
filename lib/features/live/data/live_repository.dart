@@ -52,12 +52,16 @@ class LiveRepository {
   /// Owner-only (RLS `played_holes_owner_write`); appends at the next
   /// position server-side (`add_played_hole` RPC) to avoid a client-side
   /// "next position" race between two owners adding at once. A null
-  /// [holeId] adds a generic free hole (plan 17), with an optional [label].
+  /// [holeId] adds a generic free hole (plan 17), with an optional [label]
+  /// and a required [par] (plan 26: the database refuses a free hole without
+  /// one). For a directory hole, a null [par] means the hole's own par.
   Future<void> addPlayedHole({
     required String sessionId,
     required String? holeId,
     required GameMode gameMode,
     String? label,
+    int? par,
+    String? comment,
   }) => _client.rpc<Map<String, dynamic>>(
     'add_played_hole',
     params: {
@@ -65,8 +69,28 @@ class LiveRepository {
       'p_hole_id': holeId,
       'p_game_mode': gameMode.toPostgresValue(),
       'p_label': label,
+      'p_par': par,
+      'p_comment': comment,
     },
   );
+
+  /// The session's par and comment of a played hole (plan 26, Q121):
+  /// owner-only (RLS `played_holes_owner_write`), during the session or
+  /// afterwards from the history. A blank [comment] clears it.
+  Future<void> updatePlayedHole({
+    required String playedHoleId,
+    required int par,
+    String? comment,
+  }) {
+    final trimmed = comment?.trim();
+    return _client
+        .from('played_holes')
+        .update({
+          'par': par,
+          'comment': (trimmed == null || trimmed.isEmpty) ? null : trimmed,
+        })
+        .eq('id', playedHoleId);
+  }
 
   /// Owner-only; its scores cascade (plan 08).
   Future<void> deletePlayedHole(String playedHoleId) =>

@@ -21,7 +21,6 @@ import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_form_section.dart';
 import '../../../shared/nuni_loading.dart';
 import '../../../shared/nuni_map_attribution.dart';
-import '../../../shared/nuni_segmented.dart';
 import '../../../shared/photo_field.dart';
 import '../data/holes_repository.dart';
 import '../domain/hole.dart';
@@ -58,7 +57,6 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
   final _distanceController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  HoleVisibility _visibility = HoleVisibility.public;
   LatLng? _startPosition;
   LatLng? _endPosition;
   final List<LatLng> _path = [];
@@ -270,7 +268,6 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
     _descriptionController.text = hole.description ?? '';
     _parController.text = hole.par.toString();
     _distanceController.text = hole.distanceM?.toString() ?? '';
-    _visibility = hole.visibility;
     _startPosition = hole.hasPosition
         ? LatLng(hole.startLat!, hole.startLng!)
         : null;
@@ -338,7 +335,6 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
           endLat: _endPosition?.latitude,
           endLng: _endPosition?.longitude,
           path: _pathPoints,
-          visibility: _visibility,
           photoStartPath: _startPhotoPath,
           photoEndPath: _endPhotoPath,
         );
@@ -353,7 +349,6 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
           endLat: _endPosition?.latitude,
           endLng: _endPosition?.longitude,
           path: _pathPoints,
-          visibility: _visibility,
           photoStartPath: _startPhotoPath,
           photoEndPath: _endPhotoPath,
         );
@@ -531,29 +526,6 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
                     labelText: l10n.holesFormDescriptionLabel,
                   ),
                   maxLines: 3,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.holesFormVisibilityLabel,
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                const SizedBox(height: 8),
-                NuniSegmented<HoleVisibility>(
-                  segments: [
-                    NuniSegment(
-                      value: HoleVisibility.public,
-                      label: l10n.holesFormVisibilityPublic,
-                      icon: PhosphorIcons.globe,
-                    ),
-                    NuniSegment(
-                      value: HoleVisibility.private,
-                      label: l10n.holesFormVisibilityPrivate,
-                      icon: PhosphorIcons.lockSimple,
-                    ),
-                  ],
-                  selected: _visibility,
-                  onChanged: (visibility) =>
-                      setState(() => _visibility = visibility),
                 ),
               ],
             ),

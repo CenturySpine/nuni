@@ -3,7 +3,7 @@
 -- provisional contract: plan 07 (creation session et equipes) is not planned yet, and may need to
 -- adjust this function when that plan is written. Cheap to change: nothing depends on it yet.
 
--- Public + my private holes within radius_m of (lat, lng), nearest first.
+-- Holes within radius_m of (lat, lng), nearest first -- every hole is public (plan 26, Q110).
 -- security invoker: relies entirely on the holes RLS policy for visibility.
 create or replace function holes_nearby(p_lat double precision, p_lng double precision, p_radius_m int)
 returns table (
@@ -18,8 +18,8 @@ returns table (
   end_lng double precision,
   photo_start_path text,
   photo_end_path text,
-  visibility hole_visibility,
   owner_id uuid,
+  cloned_from uuid,
   distance double precision
 )
 language sql
@@ -30,7 +30,7 @@ as $$
   select
     h.id, h.name, h.description, h.par, h.distance_m,
     h.start_lat, h.start_lng, h.end_lat, h.end_lng,
-    h.photo_start_path, h.photo_end_path, h.visibility, h.owner_id,
+    h.photo_start_path, h.photo_end_path, h.owner_id, h.cloned_from,
     st_distance(h.start, st_setsrid(st_makepoint(p_lng, p_lat), 4326)::geography) as distance
   from holes h
   where st_dwithin(h.start, st_setsrid(st_makepoint(p_lng, p_lat), 4326)::geography, p_radius_m)
@@ -325,14 +325,15 @@ as $$
         'position', ph.position,
         'game_mode', ph.game_mode,
         'label', ph.label,
+        'par', ph.par,
+        'comment', ph.comment,
         -- null for a generic "free hole" (plan 17): no row in the hole directory.
         'hole', case when h.id is null then null else jsonb_build_object(
           'id', h.id,
           'name', h.name,
           'par', h.par,
           'start_lat', h.start_lat,
-          'start_lng', h.start_lng,
-          'visibility', h.visibility
+          'start_lng', h.start_lng
         ) end,
         'scores', (
           select coalesce(jsonb_agg(jsonb_build_object(
@@ -355,11 +356,14 @@ $$;
 revoke execute on function session_snapshot(uuid) from public;
 grant execute on function session_snapshot(uuid) to authenticated;
 
--- Every completed session the caller is a member of, most recently started first, each shaped
--- exactly like a single `session_snapshot` call (plan 10) -- reused as-is rather than duplicating
--- the nested query above, so the client parses history entries with the same `LiveSessionSnapshot`
--- model and the same tested `computeStandings` it already uses for the live screen. Simpler than
--- a slimmer summary-only shape at this app's scale (a personal history, not a public feed).
+-- The history tab (plan 10, reshaped by plan 26, Q129): every completed session of the caller's
+-- association -- played in or not, can_read_session lets its members read it -- plus the ones
+-- the caller played in elsewhere (as a visitor), most recently started first. Each is shaped
+-- exactly like a single `session_snapshot` call, reused as-is rather than duplicating the nested
+-- query above, so the client parses history entries with the same `LiveSessionSnapshot` model and
+-- the same tested `computeStandings` it already uses for the live screen; the client works out
+-- "I played in it" from the teams' players. Simpler than a slimmer summary-only shape at this
+-- app's scale.
 create or replace function history_snapshots()
 returns jsonb
 language sql
@@ -370,7 +374,10 @@ as $$
   select coalesce(jsonb_agg(session_snapshot(s.id) order by s.started_at desc nulls last), '[]'::jsonb)
   from sessions s
   where s.status = 'completed'
-    and is_session_member(s.id);
+    and (
+      is_session_member(s.id)
+      or s.association_id = (select p.association_id from players p where p.user_id = auth.uid())
+    );
 $$;
 
 revoke execute on function history_snapshots() from public;
@@ -415,7 +422,9 @@ create or replace function add_played_hole(
   p_session_id uuid,
   p_hole_id uuid,
   p_game_mode game_mode,
-  p_label text default null
+  p_label text default null,
+  p_par int default null,
+  p_comment text default null
 )
 returns played_holes
 language plpgsql
@@ -425,11 +434,13 @@ as $$
 declare
   v_row played_holes;
 begin
-  insert into played_holes (session_id, hole_id, label, game_mode, position)
+  insert into played_holes (session_id, hole_id, label, par, comment, game_mode, position)
   values (
     p_session_id,
     p_hole_id,
     case when p_hole_id is null then nullif(btrim(p_label), '') end,
+    p_par,
+    nullif(btrim(p_comment), ''),
     p_game_mode,
     (select coalesce(max(position), 0) + 1 from played_holes where session_id = p_session_id)
   )
@@ -439,8 +450,72 @@ begin
 end;
 $$;
 
-revoke execute on function add_played_hole(uuid, uuid, game_mode, text) from public;
-grant execute on function add_played_hole(uuid, uuid, game_mode, text) to authenticated;
+revoke execute on function add_played_hole(uuid, uuid, game_mode, text, int, text) from public;
+grant execute on function add_played_hole(uuid, uuid, game_mode, text, int, text) to authenticated;
+
+-- Clones a hole for the caller (plan 26, decision 2): same fields, the caller as owner, the name
+-- prefixed "Clone - " (same in every language), and cloned_from pointing at the original (Q120).
+-- No photo paths: the app copies the original's photos into the caller's own storage folder,
+-- then sets them on the clone like any owner edit (Q119). security invoker: the holes insert
+-- policy already requires owner_id = the caller.
+create or replace function clone_hole(p_hole_id uuid)
+returns holes
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  v_row holes;
+begin
+  insert into holes (
+    owner_id, name, description, par, distance_m, start, end_point, path, cloned_from
+  )
+  select auth.uid(), 'Clone - ' || h.name, h.description, h.par, h.distance_m, h.start,
+    h.end_point, h.path, h.id
+  from holes h
+  where h.id = p_hole_id
+  returning * into v_row;
+
+  if v_row.id is null then
+    raise exception 'hole_not_found' using errcode = 'P0001';
+  end if;
+  return v_row;
+end;
+$$;
+
+revoke execute on function clone_hole(uuid) from public;
+grant execute on function clone_hole(uuid) to authenticated;
+
+-- Tags or untags a session for the championship (plan 26, decision 11): a super_admin or the
+-- approved local manager of the session's association, at any time, played in or not. security
+-- definer: such a caller is usually not the session's owner, whom sessions_update_owner
+-- requires; sessions_guard_championship (triggers.sql) then lets the change through for them.
+create or replace function set_session_championship(p_session_id uuid, p_value boolean)
+returns sessions
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_session sessions;
+begin
+  select * into v_session from sessions where id = p_session_id;
+  if v_session.id is null then
+    raise exception 'session_not_found' using errcode = 'P0001';
+  end if;
+  if not (is_super_admin() or is_association_manager(v_session.association_id)) then
+    raise exception 'not_championship_manager' using errcode = 'P0001';
+  end if;
+
+  update sessions set is_championship = p_value
+  where id = p_session_id
+  returning * into v_session;
+  return v_session;
+end;
+$$;
+
+revoke execute on function set_session_championship(uuid, boolean) from public;
+grant execute on function set_session_championship(uuid, boolean) to authenticated;
 
 -- ---------------------------------------------------------------------------------------------
 -- Associations (plan 18). The tables are read-only for the app (rls.sql): every write is one of

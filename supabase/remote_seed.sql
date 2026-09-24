@@ -14,7 +14,7 @@
 
 insert into holes (
   id, owner_id, name, description, par, distance_m, start, end_point, path,
-  photo_start_path, photo_end_path, visibility, legacy_id, created_at, updated_at
+  photo_start_path, photo_end_path, cloned_from, legacy_id, created_at, updated_at
 ) values
   (
     '29c86477-031b-43b7-97d4-9a75f6eae2e6',
@@ -28,7 +28,7 @@ insert into holes (
     '[{"lat":45.78332539792273,"lng":4.874141921525449},{"lat":45.783451710347684,"lng":4.874687196378039}]'::jsonb,
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-8/start.jpg',
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-8/end.jpg',
-    'public',
+    null,
     8,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T17:42:08.664663+00:00'
@@ -45,7 +45,7 @@ insert into holes (
     null,
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-25/start.jpg',
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-25/end.jpg',
-    'public',
+    null,
     25,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T07:57:35.889476+00:00'
@@ -63,7 +63,7 @@ Cible: Plaque d''égout sur la partie en béton. Bonus -1 si la balle s''arrête
     null,
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-29/start.jpg',
     null,
-    'public',
+    null,
     29,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T07:58:57.266946+00:00'
@@ -80,7 +80,7 @@ Cible: Plaque d''égout sur la partie en béton. Bonus -1 si la balle s''arrête
     '[{"lat":45.78317831057521,"lng":4.874586908248678}]'::jsonb,
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-5/start.jpg',
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-5/end.jpg',
-    'public',
+    null,
     5,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T07:59:54.509845+00:00'
@@ -97,7 +97,7 @@ Cible: Plaque d''égout sur la partie en béton. Bonus -1 si la balle s''arrête
     null,
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-3/start.jpg',
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-3/end.jpg',
-    'public',
+    null,
     3,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T08:03:03.206348+00:00'
@@ -114,7 +114,7 @@ Cible: Plaque d''égout sur la partie en béton. Bonus -1 si la balle s''arrête
     null,
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-4/start.jpg',
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-4/end.jpg',
-    'public',
+    null,
     4,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T08:03:46.777206+00:00'
@@ -131,7 +131,7 @@ Cible: Plaque d''égout sur la partie en béton. Bonus -1 si la balle s''arrête
     null,
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-34/start.jpg',
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-34/end.jpg',
-    'public',
+    null,
     34,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T08:06:48.970009+00:00'
@@ -148,7 +148,7 @@ Cible: Plaque d''égout sur la partie en béton. Bonus -1 si la balle s''arrête
     '[{"lat":45.78348212775869,"lng":4.87557031181194}]'::jsonb,
     null,
     null,
-    'public',
+    null,
     28,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T08:26:02.618549+00:00'
@@ -165,7 +165,7 @@ Cible: Plaque d''égout sur la partie en béton. Bonus -1 si la balle s''arrête
     '[{"lat":45.78365662935124,"lng":4.873905731202149},{"lat":45.783823281343146,"lng":4.873712277167478}]'::jsonb,
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-7/start.jpg',
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-7/end.jpg',
-    'public',
+    null,
     7,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T08:53:01.134433+00:00'
@@ -182,7 +182,7 @@ Cible: Plaque d''égout sur la partie en béton. Bonus -1 si la balle s''arrête
     '[{"lat":45.78362939433474,"lng":4.875088074963806}]'::jsonb,
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-38/start.jpg',
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-38/end.jpg',
-    'public',
+    null,
     38,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T08:53:25.334636+00:00'
@@ -199,7 +199,7 @@ Cible: Plaque d''égout sur la partie en béton. Bonus -1 si la balle s''arrête
     '[{"lat":45.783015318430074,"lng":4.874621101019612}]'::jsonb,
     null,
     null,
-    'public',
+    null,
     33,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T08:57:31.338137+00:00'
@@ -217,7 +217,7 @@ Cible: panneau en hauteur sur le mur ?',
     null,
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-37/start.jpg',
     null,
-    'public',
+    null,
     37,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T08:30:35.229152+00:00'
@@ -234,7 +234,7 @@ Cible: panneau en hauteur sur le mur ?',
     null,
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-20/start.jpg',
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-20/end.jpg',
-    'public',
+    null,
     20,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T08:51:21.517111+00:00'
@@ -251,7 +251,7 @@ Cible: panneau en hauteur sur le mur ?',
     null,
     null,
     null,
-    'public',
+    null,
     27,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T08:51:53.415093+00:00'
@@ -268,7 +268,7 @@ Cible: panneau en hauteur sur le mur ?',
     '[{"lat":45.78333876846842,"lng":4.8738954473698834},{"lat":45.78350277612962,"lng":4.873859411814424}]'::jsonb,
     null,
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-6/end.jpg',
-    'public',
+    null,
     6,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T08:52:24.946336+00:00'
@@ -285,7 +285,7 @@ Cible: panneau en hauteur sur le mur ?',
     null,
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-26/start.jpg',
     '667e1434-75e2-4eb7-b122-ed8681905cea/legacy-26/end.jpg',
-    'public',
+    null,
     26,
     '2026-09-23T07:53:32.124299+00:00',
     '2026-09-23T07:56:54.025157+00:00'
@@ -302,7 +302,7 @@ Cible: panneau en hauteur sur le mur ?',
     '[{"lat":45.78199179187449,"lng":4.867219975878423}]'::jsonb,
     null,
     null,
-    'public',
+    null,
     null,
     '2026-09-23T08:27:45.640405+00:00',
     '2026-09-23T08:28:36.090477+00:00'
@@ -319,7 +319,7 @@ Cible: panneau en hauteur sur le mur ?',
     '[{"lat":45.78240380777411,"lng":4.867849592561374},{"lat":45.782605824970105,"lng":4.867747668618808}]'::jsonb,
     null,
     null,
-    'public',
+    null,
     null,
     '2026-09-23T08:28:25.011499+00:00',
     '2026-09-23T08:28:25.011499+00:00'
@@ -337,7 +337,7 @@ Cible: rocher dans le coin du parc',
     '[{"lat":45.782677910158036,"lng":4.868163356587894}]'::jsonb,
     null,
     null,
-    'public',
+    null,
     null,
     '2026-09-23T08:30:16.783804+00:00',
     '2026-09-23T08:30:16.783804+00:00'

@@ -1,5 +1,10 @@
 # Plan 06 — Trous géolocalisés
 
+> **Mise à jour du 2026-09-24 (plan 26, Q110)** : la notion de trou privé est supprimée. Tout
+> trou est visible et jouable par tous ; seul son auteur le modifie. Un trou peut être cloné
+> (« Clone - <nom> ») par n'importe qui, qui en devient l'auteur. Les passages sur les trous
+> privés ci-dessous restent comme historique.
+
 ## Objectif
 
 Référentiel de trous public/privé avec position de départ, photos de départ et de cible, et

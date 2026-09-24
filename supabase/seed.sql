@@ -11,25 +11,25 @@ values
   ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'dev2@nuni.test', '{"full_name":"Joueuse Deux"}', now(), now());
 
 -- Public holes around INSA Lyon, owned by dev user 1.
-insert into holes (owner_id, name, description, par, start, visibility)
+insert into holes (owner_id, name, description, par, start)
 values
-  ('00000000-0000-0000-0000-000000000001', 'Radioactive', null, 3, st_setsrid(st_makepoint(4.8710, 45.7825), 4326)::geography, 'public'),
-  ('00000000-0000-0000-0000-000000000001', 'Pitch back', null, 3, st_setsrid(st_makepoint(4.8712, 45.7828), 4326)::geography, 'public'),
-  ('00000000-0000-0000-0000-000000000001', 'The cage', null, 3, st_setsrid(st_makepoint(4.8715, 45.7822), 4326)::geography, 'public'),
-  ('00000000-0000-0000-0000-000000000001', 'Fireman #1', null, 5, st_setsrid(st_makepoint(4.8708, 45.7830), 4326)::geography, 'public'),
-  ('00000000-0000-0000-0000-000000000001', 'Cool down man', null, 3, st_setsrid(st_makepoint(4.8717, 45.7826), 4326)::geography, 'public'),
-  ('00000000-0000-0000-0000-000000000001', 'Rhino peekaboo', 'Rhino depuis le spot sous la caméra, vers la grande fresque bleue', 4, st_setsrid(st_makepoint(4.8713, 45.7820), 4326)::geography, 'public'),
-  ('00000000-0000-0000-0000-000000000001', 'Knock knock', null, 3, st_setsrid(st_makepoint(4.8706, 45.7824), 4326)::geography, 'public'),
-  ('00000000-0000-0000-0000-000000000001', 'The pitt', null, 3, st_setsrid(st_makepoint(4.8719, 45.7831), 4326)::geography, 'public'),
-  ('00000000-0000-0000-0000-000000000001', 'Touch my ball', null, 3, st_setsrid(st_makepoint(4.8709, 45.7818), 4326)::geography, 'public'),
-  ('00000000-0000-0000-0000-000000000001', 'Fireman #2', null, 3, st_setsrid(st_makepoint(4.8721, 45.7823), 4326)::geography, 'public'),
-  ('00000000-0000-0000-0000-000000000001', 'Rhino ahead', 'Rhino depuis les bancs en béton juste au-dessus du départ du pitt', 3, st_setsrid(st_makepoint(4.8704, 45.7827), 4326)::geography, 'public'),
-  ('00000000-0000-0000-0000-000000000001', 'The gauss', 'Plaque d''égout sur la partie en béton, départ dans l''herbe de l''autre côté de la rampe descendante', 3, st_setsrid(st_makepoint(4.8716, 45.7833), 4326)::geography, 'public'),
-  ('00000000-0000-0000-0000-000000000001', 'Generic', null, 3, st_setsrid(st_makepoint(4.8711, 45.7816), 4326)::geography, 'public'),
-  ('00000000-0000-0000-0000-000000000001', 'Saint Exupéry', null, 3, st_setsrid(st_makepoint(4.8723, 45.7828), 4326)::geography, 'public'),
-  ('00000000-0000-0000-0000-000000000001', 'L''arche perdue', null, 3, st_setsrid(st_makepoint(4.8702, 45.7821), 4326)::geography, 'public'),
-  ('00000000-0000-0000-0000-000000000001', 'On fire', null, 3, st_setsrid(st_makepoint(4.8714, 45.7835), 4326)::geography, 'public'),
-  ('00000000-0000-0000-0000-000000000001', 'Bike trash', null, 3, st_setsrid(st_makepoint(4.8707, 45.7814), 4326)::geography, 'public');
+  ('00000000-0000-0000-0000-000000000001', 'Radioactive', null, 3, st_setsrid(st_makepoint(4.8710, 45.7825), 4326)::geography),
+  ('00000000-0000-0000-0000-000000000001', 'Pitch back', null, 3, st_setsrid(st_makepoint(4.8712, 45.7828), 4326)::geography),
+  ('00000000-0000-0000-0000-000000000001', 'The cage', null, 3, st_setsrid(st_makepoint(4.8715, 45.7822), 4326)::geography),
+  ('00000000-0000-0000-0000-000000000001', 'Fireman #1', null, 5, st_setsrid(st_makepoint(4.8708, 45.7830), 4326)::geography),
+  ('00000000-0000-0000-0000-000000000001', 'Cool down man', null, 3, st_setsrid(st_makepoint(4.8717, 45.7826), 4326)::geography),
+  ('00000000-0000-0000-0000-000000000001', 'Rhino peekaboo', 'Rhino depuis le spot sous la caméra, vers la grande fresque bleue', 4, st_setsrid(st_makepoint(4.8713, 45.7820), 4326)::geography),
+  ('00000000-0000-0000-0000-000000000001', 'Knock knock', null, 3, st_setsrid(st_makepoint(4.8706, 45.7824), 4326)::geography),
+  ('00000000-0000-0000-0000-000000000001', 'The pitt', null, 3, st_setsrid(st_makepoint(4.8719, 45.7831), 4326)::geography),
+  ('00000000-0000-0000-0000-000000000001', 'Touch my ball', null, 3, st_setsrid(st_makepoint(4.8709, 45.7818), 4326)::geography),
+  ('00000000-0000-0000-0000-000000000001', 'Fireman #2', null, 3, st_setsrid(st_makepoint(4.8721, 45.7823), 4326)::geography),
+  ('00000000-0000-0000-0000-000000000001', 'Rhino ahead', 'Rhino depuis les bancs en béton juste au-dessus du départ du pitt', 3, st_setsrid(st_makepoint(4.8704, 45.7827), 4326)::geography),
+  ('00000000-0000-0000-0000-000000000001', 'The gauss', 'Plaque d''égout sur la partie en béton, départ dans l''herbe de l''autre côté de la rampe descendante', 3, st_setsrid(st_makepoint(4.8716, 45.7833), 4326)::geography),
+  ('00000000-0000-0000-0000-000000000001', 'Generic', null, 3, st_setsrid(st_makepoint(4.8711, 45.7816), 4326)::geography),
+  ('00000000-0000-0000-0000-000000000001', 'Saint Exupéry', null, 3, st_setsrid(st_makepoint(4.8723, 45.7828), 4326)::geography),
+  ('00000000-0000-0000-0000-000000000001', 'L''arche perdue', null, 3, st_setsrid(st_makepoint(4.8702, 45.7821), 4326)::geography),
+  ('00000000-0000-0000-0000-000000000001', 'On fire', null, 3, st_setsrid(st_makepoint(4.8714, 45.7835), 4326)::geography),
+  ('00000000-0000-0000-0000-000000000001', 'Bike trash', null, 3, st_setsrid(st_makepoint(4.8707, 45.7814), 4326)::geography);
 
 -- One live individual session (both dev users playing solo, one team each), first two holes
 -- already scored -- mirrors the end state create_session()+start_session() would produce.

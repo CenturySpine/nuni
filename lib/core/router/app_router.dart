@@ -19,6 +19,7 @@ import '../../features/join/ui/join_page.dart';
 import '../../features/legal/ui/about_page.dart';
 import '../../features/legal/ui/legal_page.dart';
 import '../../features/legal/ui/privacy_page.dart';
+import '../../features/players/ui/player_page.dart';
 import '../../features/profile/ui/profile_page.dart';
 import '../../features/sessions/ui/session_create_page.dart';
 import '../../features/sessions/ui/session_room_page.dart';
@@ -160,6 +161,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/history/:id',
         builder: (context, state) =>
             HistoryDetailPage(sessionId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/players/:id',
+        builder: (context, state) =>
+            PlayerPage(playerId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/championship',

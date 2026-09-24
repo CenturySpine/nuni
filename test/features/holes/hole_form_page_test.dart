@@ -8,7 +8,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:nuni/core/location/location_service.dart';
 import 'package:nuni/core/supabase/supabase_providers.dart';
 import 'package:nuni/features/holes/data/holes_repository.dart';
-import 'package:nuni/features/holes/domain/hole.dart';
 import 'package:nuni/features/holes/ui/hole_form_page.dart';
 import 'package:nuni/l10n/generated/app_localizations.dart';
 import 'package:nuni/shared/nuni_chip.dart';
@@ -31,10 +30,6 @@ void main() {
   late _MockHolesRepository repository;
   late _MockSupabaseClient client;
   late _MockGoTrueClient auth;
-
-  setUpAll(() {
-    registerFallbackValue(HoleVisibility.public);
-  });
 
   setUp(() {
     repository = _MockHolesRepository();
@@ -91,7 +86,6 @@ void main() {
         distanceM: any(named: 'distanceM'),
         lat: any(named: 'lat'),
         lng: any(named: 'lng'),
-        visibility: any(named: 'visibility'),
       ),
     );
   });

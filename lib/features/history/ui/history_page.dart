@@ -16,14 +16,18 @@ import '../../../shared/nuni_icon_tile.dart';
 import '../../../shared/nuni_loading.dart';
 import '../../../shared/nuni_status_pill.dart';
 import '../../live/domain/live_team.dart';
+import '../../profile/data/profile_repository.dart';
 import '../../sessions/domain/session_kind.dart';
 import '../../sessions/ui/scoring_mode_label.dart';
 import '../../sessions/ui/session_kind_label.dart';
 import '../data/history_repository.dart';
 import '../domain/history_entry.dart';
 
-/// History tab body (plan 10): every completed session the caller is a
-/// member of, most recent first, with a simple city filter.
+/// History tab body (plan 10, reshaped by plan 26, Q129): every completed
+/// session of the caller's association (plus the ones they played in
+/// elsewhere), most recent first. A discreet marker flags the ones the
+/// caller played in, a "Mes sessions" filter keeps only those, and a simple
+/// city filter remains. No session in progress here: those are on home.
 class HistoryPage extends ConsumerStatefulWidget {
   const HistoryPage({super.key});
 
@@ -33,11 +37,13 @@ class HistoryPage extends ConsumerStatefulWidget {
 
 class _HistoryPageState extends ConsumerState<HistoryPage> {
   String? _cityFilter;
+  bool _mineOnly = false;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final entriesAsync = ref.watch(historyEntriesProvider);
+    final myPlayerId = ref.watch(myPlayerProvider).value?.id;
 
     return entriesAsync.when(
       loading: () => const NuniLoading(),
@@ -61,16 +67,29 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             if (e.snapshot.session.city case final city? when city.isNotEmpty)
               city,
         }.toList()..sort();
-        final visible = _cityFilter == null
-            ? entries
-            : [
-                for (final e in entries)
-                  if (e.snapshot.session.city == _cityFilter) e,
-              ];
+        final visible = [
+          for (final e in entries)
+            if ((_cityFilter == null ||
+                    e.snapshot.session.city == _cityFilter) &&
+                (!_mineOnly || e.playedBy(myPlayerId)))
+              e,
+        ];
 
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
           children: [
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                NuniChip(
+                  label: l10n.historyFilterMine,
+                  selected: _mineOnly,
+                  onTap: () => setState(() => _mineOnly = !_mineOnly),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
             if (cities.length > 1) ...[
               Wrap(
                 spacing: 8,
@@ -91,8 +110,16 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
               ),
               const SizedBox(height: 16),
             ],
+            if (visible.isEmpty)
+              NuniEmptyState(
+                icon: PhosphorIcons.clockCounterClockwise,
+                message: l10n.historyEmptyMine,
+              ),
             for (final entry in visible) ...[
-              _HistoryCard(entry: entry),
+              _HistoryCard(
+                entry: entry,
+                playedByMe: entry.playedBy(myPlayerId),
+              ),
               const SizedBox(height: 10),
             ],
           ],
@@ -103,9 +130,10 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
 }
 
 class _HistoryCard extends ConsumerWidget {
-  const _HistoryCard({required this.entry});
+  const _HistoryCard({required this.entry, required this.playedByMe});
 
   final HistoryEntry entry;
+  final bool playedByMe;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -155,13 +183,33 @@ class _HistoryCard extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  subtitleParts.isEmpty
-                      ? session.code
-                      : subtitleParts.join(' · '),
-                  style: textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        subtitleParts.isEmpty
+                            ? session.code
+                            : subtitleParts.join(' · '),
+                        style: textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    // "I played in it" marker (plan 26, Q129): small and
+                    // quiet, the card itself stays the same.
+                    if (playedByMe) ...[
+                      const SizedBox(width: 6),
+                      Tooltip(
+                        message: l10n.historyPlayedByMe,
+                        child: Icon(
+                          PhosphorIcons.userCheck,
+                          size: 16,
+                          semanticLabel: l10n.historyPlayedByMe,
+                          color: context.nuni.primaryInk,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Text(

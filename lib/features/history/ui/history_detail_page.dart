@@ -20,14 +20,19 @@ import '../../../shared/nuni_loading.dart';
 import '../../../shared/nuni_rank_badge.dart';
 import '../../../shared/nuni_section_header.dart';
 import '../../../shared/nuni_status_pill.dart';
+import '../../associations/data/associations_repository.dart';
+import '../../championship/data/championship_rights.dart';
 import '../../championship/domain/championship_session_result.dart';
 import '../../exports/ui/image_export_dialog.dart';
 import '../../exports/ui/pdf_export_action.dart';
 import '../../live/domain/live_team.dart';
+import '../../live/domain/played_hole.dart';
 import '../../live/domain/team_standing.dart';
 import '../../live/ui/played_hole_card.dart';
+import '../../live/ui/played_hole_settings_sheet.dart';
 import '../../live/ui/ranking_card.dart';
 import '../../sessions/data/sessions_repository.dart';
+import '../../sessions/ui/championship_toggle.dart';
 import '../../sessions/ui/scoring_mode_label.dart';
 import '../data/history_repository.dart';
 import '../domain/history_entry.dart';
@@ -83,6 +88,53 @@ class _DetailView extends ConsumerWidget {
     await showSessionEditSheet(context, entry.snapshot.session);
   }
 
+  /// Par and comment of a played hole (plan 26, Q121), organizer only.
+  Future<void> _editPlayedHole(
+    BuildContext context,
+    WidgetRef ref,
+    PlayedHole playedHole,
+  ) async {
+    final saved = await showPlayedHoleSettingsSheet(context, playedHole);
+    if (saved ?? false) ref.invalidate(historyDetailProvider(sessionId));
+  }
+
+  /// Local manager or super_admin only (plan 26, decision 11), played in
+  /// or not.
+  Future<void> _toggleChampionship(
+    BuildContext context,
+    WidgetRef ref,
+    bool value,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final tagged = await ref
+          .read(sessionsRepositoryProvider)
+          .setChampionship(sessionId: sessionId, isChampionship: value);
+      ref
+        ..invalidate(historyDetailProvider(sessionId))
+        ..invalidate(historyEntriesProvider);
+      if (value && context.mounted) {
+        final associationLabel = tagged.associationId == null
+            ? null
+            : (await ref.read(
+                associationByIdProvider(tagged.associationId!).future,
+              ))?.label;
+        if (context.mounted) {
+          await showChampionshipTagConfirmation(
+            context,
+            associationLabel: associationLabel,
+            season: tagged.championshipSeason ?? '',
+          );
+        }
+      }
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(describeError(error, l10n))));
+      }
+    }
+  }
+
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await NuniConfirmDialog.show(
@@ -127,6 +179,10 @@ class _DetailView extends ConsumerWidget {
         ?.id;
     final isOwner = entry.snapshot.isOwner(currentUserId);
     final playedHoles = entry.snapshot.playedHoles;
+    final associationId = session.associationId;
+    final canTagChampionship =
+        associationId != null &&
+        (ref.watch(canTagChampionshipProvider(associationId)).value ?? false);
 
     final subtitleParts = [
       if (session.city != null && session.city!.isNotEmpty) session.city!,
@@ -180,6 +236,16 @@ class _DetailView extends ConsumerWidget {
             ),
           ),
         ],
+        if (canTagChampionship) ...[
+          const SizedBox(height: 14),
+          NuniCard(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: ChampionshipToggle(
+              value: session.isChampionship,
+              onChanged: (value) => _toggleChampionship(context, ref, value),
+            ),
+          ),
+        ],
         const SizedBox(height: 20),
         RankingCard(
           session: session,
@@ -212,6 +278,9 @@ class _DetailView extends ConsumerWidget {
               scoringMode: session.scoringMode,
               canEditTeam: (_) => false,
               onScoreSubmit: (_, _, _) async {},
+              onEdit: isOwner
+                  ? () => _editPlayedHole(context, ref, playedHole)
+                  : null,
             ),
           ),
         const SizedBox(height: 18),

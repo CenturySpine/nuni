@@ -20,17 +20,10 @@ void main() {
     par: 3,
     startLat: 48.8534,
     startLng: 2.3488,
-    visibility: HoleVisibility.public,
     ownerId: 'u1',
   );
   // Imported from LsgScores, not repositioned yet (plan 13, Q49).
-  const imported = Hole(
-    id: 'h2',
-    name: 'Vieux trou',
-    par: 2,
-    visibility: HoleVisibility.public,
-    ownerId: 'u1',
-  );
+  const imported = Hole(id: 'h2', name: 'Vieux trou', par: 2, ownerId: 'u1');
 
   Future<void> pumpHolesPage(WidgetTester tester) async {
     final router = GoRouter(

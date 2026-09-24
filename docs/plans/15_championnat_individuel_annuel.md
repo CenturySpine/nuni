@@ -23,6 +23,11 @@ Concrètement, pour un joueur :
 
 ## Note pour les personnes qui suivent le développement du projet
 
+> **Mise à jour du 2026-09-24 (plan 26, décision 11)** : seuls le responsable local de
+> l'association et le super_admin marquent une session « championnat », à tout moment, même sans
+> y avoir joué ; l'organisateur ne le peut plus. Les marquages existants sont conservés (Q131).
+> Le classement ne change pas (aucune règle d'éligibilité, Q126).
+
 À partir d'ici, le document devient technique : modèle de données, mécanismes de calcul, écrans au
 sens développement. La partie ci-dessus reste la référence fonctionnelle.
 

@@ -13,7 +13,6 @@ _PlayedHoleGeo _$PlayedHoleGeoFromJson(Map<String, dynamic> json) =>
       par: (json['par'] as num).toInt(),
       startLat: (json['start_lat'] as num?)?.toDouble(),
       startLng: (json['start_lng'] as num?)?.toDouble(),
-      visibility: $enumDecode(_$HoleVisibilityEnumMap, json['visibility']),
     );
 
 Map<String, dynamic> _$PlayedHoleGeoToJson(_PlayedHoleGeo instance) =>
@@ -23,13 +22,7 @@ Map<String, dynamic> _$PlayedHoleGeoToJson(_PlayedHoleGeo instance) =>
       'par': instance.par,
       'start_lat': instance.startLat,
       'start_lng': instance.startLng,
-      'visibility': _$HoleVisibilityEnumMap[instance.visibility]!,
     };
-
-const _$HoleVisibilityEnumMap = {
-  HoleVisibility.public: 'public',
-  HoleVisibility.private: 'private',
-};
 
 _HoleScore _$HoleScoreFromJson(Map<String, dynamic> json) => _HoleScore(
   teamId: json['team_id'] as String,
@@ -56,6 +49,8 @@ _PlayedHole _$PlayedHoleFromJson(Map<String, dynamic> json) => _PlayedHole(
       ? null
       : PlayedHoleGeo.fromJson(json['hole'] as Map<String, dynamic>),
   label: json['label'] as String?,
+  par: (json['par'] as num).toInt(),
+  comment: json['comment'] as String?,
   scores: (json['scores'] as List<dynamic>)
       .map((e) => HoleScore.fromJson(e as Map<String, dynamic>))
       .toList(),
@@ -68,6 +63,8 @@ Map<String, dynamic> _$PlayedHoleToJson(_PlayedHole instance) =>
       'game_mode': _$GameModeEnumMap[instance.gameMode]!,
       'hole': instance.hole,
       'label': instance.label,
+      'par': instance.par,
+      'comment': instance.comment,
       'scores': instance.scores,
     };
 

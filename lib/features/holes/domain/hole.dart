@@ -3,13 +3,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'hole.freezed.dart';
 part 'hole.g.dart';
 
-enum HoleVisibility {
-  @JsonValue('public')
-  public,
-  @JsonValue('private')
-  private,
-}
-
 /// One waypoint of the path drawn between a hole's start and end (PO,
 /// 2026-09-18). Stored as a plain jsonb array on `holes.path`, ordered from
 /// start to end.
@@ -22,9 +15,10 @@ abstract class HolePathPoint with _$HolePathPoint {
       _$HolePathPointFromJson(json);
 }
 
-/// Mirrors the `holes` table (plan 03), read either as a plain row (`start_lat`
-/// / `start_lng` are generated columns) or as a `holes_nearby` RPC row, which
-/// adds `distance` (metres from the search point). `distanceM` is a different
+/// Mirrors the `holes` table (plan 03; every hole is public since plan 26),
+/// read either as a plain row (`start_lat` / `start_lng` are generated
+/// columns) or as a `holes_nearby` RPC row, which adds `distance` (metres
+/// from the search point). `distanceM` is a different
 /// thing: the hole's own length, an optional field the owner fills in.
 @freezed
 abstract class Hole with _$Hole {
@@ -46,8 +40,9 @@ abstract class Hole with _$Hole {
     List<HolePathPoint>? path,
     @JsonKey(name: 'photo_start_path') String? photoStartPath,
     @JsonKey(name: 'photo_end_path') String? photoEndPath,
-    required HoleVisibility visibility,
     @JsonKey(name: 'owner_id') required String ownerId,
+    // The hole this one was cloned from (plan 26, Q120); null for an original.
+    @JsonKey(name: 'cloned_from') String? clonedFrom,
     // Only present on `holes_nearby` rows: distance from the search point, in metres.
     double? distance,
   }) = _Hole;

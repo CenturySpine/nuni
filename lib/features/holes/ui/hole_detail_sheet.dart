@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -101,15 +103,6 @@ class _HoleDetailContent extends ConsumerWidget {
                 label: l10n.holesPositionToSet,
                 tone: NuniTone.highlight,
               ),
-            NuniStatusPill(
-              label: hole.visibility == HoleVisibility.public
-                  ? l10n.holesFormVisibilityPublic
-                  : l10n.holesFormVisibilityPrivate,
-              icon: hole.visibility == HoleVisibility.public
-                  ? PhosphorIcons.globe
-                  : PhosphorIcons.lockSimple,
-              tone: NuniTone.neutral,
-            ),
           ],
         ),
         if (hole.description != null && hole.description!.isNotEmpty) ...[
@@ -174,7 +167,62 @@ class _HoleDetailContent extends ConsumerWidget {
               ),
           ],
         ),
+        const SizedBox(height: 10),
+        _CloneButton(hole: hole),
       ],
+    );
+  }
+}
+
+/// "Cloner ce trou" (plan 26, decision 2): anyone, the owner included, makes
+/// their own copy ("Clone - " + its name, photos copied, Q119), then lands on its
+/// edit form to adapt it.
+class _CloneButton extends ConsumerStatefulWidget {
+  const _CloneButton({required this.hole});
+
+  final Hole hole;
+
+  @override
+  ConsumerState<_CloneButton> createState() => _CloneButtonState();
+}
+
+class _CloneButtonState extends ConsumerState<_CloneButton> {
+  bool _cloning = false;
+
+  Future<void> _clone() async {
+    final l10n = AppLocalizations.of(context)!;
+    final router = GoRouter.of(context);
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _cloning = true);
+    try {
+      final cloneId = await ref
+          .read(holesRepositoryProvider)
+          .cloneHole(widget.hole);
+      ref
+        ..invalidate(myHolesProvider)
+        ..invalidate(nearbyHolesProvider);
+      navigator.pop();
+      unawaited(router.push('/holes/$cloneId'));
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(describeError(error, l10n))),
+      );
+      if (mounted) setState(() => _cloning = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return SizedBox(
+      width: double.infinity,
+      child: NuniButton(
+        variant: NuniButtonVariant.secondary,
+        icon: PhosphorIcons.copy,
+        label: l10n.holesDetailClone,
+        onPressed: _cloning ? null : _clone,
+      ),
     );
   }
 }

@@ -170,7 +170,6 @@ Future<void> _migrateHoles({
       'description': (description?.isEmpty ?? true) ? null : description,
       'par': hole['par'],
       'distance_m': hole['distance'],
-      'visibility': 'public',
       'photo_start_path': start.path,
       'photo_end_path': end.path,
     });

@@ -21,6 +21,7 @@ import '../../../shared/nuni_list_card.dart';
 import '../../../shared/nuni_segmented.dart';
 import '../../associations/data/associations_repository.dart';
 import '../../associations/ui/association_logo.dart';
+import '../../championship/data/championship_rights.dart';
 import '../../profile/data/profile_repository.dart';
 import '../data/libre_ranking_direction_pref.dart';
 import '../data/sessions_repository.dart';
@@ -189,6 +190,11 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
     final association = associationId == null
         ? null
         : ref.watch(associationByIdProvider(associationId)).value;
+    // Only the local manager or a super_admin tags the championship (plan
+    // 26, decision 11): the toggle isn't offered to anyone else.
+    final canTagChampionship =
+        associationId != null &&
+        (ref.watch(canTagChampionshipProvider(associationId)).value ?? false);
 
     // Only an approved association's member creates sessions (plan 18, Q81).
     if (player != null && associationId == null) {
@@ -333,14 +339,16 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
               ],
             ],
           ),
-          const SizedBox(height: 16),
-          NuniCard(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: ChampionshipToggle(
-              value: _isChampionship,
-              onChanged: (value) => setState(() => _isChampionship = value),
+          if (canTagChampionship) ...[
+            const SizedBox(height: 16),
+            NuniCard(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: ChampionshipToggle(
+                value: _isChampionship,
+                onChanged: (value) => setState(() => _isChampionship = value),
+              ),
             ),
-          ),
+          ],
         ],
       ),
       // The form's one action stays reachable without scrolling.

@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nuni/features/exports/domain/pdf_export.dart';
 import 'package:nuni/features/history/domain/history_entry.dart';
-import 'package:nuni/features/holes/domain/hole.dart';
 import 'package:nuni/features/live/domain/game_mode.dart';
 import 'package:nuni/features/live/domain/live_session_snapshot.dart';
 import 'package:nuni/features/live/domain/live_team.dart';
@@ -46,13 +45,13 @@ void main() {
             id: 'h1',
             position: 1,
             gameMode: GameMode.individual,
+            par: 3,
             hole: const PlayedHoleGeo(
               id: 'hole1',
               name: 'Radioactive',
               par: 3,
               startLat: 0,
               startLng: 0,
-              visibility: HoleVisibility.public,
             ),
             scores: const [
               HoleScore(teamId: '1', value: 4),

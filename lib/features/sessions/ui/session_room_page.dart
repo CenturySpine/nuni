@@ -24,6 +24,7 @@ import '../../../shared/nuni_loading.dart';
 import '../../../shared/nuni_section_header.dart';
 import '../../../shared/nuni_status_pill.dart';
 import '../../associations/data/associations_repository.dart';
+import '../../championship/data/championship_rights.dart';
 import '../../live/ui/session_live_page.dart';
 import '../../profile/domain/player.dart';
 import '../data/sessions_repository.dart';
@@ -357,6 +358,10 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
     final room = widget.room;
     final myMember = _findMember(room, _currentUserId);
     final isOwner = myMember?.role == MemberRole.owner;
+    final associationId = room.session.associationId;
+    final canTagChampionship =
+        associationId != null &&
+        (ref.watch(canTagChampionshipProvider(associationId)).value ?? false);
     final canStart = canStartSession(
       kind: room.session.kind,
       members: room.members,
@@ -498,11 +503,14 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
                 ],
               ),
             ],
-            const SizedBox(height: 16),
-            ChampionshipToggle(
-              value: room.session.isChampionship,
-              onChanged: _busy ? null : _toggleChampionship,
-            ),
+            // Local manager or super_admin only (plan 26, decision 11).
+            if (canTagChampionship) ...[
+              const SizedBox(height: 16),
+              ChampionshipToggle(
+                value: room.session.isChampionship,
+                onChanged: _busy ? null : _toggleChampionship,
+              ),
+            ],
             const SizedBox(height: 8),
             NuniButton(
               variant: NuniButtonVariant.danger,

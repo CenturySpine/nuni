@@ -97,7 +97,10 @@ create table holes (
   path jsonb,
   photo_start_path text,
   photo_end_path text,
-  visibility hole_visibility not null default 'public',
+  -- Every hole is public (plan 26, Q110): visible to and playable by everyone, editable by its
+  -- owner only. The hole it was cloned from (plan 26, Q120), null for an original; kept apart so
+  -- a clone doesn't count as a new hole for the "Bâtisseur" badges (plan 21).
+  cloned_from uuid references holes (id) on delete set null,
   legacy_id bigint unique,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -205,6 +208,13 @@ create table played_holes (
   hole_id uuid references holes (id),
   -- Optional name typed when adding a free hole (Q57); only ever set when hole_id is null.
   label text,
+  -- The par for this session (plan 26, Q118): copied from the hole's own par when added, then
+  -- editable by the organizer (a harder or easier variant), and required for a free hole. Never
+  -- follows later edits of the hole, so past sessions keep their par. Filled by
+  -- played_holes_set_par (triggers.sql) when not supplied.
+  par int not null check (par between 1 and 10),
+  -- Optional note for this hole in this session only (plan 26), never the hole's description.
+  comment text,
   game_mode game_mode not null,
   position int not null,
   legacy_id bigint unique,

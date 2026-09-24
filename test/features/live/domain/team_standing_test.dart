@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nuni/features/holes/domain/hole.dart';
 import 'package:nuni/features/live/domain/game_mode.dart';
 import 'package:nuni/features/live/domain/live_team.dart';
 import 'package:nuni/features/live/domain/played_hole.dart';
@@ -14,13 +13,13 @@ PlayedHole _hole(int position, Map<String, int> valueByTeamId) => PlayedHole(
   id: 'h$position',
   position: position,
   gameMode: GameMode.individual,
+  par: 3,
   hole: const PlayedHoleGeo(
     id: 'hole',
     name: 'Hole',
     par: 3,
     startLat: 0,
     startLng: 0,
-    visibility: HoleVisibility.public,
   ),
   scores: [
     for (final entry in valueByTeamId.entries)

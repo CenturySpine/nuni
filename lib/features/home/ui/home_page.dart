@@ -43,28 +43,57 @@ class HomePage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
 
     // No own Scaffold/AppBar: AppShell already provides the shared one
-    // (title, settings action) for all three bottom-nav tabs.
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-      children: [
-        _HeroBanner(onJoin: () => _join(context)),
-        const SizedBox(height: 28),
-        const ChampionshipHomeSection(),
-        _SessionSection(
-          title: l10n.homeSectionOngoing,
-          emptyMessage: l10n.homeOngoingEmpty,
-          entries: ref.watch(myOngoingSessionsProvider),
-        ),
-        const SizedBox(height: 28),
-        _SessionSection(
-          title: l10n.homeSectionRecent,
-          emptyMessage: l10n.homeRecentEmpty,
-          entries: ref.watch(myRecentSessionsProvider),
-        ),
-      ],
+    // (title, settings action) for all three bottom-nav tabs. Pull to
+    // refresh (plan 26): the association's live sessions start and end
+    // without any action of mine, so the list can't know on its own.
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref
+          ..invalidate(myOngoingSessionsProvider)
+          ..invalidate(myRecentSessionsProvider)
+          ..invalidate(associationLiveSessionsProvider);
+        await ref.read(associationLiveSessionsProvider.future);
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        children: [
+          _HeroBanner(onJoin: () => _join(context)),
+          const SizedBox(height: 28),
+          const ChampionshipHomeSection(),
+          _SessionSection(
+            title: l10n.homeSectionOngoing,
+            emptyMessage: l10n.homeOngoingEmpty,
+            entries: _withAssociationLive(
+              ref.watch(myOngoingSessionsProvider),
+              ref.watch(associationLiveSessionsProvider),
+            ),
+          ),
+          const SizedBox(height: 28),
+          _SessionSection(
+            title: l10n.homeSectionRecent,
+            emptyMessage: l10n.homeRecentEmpty,
+            entries: ref.watch(myRecentSessionsProvider),
+          ),
+        ],
+      ),
     );
   }
 }
+
+/// My ongoing sessions, then my association's live ones I only follow (plan
+/// 26, Q132) -- the latter left out while loading or on error, so they never
+/// hold up or break my own list.
+AsyncValue<List<MySessionEntry>> _withAssociationLive(
+  AsyncValue<List<MySessionEntry>> mine,
+  AsyncValue<List<Session>> association,
+) => mine.whenData(
+  (list) => [
+    ...list,
+    for (final session in association.value ?? const <Session>[])
+      MySessionEntry(session: session, role: null),
+  ],
+);
 
 /// The brand banner at the top of home, holding its two main actions.
 class _HeroBanner extends StatelessWidget {
@@ -210,9 +239,11 @@ class _SessionCard extends StatelessWidget {
       ),
       SessionStatus.completed => null,
     };
-    final roleLabel = entry.role == MemberRole.owner
-        ? l10n.homeRoleOwner
-        : l10n.homeRolePlayer;
+    final roleLabel = switch (entry.role) {
+      MemberRole.owner => l10n.homeRoleOwner,
+      MemberRole.player => l10n.homeRolePlayer,
+      null => l10n.homeRoleSpectator,
+    };
     final isTeam = session.kind == SessionKind.team;
 
     return NuniListCard(

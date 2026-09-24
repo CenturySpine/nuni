@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_error_message.dart';
 import '../../../core/theme/app_theme.dart';
@@ -270,6 +271,8 @@ class _StandingRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return NuniCard(
+      // Opens the player's public page (plan 26, volet C).
+      onTap: () => context.push('/players/${standing.playerId}'),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       color: isMe ? context.nuni.primaryTone.container : null,
       borderColor: isMe ? context.nuni.primaryInk : null,

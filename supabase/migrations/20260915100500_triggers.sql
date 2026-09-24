@@ -208,6 +208,56 @@ create trigger scores_set_session_id_trigger
   before insert or update on scores
   for each row execute function scores_set_session_id();
 
+-- Par of a played hole (plan 26, Q118): when the insert carries none, a directory hole takes
+-- its own current par (a copy, frozen afterwards). A free hole has no par to copy: the app must
+-- send one (decision 5), otherwise the insert is refused -- except with no signed-in caller
+-- (seed replay, LsgScores import), where a free hole played before plan 26 gets 3 (Q122).
+create or replace function played_holes_set_par()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if new.par is null then
+    if new.hole_id is not null then
+      select par into new.par from holes where id = new.hole_id;
+    elsif auth.uid() is null then
+      new.par := 3;
+    else
+      raise exception 'par_required' using errcode = 'P0001';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger played_holes_set_par_trigger
+  before insert on played_holes
+  for each row execute function played_holes_set_par();
+
+-- Championship flag of a session (plan 26, decision 11): only a super_admin or the approved
+-- local manager of the session's association sets or clears it, through
+-- set_session_championship (rpc.sql). Any other signed-in write (the organizer's own update,
+-- create_session) keeps the previous value -- same silent guard as association_id below. No
+-- signed-in caller (seed replay, LsgScores import): the row keeps what it carries (Q131).
+create or replace function sessions_guard_championship()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  v_previous boolean := case when tg_op = 'INSERT' then false else old.is_championship end;
+begin
+  if new.is_championship is distinct from v_previous
+    and auth.uid() is not null
+    and not is_super_admin()
+    and not is_association_manager(new.association_id) then
+    new.is_championship := v_previous;
+  end if;
+  return new;
+end;
+$$;
+
 -- Association and championship season of a session (plans 15 and 18), both trigger-owned,
 -- never settable by the client (same principle as team_players.session_id above).
 --   1. Season: recomputed from scratch on every row, so an edited start date (plan 10) moves a
@@ -261,6 +311,12 @@ create trigger sessions_set_association_and_season_trigger
   before insert or update on sessions
   for each row execute function sessions_set_association_and_season();
 
+-- After sessions_set_association_and_season_trigger (triggers fire in name order): the guard
+-- needs the association the insert just received.
+create trigger sessions_ta_guard_championship_trigger
+  before insert or update on sessions
+  for each row execute function sessions_guard_championship();
+
 -- A player joins only an approved association (plan 18, Q79/Q81): a pending request can't be
 -- joined, even by its own requester, who is attached by approve_association at approval time.
 create or replace function players_guard_association()
@@ -305,3 +361,5 @@ revoke execute on function team_players_set_session_id() from public, authentica
 revoke execute on function scores_set_session_id() from public, authenticated;
 revoke execute on function sessions_set_association_and_season() from public, authenticated;
 revoke execute on function players_guard_association() from public, authenticated;
+revoke execute on function played_holes_set_par() from public, authenticated;
+revoke execute on function sessions_guard_championship() from public, authenticated;

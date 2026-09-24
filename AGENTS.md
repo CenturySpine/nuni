@@ -160,6 +160,14 @@ GitHub Actions (Q17).
   validation par `super_admin`). Le mail et le téléphone des responsables vivent dans
   `association_manager_contacts`, jamais lisible au-delà du responsable et des `super_admin`.
 - Équipes : table de jointure `team_players` ; la taille d'équipe est une règle applicative.
+- Trous (plan 26) : tous publics (plus de visibilité), modifiables par leur seul auteur,
+  clonables (`holes.cloned_from`). Le par d'un trou joué est `played_holes.par` (copié du trou à
+  l'ajout, modifiable par l'organisateur, obligatoire pour un trou libre) : tout calcul le lit,
+  jamais `holes.par`.
+- Sessions (plan 26) : lisibles par leurs participants et, une fois démarrées, par tous les
+  membres de leur association (`can_read_session`), en lecture seule pour ces derniers. Le
+  marquage « championnat » est réservé au responsable local et au `super_admin`
+  (`set_session_championship`) ; l'organisateur ne peut plus le changer.
 - Calcul des scores et du classement en Dart, testé unitairement ; la base ne stocke que les
   valeurs saisies.
 - Statistiques, records et badges (plans 19 à 21) : seulement les **sessions éligibles**,

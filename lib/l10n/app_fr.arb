@@ -207,9 +207,6 @@
   "holesFormParInvalid": "Indiquez un par valide (1 à 10).",
   "holesFormDistanceLabel": "Distance en mètres (facultatif)",
   "holesFormDescriptionLabel": "Description (facultative)",
-  "holesFormVisibilityLabel": "Visibilité",
-  "holesFormVisibilityPublic": "Public",
-  "holesFormVisibilityPrivate": "Privé",
   "holesFormPositionLabel": "Position de départ",
   "holesFormUseMyPosition": "Utiliser ma position",
   "holesFormAccuracy": "Précision : {accuracy} m",
@@ -421,5 +418,22 @@
   "associationsDeleteMessage": "Ses membres n'auront plus d'association et devront en choisir une autre ; son responsable perd son rôle. Impossible si des sessions lui appartiennent.",
   "associationsDeleted": "{name} a été supprimée.",
   "@associationsDeleted": {"placeholders":{"name":{"type":"String"}}},
-  "associationsDeleteHasSessions": "Suppression impossible : des sessions appartiennent à cette association. Les supprimer effacerait des scores et des championnats d'autres joueurs."
+  "associationsDeleteHasSessions": "Suppression impossible : des sessions appartiennent à cette association. Les supprimer effacerait des scores et des championnats d'autres joueurs.",
+
+  "sessionsPlayedHoleOfficialPar": "par officiel {par}",
+  "sessionsPlayedHoleEdit": "Modifier le par et le commentaire",
+  "sessionsPlayedHoleParLabel": "Par pour cette session",
+  "sessionsPlayedHoleParHint": "Par officiel du trou : {par}",
+  "sessionsPlayedHoleParRequired": "Choisissez le par de ce trou libre.",
+  "sessionsPlayedHoleCommentLabel": "Commentaire (facultatif)",
+  "sessionsPlayedHoleCommentHint": "Ex. : départ depuis le banc",
+  "sessionsLiveSpectatorNotice": "Vous suivez cette session sans y jouer.",
+  "playerPageTitle": "Joueur",
+  "playerPageNotFound": "Ce joueur n'existe plus.",
+  "profileSeePublicPage": "Voir mon profil public",
+  "holesDetailClone": "Cloner ce trou",
+  "historyFilterMine": "Mes sessions",
+  "historyEmptyMine": "Aucune session pour ce filtre.",
+  "historyPlayedByMe": "J'y ai joué",
+  "homeRoleSpectator": "En spectateur"
 }

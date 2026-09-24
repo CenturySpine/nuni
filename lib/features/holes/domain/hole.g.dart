@@ -30,8 +30,8 @@ _Hole _$HoleFromJson(Map<String, dynamic> json) => _Hole(
       .toList(),
   photoStartPath: json['photo_start_path'] as String?,
   photoEndPath: json['photo_end_path'] as String?,
-  visibility: $enumDecode(_$HoleVisibilityEnumMap, json['visibility']),
   ownerId: json['owner_id'] as String,
+  clonedFrom: json['cloned_from'] as String?,
   distance: (json['distance'] as num?)?.toDouble(),
 );
 
@@ -48,12 +48,7 @@ Map<String, dynamic> _$HoleToJson(_Hole instance) => <String, dynamic>{
   'path': instance.path,
   'photo_start_path': instance.photoStartPath,
   'photo_end_path': instance.photoEndPath,
-  'visibility': _$HoleVisibilityEnumMap[instance.visibility]!,
   'owner_id': instance.ownerId,
+  'cloned_from': instance.clonedFrom,
   'distance': instance.distance,
-};
-
-const _$HoleVisibilityEnumMap = {
-  HoleVisibility.public: 'public',
-  HoleVisibility.private: 'private',
 };
