@@ -1081,7 +1081,8 @@ Suggestion : « meilleur / pire trou » et « roi du trou » à partir de 3 pass
 la moyenne générale dès 1 trou. En dessous du seuil, l'app affiche « pas encore assez de
 parties ». Évite qu'un seul coup de chance fasse un record durable.
 
-**Q94 ☐ — Statistiques trou : quels passages comptent pour le record d'un trou ?**
+**Q94 ☑ — Statistiques trou : quels passages comptent pour le record d'un trou ?**
+Réponse PO (2026-09-24) : suggestion retenue.
 Suggestion : même règle que Q90, uniquement les scores d'équipes d'un seul joueur. Le record
 est le plus petit nombre de coups ; en cas d'égalité, le premier à l'avoir réalisé le garde. La
 moyenne et la répartition du trou suivent la même règle.
@@ -1185,7 +1186,10 @@ score, comme un classement de session. Le masquer rendrait le record anonyme san
 grand-chose, puisque le résultat est déjà visible des participants de la session. Ses
 statistiques détaillées restent masquées sur sa fiche.
 
-**Q110 ☐ — Statistiques d'un trou privé : visibles par qui ?**
+**Q110 ☑ — Statistiques d'un trou privé : visibles par qui ?**
+Réponse PO (2026-09-24) : question sans objet, la notion de trou privé est supprimée : tous
+les trous sont visibles et utilisables par tous dans les sessions, seul leur auteur peut les
+modifier. Plan 26, avec le clonage d'un trou et le par et le commentaire propres à une session.
 Constat : un trou privé n'est visible que de son propriétaire et des membres des sessions où il
 a été joué (RLS `holes`, Q13).
 Suggestion : les statistiques d'un trou privé suivent la visibilité du trou lui-même : qui
@@ -1236,3 +1240,227 @@ progression pour les compteurs (« 7 / 10 sessions »). Fiche joueur : grille pa
 appui ouvre le détail (nom, condition, date et session d'obtention). Les émojis sont écartés
 (rendu différent selon le téléphone, hors charte), les illustrations sur mesure aussi (coût,
 cohérence). Choix final sur maquette dans `/dev/theme`.
+
+**Q115 ☑ — Badges : quelle heure fait foi pour « Oiseau de nuit », « Lève-tôt » et les dates ?**
+Réponse PO (2026-09-24) : suggestion retenue, heure de l'appareil.
+Constat : I5 (après 21 h) et I6 (avant 8 h), ainsi que les semaines, mois et saisons de la
+famille B, dépendent d'un fuseau horaire. La base enregistre l'instant exact ; l'historique
+l'affiche à l'heure de l'appareil qui le consulte.
+Suggestion : l'heure de l'appareil, comme l'historique. Toutes les associations sont en France
+aujourd'hui, donc le résultat est le même pour tout le monde ; fixer l'heure de Paris
+demanderait une bibliothèque de fuseaux horaires en plus pour un cas qui n'existe pas encore.
+Tant que la question est ouverte, le plan 21 applique cette suggestion.
+
+**Q116 ☑ — Badges « Bâtisseur » : les trous et sessions importés de LsgScores comptent-ils ?**
+Réponse PO (2026-09-24) : suggestion non retenue, les données importées comptent. Dans les
+faits, le PO a tout créé dans l'ancienne app ; cela ne prive personne de ces badges, que
+d'autres obtiendront en créant des trous sur d'autres spots.
+Constat : les trous et sessions importés sont attribués d'office au compte du PO (Q50,
+plan 13), pas à leur véritable auteur. Compter ces données donnerait au PO H1, H2, H4 et H5
+d'un coup, pour des créations faites en partie par d'autres dans l'ancienne app.
+Suggestion : non, la famille H ne compte que ce qui a été créé dans NUNI (trous et sessions sans
+`legacy_id`, photos non copiées par l'import). Elle récompense une contribution à l'app, pas une
+attribution technique. Les autres familles comptent l'historique importé (Q92). Tant que la
+question est ouverte, le plan 21 applique cette suggestion.
+
+**Q117 ☑ — Badges : valider les définitions de détail du plan 21 ?**
+Réponse PO (2026-09-24), point par point :
+- (a) plus large que la suggestion : **tous les badges** ne comptent que les sessions d'au
+  moins 3 joueurs **et** d'au moins 3 trous joués, pour écarter le jeu seul, les duels et les
+  sessions abandonnées (suite en Q123 et Q124) ;
+- (b) dernier ex æquo, (c) semaine et saisons, (d) moitié de session, (e) « de suite » :
+  suggestions retenues ;
+- (f) non : Globe-trotter devient un critère géographique, 3 sessions éloignées d'au moins
+  50 km les unes des autres, au lieu du nom de ville (texte fragile) ;
+- (g) suggestion retenue (pas de golf sous l'orage), et nouveau badge « Sous la neige », même
+  légère (I8, 74 badges) ;
+- (h) sans réponse : reprise en Q125.
+Constat : plusieurs conditions du catalogue ont besoin d'une règle précise pour être calculées.
+Suggestion, à valider en bloc (détail dans `docs/plans/21_badges.md`, « Définitions
+communes ») :
+- une session à une seule équipe ne donne ni victoire, ni podium, ni dernière place ;
+- « dernier » : la plus mauvaise place, ex æquo compris ;
+- semaine du lundi au dimanche ; saisons par mois (hiver = décembre à février, etc.) ;
+- moitié de session (Remontada) : après le trou n / 2 arrondi à l'inférieur ;
+- « de suite » (Série de pars, Main chaude, Rebond) : un trou non saisi interrompt la série
+  (les trous libres comptent, ils ont un par depuis le plan 26) ;
+- ville (Globe-trotter) comparée sans majuscules, accents ni espaces autour ;
+- pluie : codes météo de la bruine, de la pluie et des averses ;
+- Oiseau de nuit : session démarrée à 21 h ou plus tard.
+Chacune suit la règle la plus simple à expliquer à un joueur. Tant que la question est ouverte,
+le plan 21 les applique.
+
+## Trous tous publics, clonage, par et commentaire de session (plan 26, 2026-09-24)
+
+**Q118 ☑ — Par d'un trou joué : copie figée à l'ajout, ou surcharge facultative ?**
+Réponse PO (2026-09-24) : suggestion retenue.
+Constat : demande PO (2026-09-24), un par propre à la session doit pouvoir prendre le pas sur le
+par officiel du trou, et un trou libre doit toujours avoir un par. Aujourd'hui, le par n'existe
+que sur le trou (`holes.par`) : si son auteur le change, toutes les sessions passées changent
+de par, donc de statistiques et de badges.
+Suggestion : une colonne `played_holes.par` toujours remplie. À l'ajout, elle reçoit le par
+officiel du trou (modifiable tout de suite), ou le par choisi pour un trou libre. Tous les
+calculs lisent ce seul champ ; l'historique ne bouge plus si le trou est modifié ensuite. Une
+surcharge vide par défaut obligerait chaque calcul à choisir entre deux champs, et laisserait
+l'historique suivre les changements du trou. Valeurs permises : 1 à 10, à la hausse comme à la
+baisse (une variante peut aussi être plus facile). Tant que la question est ouverte, le plan 26
+applique cette suggestion.
+
+**Q119 ☑ — Cloner un trou : les photos sont-elles copiées ?**
+Réponse PO (2026-09-24) : suggestion retenue, photos copiées.
+Constat : les photos d'un trou sont rangées dans le dossier de son auteur, seul autorisé à les
+remplacer ou les supprimer. Un clone qui pointerait vers ces fichiers perdrait ses photos si
+l'auteur d'origine les change.
+Suggestion : oui, les photos de départ et de cible sont copiées dans le dossier de la personne
+qui clone. Le clone devient un trou indépendant, comme le reste de ses champs. Tant que la
+question est ouverte, le plan 26 applique cette suggestion.
+
+**Q120 ☑ — Un clone compte-t-il comme trou créé pour les badges « Bâtisseur » ?**
+Réponse PO (2026-09-24) : suggestion retenue.
+Constat : sans règle, cloner 5 trous suffirait à obtenir Paysagiste (plan 21, H2) sans poser un
+seul nouveau drapeau.
+Suggestion : non. Le trou retient d'où il a été cloné (`holes.cloned_from`), et H1 et H2 ne
+comptent que les trous qui ne sont pas des clones. H3 (Architecte) compte le clone comme un
+trou de son auteur, puisqu'il a pu le déplacer ou le modifier. Tant que la question est
+ouverte, les plans 21 et 26 appliquent cette suggestion.
+
+**Q121 ☑ — Commentaire et par d'un trou joué : qui les modifie, et quand ?**
+Réponse PO (2026-09-24) : suggestion retenue, avec trois moments explicites : dans la
+feuille de choix du trou pendant la session (à l'ajout), sur le trou déjà ajouté pendant la
+session, et depuis l'historique.
+Constat : ajouter ou retirer un trou joué est réservé à l'organisateur de la session (RLS
+`played_holes_owner_write`).
+Suggestion : la même règle : l'organisateur saisit commentaire et par à l'ajout du trou, et
+peut les corriger ensuite depuis la carte du trou pendant la session, puis depuis le détail
+de la session dans l'historique. Le commentaire s'affiche sous le nom du trou, en direct et
+dans l'historique ; les exports PDF et image ne changent pas. Tant que la question est
+ouverte, le plan 26 applique cette suggestion.
+
+**Q122 ☑ — Trous libres déjà joués : quel par leur donner ?**
+Réponse PO (2026-09-24) : suggestion retenue, par de 3. Le passage des trous privés en
+publics est sans impact : l'app n'est pas encore utilisée et le PO est le seul à avoir créé des
+trous.
+Constat : les trous libres joués depuis le plan 17 n'ont pas de par, désormais obligatoire.
+Suggestion : 3, la valeur par défaut d'un trou du référentiel (`holes.par`), posée une fois à
+la reconstruction de la base. Ce sont surtout des trous de test ; l'organisateur peut corriger
+ensuite (Q121). Tant que la question est ouverte, le plan 26 applique cette suggestion.
+
+**Q123 ☑ — Records de trou : seulement les sessions de 3 joueurs et 3 trous ou plus ?**
+Réponse PO (2026-09-24) : plus large que la suggestion : **toutes** les statistiques (joueur
+et trou), tous les records et tous les badges suivent la règle des sessions d'au moins 3 joueurs
+et 3 trous joués. Raison : à 3 joueurs ou plus, les scores sont saisis et vérifiés en groupe,
+pas seul sans contrôle (limite de cet argument : Q127).
+Constat : Q117 limite tous les badges à ces sessions, dont J1 à J3 (« a détenu le record d'un
+trou »). Le record affiché sur la fiche du trou (plan 20) suit pour l'instant Q94 sans ce
+filtre.
+Suggestion : appliquer le même filtre au record et au « roi du trou » du plan 20. Sinon, un
+joueur affiché comme détenteur du record, établi pendant un duel, n'aurait pas le badge
+Recordman, et le joueur qui l'a ne serait pas celui affiché. Une seule règle, deux écrans
+cohérents. Tant que la question est ouverte, les plans 20 et 21 appliquent cette suggestion.
+
+**Q124 ☑ — Session éligible : faut-il aussi au moins 2 équipes ?**
+Réponse PO (2026-09-24) : non, seul compte le nombre de joueurs. Vérifié dans le code : une
+équipe compte exactement 2 joueurs (`session_kind.dart`, Q5) et chaque participant d'une
+session par équipes est dans une équipe ; 3 joueurs ou plus garantissent donc au moins
+2 équipes.
+Constat : 3 joueurs dans une seule équipe (scramble à trois) remplissent la règle de Q117 mais
+n'ont aucun adversaire : ils « gagnent » et sont « derniers » à la fois.
+Suggestion : oui, une session éligible a en plus au moins 2 équipes. C'est le cas de la session
+d'entraînement que Q117 veut écarter, sous une autre forme. Tant que la question est ouverte,
+le plan 21 applique cette suggestion.
+
+**Q125 ☑ — Oiseau de nuit et Lève-tôt : bornes exactes ?**
+Réponse PO (2026-09-24) : Oiseau de nuit à partir de 21 h 00 ; Lève-tôt avant 9 h 00 (8 h
+est trop tôt). Le PO demande aussi que les badges non obtenus restent visibles pour donner
+envie de jouer (plan 21, décision 17).
+Constat : point (h) de Q117, sans réponse. Une session démarrée à 21 h 00 pile est-elle « après
+21 h » ?
+Suggestion : oui, Oiseau de nuit compte à partir de 21 h 00 ; Lève-tôt compte avant 8 h 00
+(7 h 59 compte, 8 h 00 non). Règle « à partir de » la plus simple à lire sur un écran. Tant
+que la question est ouverte, le plan 21 applique cette suggestion.
+
+**Q126 ☑ — Championnat : la règle des 3 joueurs et 3 trous s'applique-t-elle aussi ?**
+Réponse PO finale (2026-09-24) : suggestion révisée retenue : pas de règle d'éligibilité pour
+le classement du championnat ; la contrainte des 3 joueurs et 3 trous reste pour les
+statistiques et les badges.
+Réponse PO (2026-09-24), partielle : le marquage « championnat » est désormais réservé au
+`super_admin` et au responsable local de l'association, et les sessions et le championnat
+deviennent visibles par tous les membres de l'association (plan 26, volet B). La question
+d'origine reste ouverte, reformulée : avec ce contrôle par le responsable, faut-il encore la
+règle des 3 joueurs et 3 trous pour le classement du championnat ? Suggestion révisée : non,
+le marquage par le responsable est le contrôle ; il peut ne pas marquer une session trop
+petite, ou en marquer une exceptionnelle. Tant que la question est ouverte, rien ne change
+pour le classement.
+Constat : Q123 l'applique aux statistiques, records et badges. Le classement du championnat
+(plan 15, livré) compte aujourd'hui toute session terminée marquée « championnat », quel que
+soit le nombre de joueurs ou de trous. L'argument anti-triche de Q123 vaut aussi pour lui :
+deux joueurs peuvent marquer un duel « championnat » et gagner des points de classement et de
+présence.
+Suggestion : oui, une session de championnat ne compte que si elle est éligible. Une seule
+règle dans toute l'app, plus simple à expliquer. Conséquence : le classement de saison peut
+changer si des sessions de championnat actuelles ont moins de 3 joueurs ou de 3 trous. Tant
+que la question est ouverte, rien ne change pour le championnat (plan 15 livré, pas de
+changement silencieux).
+
+**Q127 ☑ — Anti-triche : la règle des 3 joueurs suffit-elle ?**
+Réponse PO (2026-09-24) : suggestion retenue, on ne peut pas tout contrôler.
+Constat : les joueurs d'une session peuvent être choisis sans être connectés (plan 07). Un
+organisateur peut donc créer seul une session à 3 joueurs et saisir tous les scores : la règle
+de Q123 écarte les parties d'entraînement honnêtes, pas une triche volontaire.
+Suggestion : garder la règle simple, sans contrôle plus strict. Exiger par exemple 2 comptes
+connectés ayant rejoint la session écarterait les nombreuses sessions où un seul téléphone
+saisit pour tout le groupe, et toutes les sessions importées de LsgScores. Entre amis, avec des
+badges sans enjeu, l'effort n'en vaut pas la peine. Tant que la question est ouverte, le plan
+21 applique cette suggestion.
+
+**Q128 ☑ — Badges : montrer aussi les badges proches en fin de session ?**
+Réponse PO (2026-09-24) : suggestion retenue.
+Constat : le PO veut que les badges non obtenus donnent envie de jouer (Q125). Le plan 21 les
+affiche déjà tous, en gris avec leur progression, sur la fiche du joueur ; encore faut-il
+l'ouvrir.
+Suggestion : en fin de session, la feuille des nouveaux badges montre aussi jusqu'à 3 badges
+proches, les plus avancés (« Plus qu'une session pour Pilier », « 8 / 10 birdies »). C'est le
+moment où le joueur a le plus envie de rejouer, et cela ne demande aucun écran de plus. Tant
+que la question est ouverte, le plan 21 applique cette suggestion.
+
+**Q129 ☑ — Sessions de l'association : où les voir ?**
+Réponse PO (2026-09-24) : suggestion non retenue. Par défaut, l'historique montre les sessions
+de l'association, point ; un repère visuel simple et sobre signale celles où j'ai joué ; un
+filtre n'affiche que les miennes ; aucune session en cours dans l'historique (suite en Q132).
+Constat : décision PO du 2026-09-24 (plan 26, volet B) : toute session, en cours ou passée,
+est visible par tous les membres de son association. L'onglet Historique ne montre
+aujourd'hui que les sessions où l'on a joué.
+Suggestion : l'onglet Historique propose deux portées, « Mes sessions » (par défaut, comme
+aujourd'hui) et « Mon association », avec les sessions en cours en tête. Pas de nouvel onglet,
+et l'usage actuel ne change pas pour qui ne regarde que ses parties. Tant que la question est
+ouverte, le plan 26 applique cette suggestion.
+
+**Q130 ☑ — Un super_admin voit-il les sessions de toutes les associations ?**
+Réponse PO (2026-09-24) : non pour l'interface : le super_admin garde la possibilité (droit en
+base, en secours), mais l'app ne lui liste pas toutes les sessions. Le responsable local est
+l'acteur principal ; le PO, super_admin et membre de LSG, voit déjà les sessions LSG.
+Constat : le super_admin peut marquer « championnat » n'importe quelle session (plan 26), il
+doit donc pouvoir la trouver et l'ouvrir.
+Suggestion : oui, lecture de toutes les sessions, sans droit d'écriture en plus (hors
+marquage). Aujourd'hui, seul le PO a ce rôle (plan 16). Tant que la question est ouverte, le
+plan 26 applique cette suggestion.
+
+**Q131 ☑ — Sessions déjà marquées « championnat » par leur créateur : on les garde ?**
+Réponse PO (2026-09-24) : oui, on garde l'existant.
+Constat : jusqu'ici, le créateur d'une session la marquait lui-même (plan 15). Désormais seuls
+le responsable local et le super_admin le peuvent.
+Suggestion : oui, les marquages existants restent ; le responsable peut démarquer une session
+s'il le juge utile. Retirer tout marquage changerait le classement de la saison sans raison.
+Tant que la question est ouverte, le plan 26 applique cette suggestion.
+
+**Q132 ☑ — Sessions en cours de l'association : où les suivre ?**
+Réponse PO (2026-09-24) : suggestion retenue.
+Constat : les sessions en cours de l'association sont visibles par ses membres (plan 26,
+décision 12), mais l'historique n'en montre aucune (Q129). L'accueil liste déjà « mes
+sessions en cours ».
+Suggestion : la section « Sessions en cours » de l'accueil montre mes sessions, puis celles de
+mon association auxquelles je ne participe pas ; un appui ouvre l'écran de session en lecture
+seule. Les brouillons (salle d'attente) restent visibles de leurs seuls participants. Aucun
+nouvel écran, et c'est là qu'on cherche une partie en train de se jouer. Tant que la question
+est ouverte, le plan 26 applique cette suggestion.
+

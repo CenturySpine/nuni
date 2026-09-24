@@ -162,6 +162,10 @@ GitHub Actions (Q17).
 - Équipes : table de jointure `team_players` ; la taille d'équipe est une règle applicative.
 - Calcul des scores et du classement en Dart, testé unitairement ; la base ne stocke que les
   valeurs saisies.
+- Statistiques, records et badges (plans 19 à 21) : seulement les **sessions éligibles**,
+  terminées, d'au moins 3 joueurs et d'au moins 3 trous joués (Q117, Q123). Définition écrite
+  une seule fois dans `lib/features/stats/domain/`. Le classement d'une session n'est pas
+  concerné.
 - Temps réel : abonnements Supabase filtrés par session, jamais sur une table entière.
 
 ## Interdits

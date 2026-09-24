@@ -2,8 +2,9 @@
 
 ## Statut
 
-Fiche synthétique (2026-09-24), demandée par le PO. Priorité 1 avec le plan 19. Q93, Q95 et Q109
-tranchées le 2026-09-24 ; plan détaillé à rédiger après réponse à Q94 et Q110.
+Fiche synthétique (2026-09-24), demandée par le PO. Priorité 1 avec le plan 19, après le plan 26.
+Q93, Q94, Q95, Q109 et Q110 tranchées le 2026-09-24 ; Q123 tranchée le même jour : plan
+détaillé à rédiger. Q110 : plus de trou privé (plan 26), toutes les statistiques de trou sont publiques.
 
 ## Objectif
 
@@ -26,8 +27,13 @@ Plan 06 (trous) livré ; socle de calcul `lib/features/stats/` du plan 19.
 
 - Même socle et même RPC de lecture que le plan 19, filtrée par trou.
 - Statistiques et record communs à tous les joueurs, sans distinction d'association (Q95).
+- Écart au par calculé avec le par de chaque passage (`played_holes.par`, plan 26), qui peut
+  différer du par officiel du trou.
 - Mode de scoring « Libre » exclu : sa valeur saisie est un nombre de points, pas de coups
   (`score_calculator.dart`).
+- Statistiques, record et « roi du trou » : seulement les sessions éligibles, d'au moins
+  3 joueurs et 3 trous joués, comme les statistiques joueur et les badges (Q117, Q123). Limite
+  les saisies non contrôlées, faites seul.
 - Un record n'a de sens que sur un score individuel : seuls comptent les passages en session
   individuelle (Q90, tranchée), sessions importées comprises (Q92).
 - Auteur d'un record : pseudo et photo toujours affichés, même s'il a masqué ses statistiques
@@ -35,8 +41,9 @@ Plan 06 (trous) livré ; socle de calcul `lib/features/stats/` du plan 19.
 
 ## Questions PO liées
 
-Q94 (quels passages comptent pour un record), Q110 (statistiques d'un trou privé), Q93, Q95
-et Q109 (tranchées).
+Q93, Q94 (seuls les scores individuels comptent pour un record ; à égalité, le premier le
+garde), Q95, Q109 et Q110 (plus de trou privé, plan 26), et Q123 (sessions éligibles
+seulement), toutes tranchées.
 
 ## Critères d'acceptation (esquisse)
 

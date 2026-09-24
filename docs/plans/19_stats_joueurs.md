@@ -2,8 +2,12 @@
 
 ## Statut
 
-Fiche synthétique (2026-09-24), demandée par le PO. Priorité 1 avec le plan 20. Q90 à Q93
-et Q106 à Q108 tranchées le 2026-09-24 : plan détaillé à rédiger, plus de question ouverte.
+Fiche synthétique (2026-09-24), demandée par le PO. Priorité 1 avec le plan 20. Q90 à Q93,
+Q106 à Q108, Q117 et Q123 tranchées le 2026-09-24 : plan détaillé à rédiger, plus de question
+ouverte.
+
+Mise à jour du 2026-09-24 : la fiche `/players/:id` (pseudo et photo seulement) et ses points
+d'entrée sont livrés en avance par le plan 26 (volet C) ; ce plan y ajoute les statistiques.
 
 ## Objectif
 
@@ -12,7 +16,8 @@ forme du moment, points forts, progression sur la saison.
 
 ## Prérequis
 
-Plans 08 et 10 (scores et historique) et 13 (sessions importées de LsgScores) livrés.
+Plans 08 et 10 (scores et historique), 13 (sessions importées de LsgScores) et 26 (par de chaque
+trou joué) livrés.
 
 ## Contrainte structurante
 
@@ -42,8 +47,8 @@ résultats de son équipe (victoire, place).
 ## Contenu
 
 - Chiffres clés : sessions jouées, victoires, podiums, trous joués.
-- Rapport au par : moyenne de coups par rapport au par (trous du référentiel seulement, un trou
-  libre n'a pas de par), répartition birdie / par / bogey et plus.
+- Rapport au par : moyenne de coups par rapport au par du trou joué (`played_holes.par`, plan
+  26 : tout trou joué a un par, trous libres compris), répartition birdie / par / bogey et plus.
 - Meilleur et pire trou (moyenne par rapport au par, dès un passage, Q93).
 - Courbe de la saison (septembre à août, comme le championnat) : moyenne par session.
 - Méta-statistiques d'équipe (Q107).
@@ -57,6 +62,10 @@ résultats de son équipe (victoire, place).
 
 - Calcul en Dart, testé unitairement (règle du projet : la base ne stocke que les valeurs
   saisies). Nouveau module `lib/features/stats/` partagé avec les plans 20 et 21.
+- Seules comptent les **sessions éligibles** (Q117, Q123) : terminées, d'au moins 3 joueurs et
+  d'au moins 3 trous joués. Même règle pour les statistiques, les records et les badges ; elle
+  écarte le jeu seul, les duels, les sessions abandonnées, et limite la triche. La définition
+  est écrite une seule fois dans `lib/features/stats/domain/`, et reprise par les plans 20 et 21.
 - Lecture par une RPC `security definer` qui renvoie les scores bruts nécessaires (même logique
   que `championship_association_results`), car la RLS actuelle ne montre une session qu'à ses
   membres. La RPC applique le choix « privé » côté serveur. Aucune nouvelle table ; deux colonnes

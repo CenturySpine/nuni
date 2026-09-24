@@ -43,11 +43,12 @@ liées. Les questions sont centralisées dans [QUESTIONS_PO.md](../QUESTIONS_PO.
 | 18 ✅ | Associations (demande PO du 2026-09-23, Q77–Q89 tranchées, implémenté, base reconstruite, testé et validé par le PO ; clôturé le 2026-09-23) | [18_associations.md](18_associations.md) | Joueurs, sessions et championnats rattachés à une association ; choix à la première connexion ; page des associations ; responsables locaux et créations validés par un super_admin ; historique rattaché à Lyon Street Golf |
 | 19 | Statistiques joueur (fiche synthétique 2026-09-24, priorité 1 avec 20 et 21 ; Q90–Q93 et Q106–Q108 tranchées) | [19_stats_joueurs.md](19_stats_joueurs.md) | Fiche joueur publique (pseudo, photo) avec statistiques masquables : chiffres clés, rapport au par, meilleur et pire trou, courbe de saison |
 | 20 | Statistiques trou (fiche synthétique 2026-09-24, priorité 1 ; Q93, Q95, Q109 tranchées, Q94 et Q110 ouvertes) | [20_stats_trous.md](20_stats_trous.md) | Section statistiques dans la fiche trou : moyenne, écart au par, record, roi du trou |
-| 21 | Badges (fiche synthétique 2026-09-24, priorité 1, après le socle de 19–20 ; Q97–Q98 tranchées, catalogue de 78 badges à trier (Q96), Q111 ouverte) | [21_badges.md](21_badges.md) | Badges calculés depuis l'historique, affichés sur le profil et annoncés en fin de session |
+| 21 | Badges (plan détaillé rédigé le 2026-09-24, en attente de validation PO ; priorité 1, après 26 et le socle de 19–20 ; catalogue de 74 badges (Q96, Q117), Q94, Q97–Q98, Q111–Q117, Q120 et Q123–Q128 tranchées) | [21_badges.md](21_badges.md) | Badges calculés depuis l'historique, affichés sur le profil et annoncés en fin de session |
 | 22 | Saisie des scores hors ligne (fiche synthétique 2026-09-24 ; Q99–Q100) | [22_hors_ligne.md](22_hors_ligne.md) | Aucun score perdu sans réseau : file d'attente locale rejouée au retour du réseau |
 | 23 | Calendrier et inscriptions (fiche synthétique 2026-09-24 ; Q101–Q102) | [23_calendrier_inscriptions.md](23_calendrier_inscriptions.md) | Sessions planifiées, réponses « je viens », démarrage à partir des inscrits |
 | 24 | Export image vitrine (fiche synthétique 2026-09-24 ; Q103) | [24_export_vitrine.md](24_export_vitrine.md) | Images de résultats au format story, modèles podium et classement |
 | 25 | Identité visuelle street (fiche synthétique 2026-09-24 ; Q104–Q105) | [25_identite_street.md](25_identite_street.md) | Typographie des chiffres, classement façon tableau sportif, moments célébrés, validés d'abord dans `/dev/theme` |
+| 26 | Améliorations avant les badges (demande PO du 2026-09-24, prioritaire ; mise en œuvre demandée par le PO le 2026-09-24, premier lot avant les badges ; Q118–Q122, Q126, Q129–Q132 tranchées) | [26_ameliorations_avant_badges.md](26_ameliorations_avant_badges.md) | A : plus de trou privé, clonage, par et commentaire propres à chaque trou joué, par obligatoire pour un trou libre. B : historique et sessions en cours visibles par toute l'association, marquage « championnat » réservé au responsable local et au super_admin. C : fiche publique d'un joueur (photo et pseudo) |
 
 ## Ordre et dépendances
 
@@ -76,6 +77,9 @@ liées. Les questions sont centralisées dans [QUESTIONS_PO.md](../QUESTIONS_PO.
   de calcul (`lib/features/stats/`) et une RPC de lecture ; 21 s'appuie dessus et vient donc après
   eux. 24 dépend de 19 et 21 pour son modèle « Exploit ». 25 est préférable après 19–21, dont les
   écrans en profitent le plus. 22 et 23 sont indépendants.
+- 26 (demande PO du 2026-09-24) passe avant 19, 20 et 21 : il donne un par à chaque trou joué,
+  que leurs calculs de coups utilisent, supprime les trous privés (Q110), et ouvre les sessions
+  et le championnat à toute l'association (marquage réservé au responsable local).
 
 ## Jalons de validation avec le product owner
 
