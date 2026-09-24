@@ -343,6 +343,8 @@
   "@associationsAdminPending": {"placeholders":{"count":{"type":"int"}}},
   "associationsDetailTitle": "Association",
   "associationsNotFound": "Association introuvable.",
+  "associationsMembersTitle": "Joueurs",
+  "associationsMembersEmpty": "Aucun joueur dans cette association pour l'instant.",
   "associationsJoin": "Rejoindre cette association",
   "associationsJoinConfirmTitle": "Rejoindre {name} ?",
   "@associationsJoinConfirmTitle": {"placeholders":{"name":{"type":"String"}}},

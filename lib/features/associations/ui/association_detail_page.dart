@@ -9,13 +9,17 @@ import '../../../core/errors/app_error_message.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/nuni_avatar.dart';
 import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_card.dart';
 import '../../../shared/nuni_confirm_dialog.dart';
 import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
+import '../../../shared/nuni_grouped_list.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../../shared/nuni_section_header.dart';
 import '../../../shared/nuni_status_pill.dart';
+import '../../players/data/players_repository.dart';
 import '../../profile/data/profile_repository.dart';
 import '../data/associations_repository.dart';
 import '../domain/association.dart';
@@ -32,7 +36,8 @@ Future<void> openAssociationWebsite(String url) => launchUrl(
 /// `/associations/:id` (plan 18): the association's public card, and the
 /// actions that apply to the viewer -- join it (Q79), claim its local
 /// manager role (decision 7, Q78), edit it (its manager or a super_admin),
-/// remove its manager or delete it (super_admin, Q89).
+/// remove its manager or delete it (super_admin, Q89) -- then its members,
+/// alphabetically, each opening their public page.
 class AssociationDetailPage extends ConsumerWidget {
   const AssociationDetailPage({super.key, required this.associationId});
 
@@ -337,13 +342,82 @@ class _DetailState extends ConsumerState<_Detail> {
           ),
           const SizedBox(height: 10),
         ],
-        if (isSuperAdmin)
+        if (isSuperAdmin) ...[
           NuniButton(
             label: l10n.associationsDelete,
             variant: NuniButtonVariant.danger,
             icon: PhosphorIcons.trash,
             onPressed: _busy ? null : _delete,
           ),
+          const SizedBox(height: 10),
+        ],
+        const SizedBox(height: 14),
+        _Members(associationId: association.id),
+      ],
+    );
+  }
+}
+
+/// The association's players, alphabetically, imported ones included; a
+/// tap opens the player's public page (plan 26, volet C).
+class _Members extends ConsumerWidget {
+  const _Members({required this.associationId});
+
+  final String associationId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final membersAsync = ref.watch(associationPlayersProvider(associationId));
+    final count = membersAsync.value?.length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        NuniSectionHeader(
+          title: l10n.associationsMembersTitle,
+          trailing: count == null
+              ? null
+              : Text(
+                  '$count',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+        ),
+        membersAsync.when(
+          loading: () =>
+              const Padding(padding: EdgeInsets.all(16), child: NuniLoading()),
+          error: (error, _) => NuniErrorBanner(
+            message: describeError(error, l10n),
+            onRetry: () =>
+                ref.invalidate(associationPlayersProvider(associationId)),
+          ),
+          data: (players) => players.isEmpty
+              ? NuniCard(
+                  child: Text(
+                    l10n.associationsMembersEmpty,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                )
+              : NuniGroupedList(
+                  children: [
+                    for (final player in players)
+                      ListTile(
+                        leading: NuniAvatar(
+                          name: player.name,
+                          imageUrl: player.avatarUrl,
+                          size: 36,
+                        ),
+                        title: Text(player.name),
+                        trailing: const Icon(PhosphorIcons.caretRight),
+                        onTap: () => context.push('/players/${player.id}'),
+                      ),
+                  ],
+                ),
+        ),
       ],
     );
   }

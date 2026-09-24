@@ -371,6 +371,8 @@
   "@associationsAdminPending": {"placeholders":{"count":{"type":"int"}}},
   "associationsDetailTitle": "Club",
   "associationsNotFound": "Club not found.",
+  "associationsMembersTitle": "Players",
+  "associationsMembersEmpty": "No players in this association yet.",
   "associationsJoin": "Join this club",
   "associationsJoinConfirmTitle": "Join {name}?",
   "@associationsJoinConfirmTitle": {"placeholders":{"name":{"type":"String"}}},

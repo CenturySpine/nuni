@@ -23,6 +23,17 @@ class PlayersRepository {
         .maybeSingle();
     return row == null ? null : Player.fromJson(row);
   }
+
+  /// Every member of an association, imported players included, sorted by
+  /// name case-insensitively (the association page's member list).
+  Future<List<Player>> fetchByAssociation(String associationId) async {
+    final rows = await _client
+        .from('players')
+        .select()
+        .eq('association_id', associationId);
+    return rows.map(Player.fromJson).toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+  }
 }
 
 final playersRepositoryProvider = Provider<PlayersRepository>(
@@ -32,3 +43,7 @@ final playersRepositoryProvider = Provider<PlayersRepository>(
 @riverpod
 Future<Player?> playerById(Ref ref, String id) =>
     ref.watch(playersRepositoryProvider).fetchById(id);
+
+@riverpod
+Future<List<Player>> associationPlayers(Ref ref, String associationId) =>
+    ref.watch(playersRepositoryProvider).fetchByAssociation(associationId);
