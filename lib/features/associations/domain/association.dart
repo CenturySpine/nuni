@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../core/text/compare_names.dart';
+
 part 'association.freezed.dart';
 part 'association.g.dart';
 
@@ -110,8 +112,7 @@ List<Association> sortForChoice(
   double? lat,
   double? lng,
 }) {
-  int byName(Association a, Association b) =>
-      a.name.toLowerCase().compareTo(b.name.toLowerCase());
+  int byName(Association a, Association b) => compareNames(a.name, b.name);
   final sorted = [...associations];
   if (lat == null || lng == null) return sorted..sort(byName);
   double distance(Association a) =>

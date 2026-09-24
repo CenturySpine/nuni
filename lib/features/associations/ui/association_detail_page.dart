@@ -358,8 +358,8 @@ class _DetailState extends ConsumerState<_Detail> {
   }
 }
 
-/// The association's players, alphabetically, imported ones included; a
-/// tap opens the player's public page (plan 26, volet C).
+/// The association's players who have an account, alphabetically; a tap
+/// opens the player's public page (plan 26, volet C).
 class _Members extends ConsumerWidget {
   const _Members({required this.associationId});
 

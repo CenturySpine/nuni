@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/supabase/supabase_providers.dart';
+import '../../../core/text/compare_names.dart';
 import '../../profile/domain/player.dart';
 
 part 'players_repository.g.dart';
@@ -24,15 +25,17 @@ class PlayersRepository {
     return row == null ? null : Player.fromJson(row);
   }
 
-  /// Every member of an association, imported players included, sorted by
-  /// name case-insensitively (the association page's member list).
+  /// The members of an association who have a NUNI account, sorted by name
+  /// (the association page's member list). Imported players are left out
+  /// until they are matched with an account (PO, 2026-09-24).
   Future<List<Player>> fetchByAssociation(String associationId) async {
     final rows = await _client
         .from('players')
         .select()
-        .eq('association_id', associationId);
+        .eq('association_id', associationId)
+        .not('user_id', 'is', null);
     return rows.map(Player.fromJson).toList()
-      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      ..sort((a, b) => compareNames(a.name, b.name));
   }
 }
 
