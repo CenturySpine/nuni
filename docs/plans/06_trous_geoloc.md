@@ -136,6 +136,14 @@ décision définitive dans `docs/design/PALETTE.md` tant que le PO n'a pas valid
   automatique ne se fait que vers un point pas encore posé (corriger le départ d'un trou qui a déjà
   une cible laisse le mode sur « Départ »). Les boutons de mode restent utilisables à tout moment.
 
+## Retouche du 2026-09-24 : trou en lecture seule
+
+- Fiche d'aperçu d'un trou dont je ne suis pas l'auteur : bouton « Voir le trou » à la place de
+  « Modifier ». Il ouvre le même écran que la modification (`/holes/:id`), en lecture seule :
+  champs non modifiables, carte avec départ, cible et tracé, photos, sans boutons de pose de
+  points, d'enregistrement ni de suppression. Le mode est déduit de l'auteur du trou, donc un lien
+  direct vers `/holes/:id` s'ouvre aussi en lecture seule pour un non-auteur.
+
 ## Questions PO liées
 
 Q10, Q12, Q13, Q33, Q60, Q61.

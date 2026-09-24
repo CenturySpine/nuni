@@ -24,6 +24,7 @@ import '../../../shared/nuni_map_attribution.dart';
 import '../../../shared/photo_field.dart';
 import '../data/holes_repository.dart';
 import '../domain/hole.dart';
+import 'hole_photo_thumb.dart';
 
 const _fallbackMapCenter = LatLng(48.8566, 2.3522);
 
@@ -39,6 +40,8 @@ String _generatePhotoFolderId() =>
     '${DateTime.now().microsecondsSinceEpoch}-${Random().nextInt(2000000000)}';
 
 /// Create (`/holes/new`) and edit (`/holes/:id`) share this form (plan 06).
+/// Someone else's hole opens on the same route read-only (PO, 2026-09-24):
+/// same fields and map, nothing editable, no save or delete.
 class HoleFormPage extends ConsumerStatefulWidget {
   const HoleFormPage({super.key, this.holeId});
 
@@ -433,11 +436,11 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
     final holeAsync = ref.watch(holeByIdProvider(widget.holeId!));
     return holeAsync.when(
       loading: () => Scaffold(
-        appBar: AppBar(title: Text(l10n.holesFormTitleEdit)),
+        appBar: AppBar(title: Text(l10n.holesFormTitleView)),
         body: const NuniLoading(),
       ),
       error: (error, _) => Scaffold(
-        appBar: AppBar(title: Text(l10n.holesFormTitleEdit)),
+        appBar: AppBar(title: Text(l10n.holesFormTitleView)),
         body: Padding(
           padding: const EdgeInsets.all(16),
           child: NuniErrorBanner(
@@ -464,12 +467,16 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
         .auth
         .currentUser
         ?.id;
-    final isOwner = hole == null || hole.ownerId == currentUserId;
+    final readOnly = hole != null && hole.ownerId != currentUserId;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.isEditing ? l10n.holesFormTitleEdit : l10n.holesFormTitleNew,
+          readOnly
+              ? l10n.holesFormTitleView
+              : widget.isEditing
+              ? l10n.holesFormTitleEdit
+              : l10n.holesFormTitleNew,
         ),
       ),
       body: Form(
@@ -482,6 +489,7 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
               children: [
                 TextFormField(
                   controller: _nameController,
+                  readOnly: readOnly,
                   decoration: InputDecoration(
                     labelText: l10n.holesFormNameLabel,
                   ),
@@ -495,6 +503,7 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
                     Expanded(
                       child: TextFormField(
                         controller: _parController,
+                        readOnly: readOnly,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           labelText: l10n.holesFormParLabel,
@@ -511,6 +520,7 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
                     Expanded(
                       child: TextFormField(
                         controller: _distanceController,
+                        readOnly: readOnly,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           labelText: l10n.holesFormDistanceLabel,
@@ -522,6 +532,7 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _descriptionController,
+                  readOnly: readOnly,
                   decoration: InputDecoration(
                     labelText: l10n.holesFormDescriptionLabel,
                   ),
@@ -533,154 +544,191 @@ class _HoleFormPageState extends ConsumerState<HoleFormPage> {
             NuniFormSection(
               title: l10n.holesFormSectionPosition,
               children: [
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    NuniChip(
-                      label: l10n.holesFormPointStart,
-                      selected: _activePoint == _ActivePoint.start,
-                      onTap: () =>
-                          setState(() => _activePoint = _ActivePoint.start),
-                    ),
-                    NuniChip(
-                      label: l10n.holesFormPointEnd,
-                      selected: _activePoint == _ActivePoint.end,
-                      onTap: () =>
-                          setState(() => _activePoint = _ActivePoint.end),
-                    ),
-                    NuniChip(
-                      label: l10n.holesFormPointPath,
-                      selected: _activePoint == _ActivePoint.path,
-                      onTap: () =>
-                          setState(() => _activePoint = _ActivePoint.path),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
+                if (!readOnly) ...[
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      NuniChip(
+                        label: l10n.holesFormPointStart,
+                        selected: _activePoint == _ActivePoint.start,
+                        onTap: () =>
+                            setState(() => _activePoint = _ActivePoint.start),
+                      ),
+                      NuniChip(
+                        label: l10n.holesFormPointEnd,
+                        selected: _activePoint == _ActivePoint.end,
+                        onTap: () =>
+                            setState(() => _activePoint = _ActivePoint.end),
+                      ),
+                      NuniChip(
+                        label: l10n.holesFormPointPath,
+                        selected: _activePoint == _ActivePoint.path,
+                        onTap: () =>
+                            setState(() => _activePoint = _ActivePoint.path),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 _PositionPicker(
                   mapController: _mapController,
                   startPosition: _startPosition,
                   endPosition: _endPosition,
                   path: _path,
                   activePoint: _activePoint,
-                  onTap: _handleMapTap,
+                  onTap: readOnly ? null : _handleMapTap,
                 ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    NuniButton(
-                      variant: NuniButtonVariant.secondary,
-                      icon: PhosphorIcons.crosshair,
-                      label: l10n.holesFormUseMyPosition,
-                      onPressed: _locating ? null : () => _useMyPosition(),
-                    ),
-                    // Only moves the map (PO, 2026-09-23): the start is then
-                    // placed by tapping, never copied from the other hole.
-                    if (ref.watch(lastPlacedHoleProvider(widget.holeId)).value
-                        case final lastHole?)
-                      NuniButton(
-                        variant: NuniButtonVariant.secondary,
-                        icon: PhosphorIcons.mapPin,
-                        label: l10n.holesFormGoToLastHole(lastHole.name),
-                        onPressed: () => _mapController.move(
-                          LatLng(lastHole.startLat!, lastHole.startLng!),
-                          17,
-                        ),
-                      ),
-                    if (_locating)
-                      const SizedBox(
-                        height: 16,
-                        width: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                  ],
-                ),
-                if (_activePoint == _ActivePoint.path) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      NuniButton(
-                        variant: NuniButtonVariant.secondary,
-                        label: l10n.holesFormPathUndo,
-                        onPressed: _path.isEmpty ? null : _undoLastPathPoint,
-                      ),
-                      const SizedBox(width: 12),
-                      NuniButton(
-                        variant: NuniButtonVariant.secondary,
-                        icon: PhosphorIcons.trash,
-                        label: l10n.holesFormPathClear,
-                        onPressed: _path.isEmpty ? null : _clearPath,
-                      ),
-                    ],
-                  ),
-                ],
-                if (_startPosition == null)
+                if (readOnly && _startPosition == null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      // Editing a hole imported from LsgScores without a
-                      // position (plan 13): nothing failed, it just has to
-                      // be placed.
-                      widget.isEditing
-                          ? l10n.holesFormPositionToSet
-                          : l10n.holesFormPositionUnavailable,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  )
-                else if (_accuracy != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      l10n.holesFormAccuracy(_accuracy!.round().toString()),
+                      l10n.holesPositionToSet,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ),
+                if (!readOnly) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      NuniButton(
+                        variant: NuniButtonVariant.secondary,
+                        icon: PhosphorIcons.crosshair,
+                        label: l10n.holesFormUseMyPosition,
+                        onPressed: _locating ? null : () => _useMyPosition(),
+                      ),
+                      // Only moves the map (PO, 2026-09-23): the start is then
+                      // placed by tapping, never copied from the other hole.
+                      if (ref.watch(lastPlacedHoleProvider(widget.holeId)).value
+                          case final lastHole?)
+                        NuniButton(
+                          variant: NuniButtonVariant.secondary,
+                          icon: PhosphorIcons.mapPin,
+                          label: l10n.holesFormGoToLastHole(lastHole.name),
+                          onPressed: () => _mapController.move(
+                            LatLng(lastHole.startLat!, lastHole.startLng!),
+                            17,
+                          ),
+                        ),
+                      if (_locating)
+                        const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                    ],
+                  ),
+                  if (_activePoint == _ActivePoint.path) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        NuniButton(
+                          variant: NuniButtonVariant.secondary,
+                          label: l10n.holesFormPathUndo,
+                          onPressed: _path.isEmpty ? null : _undoLastPathPoint,
+                        ),
+                        const SizedBox(width: 12),
+                        NuniButton(
+                          variant: NuniButtonVariant.secondary,
+                          icon: PhosphorIcons.trash,
+                          label: l10n.holesFormPathClear,
+                          onPressed: _path.isEmpty ? null : _clearPath,
+                        ),
+                      ],
+                    ),
+                  ],
+                  if (_startPosition == null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        // Editing a hole imported from LsgScores without a
+                        // position (plan 13): nothing failed, it just has to
+                        // be placed.
+                        widget.isEditing
+                            ? l10n.holesFormPositionToSet
+                            : l10n.holesFormPositionUnavailable,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    )
+                  else if (_accuracy != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        l10n.holesFormAccuracy(_accuracy!.round().toString()),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                ],
               ],
             ),
             const SizedBox(height: 24),
             NuniFormSection(
               title: l10n.holesFormSectionPhotos,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    PhotoField(
-                      label: l10n.holesFormPhotoStart,
-                      imageUrl: _startPhotoPath == null
-                          ? null
-                          : repo.photoUrl(_startPhotoPath!),
-                      uploading: _startUploading,
-                      onPicked: _onStartPhotoPicked,
-                      onRemoved: () => _removePhoto(isStart: true),
-                      removeTooltip: l10n.holesFormPhotoRemove,
-                    ),
-                    PhotoField(
-                      label: l10n.holesFormPhotoEnd,
-                      imageUrl: _endPhotoPath == null
-                          ? null
-                          : repo.photoUrl(_endPhotoPath!),
-                      uploading: _endUploading,
-                      onPicked: _onEndPhotoPicked,
-                      onRemoved: () => _removePhoto(isStart: false),
-                      removeTooltip: l10n.holesFormPhotoRemove,
-                    ),
-                  ],
-                ),
+                if (readOnly)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _ReadOnlyPhoto(
+                          url: _startPhotoPath == null
+                              ? null
+                              : repo.photoUrl(_startPhotoPath!),
+                          caption: l10n.holesFormPhotoStart,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _ReadOnlyPhoto(
+                          url: _endPhotoPath == null
+                              ? null
+                              : repo.photoUrl(_endPhotoPath!),
+                          caption: l10n.holesFormPhotoEnd,
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      PhotoField(
+                        label: l10n.holesFormPhotoStart,
+                        imageUrl: _startPhotoPath == null
+                            ? null
+                            : repo.photoUrl(_startPhotoPath!),
+                        uploading: _startUploading,
+                        onPicked: _onStartPhotoPicked,
+                        onRemoved: () => _removePhoto(isStart: true),
+                        removeTooltip: l10n.holesFormPhotoRemove,
+                      ),
+                      PhotoField(
+                        label: l10n.holesFormPhotoEnd,
+                        imageUrl: _endPhotoPath == null
+                            ? null
+                            : repo.photoUrl(_endPhotoPath!),
+                        uploading: _endUploading,
+                        onPicked: _onEndPhotoPicked,
+                        onRemoved: () => _removePhoto(isStart: false),
+                        removeTooltip: l10n.holesFormPhotoRemove,
+                      ),
+                    ],
+                  ),
               ],
             ),
-            const SizedBox(height: 24),
-            NuniButton(
-              label: l10n.commonSave,
-              onPressed: _saving ? null : _save,
-            ),
-            if (widget.isEditing && isOwner) ...[
+            if (!readOnly) ...[
+              const SizedBox(height: 24),
+              NuniButton(
+                label: l10n.commonSave,
+                onPressed: _saving ? null : _save,
+              ),
+            ],
+            if (widget.isEditing && !readOnly) ...[
               const SizedBox(height: 12),
               NuniButton(
                 variant: NuniButtonVariant.danger,
@@ -715,7 +763,9 @@ class _PositionPicker extends StatelessWidget {
   final LatLng? endPosition;
   final List<LatLng> path;
   final _ActivePoint activePoint;
-  final ValueChanged<LatLng> onTap;
+
+  /// Null in read-only mode: taps leave every point where it is.
+  final ValueChanged<LatLng>? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -730,7 +780,7 @@ class _PositionPicker extends StatelessWidget {
           options: MapOptions(
             initialCenter: initial ?? _fallbackMapCenter,
             initialZoom: initial == null ? 5 : 16,
-            onTap: (tapPosition, point) => onTap(point),
+            onTap: onTap == null ? null : (tapPosition, point) => onTap!(point),
           ),
           children: [
             TileLayer(
@@ -794,4 +844,22 @@ class _PositionPicker extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A photo slot in read-only mode: the photo (or its placeholder) and its
+/// caption, nothing to pick or remove.
+class _ReadOnlyPhoto extends StatelessWidget {
+  const _ReadOnlyPhoto({required this.url, required this.caption});
+
+  final String? url;
+  final String caption;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      HolePhotoThumb(url: url, iconSize: 32),
+      const SizedBox(height: 6),
+      Text(caption, style: Theme.of(context).textTheme.labelMedium),
+    ],
+  );
 }

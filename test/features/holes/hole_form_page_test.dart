@@ -8,6 +8,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:nuni/core/location/location_service.dart';
 import 'package:nuni/core/supabase/supabase_providers.dart';
 import 'package:nuni/features/holes/data/holes_repository.dart';
+import 'package:nuni/features/holes/domain/hole.dart';
 import 'package:nuni/features/holes/ui/hole_form_page.dart';
 import 'package:nuni/l10n/generated/app_localizations.dart';
 import 'package:nuni/shared/nuni_chip.dart';
@@ -18,6 +19,8 @@ class _MockHolesRepository extends Mock implements HolesRepository {}
 class _MockSupabaseClient extends Mock implements SupabaseClient {}
 
 class _MockGoTrueClient extends Mock implements GoTrueClient {}
+
+class _MockUser extends Mock implements User {}
 
 /// Never calls the real `geolocator` plugin, which has no platform
 /// implementation registered in the widget test environment.
@@ -39,7 +42,7 @@ void main() {
     when(() => auth.currentUser).thenReturn(null);
   });
 
-  Future<void> pumpForm(WidgetTester tester) async {
+  Future<void> pumpForm(WidgetTester tester, {String? holeId}) async {
     // The form is taller than the default test surface; the "Save" and
     // "Delete" actions sit past the initial viewport + cache extent, so a
     // plain ListView never mounts them without either scrolling or a taller
@@ -62,7 +65,7 @@ void main() {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const HoleFormPage(),
+          home: HoleFormPage(holeId: holeId),
         ),
       ),
     );
@@ -139,4 +142,53 @@ void main() {
       expect(selected('Start'), isTrue);
     },
   );
+
+  group('an existing hole', () {
+    const hole = Hole(
+      id: 'h1',
+      name: 'Le Ficus',
+      par: 3,
+      startLat: 48.85,
+      startLng: 2.35,
+      ownerId: 'owner',
+    );
+
+    setUp(() {
+      when(() => repository.fetchById('h1')).thenAnswer((_) async => hole);
+      when(() => repository.fetchLastPlaced(excludeId: any(named: 'excludeId')))
+          .thenAnswer((_) async => null);
+    });
+
+    testWidgets('opens read-only for someone who does not own it', (
+      tester,
+    ) async {
+      await pumpForm(tester, holeId: 'h1');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Hole details'), findsOneWidget);
+      expect(find.text('Le Ficus'), findsOneWidget);
+      expect(find.byType(FlutterMap), findsOneWidget);
+      expect(find.byType(NuniChip), findsNothing);
+      expect(find.text('Save'), findsNothing);
+      expect(find.text('Delete hole'), findsNothing);
+      for (final field in tester.widgetList<EditableText>(
+        find.byType(EditableText),
+      )) {
+        expect(field.readOnly, isTrue);
+      }
+    });
+
+    testWidgets('stays editable for its owner', (tester) async {
+      final user = _MockUser();
+      when(() => user.id).thenReturn('owner');
+      when(() => auth.currentUser).thenReturn(user);
+
+      await pumpForm(tester, holeId: 'h1');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit hole'), findsOneWidget);
+      expect(find.text('Save'), findsOneWidget);
+      expect(find.byType(NuniChip), findsNWidgets(3));
+    });
+  });
 }

@@ -217,6 +217,7 @@
 
   "holesFormTitleNew": "New hole",
   "holesFormTitleEdit": "Edit hole",
+  "holesFormTitleView": "Hole details",
   "holesFormSectionInfo": "Details",
   "holesFormSectionPosition": "Position",
   "holesFormSectionPhotos": "Photos",
@@ -250,6 +251,7 @@
 
   "holesDetailGoThere": "Get directions",
   "holesDetailEdit": "Edit",
+  "holesDetailView": "View hole",
   "holesDetailLength": "Length: {distanceM} m",
   "@holesDetailLength": {"placeholders": {"distanceM": {"type": "int"}}},
 

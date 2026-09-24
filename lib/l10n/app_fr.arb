@@ -193,6 +193,7 @@
 
   "holesFormTitleNew": "Nouveau trou",
   "holesFormTitleEdit": "Modifier le trou",
+  "holesFormTitleView": "Détails du trou",
   "holesFormSectionInfo": "Détails",
   "holesFormSectionPosition": "Position",
   "holesFormSectionPhotos": "Photos",
@@ -224,6 +225,7 @@
 
   "holesDetailGoThere": "Y aller",
   "holesDetailEdit": "Modifier",
+  "holesDetailView": "Voir le trou",
   "holesDetailLength": "Distance : {distanceM} m",
 
   "authLoginHeading": "Connexion à NUNI",

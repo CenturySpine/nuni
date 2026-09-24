@@ -139,21 +139,21 @@ class _HoleDetailContent extends ConsumerWidget {
         const SizedBox(height: 20),
         Row(
           children: [
-            if (isOwner) ...[
-              Expanded(
-                child: NuniButton(
-                  variant: NuniButtonVariant.secondary,
-                  icon: PhosphorIcons.pencilSimple,
-                  label: l10n.holesDetailEdit,
-                  onPressed: () {
-                    final router = GoRouter.of(context);
-                    Navigator.of(context).pop();
-                    router.push('/holes/${hole.id}');
-                  },
-                ),
+            // Same route for both: a non-owner gets the form read-only
+            // (PO, 2026-09-24), map and path included.
+            Expanded(
+              child: NuniButton(
+                variant: NuniButtonVariant.secondary,
+                icon: isOwner ? PhosphorIcons.pencilSimple : PhosphorIcons.eye,
+                label: isOwner ? l10n.holesDetailEdit : l10n.holesDetailView,
+                onPressed: () {
+                  final router = GoRouter.of(context);
+                  Navigator.of(context).pop();
+                  router.push('/holes/${hole.id}');
+                },
               ),
-              if (hole.hasPosition) const SizedBox(width: 10),
-            ],
+            ),
+            if (hole.hasPosition) const SizedBox(width: 10),
             // No "go there" for a hole imported without a position (plan 13).
             if (hole.hasPosition)
               Expanded(
