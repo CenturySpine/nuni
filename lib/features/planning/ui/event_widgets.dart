@@ -222,12 +222,18 @@ class EventCard extends StatelessWidget {
                                       label: responseLabel(l10n, myResponse!),
                                       tone: responseTone(myResponse!),
                                     ),
-                                  NuniStatusPill(
+                                  // Number only on the card; the sentence
+                                  // stays for screen readers.
+                                  Semantics(
                                     label: l10n.planningPresentCount(
                                       event.yesCount,
                                     ),
-                                    icon: PhosphorIcons.users,
-                                    tone: NuniTone.neutral,
+                                    excludeSemantics: true,
+                                    child: NuniStatusPill(
+                                      label: '${event.yesCount}',
+                                      icon: PhosphorIcons.users,
+                                      tone: NuniTone.neutral,
+                                    ),
                                   ),
                                   EventCommentCount(count: event.commentCount),
                                 ],
