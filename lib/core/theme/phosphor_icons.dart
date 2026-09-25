@@ -30,6 +30,9 @@ abstract final class PhosphorIcons {
   static const x = IconData(0xe4f6, fontFamily: _regular);
   static const question = IconData(0xe3e8, fontFamily: _regular);
 
+  // Spots (plan 28).
+  static const magnifyingGlass = IconData(0xe30c, fontFamily: _regular);
+
   static const house = IconData(0xe2c2, fontFamily: _regular);
   static const arrowSquareOut = IconData(0xe5de, fontFamily: _regular);
   static const houseFill = IconData(0xe2c2, fontFamily: _fill);

@@ -373,12 +373,15 @@ create trigger associations_set_updated_at
 
 -- An event written by the app belongs to its creator's association, is 'manual', and keeps its
 -- association, origin and creator afterwards. Its person in charge, when set, is a member of that
--- association.
+-- association. Its spot, when set (plan 28), is one of that association's, and its name and point
+-- are copied onto the event.
 create or replace function events_guard()
 returns trigger
 language plpgsql
 set search_path = public
 as $$
+declare
+  v_spot spots;
 begin
   if current_user = 'authenticated' then
     if tg_op = 'INSERT' then
@@ -401,6 +404,15 @@ begin
     where id = new.manager_player_id and association_id = new.association_id
   ) then
     raise exception 'manager_not_member' using errcode = 'P0001';
+  end if;
+
+  if new.spot_id is not null then
+    select * into v_spot from spots where id = new.spot_id;
+    if not found or v_spot.association_id <> new.association_id then
+      raise exception 'spot_not_in_association' using errcode = 'P0001';
+    end if;
+    new.spot := v_spot.name;
+    new.location := coalesce(v_spot.location, new.location);
   end if;
 
   if tg_op = 'UPDATE' then
@@ -505,6 +517,59 @@ create trigger sessions_tb_guard_event_trigger
   before insert or update on sessions
   for each row execute function sessions_guard_event();
 
+-- Spots (plan 28). A session's spot is one of its association's; while it's set, the session's
+-- zone and city are the spot's name and city (Q182, Q184), recopied on every write so they can
+-- never drift apart. The session's point stays where it was created (weather, "Explorer" badges).
+-- After sessions_tb_guard_event_trigger (name order): needs the association already set.
+create or replace function sessions_copy_spot()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  v_spot spots;
+begin
+  if new.spot_id is not null then
+    select * into v_spot from spots where id = new.spot_id;
+    if not found or v_spot.association_id <> new.association_id then
+      raise exception 'spot_not_in_association' using errcode = 'P0001';
+    end if;
+    new.zone := v_spot.name;
+    new.city := coalesce(v_spot.city, new.city);
+  end if;
+  return new;
+end;
+$$;
+
+create trigger sessions_tc_copy_spot_trigger
+  before insert or update on sessions
+  for each row execute function sessions_copy_spot();
+
+-- A renamed or moved spot shows its new name, city and point everywhere it's used (Q182): its
+-- sessions and events are rewritten, their own triggers above recopying from the spot. A deleted
+-- spot leaves them their last copy (on delete set null). security definer: the staff member
+-- editing the spot may not have written those sessions and events themselves.
+create or replace function spots_propagate()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update sessions set spot_id = spot_id where spot_id = new.id;
+  update events set spot_id = spot_id where spot_id = new.id;
+  return null;
+end;
+$$;
+
+create trigger spots_propagate_trigger
+  after update of name, city, location on spots
+  for each row execute function spots_propagate();
+
+create trigger spots_set_updated_at
+  before update on spots
+  for each row execute function set_updated_at();
+
 -- None of the functions above are meant to be called directly (trigger-only, or an internal
 -- helper); Postgres grants EXECUTE to PUBLIC by default at creation, so revoke it explicitly.
 -- (handle_new_user and the "returns trigger" functions can't be invoked via RPC anyway, but
@@ -529,3 +594,5 @@ revoke execute on function events_guard() from public, authenticated;
 revoke execute on function event_responses_guard() from public, authenticated;
 revoke execute on function event_comments_guard_update() from public, authenticated;
 revoke execute on function sessions_guard_event() from public, authenticated;
+revoke execute on function sessions_copy_spot() from public, authenticated;
+revoke execute on function spots_propagate() from public, authenticated;

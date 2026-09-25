@@ -81,6 +81,7 @@ EventDraft cloneDraft(Event event) => EventDraft(
   startsAt: event.startsAt.toLocal().add(const Duration(days: 7)),
   label: '$clonePrefix${event.label}',
   spot: event.spot,
+  spotId: event.spotId,
   lat: event.locationLat,
   lng: event.locationLng,
   managerPlayerId: event.managerPlayerId,
@@ -89,7 +90,7 @@ EventDraft cloneDraft(Event event) => EventDraft(
 );
 
 /// Distinct labels already used, most recent first, without the ones a
-/// clone left as they were (Q148, Q165). [labels] is most recent first.
+/// clone left as they were (Q147, Q165). [labels] is most recent first.
 List<String> labelSuggestions(Iterable<String> labels) {
   final seen = <String>{};
   return [
@@ -97,53 +98,4 @@ List<String> labelSuggestions(Iterable<String> labels) {
       if (!label.startsWith(clonePrefix) && seen.add(label.trim()))
         label.trim(),
   ];
-}
-
-/// A spot already used by the association, with the last point known for it
-/// (Q150: choosing it pre-fills the map).
-class SpotSuggestion {
-  const SpotSuggestion({required this.name, this.lat, this.lng});
-
-  final String name;
-  final double? lat;
-  final double? lng;
-}
-
-/// A used spot: an event's spot or a session's zone (Q148), with its point
-/// and when it was used.
-class UsedSpot {
-  const UsedSpot({
-    required this.name,
-    required this.usedAt,
-    this.lat,
-    this.lng,
-  });
-
-  final String name;
-  final DateTime usedAt;
-  final double? lat;
-  final double? lng;
-}
-
-/// Distinct spots, most recently used first, each with its most recent known
-/// point (Q148, Q150). Names are compared case-insensitively, trimmed.
-List<SpotSuggestion> spotSuggestions(Iterable<UsedSpot> used) {
-  final sorted = [...used]..sort((a, b) => b.usedAt.compareTo(a.usedAt));
-  final byKey = <String, SpotSuggestion>{};
-  for (final spot in sorted) {
-    final name = spot.name.trim();
-    if (name.isEmpty) continue;
-    final key = name.toLowerCase();
-    final known = byKey[key];
-    if (known == null) {
-      byKey[key] = SpotSuggestion(name: name, lat: spot.lat, lng: spot.lng);
-    } else if (known.lat == null && spot.lat != null) {
-      byKey[key] = SpotSuggestion(
-        name: known.name,
-        lat: spot.lat,
-        lng: spot.lng,
-      );
-    }
-  }
-  return byKey.values.toList();
 }

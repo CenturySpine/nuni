@@ -29,3 +29,8 @@ create unique index associations_one_pending_request_idx
 create index events_association_starts_at_idx on events (association_id, starts_at);
 create index event_comments_event_created_at_idx on event_comments (event_id, created_at);
 create index sessions_event_id_idx on sessions (event_id) where event_id is not null;
+-- Spots (plan 28): one name per association, ignoring case and surrounding spaces (Q183); the
+-- sessions and events of a spot, for its usage count and spots_propagate (triggers.sql).
+create unique index spots_association_name_idx on spots (association_id, lower(btrim(name)));
+create index sessions_spot_id_idx on sessions (spot_id) where spot_id is not null;
+create index events_spot_id_idx on events (spot_id) where spot_id is not null;

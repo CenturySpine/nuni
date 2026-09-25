@@ -10,7 +10,7 @@
 // 2. supabase/data_seed.sql.enc (encrypted, committed): associations (plan
 //    18: requests, edits of the initial ones), their local managers and
 //    their contact details, players, sessions, teams, members, played holes,
-//    scores, session photo rows, the planning (plan 23: events, answers,
+//    scores, session photo rows, the spots (plan 28), the planning (plan 23: events, answers,
 //    comments) and the sign-up linking e-mails (Q64) --
 //    names, e-mails, phones and photo paths of real people, so never
 //    committed in clear (the repo is public). The initial associations
@@ -335,6 +335,17 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
     'id, session_id, storage_path, uploaded_by, created_at',
     'created_at',
   );
+  // Plan 28: the spots, before the events and sessions that point to them,
+  // absent from a base still on the previous schema; each session's spot is
+  // set once the session exists (the column is new too).
+  final spots = await optional(() => all('spots', '*', 'created_at'));
+  final sessionSpots = await optional(
+    () => nuni
+        .from('sessions')
+        .select('id, spot_id')
+        .not('spot_id', 'is', null)
+        .limit(100000),
+  );
   // Plan 23: the planning, and the event each session was started from.
   final events = await optional(() => all('events', '*', 'created_at'));
   final responses = await optional(
@@ -362,6 +373,20 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
             ? null
             : _Raw(
                 "'SRID=4326;POINT(${e['location_lng']} ${e['location_lat']})'",
+              ),
+      },
+  ];
+
+  final spotRows = [
+    for (final s in spots)
+      {
+        ...Map.of(s)
+          ..remove('location_lat')
+          ..remove('location_lng'),
+        'location': s['location_lat'] == null
+            ? null
+            : _Raw(
+                "'SRID=4326;POINT(${s['location_lng']} ${s['location_lat']})'",
               ),
       },
   ];
@@ -412,6 +437,7 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
   _insert(buffer, 'players', players);
   _insert(buffer, 'association_admins', admins);
   _insert(buffer, 'legacy_player_emails', emails);
+  _insert(buffer, 'spots', spotRows);
   _insert(buffer, 'events', eventRows);
   _insert(buffer, 'event_responses', responses);
   _insert(buffer, 'event_comments', comments);
@@ -426,6 +452,12 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
     buffer.writeln(
       'update sessions set event_id = ${_sql(s['event_id'])} '
       'where id = ${_sql(s['id'])} and event_id is null;',
+    );
+  }
+  for (final s in sessionSpots) {
+    buffer.writeln(
+      'update sessions set spot_id = ${_sql(s['spot_id'])} '
+      'where id = ${_sql(s['id'])} and spot_id is null;',
     );
   }
   for (final s in sessions) {
@@ -445,7 +477,8 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
         '${teams.length} teams, ${playedHoles.length} played holes, '
         '${scores.length} scores, ${photos.length} session photos, '
         '${emails.length} pending e-mails, ${admins.length} local admins, ${events.length} events, '
-        '${responses.length} event answers, ${comments.length} event comments',
+        '${responses.length} event answers, ${comments.length} event comments, '
+        '${spots.length} spots',
   );
 }
 

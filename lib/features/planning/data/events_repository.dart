@@ -163,39 +163,6 @@ class EventsRepository {
     return labelSuggestions([for (final row in rows) row['label'] as String]);
   }
 
-  /// Spots used in [associationId]'s events and zones of its sessions, with
-  /// their last known point (Q148, Q150).
-  Future<List<SpotSuggestion>> fetchSpots(String associationId) async {
-    final events = await _client
-        .from('events')
-        .select('spot, location_lat, location_lng, updated_at')
-        .eq('association_id', associationId)
-        .not('spot', 'is', null)
-        .order('updated_at', ascending: false)
-        .limit(300);
-    final sessions = await _client
-        .from('sessions')
-        .select('zone, created_at')
-        .eq('association_id', associationId)
-        .not('zone', 'is', null)
-        .order('created_at', ascending: false)
-        .limit(300);
-    return spotSuggestions([
-      for (final row in events)
-        UsedSpot(
-          name: row['spot'] as String,
-          usedAt: DateTime.parse(row['updated_at'] as String),
-          lat: (row['location_lat'] as num?)?.toDouble(),
-          lng: (row['location_lng'] as num?)?.toDouble(),
-        ),
-      for (final row in sessions)
-        UsedSpot(
-          name: row['zone'] as String,
-          usedAt: DateTime.parse(row['created_at'] as String),
-        ),
-    ]);
-  }
-
   /// The sessions started from [eventId] (Q164), most recent first.
   Future<List<Session>> fetchSessions(String eventId) async {
     final rows = await _client
@@ -274,9 +241,3 @@ Future<List<Session>> eventSessions(Ref ref, String eventId) =>
 @riverpod
 Future<List<String>> eventLabelSuggestions(Ref ref, String associationId) =>
     ref.watch(eventsRepositoryProvider).fetchLabels(associationId);
-
-@riverpod
-Future<List<SpotSuggestion>> spotSuggestionsFor(
-  Ref ref,
-  String associationId,
-) => ref.watch(eventsRepositoryProvider).fetchSpots(associationId);

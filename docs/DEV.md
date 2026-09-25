@@ -108,6 +108,12 @@ fvm dart run tool/export_remote_seed.dart --decrypt
 npx supabase db query --linked -f build/seed/data_seed.sql
 Remove-Item build/seed/data_seed.sql
 
+# 6b. Une seule fois, à la reconstruction qui crée la table des spots (plan 28, Q185) : reprendre
+#    les lieux saisis avant le plan 28 (zones des sessions, lieux des événements) en spots, et y
+#    rattacher sessions et événements. Liste relue par le PO avant. Sans effet si rejoué ; inutile
+#    ensuite, les spots faisant partie du seed de l'étape 6.
+npx supabase db query --linked -f supabase/spots_backfill.sql
+
 # 7. Obligatoire : créer la fiche "players" des comptes inscrits depuis le dernier export
 #    (sans association : l'app leur demande d'en choisir une à la prochaine ouverture)
 #    (supabase/backfill_players.sql, committé). Le déclencheur qui la peuple ne s'exécute qu'à

@@ -289,7 +289,7 @@ as EventResponse,
 /// @nodoc
 mixin _$Event {
 
- String get id;@JsonKey(name: 'association_id') String get associationId;@JsonKey(name: 'created_by') String get createdBy;@JsonKey(name: 'manager_player_id') String? get managerPlayerId;@JsonKey(name: 'starts_at') DateTime get startsAt; String get label; String? get spot;@JsonKey(name: 'location_lat') double? get locationLat;@JsonKey(name: 'location_lng') double? get locationLng; String? get description; EventColor? get color; EventOrigin get origin;@JsonKey(name: 'event_responses') List<EventAnswer> get answers;@JsonKey(name: 'event_comments', readValue: _readCount) int get commentCount;
+ String get id;@JsonKey(name: 'association_id') String get associationId;@JsonKey(name: 'created_by') String get createdBy;@JsonKey(name: 'manager_player_id') String? get managerPlayerId;@JsonKey(name: 'starts_at') DateTime get startsAt; String get label; String? get spot;@JsonKey(name: 'spot_id') String? get spotId;@JsonKey(name: 'location_lat') double? get locationLat;@JsonKey(name: 'location_lng') double? get locationLng; String? get description; EventColor? get color; EventOrigin get origin;@JsonKey(name: 'event_responses') List<EventAnswer> get answers;@JsonKey(name: 'event_comments', readValue: _readCount) int get commentCount;
 /// Create a copy of Event
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -303,20 +303,20 @@ $EventCopyWith<Event> get copyWith => _$EventCopyWithImpl<Event>(this as Event, 
 @override
 bool operator ==(Object other) {
   final _this = this as Event;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Event&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.associationId, _this.associationId) || other.associationId == _this.associationId)&&(identical(other.createdBy, _this.createdBy) || other.createdBy == _this.createdBy)&&(identical(other.managerPlayerId, _this.managerPlayerId) || other.managerPlayerId == _this.managerPlayerId)&&(identical(other.startsAt, _this.startsAt) || other.startsAt == _this.startsAt)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.spot, _this.spot) || other.spot == _this.spot)&&(identical(other.locationLat, _this.locationLat) || other.locationLat == _this.locationLat)&&(identical(other.locationLng, _this.locationLng) || other.locationLng == _this.locationLng)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.origin, _this.origin) || other.origin == _this.origin)&&const DeepCollectionEquality().equals(other.answers, _this.answers)&&(identical(other.commentCount, _this.commentCount) || other.commentCount == _this.commentCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Event&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.associationId, _this.associationId) || other.associationId == _this.associationId)&&(identical(other.createdBy, _this.createdBy) || other.createdBy == _this.createdBy)&&(identical(other.managerPlayerId, _this.managerPlayerId) || other.managerPlayerId == _this.managerPlayerId)&&(identical(other.startsAt, _this.startsAt) || other.startsAt == _this.startsAt)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.spot, _this.spot) || other.spot == _this.spot)&&(identical(other.spotId, _this.spotId) || other.spotId == _this.spotId)&&(identical(other.locationLat, _this.locationLat) || other.locationLat == _this.locationLat)&&(identical(other.locationLng, _this.locationLng) || other.locationLng == _this.locationLng)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.origin, _this.origin) || other.origin == _this.origin)&&const DeepCollectionEquality().equals(other.answers, _this.answers)&&(identical(other.commentCount, _this.commentCount) || other.commentCount == _this.commentCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Event;
-  return Object.hash(runtimeType,_this.id,_this.associationId,_this.createdBy,_this.managerPlayerId,_this.startsAt,_this.label,_this.spot,_this.locationLat,_this.locationLng,_this.description,_this.color,_this.origin,const DeepCollectionEquality().hash(_this.answers),_this.commentCount);
+  return Object.hash(runtimeType,_this.id,_this.associationId,_this.createdBy,_this.managerPlayerId,_this.startsAt,_this.label,_this.spot,_this.spotId,_this.locationLat,_this.locationLng,_this.description,_this.color,_this.origin,const DeepCollectionEquality().hash(_this.answers),_this.commentCount);
 }
 
 @override
 String toString() {
   final _this = this as Event;
-  return 'Event(id: ${_this.id}, associationId: ${_this.associationId}, createdBy: ${_this.createdBy}, managerPlayerId: ${_this.managerPlayerId}, startsAt: ${_this.startsAt}, label: ${_this.label}, spot: ${_this.spot}, locationLat: ${_this.locationLat}, locationLng: ${_this.locationLng}, description: ${_this.description}, color: ${_this.color}, origin: ${_this.origin}, answers: ${_this.answers}, commentCount: ${_this.commentCount})';
+  return 'Event(id: ${_this.id}, associationId: ${_this.associationId}, createdBy: ${_this.createdBy}, managerPlayerId: ${_this.managerPlayerId}, startsAt: ${_this.startsAt}, label: ${_this.label}, spot: ${_this.spot}, spotId: ${_this.spotId}, locationLat: ${_this.locationLat}, locationLng: ${_this.locationLng}, description: ${_this.description}, color: ${_this.color}, origin: ${_this.origin}, answers: ${_this.answers}, commentCount: ${_this.commentCount})';
 }
 
 
@@ -327,7 +327,7 @@ abstract mixin class $EventCopyWith<$Res>  {
   factory $EventCopyWith(Event value, $Res Function(Event) _then) = _$EventCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'association_id') String associationId,@JsonKey(name: 'created_by') String createdBy,@JsonKey(name: 'manager_player_id') String? managerPlayerId,@JsonKey(name: 'starts_at') DateTime startsAt, String label, String? spot,@JsonKey(name: 'location_lat') double? locationLat,@JsonKey(name: 'location_lng') double? locationLng, String? description, EventColor? color, EventOrigin origin,@JsonKey(name: 'event_responses') List<EventAnswer> answers,@JsonKey(name: 'event_comments', readValue: _readCount) int commentCount
+ String id,@JsonKey(name: 'association_id') String associationId,@JsonKey(name: 'created_by') String createdBy,@JsonKey(name: 'manager_player_id') String? managerPlayerId,@JsonKey(name: 'starts_at') DateTime startsAt, String label, String? spot,@JsonKey(name: 'spot_id') String? spotId,@JsonKey(name: 'location_lat') double? locationLat,@JsonKey(name: 'location_lng') double? locationLng, String? description, EventColor? color, EventOrigin origin,@JsonKey(name: 'event_responses') List<EventAnswer> answers,@JsonKey(name: 'event_comments', readValue: _readCount) int commentCount
 });
 
 
@@ -344,7 +344,7 @@ class _$EventCopyWithImpl<$Res>
 
 /// Create a copy of Event
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? associationId = null,Object? createdBy = null,Object? managerPlayerId = freezed,Object? startsAt = null,Object? label = null,Object? spot = freezed,Object? locationLat = freezed,Object? locationLng = freezed,Object? description = freezed,Object? color = freezed,Object? origin = null,Object? answers = null,Object? commentCount = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? associationId = null,Object? createdBy = null,Object? managerPlayerId = freezed,Object? startsAt = null,Object? label = null,Object? spot = freezed,Object? spotId = freezed,Object? locationLat = freezed,Object? locationLng = freezed,Object? description = freezed,Object? color = freezed,Object? origin = null,Object? answers = null,Object? commentCount = null,}) {
   return _then(Event(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,associationId: null == associationId ? _self.associationId : associationId // ignore: cast_nullable_to_non_nullable
@@ -353,6 +353,7 @@ as String,managerPlayerId: freezed == managerPlayerId ? _self.managerPlayerId : 
 as String?,startsAt: null == startsAt ? _self.startsAt : startsAt // ignore: cast_nullable_to_non_nullable
 as DateTime,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,spot: freezed == spot ? _self.spot : spot // ignore: cast_nullable_to_non_nullable
+as String?,spotId: freezed == spotId ? _self.spotId : spotId // ignore: cast_nullable_to_non_nullable
 as String?,locationLat: freezed == locationLat ? _self.locationLat : locationLat // ignore: cast_nullable_to_non_nullable
 as double?,locationLng: freezed == locationLng ? _self.locationLng : locationLng // ignore: cast_nullable_to_non_nullable
 as double?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
@@ -445,10 +446,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'association_id')  String associationId, @JsonKey(name: 'created_by')  String createdBy, @JsonKey(name: 'manager_player_id')  String? managerPlayerId, @JsonKey(name: 'starts_at')  DateTime startsAt,  String label,  String? spot, @JsonKey(name: 'location_lat')  double? locationLat, @JsonKey(name: 'location_lng')  double? locationLng,  String? description,  EventColor? color,  EventOrigin origin, @JsonKey(name: 'event_responses')  List<EventAnswer> answers, @JsonKey(name: 'event_comments', readValue: _readCount)  int commentCount)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'association_id')  String associationId, @JsonKey(name: 'created_by')  String createdBy, @JsonKey(name: 'manager_player_id')  String? managerPlayerId, @JsonKey(name: 'starts_at')  DateTime startsAt,  String label,  String? spot, @JsonKey(name: 'spot_id')  String? spotId, @JsonKey(name: 'location_lat')  double? locationLat, @JsonKey(name: 'location_lng')  double? locationLng,  String? description,  EventColor? color,  EventOrigin origin, @JsonKey(name: 'event_responses')  List<EventAnswer> answers, @JsonKey(name: 'event_comments', readValue: _readCount)  int commentCount)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Event() when $default != null:
-return $default(_that.id,_that.associationId,_that.createdBy,_that.managerPlayerId,_that.startsAt,_that.label,_that.spot,_that.locationLat,_that.locationLng,_that.description,_that.color,_that.origin,_that.answers,_that.commentCount);case _:
+return $default(_that.id,_that.associationId,_that.createdBy,_that.managerPlayerId,_that.startsAt,_that.label,_that.spot,_that.spotId,_that.locationLat,_that.locationLng,_that.description,_that.color,_that.origin,_that.answers,_that.commentCount);case _:
   return orElse();
 
 }
@@ -466,10 +467,10 @@ return $default(_that.id,_that.associationId,_that.createdBy,_that.managerPlayer
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'association_id')  String associationId, @JsonKey(name: 'created_by')  String createdBy, @JsonKey(name: 'manager_player_id')  String? managerPlayerId, @JsonKey(name: 'starts_at')  DateTime startsAt,  String label,  String? spot, @JsonKey(name: 'location_lat')  double? locationLat, @JsonKey(name: 'location_lng')  double? locationLng,  String? description,  EventColor? color,  EventOrigin origin, @JsonKey(name: 'event_responses')  List<EventAnswer> answers, @JsonKey(name: 'event_comments', readValue: _readCount)  int commentCount)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'association_id')  String associationId, @JsonKey(name: 'created_by')  String createdBy, @JsonKey(name: 'manager_player_id')  String? managerPlayerId, @JsonKey(name: 'starts_at')  DateTime startsAt,  String label,  String? spot, @JsonKey(name: 'spot_id')  String? spotId, @JsonKey(name: 'location_lat')  double? locationLat, @JsonKey(name: 'location_lng')  double? locationLng,  String? description,  EventColor? color,  EventOrigin origin, @JsonKey(name: 'event_responses')  List<EventAnswer> answers, @JsonKey(name: 'event_comments', readValue: _readCount)  int commentCount)  $default,) {final _that = this;
 switch (_that) {
 case _Event():
-return $default(_that.id,_that.associationId,_that.createdBy,_that.managerPlayerId,_that.startsAt,_that.label,_that.spot,_that.locationLat,_that.locationLng,_that.description,_that.color,_that.origin,_that.answers,_that.commentCount);case _:
+return $default(_that.id,_that.associationId,_that.createdBy,_that.managerPlayerId,_that.startsAt,_that.label,_that.spot,_that.spotId,_that.locationLat,_that.locationLng,_that.description,_that.color,_that.origin,_that.answers,_that.commentCount);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -486,10 +487,10 @@ return $default(_that.id,_that.associationId,_that.createdBy,_that.managerPlayer
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'association_id')  String associationId, @JsonKey(name: 'created_by')  String createdBy, @JsonKey(name: 'manager_player_id')  String? managerPlayerId, @JsonKey(name: 'starts_at')  DateTime startsAt,  String label,  String? spot, @JsonKey(name: 'location_lat')  double? locationLat, @JsonKey(name: 'location_lng')  double? locationLng,  String? description,  EventColor? color,  EventOrigin origin, @JsonKey(name: 'event_responses')  List<EventAnswer> answers, @JsonKey(name: 'event_comments', readValue: _readCount)  int commentCount)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'association_id')  String associationId, @JsonKey(name: 'created_by')  String createdBy, @JsonKey(name: 'manager_player_id')  String? managerPlayerId, @JsonKey(name: 'starts_at')  DateTime startsAt,  String label,  String? spot, @JsonKey(name: 'spot_id')  String? spotId, @JsonKey(name: 'location_lat')  double? locationLat, @JsonKey(name: 'location_lng')  double? locationLng,  String? description,  EventColor? color,  EventOrigin origin, @JsonKey(name: 'event_responses')  List<EventAnswer> answers, @JsonKey(name: 'event_comments', readValue: _readCount)  int commentCount)?  $default,) {final _that = this;
 switch (_that) {
 case _Event() when $default != null:
-return $default(_that.id,_that.associationId,_that.createdBy,_that.managerPlayerId,_that.startsAt,_that.label,_that.spot,_that.locationLat,_that.locationLng,_that.description,_that.color,_that.origin,_that.answers,_that.commentCount);case _:
+return $default(_that.id,_that.associationId,_that.createdBy,_that.managerPlayerId,_that.startsAt,_that.label,_that.spot,_that.spotId,_that.locationLat,_that.locationLng,_that.description,_that.color,_that.origin,_that.answers,_that.commentCount);case _:
   return null;
 
 }
@@ -501,7 +502,7 @@ return $default(_that.id,_that.associationId,_that.createdBy,_that.managerPlayer
 @JsonSerializable()
 
 class _Event extends Event {
-  const _Event({required this.id, @JsonKey(name: 'association_id') required this.associationId, @JsonKey(name: 'created_by') required this.createdBy, @JsonKey(name: 'manager_player_id') this.managerPlayerId, @JsonKey(name: 'starts_at') required this.startsAt, required this.label, this.spot, @JsonKey(name: 'location_lat') this.locationLat, @JsonKey(name: 'location_lng') this.locationLng, this.description, this.color, this.origin = EventOrigin.manual, @JsonKey(name: 'event_responses')  List<EventAnswer> answers = const [], @JsonKey(name: 'event_comments', readValue: _readCount) this.commentCount = 0}): _answers = answers,super._();
+  const _Event({required this.id, @JsonKey(name: 'association_id') required this.associationId, @JsonKey(name: 'created_by') required this.createdBy, @JsonKey(name: 'manager_player_id') this.managerPlayerId, @JsonKey(name: 'starts_at') required this.startsAt, required this.label, this.spot, @JsonKey(name: 'spot_id') this.spotId, @JsonKey(name: 'location_lat') this.locationLat, @JsonKey(name: 'location_lng') this.locationLng, this.description, this.color, this.origin = EventOrigin.manual, @JsonKey(name: 'event_responses')  List<EventAnswer> answers = const [], @JsonKey(name: 'event_comments', readValue: _readCount) this.commentCount = 0}): _answers = answers,super._();
   factory _Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);
 
 @override final  String id;
@@ -511,6 +512,7 @@ class _Event extends Event {
 @override@JsonKey(name: 'starts_at') final  DateTime startsAt;
 @override final  String label;
 @override final  String? spot;
+@override@JsonKey(name: 'spot_id') final  String? spotId;
 @override@JsonKey(name: 'location_lat') final  double? locationLat;
 @override@JsonKey(name: 'location_lng') final  double? locationLng;
 @override final  String? description;
@@ -538,18 +540,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Event&&(identical(other.id, id) || other.id == id)&&(identical(other.associationId, associationId) || other.associationId == associationId)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy)&&(identical(other.managerPlayerId, managerPlayerId) || other.managerPlayerId == managerPlayerId)&&(identical(other.startsAt, startsAt) || other.startsAt == startsAt)&&(identical(other.label, label) || other.label == label)&&(identical(other.spot, spot) || other.spot == spot)&&(identical(other.locationLat, locationLat) || other.locationLat == locationLat)&&(identical(other.locationLng, locationLng) || other.locationLng == locationLng)&&(identical(other.description, description) || other.description == description)&&(identical(other.color, color) || other.color == color)&&(identical(other.origin, origin) || other.origin == origin)&&const DeepCollectionEquality().equals(other.answers, _answers)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Event&&(identical(other.id, id) || other.id == id)&&(identical(other.associationId, associationId) || other.associationId == associationId)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy)&&(identical(other.managerPlayerId, managerPlayerId) || other.managerPlayerId == managerPlayerId)&&(identical(other.startsAt, startsAt) || other.startsAt == startsAt)&&(identical(other.label, label) || other.label == label)&&(identical(other.spot, spot) || other.spot == spot)&&(identical(other.spotId, spotId) || other.spotId == spotId)&&(identical(other.locationLat, locationLat) || other.locationLat == locationLat)&&(identical(other.locationLng, locationLng) || other.locationLng == locationLng)&&(identical(other.description, description) || other.description == description)&&(identical(other.color, color) || other.color == color)&&(identical(other.origin, origin) || other.origin == origin)&&const DeepCollectionEquality().equals(other.answers, _answers)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,associationId,createdBy,managerPlayerId,startsAt,label,spot,locationLat,locationLng,description,color,origin,const DeepCollectionEquality().hash(_answers),commentCount);
+    return Object.hash(runtimeType,id,associationId,createdBy,managerPlayerId,startsAt,label,spot,spotId,locationLat,locationLng,description,color,origin,const DeepCollectionEquality().hash(_answers),commentCount);
 }
 
 @override
 String toString() {
-    return 'Event(id: $id, associationId: $associationId, createdBy: $createdBy, managerPlayerId: $managerPlayerId, startsAt: $startsAt, label: $label, spot: $spot, locationLat: $locationLat, locationLng: $locationLng, description: $description, color: $color, origin: $origin, answers: $answers, commentCount: $commentCount)';
+    return 'Event(id: $id, associationId: $associationId, createdBy: $createdBy, managerPlayerId: $managerPlayerId, startsAt: $startsAt, label: $label, spot: $spot, spotId: $spotId, locationLat: $locationLat, locationLng: $locationLng, description: $description, color: $color, origin: $origin, answers: $answers, commentCount: $commentCount)';
 }
 
 
@@ -560,7 +562,7 @@ abstract mixin class _$EventCopyWith<$Res> implements $EventCopyWith<$Res> {
   factory _$EventCopyWith(_Event value, $Res Function(_Event) _then) = __$EventCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'association_id') String associationId,@JsonKey(name: 'created_by') String createdBy,@JsonKey(name: 'manager_player_id') String? managerPlayerId,@JsonKey(name: 'starts_at') DateTime startsAt, String label, String? spot,@JsonKey(name: 'location_lat') double? locationLat,@JsonKey(name: 'location_lng') double? locationLng, String? description, EventColor? color, EventOrigin origin,@JsonKey(name: 'event_responses') List<EventAnswer> answers,@JsonKey(name: 'event_comments', readValue: _readCount) int commentCount
+ String id,@JsonKey(name: 'association_id') String associationId,@JsonKey(name: 'created_by') String createdBy,@JsonKey(name: 'manager_player_id') String? managerPlayerId,@JsonKey(name: 'starts_at') DateTime startsAt, String label, String? spot,@JsonKey(name: 'spot_id') String? spotId,@JsonKey(name: 'location_lat') double? locationLat,@JsonKey(name: 'location_lng') double? locationLng, String? description, EventColor? color, EventOrigin origin,@JsonKey(name: 'event_responses') List<EventAnswer> answers,@JsonKey(name: 'event_comments', readValue: _readCount) int commentCount
 });
 
 
@@ -577,7 +579,7 @@ class __$EventCopyWithImpl<$Res>
 
 /// Create a copy of Event
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? associationId = null,Object? createdBy = null,Object? managerPlayerId = freezed,Object? startsAt = null,Object? label = null,Object? spot = freezed,Object? locationLat = freezed,Object? locationLng = freezed,Object? description = freezed,Object? color = freezed,Object? origin = null,Object? answers = null,Object? commentCount = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? associationId = null,Object? createdBy = null,Object? managerPlayerId = freezed,Object? startsAt = null,Object? label = null,Object? spot = freezed,Object? spotId = freezed,Object? locationLat = freezed,Object? locationLng = freezed,Object? description = freezed,Object? color = freezed,Object? origin = null,Object? answers = null,Object? commentCount = null,}) {
   return _then(_Event(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,associationId: null == associationId ? _self.associationId : associationId // ignore: cast_nullable_to_non_nullable
@@ -586,6 +588,7 @@ as String,managerPlayerId: freezed == managerPlayerId ? _self.managerPlayerId : 
 as String?,startsAt: null == startsAt ? _self.startsAt : startsAt // ignore: cast_nullable_to_non_nullable
 as DateTime,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,spot: freezed == spot ? _self.spot : spot // ignore: cast_nullable_to_non_nullable
+as String?,spotId: freezed == spotId ? _self.spotId : spotId // ignore: cast_nullable_to_non_nullable
 as String?,locationLat: freezed == locationLat ? _self.locationLat : locationLat // ignore: cast_nullable_to_non_nullable
 as double?,locationLng: freezed == locationLng ? _self.locationLng : locationLng // ignore: cast_nullable_to_non_nullable
 as double?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
@@ -888,7 +891,7 @@ as DateTime?,
 /// @nodoc
 mixin _$EventDraft {
 
- DateTime get startsAt; String get label; String? get spot; double? get lat; double? get lng; String? get managerPlayerId; String? get description; EventColor? get color;
+ DateTime get startsAt; String get label; String? get spot; String? get spotId; double? get lat; double? get lng; String? get managerPlayerId; String? get description; EventColor? get color;
 /// Create a copy of EventDraft
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -900,20 +903,20 @@ $EventDraftCopyWith<EventDraft> get copyWith => _$EventDraftCopyWithImpl<EventDr
 @override
 bool operator ==(Object other) {
   final _this = this as EventDraft;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EventDraft&&(identical(other.startsAt, _this.startsAt) || other.startsAt == _this.startsAt)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.spot, _this.spot) || other.spot == _this.spot)&&(identical(other.lat, _this.lat) || other.lat == _this.lat)&&(identical(other.lng, _this.lng) || other.lng == _this.lng)&&(identical(other.managerPlayerId, _this.managerPlayerId) || other.managerPlayerId == _this.managerPlayerId)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.color, _this.color) || other.color == _this.color));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EventDraft&&(identical(other.startsAt, _this.startsAt) || other.startsAt == _this.startsAt)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.spot, _this.spot) || other.spot == _this.spot)&&(identical(other.spotId, _this.spotId) || other.spotId == _this.spotId)&&(identical(other.lat, _this.lat) || other.lat == _this.lat)&&(identical(other.lng, _this.lng) || other.lng == _this.lng)&&(identical(other.managerPlayerId, _this.managerPlayerId) || other.managerPlayerId == _this.managerPlayerId)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.color, _this.color) || other.color == _this.color));
 }
 
 
 @override
 int get hashCode {
   final _this = this as EventDraft;
-  return Object.hash(runtimeType,_this.startsAt,_this.label,_this.spot,_this.lat,_this.lng,_this.managerPlayerId,_this.description,_this.color);
+  return Object.hash(runtimeType,_this.startsAt,_this.label,_this.spot,_this.spotId,_this.lat,_this.lng,_this.managerPlayerId,_this.description,_this.color);
 }
 
 @override
 String toString() {
   final _this = this as EventDraft;
-  return 'EventDraft(startsAt: ${_this.startsAt}, label: ${_this.label}, spot: ${_this.spot}, lat: ${_this.lat}, lng: ${_this.lng}, managerPlayerId: ${_this.managerPlayerId}, description: ${_this.description}, color: ${_this.color})';
+  return 'EventDraft(startsAt: ${_this.startsAt}, label: ${_this.label}, spot: ${_this.spot}, spotId: ${_this.spotId}, lat: ${_this.lat}, lng: ${_this.lng}, managerPlayerId: ${_this.managerPlayerId}, description: ${_this.description}, color: ${_this.color})';
 }
 
 
@@ -924,7 +927,7 @@ abstract mixin class $EventDraftCopyWith<$Res>  {
   factory $EventDraftCopyWith(EventDraft value, $Res Function(EventDraft) _then) = _$EventDraftCopyWithImpl;
 @useResult
 $Res call({
- DateTime startsAt, String label, String? spot, double? lat, double? lng, String? managerPlayerId, String? description, EventColor? color
+ DateTime startsAt, String label, String? spot, String? spotId, double? lat, double? lng, String? managerPlayerId, String? description, EventColor? color
 });
 
 
@@ -941,11 +944,12 @@ class _$EventDraftCopyWithImpl<$Res>
 
 /// Create a copy of EventDraft
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? startsAt = null,Object? label = null,Object? spot = freezed,Object? lat = freezed,Object? lng = freezed,Object? managerPlayerId = freezed,Object? description = freezed,Object? color = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? startsAt = null,Object? label = null,Object? spot = freezed,Object? spotId = freezed,Object? lat = freezed,Object? lng = freezed,Object? managerPlayerId = freezed,Object? description = freezed,Object? color = freezed,}) {
   return _then(EventDraft(
 startsAt: null == startsAt ? _self.startsAt : startsAt // ignore: cast_nullable_to_non_nullable
 as DateTime,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,spot: freezed == spot ? _self.spot : spot // ignore: cast_nullable_to_non_nullable
+as String?,spotId: freezed == spotId ? _self.spotId : spotId // ignore: cast_nullable_to_non_nullable
 as String?,lat: freezed == lat ? _self.lat : lat // ignore: cast_nullable_to_non_nullable
 as double?,lng: freezed == lng ? _self.lng : lng // ignore: cast_nullable_to_non_nullable
 as double?,managerPlayerId: freezed == managerPlayerId ? _self.managerPlayerId : managerPlayerId // ignore: cast_nullable_to_non_nullable
@@ -1036,10 +1040,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime startsAt,  String label,  String? spot,  double? lat,  double? lng,  String? managerPlayerId,  String? description,  EventColor? color)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime startsAt,  String label,  String? spot,  String? spotId,  double? lat,  double? lng,  String? managerPlayerId,  String? description,  EventColor? color)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _EventDraft() when $default != null:
-return $default(_that.startsAt,_that.label,_that.spot,_that.lat,_that.lng,_that.managerPlayerId,_that.description,_that.color);case _:
+return $default(_that.startsAt,_that.label,_that.spot,_that.spotId,_that.lat,_that.lng,_that.managerPlayerId,_that.description,_that.color);case _:
   return orElse();
 
 }
@@ -1057,10 +1061,10 @@ return $default(_that.startsAt,_that.label,_that.spot,_that.lat,_that.lng,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime startsAt,  String label,  String? spot,  double? lat,  double? lng,  String? managerPlayerId,  String? description,  EventColor? color)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime startsAt,  String label,  String? spot,  String? spotId,  double? lat,  double? lng,  String? managerPlayerId,  String? description,  EventColor? color)  $default,) {final _that = this;
 switch (_that) {
 case _EventDraft():
-return $default(_that.startsAt,_that.label,_that.spot,_that.lat,_that.lng,_that.managerPlayerId,_that.description,_that.color);case _:
+return $default(_that.startsAt,_that.label,_that.spot,_that.spotId,_that.lat,_that.lng,_that.managerPlayerId,_that.description,_that.color);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1077,10 +1081,10 @@ return $default(_that.startsAt,_that.label,_that.spot,_that.lat,_that.lng,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime startsAt,  String label,  String? spot,  double? lat,  double? lng,  String? managerPlayerId,  String? description,  EventColor? color)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime startsAt,  String label,  String? spot,  String? spotId,  double? lat,  double? lng,  String? managerPlayerId,  String? description,  EventColor? color)?  $default,) {final _that = this;
 switch (_that) {
 case _EventDraft() when $default != null:
-return $default(_that.startsAt,_that.label,_that.spot,_that.lat,_that.lng,_that.managerPlayerId,_that.description,_that.color);case _:
+return $default(_that.startsAt,_that.label,_that.spot,_that.spotId,_that.lat,_that.lng,_that.managerPlayerId,_that.description,_that.color);case _:
   return null;
 
 }
@@ -1092,12 +1096,13 @@ return $default(_that.startsAt,_that.label,_that.spot,_that.lat,_that.lng,_that.
 
 
 class _EventDraft extends EventDraft {
-  const _EventDraft({required this.startsAt, required this.label, this.spot, this.lat, this.lng, this.managerPlayerId, this.description, this.color}): super._();
+  const _EventDraft({required this.startsAt, required this.label, this.spot, this.spotId, this.lat, this.lng, this.managerPlayerId, this.description, this.color}): super._();
   
 
 @override final  DateTime startsAt;
 @override final  String label;
 @override final  String? spot;
+@override final  String? spotId;
 @override final  double? lat;
 @override final  double? lng;
 @override final  String? managerPlayerId;
@@ -1114,18 +1119,18 @@ _$EventDraftCopyWith<_EventDraft> get copyWith => __$EventDraftCopyWithImpl<_Eve
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EventDraft&&(identical(other.startsAt, startsAt) || other.startsAt == startsAt)&&(identical(other.label, label) || other.label == label)&&(identical(other.spot, spot) || other.spot == spot)&&(identical(other.lat, lat) || other.lat == lat)&&(identical(other.lng, lng) || other.lng == lng)&&(identical(other.managerPlayerId, managerPlayerId) || other.managerPlayerId == managerPlayerId)&&(identical(other.description, description) || other.description == description)&&(identical(other.color, color) || other.color == color));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EventDraft&&(identical(other.startsAt, startsAt) || other.startsAt == startsAt)&&(identical(other.label, label) || other.label == label)&&(identical(other.spot, spot) || other.spot == spot)&&(identical(other.spotId, spotId) || other.spotId == spotId)&&(identical(other.lat, lat) || other.lat == lat)&&(identical(other.lng, lng) || other.lng == lng)&&(identical(other.managerPlayerId, managerPlayerId) || other.managerPlayerId == managerPlayerId)&&(identical(other.description, description) || other.description == description)&&(identical(other.color, color) || other.color == color));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,startsAt,label,spot,lat,lng,managerPlayerId,description,color);
+    return Object.hash(runtimeType,startsAt,label,spot,spotId,lat,lng,managerPlayerId,description,color);
 }
 
 @override
 String toString() {
-    return 'EventDraft(startsAt: $startsAt, label: $label, spot: $spot, lat: $lat, lng: $lng, managerPlayerId: $managerPlayerId, description: $description, color: $color)';
+    return 'EventDraft(startsAt: $startsAt, label: $label, spot: $spot, spotId: $spotId, lat: $lat, lng: $lng, managerPlayerId: $managerPlayerId, description: $description, color: $color)';
 }
 
 
@@ -1136,7 +1141,7 @@ abstract mixin class _$EventDraftCopyWith<$Res> implements $EventDraftCopyWith<$
   factory _$EventDraftCopyWith(_EventDraft value, $Res Function(_EventDraft) _then) = __$EventDraftCopyWithImpl;
 @override @useResult
 $Res call({
- DateTime startsAt, String label, String? spot, double? lat, double? lng, String? managerPlayerId, String? description, EventColor? color
+ DateTime startsAt, String label, String? spot, String? spotId, double? lat, double? lng, String? managerPlayerId, String? description, EventColor? color
 });
 
 
@@ -1153,11 +1158,12 @@ class __$EventDraftCopyWithImpl<$Res>
 
 /// Create a copy of EventDraft
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? startsAt = null,Object? label = null,Object? spot = freezed,Object? lat = freezed,Object? lng = freezed,Object? managerPlayerId = freezed,Object? description = freezed,Object? color = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? startsAt = null,Object? label = null,Object? spot = freezed,Object? spotId = freezed,Object? lat = freezed,Object? lng = freezed,Object? managerPlayerId = freezed,Object? description = freezed,Object? color = freezed,}) {
   return _then(_EventDraft(
 startsAt: null == startsAt ? _self.startsAt : startsAt // ignore: cast_nullable_to_non_nullable
 as DateTime,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,spot: freezed == spot ? _self.spot : spot // ignore: cast_nullable_to_non_nullable
+as String?,spotId: freezed == spotId ? _self.spotId : spotId // ignore: cast_nullable_to_non_nullable
 as String?,lat: freezed == lat ? _self.lat : lat // ignore: cast_nullable_to_non_nullable
 as double?,lng: freezed == lng ? _self.lng : lng // ignore: cast_nullable_to_non_nullable
 as double?,managerPlayerId: freezed == managerPlayerId ? _self.managerPlayerId : managerPlayerId // ignore: cast_nullable_to_non_nullable

@@ -196,6 +196,16 @@ GitHub Actions (Q17).
   seule implémentation, le rejeu `HoleReplay` de `hole_stats.dart`, lu par la fiche trou et
   par les badges J ; `players.stats_public` et `players.badges_public` ne décident que de l'affichage
   sur la fiche publique, jamais de l'accès aux données (Q133).
+- Spots (plan 28) : table `spots` par association (nom unique sans tenir compte de la casse,
+  description, adresse, ville, point, ou « emplacement variable » sans point, Q186), lisible par
+  tout compte connecté, en lecture seule pour l'app : écriture par les RPC
+  `create_spot` (tout membre, pour le « + » de la création de session ; description réservée
+  au staff), `update_spot` et `delete_spot` (`is_association_staff` ou `super_admin`). Une
+  session porte obligatoirement un spot (`create_session`), un événement un spot ou un lieu
+  libre. `sessions.zone`/`city` et `events.spot`/`location` restent des copies tenues à jour
+  par la base (déclencheurs `sessions_copy_spot`, `events_guard`, `spots_propagate`) : les
+  écrans les lisent comme avant, et elles gardent le lieu d'un spot supprimé. Adresse ↔ point
+  par Photon (`place_geocoding_client.dart`), toujours synchronisés.
 - Planning (plan 23) : table `events` à part, jamais un statut de session (un événement peut
   n'avoir rien à voir avec le jeu). Lecture, réponses (`event_responses`) et commentaires
   (`event_comments`) réservés aux membres de l'association ; modification par le créateur, le
@@ -205,7 +215,7 @@ GitHub Actions (Q17).
   de celui qui importe, et remplace les seuls
   événements importés à venir. Le fichier d'agenda est lu en Dart (`ics_parser.dart`), qui
   transforme toute répétition en événements indépendants : NUNI n'a aucune notion de
-  répétition. Listes de libellés et de lieux déduites de l'existant, sans table. Couleurs :
+  répétition. Liste de libellés déduite de l'existant, sans table ; lieux : les spots (plan 28). Couleurs :
   `eventHues` de `palettes.dart`. Une session démarrée depuis un événement porte
   `sessions.event_id` (`create_session` y ajoute les « présents »).
 - Temps réel : abonnements Supabase filtrés par session (ou par événement pour les

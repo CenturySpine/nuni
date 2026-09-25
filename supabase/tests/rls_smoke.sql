@@ -43,6 +43,13 @@ where user_id in ('a0000000-0000-0000-0000-000000000007', 'a0000000-0000-0000-00
                   'a0000000-0000-0000-0000-000000000010');
 update players set association_id = 'c0000000-0000-0000-0000-000000000002'
 where user_id = 'a0000000-0000-0000-0000-000000000008';
+-- Plan 28: one spot in each association; every new session needs one.
+insert into spots (id, association_id, name, city, location)
+values
+  ('d0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'Smoke Park',
+   'Smokeville', st_setsrid(st_makepoint(2.36, 48.86), 4326)::geography),
+  ('d0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000002', 'Smoke Other Park',
+   'Othertown', st_setsrid(st_makepoint(4.01, 45.01), 4326)::geography);
 
 -- A hole owned by the session owner (every hole is public since plan 26, Q110), par 4 so the
 -- played hole's copied par is distinguishable from the free-hole default of 3.
@@ -69,6 +76,7 @@ set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"
 
 select create_session(jsonb_build_object(
   'kind', 'team',
+  'spot_id', 'd0000000-0000-0000-0000-000000000001',
   'scoring_mode', 'stroke_play',
   'ranking_direction', 'asc',
   'teams', jsonb_build_array(
@@ -198,7 +206,7 @@ set role authenticated;
 set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000004","role":"authenticated"}';
 do $$
 begin
-  perform create_session('{"kind":"individual","scoring_mode":"stroke_play","ranking_direction":"asc"}');
+  perform create_session('{"kind":"individual","scoring_mode":"stroke_play","ranking_direction":"asc","spot_id":"d0000000-0000-0000-0000-000000000001"}');
   insert into test_results (test, passed) values ('no_association_cannot_create_session', false);
 exception when others then
   insert into test_results (test, passed)
@@ -781,7 +789,8 @@ from players where user_id = 'a0000000-0000-0000-0000-000000000001';
 do $$
 begin
   perform create_session(jsonb_build_object('kind', 'individual', 'scoring_mode', 'stroke_play',
-    'ranking_direction', 'asc', 'event_id', (select id from test_events where name = 'today')));
+    'ranking_direction', 'asc', 'spot_id', 'd0000000-0000-0000-0000-000000000001',
+    'event_id', (select id from test_events where name = 'today')));
   insert into test_results (test, passed) values ('member_cannot_start_session_from_event', false);
 exception when others then
   insert into test_results (test, passed)
@@ -792,7 +801,8 @@ reset request.jwt.claims;
 set role authenticated;
 set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000007","role":"authenticated"}';
 select create_session(jsonb_build_object('kind', 'individual', 'scoring_mode', 'stroke_play',
-  'ranking_direction', 'asc', 'event_id', (select id from test_events where name = 'today')));
+  'ranking_direction', 'asc', 'spot_id', 'd0000000-0000-0000-0000-000000000001',
+    'event_id', (select id from test_events where name = 'today')));
 reset role;
 reset request.jwt.claims;
 insert into test_results (test, passed)
@@ -928,7 +938,8 @@ select 'admin_tags_championship_edits_event_and_moderates',
 insert into test_results (test, passed)
 select 'admin_imports', (import_events_preview() ->> 'events')::int = 1;
 select create_session(jsonb_build_object('kind', 'individual', 'scoring_mode', 'stroke_play',
-  'ranking_direction', 'asc', 'event_id', (select id from test_events where name = 'today')));
+  'ranking_direction', 'asc', 'spot_id', 'd0000000-0000-0000-0000-000000000001',
+    'event_id', (select id from test_events where name = 'today')));
 insert into test_results (test, passed)
 select 'admin_starts_session_from_event',
   exists (
@@ -969,6 +980,191 @@ reset role;
 reset request.jwt.claims;
 drop table test_plan27;
 
+-- ===== Plan 28: spots =====
+-- Owner (1) is a plain member of association 1, manager (9) its local manager, foreign (8) belongs
+-- to association 2: they read association 1's spots too, but write none.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000008","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'spots_read_by_everyone',
+  exists (select 1 from spots where association_id = 'c0000000-0000-0000-0000-000000000001')
+  and exists (select 1 from spots where association_id = 'c0000000-0000-0000-0000-000000000002');
+do $$
+begin
+  perform create_spot('c0000000-0000-0000-0000-000000000001',
+    '{"name": "Intruder", "location": {"lat": 48.8, "lng": 2.3}}'::jsonb);
+  insert into test_results (test, passed) values ('outsider_cannot_create_spot', false);
+exception when others then
+  insert into test_results (test, passed) values ('outsider_cannot_create_spot', sqlerrm = 'not_association_member');
+end $$;
+reset role;
+reset request.jwt.claims;
+
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+-- The "+" of the session form: a name and a point; a member's description is dropped (Q180).
+select create_spot('c0000000-0000-0000-0000-000000000001',
+  '{"name": " Quick spot ", "description": "ignored", "location": {"lat": 48.87, "lng": 2.37}}'::jsonb);
+insert into test_results (test, passed)
+select 'member_quick_creates_spot',
+  exists (
+    select 1 from spots
+    where association_id = 'c0000000-0000-0000-0000-000000000001'
+      and name = 'Quick spot' and description is null and location_lat is not null
+      and created_by = 'a0000000-0000-0000-0000-000000000001'
+  );
+do $$
+begin
+  perform create_spot('c0000000-0000-0000-0000-000000000001',
+    '{"name": "quick SPOT", "location": {"lat": 48.8, "lng": 2.3}}'::jsonb);
+  insert into test_results (test, passed) values ('spot_name_unique_ignoring_case', false);
+exception when others then
+  insert into test_results (test, passed) values ('spot_name_unique_ignoring_case', sqlerrm = 'spot_name_taken');
+end $$;
+do $$
+begin
+  perform create_spot('c0000000-0000-0000-0000-000000000001', '{"name": "Nowhere"}'::jsonb);
+  insert into test_results (test, passed) values ('spot_requires_point', false);
+exception when others then
+  insert into test_results (test, passed) values ('spot_requires_point', sqlerrm = 'spot_location_required');
+end $$;
+do $$
+begin
+  perform update_spot('d0000000-0000-0000-0000-000000000001', '{"name": "Hacked"}'::jsonb);
+  insert into test_results (test, passed) values ('member_cannot_edit_spot', false);
+exception when others then
+  insert into test_results (test, passed) values ('member_cannot_edit_spot', sqlerrm = 'not_association_manager');
+end $$;
+do $$
+begin
+  perform delete_spot('d0000000-0000-0000-0000-000000000001');
+  insert into test_results (test, passed) values ('member_cannot_delete_spot', false);
+exception when others then
+  insert into test_results (test, passed) values ('member_cannot_delete_spot', sqlerrm = 'not_association_manager');
+end $$;
+-- A session needs a spot of its own association, whose name and city it copies (Q184).
+do $$
+begin
+  perform create_session('{"kind":"individual","scoring_mode":"stroke_play","ranking_direction":"asc"}');
+  insert into test_results (test, passed) values ('session_requires_spot', false);
+exception when others then
+  insert into test_results (test, passed) values ('session_requires_spot', sqlerrm = 'spot_required');
+end $$;
+do $$
+begin
+  perform create_session('{"kind":"individual","scoring_mode":"stroke_play","ranking_direction":"asc","spot_id":"d0000000-0000-0000-0000-000000000002"}');
+  insert into test_results (test, passed) values ('session_spot_of_own_association', false);
+exception when others then
+  insert into test_results (test, passed) values ('session_spot_of_own_association', sqlerrm = 'spot_not_in_association');
+end $$;
+select create_session(jsonb_build_object('kind', 'individual', 'scoring_mode', 'stroke_play',
+  'ranking_direction', 'asc', 'spot_id', 'd0000000-0000-0000-0000-000000000001', 'comment', 'plan28'));
+insert into test_results (test, passed)
+select 'session_copies_spot',
+  exists (
+    select 1 from sessions
+    where comment = 'plan28' and spot_id = 'd0000000-0000-0000-0000-000000000001'
+      and zone = 'Smoke Park' and city = 'Smokeville' and location_lat is not null
+  );
+-- An event may be linked to a spot (its name and point copied) or keep a free place.
+insert into events (starts_at, label, spot_id)
+values (now() + interval '10 days', 'Plan 28 linked', 'd0000000-0000-0000-0000-000000000001');
+insert into events (starts_at, label, spot)
+values (now() + interval '11 days', 'Plan 28 free', 'Christmas restaurant');
+insert into test_results (test, passed)
+select 'event_spot_linked_or_free',
+  exists (
+    select 1 from events
+    where label = 'Plan 28 linked' and spot = 'Smoke Park' and location_lat is not null
+  )
+  and exists (
+    select 1 from events where label = 'Plan 28 free' and spot = 'Christmas restaurant' and spot_id is null
+  );
+reset role;
+reset request.jwt.claims;
+
+-- The manager renames the spot: sessions and events follow; deletes it: they keep the name (Q182).
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000009","role":"authenticated"}';
+select update_spot('d0000000-0000-0000-0000-000000000001',
+  '{"name": "Smoke Garden", "description": "By the fountain", "city": "Smokecity"}'::jsonb);
+-- Checked as the privileged role: the session is a draft, which only its participants read
+-- (plan 26), not the manager who renamed the spot.
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'rename_spot_propagates',
+  (select zone || '|' || city from sessions where comment = 'plan28') = 'Smoke Garden|Smokecity'
+  and (select spot from events where label = 'Plan 28 linked') = 'Smoke Garden'
+  and (select description from spots where id = 'd0000000-0000-0000-0000-000000000001') = 'By the fountain';
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000009","role":"authenticated"}';
+do $$
+begin
+  perform update_spot('d0000000-0000-0000-0000-000000000001', '{"location": null}'::jsonb);
+  insert into test_results (test, passed) values ('spot_point_cannot_be_removed', false);
+exception when others then
+  insert into test_results (test, passed) values ('spot_point_cannot_be_removed', sqlerrm = 'spot_location_required');
+end $$;
+select delete_spot('d0000000-0000-0000-0000-000000000001');
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'delete_spot_keeps_names',
+  (select spot_id is null and zone = 'Smoke Garden' from sessions where comment = 'plan28')
+  and (select spot_id is null and spot = 'Smoke Garden' from events where label = 'Plan 28 linked');
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000009","role":"authenticated"}';
+-- A spot with a variable location (Q186): no point, each event and session keeps its own.
+select create_spot('c0000000-0000-0000-0000-000000000001', jsonb_build_object(
+  'name', 'Surprise', 'variable_location', true, 'location', jsonb_build_object('lat', 1, 'lng', 1)));
+insert into events (starts_at, label, spot_id, location)
+select now() + interval '13 days', 'Plan 28 surprise', id,
+  st_setsrid(st_makepoint(2.30, 48.80), 4326)::geography
+from spots where name = 'Surprise' and association_id = 'c0000000-0000-0000-0000-000000000001';
+insert into test_results (test, passed)
+select 'variable_spot_keeps_event_point',
+  (select location_lat is null and variable_location from spots where name = 'Surprise' and association_id = 'c0000000-0000-0000-0000-000000000001')
+  and (select round(location_lat::numeric, 2) from events where label = 'Plan 28 surprise') = 48.80;
+reset role;
+reset request.jwt.claims;
+-- A plain member can't make a spot variable: theirs keeps its point.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+select create_session(jsonb_build_object('kind', 'individual', 'scoring_mode', 'stroke_play',
+  'ranking_direction', 'asc', 'spot_id', (select id from spots where name = 'Surprise' and association_id = 'c0000000-0000-0000-0000-000000000001'),
+  'city', 'Smoketown', 'location', jsonb_build_object('lat', 48.81, 'lng', 2.31),
+  'comment', 'plan28 surprise'));
+insert into test_results (test, passed)
+select 'variable_spot_session_keeps_its_point_and_city',
+  exists (
+    select 1 from sessions
+    where comment = 'plan28 surprise' and zone = 'Surprise' and city = 'Smoketown'
+      and round(location_lat::numeric, 2) = 48.81
+  );
+do $$
+begin
+  perform create_spot('c0000000-0000-0000-0000-000000000001',
+    '{"name": "Member variable", "variable_location": true}'::jsonb);
+  insert into test_results (test, passed) values ('member_cannot_create_variable_spot', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('member_cannot_create_variable_spot', sqlerrm = 'spot_location_required');
+end $$;
+reset role;
+reset request.jwt.claims;
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000009","role":"authenticated"}';
+-- An imported place named like a spot (ignoring case) is linked to it.
+select import_events(jsonb_build_array(jsonb_build_object(
+  'label', 'Plan 28 import', 'starts_at', now() + interval '12 days', 'spot', 'QUICK SPOT')));
+insert into test_results (test, passed)
+select 'import_links_spot_by_name',
+  (select s.name from events e join spots s on s.id = e.spot_id where e.label = 'Plan 28 import')
+    = 'Quick spot';
+reset role;
+reset request.jwt.claims;
+
 -- ===== Verdict =====
 select * from test_results order by n;
 
@@ -976,6 +1172,7 @@ select * from test_results order by n;
 delete from sessions where event_id in (select id from test_events);
 delete from events where association_id in ('c0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000002');
 delete from sessions where id in (select session_id from test_ids);
+delete from sessions where association_id in ('c0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000002');
 delete from holes where cloned_from in (select private_hole from test_ids);
 delete from holes where id in (select private_hole from test_ids);
 delete from association_managers where association_id = 'c0000000-0000-0000-0000-000000000001';

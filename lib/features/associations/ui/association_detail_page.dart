@@ -16,6 +16,7 @@ import '../../../shared/nuni_confirm_dialog.dart';
 import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_grouped_list.dart';
+import '../../../shared/nuni_list_card.dart';
 import '../../../shared/nuni_loading.dart';
 import '../../../shared/nuni_section_header.dart';
 import '../../../shared/nuni_status_pill.dart';
@@ -352,6 +353,17 @@ class _DetailState extends ConsumerState<_Detail> {
             ],
           ),
         ),
+        // Plan 28: where it plays, open to anyone (read-only outside the
+        // association); its staff manage the list there.
+        if (isApproved) ...[
+          const SizedBox(height: 16),
+          NuniListCard(
+            leading: Icon(PhosphorIcons.mapPin, color: context.nuni.primaryInk),
+            title: l10n.spotsTitle,
+            subtitle: l10n.spotsEntrySubtitle,
+            onTap: () => context.push('/associations/${association.id}/spots'),
+          ),
+        ],
         if (association.partners.isNotEmpty) ...[
           const SizedBox(height: 16),
           NuniSectionHeader(title: l10n.associationsPartnersTitle),

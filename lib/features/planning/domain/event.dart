@@ -81,6 +81,9 @@ abstract class Event with _$Event {
     @JsonKey(name: 'starts_at') required DateTime startsAt,
     required String label,
     String? spot,
+    // One of the association's spots (plan 28), whose name [spot] copies;
+    // null for a free place.
+    @JsonKey(name: 'spot_id') String? spotId,
     @JsonKey(name: 'location_lat') double? locationLat,
     @JsonKey(name: 'location_lng') double? locationLng,
     String? description,
@@ -144,6 +147,7 @@ abstract class EventDraft with _$EventDraft {
     required DateTime startsAt,
     required String label,
     String? spot,
+    String? spotId,
     double? lat,
     double? lng,
     String? managerPlayerId,
@@ -155,6 +159,7 @@ abstract class EventDraft with _$EventDraft {
     'starts_at': startsAt.toUtc().toIso8601String(),
     'label': label.trim(),
     'spot': _blankToNull(spot),
+    'spot_id': spotId,
     'location': lat == null || lng == null
         ? null
         : 'SRID=4326;POINT($lng $lat)',

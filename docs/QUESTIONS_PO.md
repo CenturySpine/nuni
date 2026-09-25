@@ -1718,7 +1718,8 @@ construire. Une table dédiée ne se justifierait que pour une liste gérée par
 (ordre imposé, libellés retirés à la main).
 
 **Q148 ☑ — Planning : les lieux mémorisés sont-ils partagés avec le champ « Zone » des sessions ?**
-Réponse PO (2026-09-25) : oui.
+Réponse PO (2026-09-25) : oui. **Remplacée le 2026-09-25 par le plan 28** (référentiel de spots,
+Q178 à Q185) : les lieux proposés sont désormais les spots de l'association.
 Constat : le besoin demande que les lieux saisis servent aux événements et aux sessions. La
 création de session a déjà un champ « Zone (facultative) », qui propose les zones des sessions
 précédentes de la même ville.
@@ -2066,3 +2067,102 @@ super_admin. C'est le terme de la demande du PO, et le mot « local » le rattac
 « responsable local », dont il partage les droits. L'autre voie, renommer le super_admin
 « l'équipe NUNI » dans les textes existants, lèverait toute ambiguïté mais changerait des
 textes déjà validés. Le plan 27 applique la suggestion.
+
+## Référentiel de spots (plan 28, 2026-09-25)
+
+Demande du PO du 2026-09-25 : un référentiel de spots par association (libellé, description,
+point et adresse synchronisés), géré par le responsable local et les administrateurs locaux ;
+choix libre ou dans le référentiel pour un événement, obligatoire dans le référentiel pour une
+session, avec création rapide « + » à la position courante. Remplace Q148 pour les lieux. Réponses du PO du 2026-09-25 : toutes les suggestions retenues.
+
+**Q178 ☑ — Spots : quel service pour passer d'une adresse à un point et inversement ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Constat : l'app n'utilise que BigDataCloud, qui donne la ville d'un point mais ni l'adresse
+complète ni la recherche d'adresse.
+Suggestion : Photon (komoot), fondé sur OpenStreetMap comme les cartes de l'app : gratuit, sans
+clé, appelable depuis le navigateur, dans les deux sens, et il accepte la recherche au fil de la
+frappe. Nominatim (le service officiel d'OpenStreetMap) interdit justement cette recherche au
+fil de la frappe ; Google et Mapbox exigent une clé et un compte de facturation. BigDataCloud
+reste pour la ville à la création de session tant qu'il sert ailleurs. Le plan 28 applique
+cette suggestion.
+
+**Q179 ☑ — Spots : l'adresse peut-elle être tapée librement, sans correspondre à un point ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Suggestion : non. L'adresse ne s'écrit que par la recherche (on tape, on choisit une
+proposition, le point suit) ou par le point (on le pose, l'adresse suit). Une adresse tapée à la
+main sans être retrouvée ne peut pas placer le point : les deux divergeraient, ce que la demande
+exclut. Si le lieu n'a pas d'adresse (un parc), on pose le point et l'adresse proposée est la
+plus proche ; la description sert aux précisions (« entrée côté fontaine »). Le plan 28 applique
+cette suggestion.
+
+**Q180 ☑ — Spots : qui peut créer un spot par le « + » de la création de session, et qui voit l'écran « Spots » ?**
+Réponse PO (2026-09-25) : suggestion retenue. Complément PO du même jour, après essai : l'écran « Spots » est visible de tout compte connecté, y compris hors de l'association (lecture seule), et sa tuile passe au-dessus des partenaires sur la page de l'association.
+Constat : tout membre d'une association peut créer une session ; le « + » doit donc lui être
+ouvert, sinon un membre ordinaire serait bloqué sur un spot absent.
+Suggestion : le « + » est ouvert à tout membre (nom et point seulement) ; modifier, compléter et
+supprimer restent réservés au responsable local, aux administrateurs locaux et au super_admin.
+L'écran « Spots » (liste et carte) est visible de tous les membres en lecture, pour qu'ils
+trouvent où l'on joue ; les boutons d'édition n'apparaissent qu'aux responsables. Le plan 28
+applique cette suggestion.
+
+**Q181 ☑ — Spots : un spot peut-il exister sans point sur la carte ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Suggestion : non pour un spot créé dans l'app : à défaut de position (géolocalisation refusée),
+le « + » affiche la carte pour poser le point. Seuls les spots repris de l'existant sans point
+connu (Q185) en sont dépourvus, signalés « à compléter » dans l'écran « Spots ». Un référentiel
+dont chaque spot est placé permet de proposer d'abord les spots les plus proches à la création
+de session. Le plan 28 applique cette suggestion.
+
+**Q182 ☑ — Spots : que deviennent les sessions et événements d'un spot supprimé ou renommé ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Suggestion : chaque session ou événement garde un lien vers le spot **et** une copie de son nom.
+Tant que le spot existe, on affiche son nom actuel (un renommage se voit partout) ; s'il est
+supprimé, le lien tombe et la copie reste affichée : l'historique ne perd jamais son lieu, et
+la suppression n'est jamais bloquée. Interdire la suppression d'un spot utilisé obligerait à
+garder des spots fermés dans la liste. Le plan 28 applique cette suggestion.
+
+**Q183 ☑ — Spots : deux spots de la même association peuvent-ils porter le même nom ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Suggestion : non, sans tenir compte des majuscules : « Parc Borély » et « parc borély » seraient
+indiscernables dans la liste de la création de session, et le « + » propose le spot existant au
+lieu d'en créer un doublon. Deux associations peuvent avoir chacune leur « Vieux-Port ». Le plan
+28 applique cette suggestion.
+
+**Q184 ☑ — Spots : la ville d'une session devient-elle celle de son spot ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Constat : la création de session détecte aujourd'hui la ville par la position (Q11), dans un
+champ modifiable ; la ville sert au filtre de l'historique et à l'affichage.
+Suggestion : oui. La ville est tirée de l'adresse du spot et copiée dans la session ; le champ
+ville disparaît du formulaire. Un champ de moins, et la ville ne peut plus contredire le spot
+(créateur qui prépare la session depuis chez lui). Le plan 28 applique cette suggestion.
+
+**Q185 ☑ — Spots : faut-il pré-remplir le référentiel avec les lieux déjà saisis ?**
+Réponse PO (2026-09-25) : suggestion retenue. Liste relue le même jour : les 7 lieux sont des
+spots de jeu ; « INSA » et « Campus de la Doua » ne font qu'un (« INSA », adresse du campus),
+« Hôpital de la Croix-Rousse » devient « Croix-Rousse » et « DOCKS 40 » devient « Confluence »
+(leur ancien texte devient leur adresse), « Tee Time » et « Auditorium » restent tels quels,
+« Surprise » est un spot générique sans emplacement. Appliqué par `supabase/spots_backfill.sql`.
+Constat : les événements ont des lieux en texte libre (souvent avec un point) et les sessions,
+importées de LsgScores comprises, des zones en texte libre.
+Suggestion : oui, une fois, au passage du plan 28 : un spot par nom distinct et par association
+(sans tenir compte des majuscules), point repris du dernier événement ou de la dernière session
+qui en a un, puis sessions et événements rattachés. Le PO relit la liste avant la reconstruction
+et peut en retirer ; les responsables fusionnent ensuite les variantes en renommant. Partir
+d'un référentiel vide obligerait à tout ressaisir et laisserait l'historique sans lien. Le plan
+28 applique cette suggestion.
+
+**Q186 ☑ — Spots : comment gérer un spot « générique » (« Surprise ») dont l'emplacement change à chaque fois ?**
+Réponse PO (2026-09-25) : suggestion retenue ; couvre aussi l'événement programmé des semaines à l'avance dont le lieu n'est révélé que la veille (modification de l'événement : point posé sur sa carte, ou spot choisi).
+Constat : le PO a besoin d'un nom réutilisable (« Surprise ») dont l'emplacement diffère d'une
+session ou d'un événement à l'autre. Le plan 28 tel que codé le permet déjà en partie : un spot
+sans point laisse à chaque événement son propre point (posé sur la carte du formulaire) et à
+chaque session le sien (la position de son créateur). Trois manques : la création d'un tel spot
+dans l'app est impossible (point obligatoire, Q181), l'écran « Spots » l'affiche « À compléter »,
+et une session sur ce spot n'aurait pas de ville (elle vient du spot, Q184).
+Suggestion : une case « Emplacement variable » dans le formulaire de spot (responsables
+seulement). Cochée, le spot n'a ni point ni adresse, n'est jamais « À compléter » ; chaque
+événement garde le point posé sur sa carte, chaque session la position de son créateur (ou le
+point de l'événement dont elle est démarrée), et sa ville est détectée depuis cette position
+comme avant le plan 28 (Q11). Un simple drapeau sur la table, sans nouvelle table. L'autre voie,
+créer un spot par occurrence (« Surprise 12/10 »), encombrerait la liste et casserait le
+regroupement par nom dans les statistiques à venir.

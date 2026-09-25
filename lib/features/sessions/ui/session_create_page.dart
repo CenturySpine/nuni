@@ -23,8 +23,10 @@ import '../../associations/data/associations_repository.dart';
 import '../../associations/ui/association_logo.dart';
 import '../../championship/data/championship_rights.dart';
 import '../../planning/data/events_repository.dart';
-import '../../planning/domain/planning.dart';
 import '../../profile/data/profile_repository.dart';
+import '../../spots/data/spots_repository.dart';
+import '../../spots/domain/spot.dart';
+import '../../spots/ui/spot_picker.dart';
 import '../data/libre_ranking_direction_pref.dart';
 import '../data/sessions_repository.dart';
 import '../domain/ranking_direction.dart';
@@ -37,9 +39,12 @@ import 'scoring_mode_info_sheet.dart';
 /// afterwards, in the waiting room (`SessionRoomPage`).
 ///
 /// `/session/new?event=:id` (plan 23, Q164) is the same form reached from
-/// "Start the session" on today's event: the zone starts as the event's
-/// place, and the members who answered "present" join the waiting room
-/// (create_session does it). Nothing else changes: a shortcut only.
+/// "Start the session" on today's event: the spot starts as the event's
+/// when it has one, and the members who answered "present" join the waiting
+/// room (create_session does it). Nothing else changes: a shortcut only.
+///
+/// The spot is required and chosen among the association's (plan 28); its
+/// name and city become the session's zone and city (Q184).
 class SessionCreatePage extends ConsumerStatefulWidget {
   const SessionCreatePage({super.key, this.eventId});
 
@@ -50,12 +55,13 @@ class SessionCreatePage extends ConsumerStatefulWidget {
 }
 
 class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
-  final _cityController = TextEditingController();
-  final _zoneController = TextEditingController();
-
   SessionKind _kind = SessionKind.individual;
   ScoringMode _scoringMode = ScoringMode.strokePlay;
   bool _isChampionship = false;
+  Spot? _spot;
+
+  /// Set once "Create" was tapped without a spot, to say it's missing.
+  bool _spotMissing = false;
 
   Position? _position;
   bool _creating = false;
@@ -67,20 +73,18 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
     unawaited(_prefillFromEvent());
   }
 
-  @override
-  void dispose() {
-    _cityController.dispose();
-    _zoneController.dispose();
-    super.dispose();
-  }
-
   Future<void> _prefillFromEvent() async {
     final eventId = widget.eventId;
     if (eventId == null) return;
     final event = await ref.read(eventByIdProvider(eventId).future);
-    final spot = event?.spot;
-    if (mounted && spot != null && _zoneController.text.isEmpty) {
-      _zoneController.text = spot;
+    final spotId = event?.spotId;
+    if (event == null || spotId == null) return;
+    final spots = await ref.read(
+      associationSpotsProvider(event.associationId).future,
+    );
+    final spot = spots.where((s) => s.id == spotId).firstOrNull;
+    if (mounted && spot != null && _spot == null) {
+      setState(() => _spot = spot);
     }
   }
 
@@ -90,22 +94,16 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
         .getCurrentPosition();
     if (!mounted || position == null) return;
     setState(() => _position = position);
-
-    final languageCode = Localizations.localeOf(context).languageCode;
-    final city = await ref
-        .read(reverseGeocodingClientProvider)
-        .cityFor(
-          lat: position.latitude,
-          lng: position.longitude,
-          languageCode: languageCode,
-        );
-    if (mounted && city != null && _cityController.text.isEmpty) {
-      _cityController.text = city;
-    }
   }
 
   Future<void> _create() async {
     final l10n = AppLocalizations.of(context)!;
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final spot = _spot;
+    if (spot == null) {
+      setState(() => _spotMissing = true);
+      return;
+    }
     setState(() => _creating = true);
     try {
       final implied = _scoringMode.impliedRankingDirection;
@@ -118,17 +116,37 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
         );
       }
 
-      final city = _cityController.text.trim();
-      final zone = _zoneController.text.trim();
+      // The session's point: where its creator stands -- except on a spot
+      // with a variable location (Q186), where the event it's started from
+      // says where it is today. Such a spot has no city: it's found from
+      // that point, as before plan 28 (Q11).
+      var lat = _position?.latitude;
+      var lng = _position?.longitude;
+      String? city;
+      if (spot.variableLocation) {
+        final event = widget.eventId == null
+            ? null
+            : ref.read(eventByIdProvider(widget.eventId!)).value;
+        if (event != null && event.hasLocation) {
+          lat = event.locationLat;
+          lng = event.locationLng;
+        }
+        if (lat != null && lng != null) {
+          city = await ref
+              .read(reverseGeocodingClientProvider)
+              .cityFor(lat: lat, lng: lng, languageCode: languageCode);
+        }
+      }
+
       final repo = ref.read(sessionsRepositoryProvider);
       final session = await repo.create(
         kind: _kind,
         scoringMode: _scoringMode,
         rankingDirection: rankingDirection,
-        city: city.isEmpty ? null : city,
-        zone: zone.isEmpty ? null : zone,
-        lat: _position?.latitude,
-        lng: _position?.longitude,
+        spotId: spot.id,
+        city: city,
+        lat: lat,
+        lng: lng,
         eventId: widget.eventId,
       );
       if (widget.eventId != null) {
@@ -173,6 +191,9 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
               // Plan 23, Q164: no longer the event's day, or no longer in
               // charge of it.
               'event_not_startable' => l10n.planningErrorNotStartable,
+              // Plan 28: the spot was deleted, or belongs elsewhere, meanwhile.
+              'spot_required' ||
+              'spot_not_in_association' => l10n.spotsFieldRequired,
               _ => describeError(error, l10n),
             }),
           ),
@@ -199,11 +220,6 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
     final l10n = AppLocalizations.of(context)!;
     final player = ref.watch(myPlayerProvider).value;
     final associationId = player?.associationId;
-    // The association's places, from its sessions and its planning (plan
-    // 23, Q148), most recent first.
-    final zoneSuggestions = associationId == null
-        ? const AsyncValue<List<SpotSuggestion>>.data([])
-        : ref.watch(spotSuggestionsForProvider(associationId));
     final event = widget.eventId == null
         ? null
         : ref.watch(eventByIdProvider(widget.eventId!)).value;
@@ -257,41 +273,26 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
           NuniFormSection(
             title: l10n.sessionsCreateSectionLocation,
             children: [
-              TextFormField(
-                controller: _cityController,
-                decoration: InputDecoration(
-                  labelText: l10n.sessionsCreateCityLabel,
+              if (associationId != null)
+                SpotPickerField(
+                  associationId: associationId,
+                  value: _spot,
+                  lat: _position?.latitude,
+                  lng: _position?.longitude,
+                  onChanged: (spot) => setState(() {
+                    _spot = spot;
+                    _spotMissing = false;
+                  }),
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _zoneController,
-                decoration: InputDecoration(
-                  labelText: l10n.sessionsCreateZoneLabel,
+              if (_spotMissing)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6, left: 12),
+                  child: Text(
+                    l10n.spotsFieldRequired,
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: Theme.of(context).colorScheme.error),
+                  ),
                 ),
-              ),
-              zoneSuggestions.when(
-                data: (zones) => zones.isEmpty
-                    ? const SizedBox.shrink()
-                    : Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            for (final zone in zones.take(8))
-                              NuniChip(
-                                label: zone.name,
-                                onTap: () => setState(
-                                  () => _zoneController.text = zone.name,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                loading: () => const SizedBox.shrink(),
-                error: (_, _) => const SizedBox.shrink(),
-              ),
             ],
           ),
           const SizedBox(height: 24),

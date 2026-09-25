@@ -32,8 +32,8 @@ class SessionsRepository {
     required SessionKind kind,
     required ScoringMode scoringMode,
     required RankingDirection rankingDirection,
+    required String spotId,
     String? city,
-    String? zone,
     double? lat,
     double? lng,
     String? eventId,
@@ -42,8 +42,11 @@ class SessionsRepository {
       'kind': kind.toPostgresValue(),
       'scoring_mode': scoringMode.toPostgresValue(),
       'ranking_direction': rankingDirection.name,
-      'city': city,
-      'zone': zone,
+      // The association's spot (plan 28): the base copies its name and city
+      // into the session's zone and city.
+      'spot_id': spotId,
+      // Only kept when the spot has no city of its own (Q186).
+      'city': ?city,
       if (lat != null && lng != null) 'location': {'lat': lat, 'lng': lng},
       // Started from a planning event (plan 23, Q164): linked to it, and its
       // "present" members join the waiting room.

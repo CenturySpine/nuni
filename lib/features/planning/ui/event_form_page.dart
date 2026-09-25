@@ -18,6 +18,8 @@ import '../../associations/data/associations_repository.dart';
 import '../../players/data/players_repository.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../profile/domain/player.dart';
+import '../../spots/data/spots_repository.dart';
+import '../../spots/domain/spot.dart';
 import '../data/events_repository.dart';
 import '../domain/event.dart';
 import '../domain/planning.dart';
@@ -93,6 +95,7 @@ class EventFormPage extends ConsumerWidget {
                           startsAt: event.startsAt.toLocal(),
                           label: event.label,
                           spot: event.spot,
+                          spotId: event.spotId,
                           lat: event.locationLat,
                           lng: event.locationLng,
                           managerPlayerId: event.managerPlayerId,
@@ -199,11 +202,12 @@ class _EventFormState extends ConsumerState<_EventForm> {
     });
   }
 
-  void _chooseSpot(SpotSuggestion spot) {
+  /// One of the association's spots (plan 28): its point comes with it.
+  void _chooseSpot(Spot spot) {
     _spot.text = spot.name;
-    if (spot.lat != null && spot.lng != null) {
+    if (spot.hasLocation) {
       setState(() {
-        _point = LatLng(spot.lat!, spot.lng!);
+        _point = LatLng(spot.locationLat!, spot.locationLng!);
         _mapVersion++;
       });
     }
@@ -213,10 +217,16 @@ class _EventFormState extends ConsumerState<_EventForm> {
     final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
+    // A place named like one of the association's spots is that spot (plan
+    // 28); any other text stays a free place (a dinner, a general assembly).
+    final spots =
+        ref.read(associationSpotsProvider(widget.associationId)).value ??
+        const <Spot>[];
     final draft = EventDraft(
       startsAt: _startsAt,
       label: _label.text,
       spot: _spot.text,
+      spotId: spotNamed(spots, _spot.text)?.id,
       lat: _point?.latitude,
       lng: _point?.longitude,
       managerPlayerId: _managerId,
@@ -237,9 +247,7 @@ class _EventFormState extends ConsumerState<_EventForm> {
           ..invalidate(eventByIdProvider(id));
         if (mounted) context.pop();
       }
-      ref
-        ..invalidate(eventLabelSuggestionsProvider(widget.associationId))
-        ..invalidate(spotSuggestionsForProvider(widget.associationId));
+      ref.invalidate(eventLabelSuggestionsProvider(widget.associationId));
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -259,8 +267,8 @@ class _EventFormState extends ConsumerState<_EventForm> {
         ref.watch(eventLabelSuggestionsProvider(widget.associationId)).value ??
         const <String>[];
     final spots =
-        ref.watch(spotSuggestionsForProvider(widget.associationId)).value ??
-        const <SpotSuggestion>[];
+        ref.watch(associationSpotsProvider(widget.associationId)).value ??
+        const <Spot>[];
     final members =
         ref.watch(associationPlayersProvider(widget.associationId)).value ??
         const <Player>[];
@@ -315,10 +323,11 @@ class _EventFormState extends ConsumerState<_EventForm> {
             NuniFormSection(
               title: l10n.sessionsCreateSectionLocation,
               children: [
-                _SuggestField<SpotSuggestion>(
+                _SuggestField<Spot>(
                   controller: _spot,
                   focusNode: _spotFocus,
                   label: l10n.planningFormSpot,
+                  helper: l10n.planningFormSpotHint,
                   options: spots,
                   display: (spot) => spot.name,
                   onSelected: _chooseSpot,
@@ -420,8 +429,9 @@ class _EventFormState extends ConsumerState<_EventForm> {
   }
 }
 
-/// A text field offering what the association already used (labels, spots:
-/// Q148), filtered as one types; anything typed is accepted too.
+/// A text field offering the association's labels already used (Q147) or
+/// its spots (plan 28), filtered as one types; anything typed is accepted
+/// too.
 class _SuggestField<T extends Object> extends StatelessWidget {
   const _SuggestField({
     required this.controller,
@@ -431,6 +441,7 @@ class _SuggestField<T extends Object> extends StatelessWidget {
     required this.display,
     required this.onSelected,
     this.validator,
+    this.helper,
   });
 
   final TextEditingController controller;
@@ -440,6 +451,7 @@ class _SuggestField<T extends Object> extends StatelessWidget {
   final String Function(T) display;
   final ValueChanged<T> onSelected;
   final FormFieldValidator<String>? validator;
+  final String? helper;
 
   @override
   Widget build(BuildContext context) {
@@ -460,7 +472,11 @@ class _SuggestField<T extends Object> extends StatelessWidget {
           TextFormField(
             controller: controller,
             focusNode: focusNode,
-            decoration: InputDecoration(labelText: label),
+            decoration: InputDecoration(
+              labelText: label,
+              helperText: helper,
+              helperMaxLines: 2,
+            ),
             textCapitalization: TextCapitalization.sentences,
             validator: validator,
             onFieldSubmitted: (_) => onSubmitted(),

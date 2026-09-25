@@ -99,7 +99,7 @@ grant execute on function join_session(text) to authenticated;
 -- to a user). payload shape:
 -- {
 --   "kind": "individual"|"team", "scoring_mode": "...", "ranking_direction": "asc"|"desc",
---   "city": text?, "zone": text?, "location": {"lat": number, "lng": number}?, "comment": text?,
+--   "spot_id": uuid, "location": {"lat": number, "lng": number}?, "city": text?, "comment": text?,
 --   "teams": [{"position": int, "player_ids": [uuid, ...]}, ...]?,
 --   "event_id": uuid?
 -- }
@@ -107,6 +107,10 @@ grant execute on function join_session(text) to authenticated;
 -- to it (sessions_guard_event, triggers.sql, checks who may) and every member who answered
 -- "present" joins its waiting room, like participants added by the organizer (Q26) -- nothing
 -- more: the organizer then adds, removes or invites as for any session.
+-- The spot is required (plan 28): one of the creator's association's spots, checked by
+-- sessions_copy_spot (triggers.sql), which also copies its name and city into zone and city. The
+-- point is the one sent (the creator's position, or the event's for a spot with a variable
+-- location, Q186), else the spot's. The city sent is kept only when the spot has none (Q186).
 create or replace function create_session(payload jsonb)
 returns sessions
 language plpgsql
@@ -118,26 +122,27 @@ declare
   v_team jsonb;
   v_team_id uuid;
   v_player_id uuid;
+  v_spot_id uuid := (payload ->> 'spot_id')::uuid;
 begin
+  if v_spot_id is null then
+    raise exception 'spot_required' using errcode = 'P0001';
+  end if;
+
   insert into sessions (
-    owner_id, kind, scoring_mode, ranking_direction, city, zone, location, comment, event_id
+    owner_id, kind, scoring_mode, ranking_direction, spot_id, city, location, comment, event_id
   ) values (
     auth.uid(),
     (payload ->> 'kind')::session_kind,
     (payload ->> 'scoring_mode')::scoring_mode,
     (payload ->> 'ranking_direction')::ranking_direction,
-    payload ->> 'city',
-    payload ->> 'zone',
-    case when payload -> 'location' is not null
-      then st_setsrid(
-        st_makepoint(
-          (payload -> 'location' ->> 'lng')::double precision,
-          (payload -> 'location' ->> 'lat')::double precision
-        ),
-        4326
-      )::geography
-      else null
-    end,
+    v_spot_id,
+    nullif(btrim(payload ->> 'city'), ''),
+    coalesce(
+      case when jsonb_typeof(payload -> 'location') = 'object'
+        then _payload_point(payload -> 'location')
+      end,
+      (select location from spots where id = v_spot_id)
+    ),
     payload ->> 'comment',
     (payload ->> 'event_id')::uuid
   )
@@ -1060,7 +1065,13 @@ begin
     raise exception 'association_not_approved' using errcode = 'P0001';
   end if;
 
-  update sessions set association_id = p_association_id
+  -- A spot belongs to one association (plan 28): moved elsewhere, the session drops its link and
+  -- keeps the copied name.
+  update sessions set
+    association_id = p_association_id,
+    spot_id = case
+      when (select association_id from spots where id = spot_id) = p_association_id then spot_id
+    end
   where id = p_session_id
   returning * into v_session;
   return v_session;
@@ -1174,6 +1185,8 @@ $$;
 -- the given ones as 'imported'. The agenda is read in Dart (ics_parser.dart), which already
 -- turned every repeated event into independent dated ones and left out past dates. The importer
 -- is the creator and the person in charge.
+-- A place named like one of the association's spots (ignoring case) is linked to it (plan 28);
+-- any other stays free text.
 -- p_events: [{ "label": text, "starts_at": timestamptz, "spot": text?,
 --              "location": {"lat", "lng"}?, "description": text? }, ...]
 create or replace function import_events(p_events jsonb)
@@ -1197,8 +1210,8 @@ begin
   get diagnostics v_deleted = row_count;
 
   insert into events (
-    association_id, created_by, manager_player_id, starts_at, label, spot, location, description,
-    origin
+    association_id, created_by, manager_player_id, starts_at, label, spot, spot_id, location,
+    description, origin
   )
   select
     v_association_id,
@@ -1207,6 +1220,11 @@ begin
     (e ->> 'starts_at')::timestamptz,
     btrim(e ->> 'label'),
     nullif(btrim(e ->> 'spot'), ''),
+    (
+      select s.id from spots s
+      where s.association_id = v_association_id
+        and lower(btrim(s.name)) = lower(btrim(e ->> 'spot'))
+    ),
     case when e ? 'location' then _payload_point(e -> 'location') end,
     nullif(btrim(e ->> 'description'), ''),
     'imported'
@@ -1222,3 +1240,134 @@ revoke execute on function import_events_preview() from public;
 revoke execute on function import_events(jsonb) from public;
 grant execute on function import_events_preview() to authenticated;
 grant execute on function import_events(jsonb) to authenticated;
+
+-- ---------------------------------------------------------------------------------------------
+-- Spots (plan 28). The table is read-only for the app (rls.sql); these functions decide who
+-- writes. Staff = is_association_staff or a super_admin.
+-- ---------------------------------------------------------------------------------------------
+
+-- Adds a spot to an association: its staff, with every field; any member too, from the "+" of the
+-- session form (Q180), with a name and a point only (the description and the variable location
+-- are left for the staff). The point is required (Q181), unless the location is variable (Q186);
+-- a name already used in the association, ignoring case, is refused (Q183). payload:
+-- { "name": text, "description": text?, "address": text?, "city": text?,
+--   "location": {"lat", "lng"}?, "variable_location": boolean? }
+create or replace function create_spot(p_association_id uuid, payload jsonb)
+returns spots
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_staff boolean := is_association_staff(p_association_id) or is_super_admin();
+  v_variable boolean := v_staff and coalesce((payload ->> 'variable_location')::boolean, false);
+  v_spot spots;
+begin
+  if not (v_staff or is_association_member(p_association_id)) then
+    raise exception 'not_association_member' using errcode = 'P0001';
+  end if;
+  if not v_variable and jsonb_typeof(payload -> 'location') is distinct from 'object' then
+    raise exception 'spot_location_required' using errcode = 'P0001';
+  end if;
+
+  insert into spots (
+    association_id, name, description, address, city, location, variable_location, created_by
+  )
+  values (
+    p_association_id,
+    btrim(payload ->> 'name'),
+    case when v_staff then nullif(btrim(payload ->> 'description'), '') end,
+    case when not v_variable then nullif(btrim(payload ->> 'address'), '') end,
+    case when not v_variable then nullif(btrim(payload ->> 'city'), '') end,
+    case when not v_variable then _payload_point(payload -> 'location') end,
+    v_variable,
+    auth.uid()
+  )
+  returning * into v_spot;
+  return v_spot;
+exception
+  when unique_violation then
+    raise exception 'spot_name_taken' using errcode = 'P0001';
+end;
+$$;
+
+-- Edits a spot (staff only). Only the keys present change; the point can be moved, never removed
+-- (Q181) -- except by making the location variable (Q186), which clears point, address and city.
+-- Back to a fixed location, a point is required. A new name, city or point reaches the spot's
+-- sessions and events (spots_propagate, triggers.sql). Same payload as create_spot.
+create or replace function update_spot(p_spot_id uuid, payload jsonb)
+returns spots
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_spot spots;
+  v_variable boolean;
+begin
+  select * into v_spot from spots where id = p_spot_id;
+  if not found or not (is_association_staff(v_spot.association_id) or is_super_admin()) then
+    raise exception 'not_association_manager' using errcode = 'P0001';
+  end if;
+  v_variable := coalesce((payload ->> 'variable_location')::boolean, v_spot.variable_location);
+  if (not v_variable and payload ? 'location' and jsonb_typeof(payload -> 'location') <> 'object')
+    or (not v_variable and v_spot.variable_location and not payload ? 'location') then
+    raise exception 'spot_location_required' using errcode = 'P0001';
+  end if;
+
+  update spots set
+    name = case when payload ? 'name' then btrim(payload ->> 'name') else name end,
+    description = case
+      when payload ? 'description' then nullif(btrim(payload ->> 'description'), '')
+      else description
+    end,
+    address = case
+      when v_variable then null
+      when payload ? 'address' then nullif(btrim(payload ->> 'address'), '')
+      else address
+    end,
+    city = case
+      when v_variable then null
+      when payload ? 'city' then nullif(btrim(payload ->> 'city'), '')
+      else city
+    end,
+    location = case
+      when v_variable then null
+      when payload ? 'location' then _payload_point(payload -> 'location')
+      else location
+    end,
+    variable_location = v_variable
+  where id = p_spot_id
+  returning * into v_spot;
+  return v_spot;
+exception
+  when unique_violation then
+    raise exception 'spot_name_taken' using errcode = 'P0001';
+end;
+$$;
+
+-- Deletes a spot (staff only). Its sessions and events lose the link and keep its name (Q182).
+create or replace function delete_spot(p_spot_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_association_id uuid;
+begin
+  select association_id into v_association_id from spots where id = p_spot_id;
+  if v_association_id is null
+    or not (is_association_staff(v_association_id) or is_super_admin()) then
+    raise exception 'not_association_manager' using errcode = 'P0001';
+  end if;
+  delete from spots where id = p_spot_id;
+end;
+$$;
+
+revoke execute on function create_spot(uuid, jsonb) from public;
+revoke execute on function update_spot(uuid, jsonb) from public;
+revoke execute on function delete_spot(uuid) from public;
+grant execute on function create_spot(uuid, jsonb) to authenticated;
+grant execute on function update_spot(uuid, jsonb) to authenticated;
+grant execute on function delete_spot(uuid) to authenticated;

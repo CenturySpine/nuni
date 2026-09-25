@@ -98,8 +98,7 @@ class _EventImportPageState extends ConsumerState<EventImportPage> {
       );
       ref
         ..invalidate(myPlanningProvider)
-        ..invalidate(eventLabelSuggestionsProvider(associationId))
-        ..invalidate(spotSuggestionsForProvider(associationId));
+        ..invalidate(eventLabelSuggestionsProvider(associationId));
       if (mounted) {
         _snack(l10n.planningImportDone(created));
         context.go('/planning');

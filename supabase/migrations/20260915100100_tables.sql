@@ -158,6 +158,35 @@ create table association_admins (
   primary key (association_id, player_id)
 );
 
+-- An association's playing spots (plan 28): a free name and description, and a place given both
+-- as a point and as the address found for it (Q178, Q179: the app keeps them in step through a
+-- geocoding service; the base just stores what it gets). Managed by the association's staff
+-- (is_association_staff); any member may add one from the session form (Q180). Every write goes
+-- through the RPCs of rpc.sql. The name is unique per association, ignoring case (Q183, index in
+-- indexes.sql). The point is required by the RPCs (Q181), except for a spot with a variable
+-- location (Q186, "Surprise": the same name, somewhere else each time), which has neither point
+-- nor address -- each event keeps its own point, each session its own. Also nullable for the
+-- spots taken over once from the free-text places typed before plan 28 (Q185), whose point
+-- wasn't always known.
+create table spots (
+  id uuid primary key default gen_random_uuid(),
+  association_id uuid not null references associations (id) on delete cascade,
+  name text not null check (btrim(name) <> '' and char_length(name) <= 80),
+  description text,
+  address text,
+  -- The address's city, copied into the sessions played there (Q184).
+  city text,
+  location geography(point, 4326),
+  -- Plain numeric columns PostgREST can return as-is, same reasoning as holes.start_lat.
+  location_lat double precision generated always as (st_y(location::geometry)) stored,
+  location_lng double precision generated always as (st_x(location::geometry)) stored,
+  variable_location boolean not null default false
+    check (not variable_location or (location is null and address is null and city is null)),
+  created_by uuid references auth.users (id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table sessions (
   id uuid primary key default gen_random_uuid(),
   code text not null unique,
@@ -166,8 +195,14 @@ create table sessions (
   kind session_kind not null,
   scoring_mode scoring_mode not null,
   ranking_direction ranking_direction not null,
+  -- While spot_id is set, city and zone are copies of the spot's city and name, kept in step by
+  -- sessions_tc_copy_spot and spots_propagate (triggers.sql): every screen and export reads them
+  -- as before, and they keep the place once the spot is deleted (Q182).
   city text,
   zone text,
+  -- The association's spot where it's played (plan 28): required by create_session for every
+  -- new session; null for the sessions imported or created before plan 28 and not taken over.
+  spot_id uuid references spots (id) on delete set null,
   location geography(point, 4326),
   -- Plain numeric columns PostgREST can return as-is, same reasoning as
   -- holes.start_lat/start_lng above.
@@ -277,8 +312,9 @@ alter table sessions
 -- Association planning (plan 23): what an association plans -- game sessions, but also its
 -- Christmas dinner or general assembly (Q160), hence a table of its own rather than a session
 -- status. Only the start is stored (no end time); spot and point are optional, so an event can
--- open for answers before its place is decided (Q150). The spot is plain text: the reusable list
--- of spots and labels is read from what the association already used (Q147, Q148), no table.
+-- open for answers before its place is decided (Q150). The place is either one of the
+-- association's spots (spot_id, plan 28) or free text (a dinner, a general assembly); the
+-- reusable list of labels is read from what the association already used (Q147), no table.
 create table events (
   id uuid primary key default gen_random_uuid(),
   -- The creator's association, set by events_set_defaults (triggers.sql) for an event typed in
@@ -289,7 +325,10 @@ create table events (
   manager_player_id uuid references players (id) on delete set null,
   starts_at timestamptz not null,
   label text not null check (btrim(label) <> ''),
+  -- While spot_id is set, spot is a copy of the spot's name and location its point when it has
+  -- one (events_guard, spots_propagate in triggers.sql), same reasoning as sessions.zone.
   spot text check (spot is null or btrim(spot) <> ''),
+  spot_id uuid references spots (id) on delete set null,
   location geography(point, 4326),
   -- Plain numeric columns PostgREST can return as-is, same reasoning as holes.start_lat.
   location_lat double precision generated always as (st_y(location::geometry)) stored,

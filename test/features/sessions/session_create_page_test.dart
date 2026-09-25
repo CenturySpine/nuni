@@ -7,7 +7,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:nuni/core/location/location_service.dart';
 import 'package:nuni/features/associations/data/associations_repository.dart';
 import 'package:nuni/features/associations/domain/association.dart';
-import 'package:nuni/features/planning/data/events_repository.dart';
 import 'package:nuni/features/profile/data/profile_repository.dart';
 import 'package:nuni/features/profile/domain/player.dart';
 import 'package:nuni/features/sessions/data/sessions_repository.dart';
@@ -16,6 +15,8 @@ import 'package:nuni/features/sessions/domain/scoring_mode.dart';
 import 'package:nuni/features/sessions/domain/session.dart';
 import 'package:nuni/features/sessions/domain/session_kind.dart';
 import 'package:nuni/features/sessions/ui/session_create_page.dart';
+import 'package:nuni/features/spots/data/spots_repository.dart';
+import 'package:nuni/features/spots/domain/spot.dart';
 import 'package:nuni/l10n/generated/app_localizations.dart';
 
 class _MockSessionsRepository extends Mock implements SessionsRepository {}
@@ -35,6 +36,13 @@ const _lsg = Association(
   locationLat: 45.749,
   locationLng: 4.8459,
   status: AssociationStatus.approved,
+);
+const _park = Spot(
+  id: 'sp1',
+  associationId: 'lsg',
+  name: 'Parc de la Tête d’Or',
+  locationLat: 45.77,
+  locationLng: 4.85,
 );
 const _member = Player(
   id: 'p1',
@@ -60,8 +68,8 @@ void main() {
         kind: any(named: 'kind'),
         scoringMode: any(named: 'scoringMode'),
         rankingDirection: any(named: 'rankingDirection'),
+        spotId: any(named: 'spotId'),
         city: any(named: 'city'),
-        zone: any(named: 'zone'),
         lat: any(named: 'lat'),
         lng: any(named: 'lng'),
         eventId: any(named: 'eventId'),
@@ -90,8 +98,8 @@ void main() {
           locationServiceProvider.overrideWithValue(_FakeLocationService()),
           myPlayerProvider.overrideWith((ref) async => player),
           associationsProvider.overrideWith((ref) async => [_lsg]),
-          spotSuggestionsForProvider.overrideWith(
-            (ref, associationId) async => const [],
+          associationSpotsProvider.overrideWith(
+            (ref, associationId) async => const [_park],
           ),
         ],
         child: MaterialApp(
@@ -108,12 +116,42 @@ void main() {
     );
   }
 
+  Future<void> chooseSpot(WidgetTester tester) async {
+    await tester.tap(find.text('Choose a spot'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(_park.name));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('a session needs a spot (plan 28)', (tester) async {
+    await pumpForm(tester);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Create the session'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Choose the spot where you play.'), findsOneWidget);
+    verifyNever(
+      () => repository.create(
+        kind: any(named: 'kind'),
+        scoringMode: any(named: 'scoringMode'),
+        rankingDirection: any(named: 'rankingDirection'),
+        spotId: any(named: 'spotId'),
+        city: any(named: 'city'),
+        lat: any(named: 'lat'),
+        lng: any(named: 'lng'),
+        eventId: any(named: 'eventId'),
+      ),
+    );
+  });
+
   testWidgets(
     'submitting the default form creates an individual, Stroke Play session',
     (tester) async {
       await pumpForm(tester);
       await tester.pumpAndSettle();
 
+      await chooseSpot(tester);
       await tester.tap(find.text('Create the session'));
       await tester.pumpAndSettle();
 
@@ -122,8 +160,8 @@ void main() {
           kind: SessionKind.individual,
           scoringMode: ScoringMode.strokePlay,
           rankingDirection: RankingDirection.asc,
+          spotId: 'sp1',
           city: null,
-          zone: null,
           lat: null,
           lng: null,
           eventId: null,
@@ -138,6 +176,7 @@ void main() {
 
     await tester.tap(find.text('Team'));
     await tester.pumpAndSettle();
+    await chooseSpot(tester);
     await tester.tap(find.text('Create the session'));
     await tester.pumpAndSettle();
 
@@ -146,8 +185,8 @@ void main() {
         kind: SessionKind.team,
         scoringMode: any(named: 'scoringMode'),
         rankingDirection: any(named: 'rankingDirection'),
+        spotId: any(named: 'spotId'),
         city: any(named: 'city'),
-        zone: any(named: 'zone'),
         lat: any(named: 'lat'),
         lng: any(named: 'lng'),
         eventId: any(named: 'eventId'),

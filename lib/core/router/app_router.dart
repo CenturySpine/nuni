@@ -28,6 +28,8 @@ import '../../features/profile/ui/profile_page.dart';
 import '../../features/sessions/ui/session_create_page.dart';
 import '../../features/sessions/ui/session_room_page.dart';
 import '../../features/settings/ui/settings_page.dart';
+import '../../features/spots/ui/spot_form_page.dart';
+import '../../features/spots/ui/spots_page.dart';
 import '../supabase/supabase_providers.dart';
 import '../theme/theme_demo_page.dart';
 import 'app_shell.dart';
@@ -141,6 +143,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/associations/:id/edit',
         builder: (context, state) =>
             AssociationFormPage(associationId: state.pathParameters['id']),
+      ),
+      GoRoute(
+        path: '/associations/:id/spots',
+        builder: (context, state) =>
+            SpotsPage(associationId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/associations/:id/spots/new',
+        builder: (context, state) =>
+            SpotFormPage(associationId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/associations/:id/spots/:spotId',
+        builder: (context, state) => SpotFormPage(
+          associationId: state.pathParameters['id']!,
+          spotId: state.pathParameters['spotId'],
+        ),
       ),
       GoRoute(
         path: '/admin/requests',

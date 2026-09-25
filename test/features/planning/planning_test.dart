@@ -95,17 +95,6 @@ void main() {
     );
   });
 
-  test('spotSuggestions: most recent first, last known point kept', () {
-    final spots = spotSuggestions([
-      UsedSpot(name: 'Parc', usedAt: DateTime(2026, 9, 1), lat: 1, lng: 2),
-      UsedSpot(name: 'parc ', usedAt: DateTime(2026, 9, 20)),
-      UsedSpot(name: 'Quais', usedAt: DateTime(2026, 9, 10), lat: 3, lng: 4),
-      UsedSpot(name: ' ', usedAt: DateTime(2026, 9, 30)),
-    ]);
-    expect(spots.map((s) => s.name), ['parc', 'Quais']);
-    expect((spots.first.lat, spots.first.lng), (1.0, 2.0));
-  });
-
   test('Event reads its answers and comment count from one row', () {
     final event = Event.fromJson({
       'id': 'e',

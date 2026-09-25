@@ -7,6 +7,7 @@ alter table associations enable row level security;
 alter table association_managers enable row level security;
 alter table association_manager_contacts enable row level security;
 alter table association_admins enable row level security;
+alter table spots enable row level security;
 alter table players enable row level security;
 alter table holes enable row level security;
 alter table sessions enable row level security;
@@ -34,6 +35,8 @@ grant select on associations to authenticated;
 grant select on association_managers to authenticated;
 grant select on association_manager_contacts to authenticated;
 grant select on association_admins to authenticated;
+-- Spots (plan 28): same principle, written only through the spot RPCs of rpc.sql.
+grant select on spots to authenticated;
 grant select, update on players to authenticated;
 grant select, insert, update, delete on holes to authenticated;
 grant select, insert, update, delete on sessions to authenticated;
@@ -56,6 +59,7 @@ grant select on associations to service_role;
 grant select on association_managers to service_role;
 grant select on association_manager_contacts to service_role;
 grant select on association_admins to service_role;
+grant select on spots to service_role;
 grant select, insert on holes to service_role;
 grant select, insert on players to service_role;
 grant select, insert on legacy_player_emails to service_role;
@@ -377,4 +381,15 @@ create policy "event_comments_delete" on event_comments for delete to authentica
       select 1 from events e
       where e.id = event_id and is_association_staff(e.association_id)
     )
+  );
+
+-- spots (plan 28): read by every signed-in account, like the association itself (PO,
+-- 2026-09-25: the "Spots" screen is open to anyone, read-only outside the association), as long
+-- as the association is approved; its members and super_admins read them in any case. No write
+-- policy: the RPCs of rpc.sql decide.
+create policy "spots_select" on spots for select to authenticated
+  using (
+    exists (select 1 from associations a where a.id = association_id and a.status = 'approved')
+    or is_association_member(association_id)
+    or is_super_admin()
   );
