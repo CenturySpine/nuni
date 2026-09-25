@@ -21,6 +21,7 @@ import '../../../shared/nuni_section_header.dart';
 import '../../../shared/nuni_status_pill.dart';
 import '../../players/data/players_repository.dart';
 import '../../profile/data/profile_repository.dart';
+import '../data/association_choice_skip_pref.dart';
 import '../data/associations_repository.dart';
 import '../domain/association.dart';
 import 'association_logo.dart';
@@ -117,6 +118,27 @@ class _DetailState extends ConsumerState<_Detail> {
     }, l10n.associationsJoined(association.name));
   }
 
+  /// Q146: a player goes back to no association; a local manager can't
+  /// (the button isn't offered).
+  Future<void> _leave() async {
+    final l10n = AppLocalizations.of(context)!;
+    final association = widget.association;
+    final confirmed = await NuniConfirmDialog.show(
+      context,
+      title: l10n.associationsLeaveConfirmTitle(association.name),
+      message: l10n.associationsLeaveConfirmMessage,
+      confirmLabel: l10n.associationsLeave,
+      danger: true,
+    );
+    if (!confirmed || !mounted) return;
+    await _run(() async {
+      await ref.read(associationsRepositoryProvider).leave();
+      // Leaving is a choice: don't bring the first sign-in choice back.
+      await ref.read(associationChoiceSkippedProvider.notifier).skip();
+      ref.invalidate(myPlayerProvider);
+    }, l10n.associationsLeft(association.name));
+  }
+
   Future<void> _revoke(ManagerSummary manager) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await NuniConfirmDialog.show(
@@ -200,6 +222,13 @@ class _DetailState extends ConsumerState<_Detail> {
     final isApproved = association.status == AssociationStatus.approved;
     final isMine = player?.associationId == association.id;
     final iAmManager = manager != null && manager.userId == myUserId;
+    // A local manager stays in the association they manage (Q146): they
+    // can neither leave it nor switch to another one.
+    final iManageMine = myRows.any(
+      (row) =>
+          row.associationId == player?.associationId &&
+          row.status == AssociationManagerStatus.approved,
+    );
     final myPendingClaim = myRows.any(
       (row) =>
           row.associationId == association.id &&
@@ -304,11 +333,30 @@ class _DetailState extends ConsumerState<_Detail> {
           ),
         ],
         const SizedBox(height: 20),
-        if (isApproved && !isMine) ...[
+        if (isApproved && !isMine && !iManageMine) ...[
           NuniButton(
             label: l10n.associationsJoin,
             icon: PhosphorIcons.userPlus,
             onPressed: _busy ? null : _join,
+          ),
+          const SizedBox(height: 10),
+        ],
+        if (isMine && !iManageMine) ...[
+          NuniButton(
+            label: l10n.associationsLeave,
+            variant: NuniButtonVariant.secondary,
+            icon: PhosphorIcons.signOut,
+            onPressed: _busy ? null : _leave,
+          ),
+          const SizedBox(height: 10),
+        ],
+        if (iManageMine && (isMine || isApproved)) ...[
+          Text(
+            isMine
+                ? l10n.associationsManagerCantLeave
+                : l10n.associationsManagerCantSwitch,
+            style: textTheme.bodySmall,
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 10),
         ],

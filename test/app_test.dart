@@ -10,6 +10,7 @@ import 'package:nuni/features/associations/domain/association.dart';
 import 'package:nuni/features/profile/data/profile_repository.dart';
 import 'package:nuni/features/profile/domain/player.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class _MockSupabaseClient extends Mock implements SupabaseClient {}
@@ -69,45 +70,65 @@ void main() {
     },
   );
 
-  testWidgets(
-    'a player with no association chooses one before the app (plan 18)',
-    (tester) async {
-      when(() => auth.currentSession).thenReturn(_MockSession());
+  Future<void> pumpWithoutAssociation(WidgetTester tester) async {
+    when(() => auth.currentSession).thenReturn(_MockSession());
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            supabaseClientProvider.overrideWithValue(client),
-            locationServiceProvider.overrideWithValue(_NoLocation()),
-            myPlayerProvider.overrideWith(
-              (ref) async => const Player(
-                id: 'p1',
-                name: 'New',
-                locale: 'en',
-                userId: 'u1',
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          supabaseClientProvider.overrideWithValue(client),
+          locationServiceProvider.overrideWithValue(_NoLocation()),
+          myPlayerProvider.overrideWith(
+            (ref) async =>
+                const Player(id: 'p1', name: 'New', locale: 'en', userId: 'u1'),
+          ),
+          myPendingRequestProvider.overrideWith((ref) async => null),
+          associationsProvider.overrideWith(
+            (ref) async => const [
+              Association(
+                id: 'lsg',
+                name: 'Lyon Street Golf',
+                city: 'Lyon',
+                locationLat: 45.749,
+                locationLng: 4.8459,
+                status: AssociationStatus.approved,
               ),
-            ),
-            myPendingRequestProvider.overrideWith((ref) async => null),
-            associationsProvider.overrideWith(
-              (ref) async => const [
-                Association(
-                  id: 'lsg',
-                  name: 'Lyon Street Golf',
-                  city: 'Lyon',
-                  locationLat: 45.749,
-                  locationLng: 4.8459,
-                  status: AssociationStatus.approved,
-                ),
-              ],
-            ),
-          ],
-          child: const NuniApp(),
-        ),
-      );
-      await tester.pumpAndSettle();
+            ],
+          ),
+        ],
+        child: const NuniApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets(
+    'a player with no association is offered one before the app (plan 18)',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      await pumpWithoutAssociation(tester);
 
       expect(find.text('Choose your club'), findsOneWidget);
       expect(find.text('Holes'), findsNothing);
+
+      await tester.tap(find.text('Not now'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Choose your club'), findsNothing);
+      expect(find.text('Holes'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'once put off on this device, the choice is not offered again (Q146)',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'nuni.association_choice_skipped': true,
+      });
+      await pumpWithoutAssociation(tester);
+
+      expect(find.text('Choose your club'), findsNothing);
+      expect(find.text('Holes'), findsOneWidget);
     },
   );
 }

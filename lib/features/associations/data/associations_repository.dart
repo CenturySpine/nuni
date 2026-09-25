@@ -108,6 +108,13 @@ class AssociationsRepository {
       .update({'association_id': associationId})
       .eq('user_id', _myUserId);
 
+  /// Leaves my association (Q146): I'm back to no association, so I can't
+  /// create sessions until I join one again.
+  Future<void> leave() => _client
+      .from('players')
+      .update({'association_id': null})
+      .eq('user_id', _myUserId);
+
   Future<Association> request(AssociationDraft draft) async {
     final row = await _client.rpc<Map<String, dynamic>>(
       'request_association',

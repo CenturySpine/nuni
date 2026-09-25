@@ -9,6 +9,7 @@ import 'package:nuni/features/associations/domain/association.dart';
 import 'package:nuni/features/associations/ui/association_choice_page.dart';
 import 'package:nuni/l10n/generated/app_localizations.dart';
 import 'package:nuni/shared/nuni_button.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Never calls the real `geolocator` plugin; [position] null = refused.
 class _FakeLocationService implements LocationService {
@@ -60,6 +61,7 @@ void main() {
   Future<void> pump(WidgetTester tester, Position? position) async {
     await tester.binding.setSurfaceSize(const Size(800, 1600));
     addTearDown(() => tester.binding.setSurfaceSize(null));
+    SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -68,15 +70,15 @@ void main() {
           ),
           associationsProvider.overrideWith((ref) async => associations),
         ],
-        child: const MaterialApp(
-          localizationsDelegates: [
+        child: MaterialApp(
+          localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: AssociationChoicePage(),
+          home: const AssociationChoicePage(),
         ),
       ),
     );
@@ -114,5 +116,17 @@ void main() {
     await tester.tap(find.text('Wild Shrimp Crew'));
     await tester.pump();
     expect(confirmAction(tester), isNotNull);
+  });
+
+  testWidgets('"Not now" puts the choice off on this device (Q146)', (
+    tester,
+  ) async {
+    await pump(tester, null);
+
+    await tester.tap(find.text('Not now'));
+    await tester.pumpAndSettle();
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('nuni.association_choice_skipped'), isTrue);
   });
 }

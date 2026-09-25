@@ -1035,6 +1035,26 @@ d'en choisir une à la prochaine ouverture). Alternative si le besoin se présen
 `super_admin` déplace d'abord les sessions vers une autre association (la fonction de correction
 existe côté serveur, Q80), puis supprime.
 
+**Q146 ☑ — Le choix d'une association à la première connexion est-il obligatoire ? Peut-on
+quitter son association ?**
+Demande PO (2026-09-25) : pouvoir utiliser l'app sans rejoindre d'association ; le choix reste
+proposé à la première connexion, sans être imposé. Pouvoir aussi quitter une association.
+Constat : l'écran de choix était obligatoire (plan 18, décision 1) ; on ne pouvait que changer
+d'association (Q79), jamais la quitter. L'état « sans association » existait déjà (demande en
+attente, Q81 ; association supprimée, Q89) : on peut rejoindre des sessions, pas en créer.
+Réponses PO (2026-09-25) :
+- (a) Sans association, pas de création de session : règle gardée (suggestion retenue). Une
+  session appartient toujours à une association, donc pas de changement de schéma.
+- (b) « Plus tard » est retenu sur l'appareil, comme la palette (suggestion retenue) : l'écran
+  n'est reproposé que sur un nouvel appareil ou navigateur. Quitter une association vaut aussi
+  « plus tard ».
+- (c) Bouton « Quitter cette association » sur la fiche de mon association, avec confirmation
+  (suggestion retenue).
+- (d) Suggestion non retenue : un responsable local ne peut pas quitter l'association qu'il
+  gère, pour garder une règle simple à comprendre. Conséquence directe appliquée : il ne peut
+  pas non plus en rejoindre une autre (changer, c'est quitter). Contrôle fait dans l'app, pas
+  en base (aucun changement de schéma, donc pas de reconstruction).
+
 ## Plans 19 à 25 — fiches synthétiques (2026-09-24)
 
 Short list du PO (2026-09-24) : hors ligne, suppression de compte (plan 14, Q27–Q31 déjà

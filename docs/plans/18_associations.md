@@ -37,11 +37,13 @@ golf (disc golf, ou toute association qui veut l'utiliser pour son scoring inter
 
 ## Décisions retenues (PO, 2026-09-23)
 
-1. **Association d'un joueur.** À la première connexion, un joueur sans association doit en
-   choisir une parmi les associations approuvées. L'app pré-sélectionne celle dont la ville est la
+1. **Association d'un joueur.** À la première connexion, un joueur sans association se voit
+   proposer d'en choisir une parmi les associations approuvées ; « Plus tard » lui permet de
+   passer, retenu sur l'appareil (Q146, 2026-09-25 : le choix n'est plus obligatoire). L'app pré-sélectionne celle dont la ville est la
    plus proche de sa position (géolocalisation refusée : liste alphabétique, rien de
    pré-sélectionné). Il peut en changer ensuite librement, sans validation ; ses sessions passées
-   gardent leur association (Q79).
+   gardent leur association (Q79). Il peut aussi la quitter (Q146), sauf s'il en est le
+   responsable local, qui ne peut ni la quitter ni en changer.
 2. **Demande de création en attente (Q81).** Seule une association approuvée peut recevoir des
    sessions. Un joueur qui demande la création de son association n'est rattaché à aucune
    association tant que la demande attend : il peut consulter l'app et rejoindre des sessions,
@@ -107,13 +109,15 @@ Les autres associations et équipes demanderont leur création dans l'app.
   - Pour un joueur dont la demande de création attend : un encart « Demande en attente de
     validation ».
 - **Fiche d'une association** : mêmes informations, lien vers le site ; actions selon le cas :
-  - « Rejoindre cette association » (Q79) ;
+  - « Rejoindre cette association » (Q79) ; sur mon association, « Quitter cette association »
+    avec confirmation (Q146), remplacé par une explication pour son responsable local ;
   - « Je suis le responsable local » (s'il n'y en a pas) → mail, téléphone, message → « Demande
     envoyée » ; une revendication en attente est signalée à son auteur ;
   - « Modifier » (responsable approuvé) → nom, abréviation, ville (nom + point sur une carte),
     site, logo (import + recadrage carré), mail, téléphone.
 - **Choix de l'association** (première connexion, ou joueur sans association ni demande en
-  attente) : écran plein, liste triée par distance, la plus proche pré-sélectionnée, « Valider ».
+  attente, qui ne l'a pas remis à plus tard sur cet appareil) : écran plein, liste triée par
+  distance, la plus proche pré-sélectionnée, « Valider » et « Plus tard » (Q146).
   En bas, « Mon association n'est pas dans la liste » ouvre la demande de création.
 - **Profil** : mon association, avec lien vers sa fiche.
 - **Création de session** : l'association de la session est affichée (lecture seule).

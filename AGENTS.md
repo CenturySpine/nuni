@@ -152,8 +152,10 @@ GitHub Actions (Q17).
   Tout joueur créé par l'app est lié dès l'inscription (trigger) ; pas de joueur créé à la volée,
   pas de réclamation de fiche (Q24). `user_id` nul = joueur importé de LsgScores, non
   sélectionnable dans une nouvelle session.
-- Associations (plan 18) : chaque joueur appartient à une association (`players.association_id`,
-  choisie à la première connexion), chaque session à celle de son créateur (posée par un
+- Associations (plan 18) : un joueur appartient à au plus une association
+  (`players.association_id`, proposée à la première connexion, jamais imposée ; il peut la
+  quitter, sauf s'il en est le responsable local, Q146 ; sans association, il rejoint des
+  sessions mais n'en crée pas), chaque session à celle de son créateur (posée par un
   déclencheur, figée), et un championnat = une association × une saison (plus de zones
   géographiques, Q77). Les tables d'associations sont en lecture seule pour l'app : toute écriture
   passe par les RPC `security definer` de `rpc.sql` (demande, revendication, modification,

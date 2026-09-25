@@ -22,7 +22,11 @@ void main() {
     status: AssociationStatus.approved,
   );
 
-  Future<void> pump(WidgetTester tester, List<Player> members) async {
+  Future<void> pump(
+    WidgetTester tester,
+    List<Player> members, {
+    List<AssociationManager> myManagerRows = const [],
+  }) async {
     await tester.binding.setSurfaceSize(const Size(800, 2000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final router = GoRouter(
@@ -44,7 +48,7 @@ void main() {
         overrides: [
           associationsProvider.overrideWith((ref) async => [association]),
           associationManagersProvider.overrideWith((ref) async => {}),
-          myManagerRowsProvider.overrideWith((ref) async => []),
+          myManagerRowsProvider.overrideWith((ref) async => myManagerRows),
           isSuperAdminProvider.overrideWith((ref) async => false),
           myPlayerProvider.overrideWith(
             (ref) async => const Player(
@@ -96,5 +100,43 @@ void main() {
     await pump(tester, const []);
 
     expect(find.text('No players in this association yet.'), findsOneWidget);
+  });
+
+  testWidgets('a member can leave their association (Q146)', (tester) async {
+    await pump(tester, const []);
+
+    expect(
+      find.textContaining('Leave this club', findRichText: true),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Join this club', findRichText: true),
+      findsNothing,
+    );
+  });
+
+  testWidgets("its local manager can't leave it (Q146)", (tester) async {
+    await pump(
+      tester,
+      const [],
+      myManagerRows: [
+        AssociationManager(
+          id: 'm1',
+          associationId: 'lyon',
+          userId: 'u1',
+          status: AssociationManagerStatus.approved,
+          requestedAt: DateTime(2026, 9, 23),
+        ),
+      ],
+    );
+
+    expect(
+      find.textContaining('Leave this club', findRichText: true),
+      findsNothing,
+    );
+    expect(
+      find.text("You are this club's local manager: you can't leave it."),
+      findsOneWidget,
+    );
   });
 }

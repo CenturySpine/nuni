@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/associations/data/association_choice_skip_pref.dart';
 import '../../features/associations/data/associations_repository.dart';
 import '../../features/associations/ui/association_choice_page.dart';
 import '../../features/profile/data/profile_repository.dart';
@@ -14,7 +15,8 @@ import 'app_bottom_nav.dart';
 /// History, Associations): the brand mark and the current tab's name as a
 /// large title, the player's avatar on the right opening Profile / Settings
 /// -- there is no side drawer. A player with no association and no creation
-/// request pending gets the association choice first (plan 18, decision 1).
+/// request pending is offered the association choice first, unless they put
+/// it off on this device (plan 18, decision 1, Q146).
 class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.navigationShell});
 
@@ -25,10 +27,12 @@ class AppShell extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final player = ref.watch(myPlayerProvider).value;
     final pendingRequest = ref.watch(myPendingRequestProvider);
+    final choiceSkipped = ref.watch(associationChoiceSkippedProvider);
     if (player != null &&
         player.associationId == null &&
         pendingRequest.hasValue &&
-        pendingRequest.value == null) {
+        pendingRequest.value == null &&
+        choiceSkipped.value == false) {
       return const AssociationChoicePage();
     }
     final titles = [

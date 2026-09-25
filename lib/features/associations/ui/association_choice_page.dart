@@ -13,12 +13,14 @@ import '../../../shared/nuni_list_card.dart';
 import '../../../shared/nuni_loading.dart';
 import '../../../shared/nuni_logo.dart';
 import '../../profile/data/profile_repository.dart';
+import '../data/association_choice_skip_pref.dart';
 import '../data/associations_repository.dart';
 import '../domain/association.dart';
 import 'association_logo.dart';
 
 /// First sign-in (plan 18, decision 1): a player with no association, and no
-/// creation request pending, picks one before anything else. The nearest
+/// creation request pending, is offered one before anything else -- "Not
+/// now" puts it off on this device (Q146). The nearest
 /// association is pre-selected when the position is known; otherwise the
 /// list is alphabetical with nothing selected. "Mine isn't listed" opens a
 /// creation request (Q81).
@@ -157,10 +159,24 @@ class _AssociationChoicePageState extends ConsumerState<AssociationChoicePage> {
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: NuniButton(
-            label: l10n.associationsChoiceConfirm,
-            onPressed: _selectedId == null || _saving ? null : _confirm,
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              NuniButton(
+                label: l10n.associationsChoiceConfirm,
+                onPressed: _selectedId == null || _saving ? null : _confirm,
+              ),
+              const SizedBox(height: 4),
+              TextButton(
+                onPressed: _saving
+                    ? null
+                    : () => ref
+                          .read(associationChoiceSkippedProvider.notifier)
+                          .skip(),
+                child: Text(l10n.associationsChoiceSkip),
+              ),
+            ],
           ),
         ),
       ),
