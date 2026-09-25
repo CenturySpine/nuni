@@ -1164,14 +1164,23 @@ Suggestion : garder la règle actuelle, la dernière saisie envoyée gagne, sans
 conflit. En pratique, une équipe saisit sur un seul téléphone ; gérer les conflits coûterait
 cher pour un cas rare.
 
-**Q101 ☐ — Calendrier : qui peut planifier une session ?**
+**Q101 ☑ — Calendrier : qui peut planifier une session ?**
+Réponse PO (2026-09-25), dans les besoins du planning (plan 23) : tout membre de l'association
+crée un événement à la main ; l'import d'un agenda est réservé au responsable local et au
+super_admin. Qui modifie et supprime : Q151.
 Suggestion : tout joueur de l'association, comme aujourd'hui tout joueur peut créer une
 session. Un responsable d'association peut supprimer une session planifiée.
 
-**Q102 ☐ — Calendrier : comment rappeler l'événement aux inscrits ?**
+**Q102 ☑ — Calendrier : comment rappeler l'événement aux inscrits ?**
+Réponse PO (2026-09-25) : pas pour le moment ; faisable après coup si nécessaire, sans effet
+sur la base.
 Suggestion : un bouton « Ajouter à mon agenda » (fichier `.ics`), sans notification push. Les
 notifications d'une PWA restent peu fiables sur iPhone et demandent une infrastructure
 d'envoi ; l'agenda du téléphone fait déjà très bien le rappel.
+Mise à jour (2026-09-25, plan 23 détaillé) : le plan ne contient ni rappel ni bouton. Si le
+bouton est retenu, il s'ajoute au détail d'un événement pour un coût faible (le plan sait déjà
+lire le format) ; faute d'heure de fin, l'événement ajouté à l'agenda durerait 2 heures. Tant
+que la question est ouverte, le plan 23 n'en contient pas.
 
 **Q103 ☐ — Export vitrine : quels modèles pour la première version ?**
 Suggestion : format story 9:16 avec deux modèles, « Podium » et « Classement complet ».
@@ -1689,3 +1698,263 @@ ignorées, comme pour Rempart. Badge unique gardé à vie, famille J, sans lien 
 (il n'y était pas, elle peut appartenir à une autre association). Pas de version à compteur :
 elle dépendrait surtout de l'activité des autres joueurs. Tant que la question est ouverte,
 rien n'est codé.
+
+## Planning d'association (plan 23, 2026-09-25)
+
+Besoins exprimés par le PO le 2026-09-25 : événements créés à la main par tout membre ou
+importés par le responsable local, lieu et libellé réutilisables, point sur la carte,
+responsable, couleur, clonage, réponses présent / absent / peut-être, prochain événement sur
+l'accueil, planning en liste avec séparateurs d'année et de mois. Les questions ci-dessous
+portent sur ce que ces besoins ne fixent pas.
+
+**Q147 ☑ — Planning : d'où vient la liste des libellés ?**
+Réponse PO (2026-09-25) : suggestion retenue ; la gestion de ces libellés viendra plus tard.
+Constat : le besoin demande une liste par association, enrichie par chaque saisie libre.
+Suggestion : la liste est l'ensemble des libellés déjà utilisés dans les événements de
+l'association, les plus récents d'abord, vide au départ ; pas de table ni d'écran de gestion.
+C'est déjà ainsi que fonctionnent les zones des sessions. Une faute de frappe disparaît dès que
+le dernier événement qui la porte est corrigé ou supprimé, sans écran d'administration à
+construire. Une table dédiée ne se justifierait que pour une liste gérée par le responsable
+(ordre imposé, libellés retirés à la main).
+
+**Q148 ☑ — Planning : les lieux mémorisés sont-ils partagés avec le champ « Zone » des sessions ?**
+Réponse PO (2026-09-25) : oui.
+Constat : le besoin demande que les lieux saisis servent aux événements et aux sessions. La
+création de session a déjà un champ « Zone (facultative) », qui propose les zones des sessions
+précédentes de la même ville.
+Suggestion : oui. Une seule liste de lieux par association, faite des lieux des événements et
+des zones des sessions de l'association, proposée dans les deux formulaires, sans table dédiée
+(même raison que Q147). Les suggestions de zone passent donc du filtre « même ville » au filtre
+« même association », plus juste depuis le plan 18. Le champ garde son nom « Zone » ; le
+renommer « Lieu » est possible mais toucherait l'historique et les exports.
+
+**Q149 ☑ — Planning : quelles couleurs proposer pour un événement ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Suggestion : huit teintes fixes (rouge, orange, jaune, vert, turquoise, bleu, violet, rose),
+choisies par pastilles, plus « aucune ». La base ne stocke que le nom de la teinte ; sa couleur
+exacte est définie par la palette choisie par l'utilisateur, en clair et en sombre, et passe le
+test de contraste, comme toutes les couleurs de l'app (règle AGENTS.md). Un sélecteur libre
+produirait des couleurs illisibles en mode sombre ou sur certaines palettes.
+
+**Q150 ☑ — Planning : le lieu et le point sur la carte sont-ils obligatoires ?**
+Réponse PO (2026-09-25) : suggestion non retenue, aucun des deux n'est obligatoire : on peut
+créer un événement pour ouvrir les inscriptions et fixer lieu et point au dernier moment. Un
+événement reste modifiable par son créateur, le responsable local et le super_admin. La date,
+l'heure et le libellé restent obligatoires (besoin initial). À l'import, un événement sans lieu
+reste sans lieu.
+Constat : le besoin marque le responsable, la description et la couleur comme facultatifs,
+mais ne dit rien du lieu ni du point.
+Suggestion : lieu obligatoire, point facultatif. Un rendez-vous sans lieu ne sert à rien ;
+le point, lui, manque dans presque tous les fichiers importés (le champ `GEO` est rarement
+rempli) et le lieu suffit à qui connaît le spot. Choisir un lieu déjà utilisé pré-remplit le
+dernier point connu pour ce lieu, ce qui rend le point quasi gratuit à la deuxième fois. À
+l'import, les événements sans lieu reçoivent un lieu saisi une fois dans l'aperçu.
+
+**Q151 ☑ — Planning : qui peut modifier et supprimer un événement ?**
+Réponse PO (2026-09-25) : oui (voir Q150). Le cas du responsable désigné est précisé en Q161.
+Suggestion : son créateur, son responsable, le responsable local de l'association et le
+super_admin. Le responsable désigné porte l'événement et doit pouvoir le corriger ; le
+responsable local fait le ménage (doublon, événement annulé). Ouvrir à tout membre exposerait
+le planning à une suppression par erreur, sans historique pour la rattraper.
+
+**Q152 ☑ — Planning : que reprend un clone ?**
+Réponse PO (2026-09-25) : oui, avec le libellé préfixé « Clone - ».
+Suggestion : tous les champs, avec la date décalée d'une semaine (même jour, même heure), dans
+un formulaire à valider ; les réponses ne sont pas copiées. Le cas courant est une sortie
+hebdomadaire reprogrammée ; la date reste modifiable avant d'enregistrer.
+
+**Q153 ☑ — Planning : quels fichiers importer ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Constat : Android (Google Agenda), iPhone et Mac (Calendrier Apple) et Outlook échangent leurs
+agendas au format iCalendar, fichier `.ics`. Aucune de leurs applications mobiles n'exporte un
+agenda entier : l'export se fait depuis calendar.google.com (un `.zip` contenant un `.ics` par
+agenda), depuis Calendrier sur Mac (Fichier > Exporter) ou depuis Outlook sur ordinateur. Un
+`.ics` reçu par mail ou messagerie s'enregistre en revanche sur le téléphone. L'ancien format
+vCalendar (`.vcs`) n'est plus produit par ces applications.
+Suggestion : `.ics` et `.zip` d'export Google (lu sans le décompresser à la main), rien
+d'autre. L'abonnement par adresse (webcal) est écarté : les serveurs de Google et d'Apple
+n'autorisent pas une page web à lire ces adresses, il faudrait un relais côté serveur.
+Retour PO (2026-09-25) : « je ne sais pas, quelle pratique recommandes-tu ? »
+Recommandation, en pratique : tenir l'agenda de l'association dans Google Agenda (le plus
+répandu, gratuit, lisible sur Android comme sur iPhone), et l'importer dans NUNI depuis un
+ordinateur : calendar.google.com > Paramètres > Importer et exporter > Exporter, puis dans NUNI
+Planning > Importer un agenda, choisir le `.zip` téléchargé. Pour un agenda Apple : Calendrier
+sur Mac > Fichier > Exporter, puis le `.ics` produit. Pour un seul événement reçu par mail ou
+messagerie : enregistrer le `.ics` sur le téléphone puis le choisir dans NUNI. NUNI accepte donc
+`.ics` et `.zip`, rien d'autre : ce sont les deux seuls fichiers que ces applications
+produisent. Valider cette recommandation ?
+
+**Q154 ☑ — Planning : import des événements répétés et des fuseaux horaires ?**
+Réponse PO (2026-09-25) : pas de notion de répétition dans NUNI, chaque événement est un événement indépendant. Conséquence pour l'import d'un fichier qui contient une répétition : Q167.
+Constat : un agenda d'association contient souvent une sortie répétée (« tous les jeudis »),
+stockée comme un seul événement avec une règle de répétition. Les heures y sont écrites en temps
+universel ou avec un fuseau horaire nommé (Europe/Paris).
+Suggestion : développer chaque répétition en événements séparés sur les 12 prochains mois, en
+tenant compte des dates exclues ; chacun devient un événement normal, que l'on peut modifier ou
+supprimer seul, avec ses propres réponses. Au-delà de 12 mois, ré-importer le fichier plus tard.
+Les fuseaux horaires sont convertis exactement (paquet `timezone`), pour qu'un événement créé à
+19 h à Paris s'affiche à 19 h.
+Retour PO (2026-09-25) : « je ne comprends pas ». Reformulation : dans Google Agenda, une
+sortie « tous les jeudis » n'est pas enregistrée comme 52 événements, mais comme un seul
+événement accompagné de la règle « se répète chaque jeudi, sans fin ». NUNI, lui, a besoin d'un
+événement par date (chacun a ses réponses et ses commentaires). À l'import, NUNI doit donc
+fabriquer les dates une par une, et il faut une limite puisque la règle peut être sans fin.
+Suggestion : créer les dates des 12 prochains mois (les jeudis supprimés dans Google, par
+exemple pendant les vacances, sont sautés). Au-delà, un nouvel import prolonge le planning. Les
+fuseaux horaires ne demandent pas de décision : les heures sont toujours affichées justes.
+Limite de 12 mois : convient-elle ?
+
+**Q155 ☑ — Planning : ré-importer le même agenda crée-t-il des doublons ?**
+Réponse PO (2026-09-25) : suggestion non retenue. Un import écrase tout, avec avertissement :
+chaque événement est marqué « importé » ou « manuel » selon sa création, et seuls les
+événements « importés » sont effacés avant le nouvel import ; ceux créés par les membres sont
+conservés. Précision sur les importés passés : Q163.
+Suggestion : non. Chaque événement d'un fichier `.ics` porte un identifiant stable ; ré-importer
+met à jour l'événement déjà importé (date, libellé, lieu, description) en gardant ses réponses,
+et l'aperçu signale « nouveau » ou « mis à jour ». Un événement retiré de l'agenda d'origine
+n'est pas supprimé dans NUNI (il peut déjà avoir des réponses) : le responsable le supprime à
+la main. Un événement modifié dans NUNI puis ré-importé reprend les valeurs du fichier.
+
+**Q156 ☑ — Planning : où placer le point d'entrée du planning ?**
+Réponse PO (2026-09-25) : oui pour le moment, à revoir après essai visuel ; l'onglet
+n'apparaît pas pour un joueur sans association.
+Suggestion : un cinquième onglet « Planning » (icône calendrier) dans la barre du bas, en plus
+du lien depuis la carte « Prochain événement » de l'accueil. Consulter le planning est un geste
+fréquent, qui mérite un accès direct ; cinq onglets restent dans les recommandations Material
+(3 à 5). Le ranger dans l'onglet Associations le cacherait derrière la page de toutes les
+associations, pensée pour autre chose.
+
+**Q157 ☑ — Planning : quelles règles pour les réponses ?**
+Réponse PO (2026-09-25) : oui.
+Suggestion : chacun répond pour lui-même seulement, modifie sa réponse jusqu'à l'heure de
+début, et voit la liste nominative des réponses de tous les membres (présents, peut-être,
+absents) avec le nombre de membres sans réponse. Seuls les membres de l'association de
+l'événement peuvent répondre. Le responsable ne répond pas à la place d'un autre : cela
+brouillerait qui s'est vraiment engagé.
+
+**Q158 ☑ — Planning : jusqu'à quand un événement est-il « le prochain » sur l'accueil ?**
+Réponse PO (2026-09-25) : oui.
+Suggestion : jusqu'à la fin de sa journée. Un événement n'a pas d'heure de fin ; le garder
+toute la journée laisse le lieu et la liste des présents sous la main pendant la sortie. La
+carte montre libellé, date, heure, lieu, mes trois boutons de réponse et le nombre de présents ;
+elle disparaît s'il n'y a aucun événement à venir.
+
+**Q159 ☑ — Planning : les événements passés restent-ils consultables ?**
+Réponse PO (2026-09-25) : pas de sélecteur, les passés restent visibles dans le planning
+global, cela suffit. Lecture de cette réponse : Q162.
+Suggestion : oui, par un sélecteur « À venir / Passés » en haut du planning, « À venir » par
+défaut ; les passés s'affichent du plus récent au plus ancien, avec les mêmes séparateurs. Ils
+gardent leurs réponses (qui était là) et servent de modèle à cloner.
+
+**Q160 ☑ — Planning : un événement est-il relié à une session ?**
+Réponse PO (2026-09-25) : événement et session restent séparés, parce qu'un événement peut
+concerner la vie de l'association sans jeu (repas de Noël, assemblée générale). Mais le lien
+est à faire dans ce plan : un bouton « Démarrer la session » sur l'événement du jour crée la
+session avec les inscrits, toujours complétable comme n'importe quelle session (ajouter ou
+retirer des joueurs, inviter…) ; ce n'est qu'un raccourci. Détails : Q164.
+Constat : l'ancienne fiche du plan 23 prévoyait de démarrer une session depuis l'événement,
+avec les inscrits pré-sélectionnés ; le besoin du 2026-09-25 ne le demande pas.
+Suggestion : non dans ce plan : événements et sessions restent indépendants. Le lien (bouton
+« Démarrer la session » qui pré-sélectionne les présents) s'ajoute ensuite sans rien changer au
+modèle, une fois le planning utilisé et le besoin confirmé.
+
+Réponses du PO du 2026-09-25 (Q147 à Q160, Q102) et besoins ajoutés le même jour : vue
+détaillée plein écran de chaque événement (toutes les informations, carte bien visible) et fil
+de commentaires basique (auteur, date, texte libre avec liens web et mail reconnus, pas de
+sélecteur d'emoji, pas de réponse ni de mention, fil linéaire), nombre de commentaires en
+pastille sur l'accueil et le planning. Questions qui en découlent :
+
+**Q161 ☑ — Planning : le responsable désigné d'un événement peut-il le modifier ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Constat : la suggestion de Q151, acceptée, incluait le responsable désigné ; la réponse à Q150
+cite seulement le créateur, le responsable local et le super_admin.
+Suggestion : oui, il peut le modifier et le supprimer. Il porte l'événement (c'est souvent lui
+qui fixe le lieu au dernier moment, Q150) ; sans ce droit, il dépendrait du créateur pour
+corriger l'heure ou le lieu. Tant que la question est ouverte, le plan 23 applique cette
+suggestion.
+
+**Q162 ☑ — Planning : comment se présente la liste une fois les passés inclus ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Constat : Q159 retire le sélecteur « À venir / Passés » ; les passés sont donc dans la même
+liste que les événements à venir.
+Suggestion : une seule liste dans l'ordre des dates, du plus ancien au plus récent, qui s'ouvre
+positionnée sur le prochain événement ; on remonte pour voir les passés, on descend pour
+l'avenir. Les événements passés sont légèrement estompés. S'ouvrir en haut d'une liste qui
+commence par des mois d'événements passés obligerait à défiler à chaque visite. Tant que la
+question est ouverte, le plan 23 applique cette suggestion.
+
+**Q163 ☑ — Planning : un ré-import efface-t-il aussi les événements importés déjà passés ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Constat : Q155 fait effacer les événements importés avant chaque nouvel import. L'import
+ignore les événements passés du fichier (ils ne servent plus à s'inscrire) : un événement
+importé passé effacé ne reviendrait donc jamais, avec ses réponses et ses commentaires.
+Suggestion : n'effacer que les événements importés à venir ; les passés restent, comme
+souvenir de qui était là. L'avertissement affiche le nombre d'événements à venir effacés et de
+réponses et commentaires perdus. Tant que la question est ouverte, le plan 23 applique cette
+suggestion.
+
+**Q164 ☑ — Planning : règles du bouton « Démarrer la session » ?**
+Retour PO (2026-09-25) : le bouton n'apparaît que pour le super_admin, le responsable local et le responsable de l'événement. Autres points de la suggestion (seuls les « présent » pré-sélectionnés, plusieurs sessions possibles depuis un même événement, affichées sur l'événement) retenus par le PO le même jour.
+Suggestion :
+- visible sur tout événement du jour (le planning ne distingue pas un repas d'une sortie de
+  jeu ; un bouton inutile un soir de repas ne gêne pas), par tout membre de l'association,
+  comme aujourd'hui tout joueur peut créer une session ; celui qui appuie en devient
+  l'organisateur ;
+- joueurs pré-sélectionnés : ceux qui ont répondu « présent » seulement ; les « peut-être »
+  s'ajoutent en un geste s'ils sont là ;
+- zone de la session pré-remplie avec le lieu de l'événement ;
+- plusieurs sessions peuvent être démarrées depuis le même événement (deux groupes le même
+  soir) ; la session garde le lien vers son événement, et l'événement affiche les sessions
+  démarrées depuis lui, ce qui évite qu'un deuxième membre en démarre une en double sans le
+  savoir.
+Tant que la question est ouverte, le plan 23 applique cette suggestion.
+
+**Q165 ☑ — Planning : les libellés « Clone - … » rejoignent-ils la liste des libellés ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Constat : la liste des libellés est faite de ceux déjà utilisés (Q147). Un clone enregistré sans
+retoucher son libellé y ajouterait « Clone - Session du jeudi », puis « Clone - Clone - … ».
+Suggestion : ne pas proposer les libellés qui commencent par « Clone - ». La liste reste propre
+sans écran de gestion ; le libellé du clone reste bien sûr celui enregistré. Tant que la
+question est ouverte, le plan 23 applique cette suggestion.
+
+**Q166 ☑ — Planning : règles des commentaires ?**
+Réponse PO (2026-09-25) : l'auteur peut modifier et supprimer son commentaire ; mise à jour en direct si possible techniquement (à l'approche d'un événement, les gens surveilleront peut-être les commentaires) ; d'accord pour le reste (tout membre commente, avant comme après ; responsable local et super_admin peuvent aussi supprimer ; 2 000 caractères ; pas de « non lu »). Faisabilité vérifiée dans le dépôt : les sessions en direct utilisent déjà un abonnement Supabase filtré par session (`realtime.sql`) ; les commentaires suivent le même modèle, filtré par événement.
+Suggestion :
+- tout membre de l'association de l'événement commente, avant comme après l'événement ;
+- un commentaire ne se modifie pas ; il se supprime par son auteur, le responsable local ou le
+  super_admin (modération), après confirmation ;
+- 2 000 caractères au plus ;
+- pas de temps réel : le fil se recharge à l'ouverture, après chaque envoi et en tirant vers le
+  bas. Un fil de commentaires n'est pas une messagerie instantanée ; le temps réel ajouterait un
+  abonnement par événement ouvert pour un gain faible ;
+- la pastille compte tous les commentaires, sans notion de « non lu » (qui demanderait de
+  mémoriser ce que chacun a lu).
+Tant que la question est ouverte, le plan 23 applique cette suggestion.
+
+**Q167 ☑ — Planning : que devient, à l'import, un événement répété du fichier ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Constat : NUNI n'a pas de notion de répétition (Q154). Mais un fichier exporté de Google Agenda
+ou d'Apple contient les sorties régulières sous la forme d'un seul événement accompagné d'une
+règle (« chaque jeudi »). L'import doit donc en faire quelque chose.
+Suggestion : créer un événement indépendant par date, sur les 12 prochains mois, sans aucun
+lien entre eux ; les dates supprimées dans l'agenda d'origine sont sautées. Une fois importés,
+ce sont des événements comme les autres (modifiables et supprimables un par un, chacun avec ses
+réponses et ses commentaires) : NUNI ne garde aucune trace de la répétition. Le ré-import
+suivant prolonge le planning. L'autre voie, n'importer que la prochaine date, ferait perdre
+silencieusement toutes les sorties régulières de l'agenda, qui sont le cas le plus courant
+d'une association. Tant que la question est ouverte, le plan 23 applique cette suggestion.
+
+**Q168 ☑ — Planning : que contient le message d'un événement partagé ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Demande PO (2026-09-25) : pouvoir partager un événement (par exemple dans WhatsApp), le lien
+menant directement à sa vue détaillée, après connexion si nécessaire.
+Constat : NUNI est une application d'une seule page ; WhatsApp, pour un lien, affiche un aperçu
+lu dans la page d'accueil du site, donc le même pour tous les événements (« NUNI – Never Up,
+Never In »). Un aperçu propre à chaque événement demanderait une page générée côté serveur pour
+chaque lien. Par ailleurs, un compte d'une autre association n'a pas le droit de lire
+l'événement.
+Suggestion : le message partagé contient, avant le lien, le libellé, la date, l'heure et le
+lieu (« Session du jeudi – jeudi 2 octobre, 19 h 00 – Parc de la Tête d'Or »), rédigés dans la
+langue de celui qui partage : le groupe voit l'essentiel sans ouvrir le lien. Un compte d'une
+autre association qui ouvre le lien voit « Cet événement appartient à une autre association »,
+jamais le contenu. Tant que la question est ouverte, le plan 23 applique cette suggestion.
