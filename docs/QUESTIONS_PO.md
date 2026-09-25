@@ -2166,3 +2166,122 @@ point de l'événement dont elle est démarrée), et sa ville est détectée dep
 comme avant le plan 28 (Q11). Un simple drapeau sur la table, sans nouvelle table. L'autre voie,
 créer un spot par occurrence (« Surprise 12/10 »), encombrerait la liste et casserait le
 regroupement par nom dans les statistiques à venir.
+
+## Natures de session (plan 29, 2026-09-25)
+
+Demande du PO du 2026-09-25 : enregistrer toute activité de l'association comme une session
+(parcours, entraînement, simulateur, repas, AG…), avec des pastilles cumulables qui décident de
+l'écran, des statistiques et de nouveaux badges. Idée de départ du PO : des tags libres,
+éventuellement hiérarchiques ; remplacée, avec son accord, par deux axes (scores oui/non et tags
+de contexte), présentés comme une seule rangée de pastilles.
+
+**Q187 ☑ — Natures de session : comment qualifier une session ?**
+Réponse PO (2026-09-25) : deux axes présentés comme une seule rangée de pastilles d'aspect
+identique. « Parcours » (la session a une carte de score) est coché par défaut à la création,
+parce que c'est la nature la plus programmée ; le décocher masque le scoring. Toute session
+porte au moins une pastille de nature. L'organisation technique est laissée à l'assistant.
+Constat : `scoring_mode` et `kind` sont obligatoires, une session sans scores est impossible ;
+« individuel / équipe » existe déjà (`kind`), le championnat aussi (`is_championship`).
+Suggestion retenue : pas de tags libres ni de hiérarchie (vocabulaire fixe, nécessaire aux
+badges et aux stats) ; Parcours = présence d'un mode de scoring ; tags de contexte cumulables
+dans une énumération Postgres, sans table de référence.
+
+**Q188 ☑ — Natures de session : lesquelles comptent dans les statistiques et les records ?**
+Réponse PO (2026-09-25) : une session Training ou Simulateur, même avec des scores, ne compte
+ni dans les stats ni dans les records ; elle reste dans l'historique et compte pour les badges
+de la famille L. Une session Parcours taguée Vie de l'asso (tournoi de Noël) compte.
+
+**Q189 ☑ — Natures de session : sur quels trous se joue une session Simulateur ?**
+Réponse PO (2026-09-25) : uniquement des trous libres (plan 17) quand on saisit des scores.
+Une séance au simulateur sans scores est taguée Simulateur et Training : une session conteneur
+avec compte rendu, photos et export.
+
+**Q190 ☑ — Natures de session : le seuil de 3 joueurs vaut-il pour les nouveaux badges ?**
+Réponse PO (2026-09-25) : oui, au moins 3 présents pour tout badge, quelle que soit la nature.
+
+**Q191 ☑ — Natures de session : qui pose les tags ?**
+Réponse PO (2026-09-25) : l'organisateur, le responsable local, les administrateurs locaux et
+le `super_admin`, comme les autres droits.
+
+**Q192 ☑ — Natures de session : quels tags de contexte ?**
+Réponse PO (2026-09-25) : Training, Simulateur, Vie de l'association (ajouté pour les repas,
+AG et autres moments sans jeu). Aucun autre pour l'instant.
+
+**Q193 ☑ — Natures de session : le choix avec ou sans scores peut-il changer ?**
+Réponse PO (2026-09-25) : non, il est figé dès la création. Les tags pouvant être ajoutés ou
+retirés après coup restent à préciser (Q197).
+
+**Q194 ☑ — Natures de session : comment se remplissent les présents d'une session sans scores ?**
+Réponse PO (2026-09-25) : comme les joueurs d'aujourd'hui. L'organisateur ou un administrateur
+peut tout saisir seul, à la main, sans partager de QR code, comme un carnet de bord ; le code
+et le QR restent possibles.
+
+**Q195 ☑ — Natures de session : quel lieu pour une session sans scores ?**
+Réponse PO (2026-09-25) : suggestion retenue. Un spot ou un lieu libre, comme un événement du
+planning ; le lieu libre passe par la recherche d'adresse, qui donne le point de la météo. Une
+session avec Parcours garde le spot obligatoire (plan 28).
+
+**Q196 ☑ — Natures de session : quels nouveaux badges ?**
+Réponse PO (2026-09-25) : premier training, 5 trainings, 10 trainings ; première session Vie
+de l'asso, 5 sessions Vie de l'asso (pas 10, trop sur une année) ; un combo « une session de
+parcours, une de training et une de vie de l'asso ». L'assistant peut en suggérer d'autres
+(Q199, Q200). Noms et icônes proposés dans le plan 29.
+
+**Q197 ☑ — Natures de session : quelles pastilles restent modifiables après coup, et lesquelles sont figées ?**
+Réponse PO (2026-09-25) : suggestion retenue. Exemple du PO : les lundis au simulateur seront
+tagués Training, Simulateur et Vie de l'asso, sans scores. Effet d'un retag Training sur un
+parcours terminé, vérifié dans le code : les stats et badges sont recalculés au prochain
+affichage ; un badge perdu disparaît sans annonce (`badge_announcer.dart` n'annonce que les
+gains) ; s'il revient, il n'est pas réannoncé sur l'appareil qui l'avait déjà montré
+(`SeenBadgesStore`), mais l'est sur un autre appareil ; le record et le roi du trou étant
+rejoués (`HoleReplay`), un autre joueur peut gagner ce que le premier perd. Aucune donnée
+perdue : retirer le tag rétablit tout.
+Reformulation PO (2026-09-25) : la vraie question n'est pas « jusqu'à quand », mais de séparer
+les pastilles sans risque à modifier, même longtemps après, de celles qui ne doivent plus bouger.
+Constat : rien de ce qui dépend des pastilles n'est stocké (stats, records et badges sont
+recalculés à chaque affichage) : une modification ne casse aucune donnée, elle change ce que
+voient les joueurs. Le mode de scoring et le format (individuel / équipe) ne sont déjà plus
+modifiables après la création aujourd'hui (`session_edit_sheet.dart` : date, heures,
+commentaire). Le risque est donc de deux ordres : structure (les trous et scores saisis ne
+correspondraient plus à la pastille) ou effet silencieux sur les stats, records et badges de
+tous les présents.
+Suggestion, trois catégories :
+- **Figées dès la création** : Parcours (Q193) ; Individuel / Équipe (déjà le cas) ; Simulateur
+  sur une session avec Parcours, qui décide des trous proposés (Q189) : l'ajouter après coup
+  laisserait des trous du référentiel dans une session Simulateur, le retirer ferait compter
+  dans les stats une partie jouée sur écran.
+- **Libres à tout moment** (organisateur et staff) : Vie de l'asso, sur toute session ; Training
+  et Simulateur sur une session sans Parcours. Leur seul effet est sur les badges L, recalculés
+  à l'affichage ; aucune statistique ni aucun record ne bouge.
+- **Sensibles** : Training sur une session avec Parcours, qui fait entrer ou sortir la session
+  des stats, records, roi du trou et badges A à K de tous les joueurs. L'organisateur jusqu'à la
+  fin de la session, puis le responsable local, les administrateurs locaux et le `super_admin`
+  à tout moment, comme le marquage championnat (plan 26), qui reste inchangé.
+Le plan 29 applique cette suggestion.
+
+**Q198 ☑ — Natures de session : les badges existants (A à K) comptent-ils les sessions Training, Simulateur ou sans scores ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Constat : les familles A (sessions jouées), B (régularité) et I (conditions de jeu)
+pourraient compter n'importe quelle session ; les autres parlent de coups, de victoires, de
+trous ou de records et n'ont de sens que pour une session de jeu.
+Suggestion : non, les 90 badges existants ne lisent que les sessions de jeu éligibles, et la
+famille L couvre le reste. Sinon, dix trainings donneraient « Pilier » sans un seul trou joué,
+et les badges déjà obtenus changeraient de sens. Un seul critère pour A à K, le même que celui
+des stats, reste simple à expliquer. Le plan 29 applique cette suggestion.
+
+**Q199 ☑ — Natures de session : un badge « première session Simulateur » ?**
+Réponse PO (2026-09-25) : suggestion retenue, « Joueur virtuel ».
+Constat : la demande initiale du PO citait « première session de simulateur » ; le catalogue
+de Q196 ne l'a pas repris.
+Suggestion : oui, un seul badge (L7 « Joueur virtuel »), sans palier : les séances au
+simulateur seront rares, un palier à 5 ne serait presque jamais atteint. Le plan 29 applique
+cette suggestion.
+
+**Q200 ☑ — Natures de session : un badge pour l'organisateur des trainings ?**
+Réponse PO (2026-09-25) : oui, en trois paliers : 1er, 5e et 10e training organisé (créé et
+terminé, au moins 3 présents).
+Constat : la famille H récompense déjà l'organisation de sessions (H4, H5), mais seulement des
+sessions de jeu (Q198).
+Suggestion : oui, L8 « Coach » : 5 sessions Training créées et terminées, chacune avec au moins
+3 présents. Il valorise ceux qui animent les entraînements, un rôle que les badges de jeu ne
+voient pas. Le plan 29 applique cette suggestion.
