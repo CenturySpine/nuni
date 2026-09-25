@@ -112,7 +112,18 @@ void main() {
       expect(find.text('Thursday session'), findsOneWidget);
       expect(find.text('Christmas dinner'), findsOneWidget);
       expect(find.text('Present'), findsOneWidget);
-      expect(find.text('2 present'), findsOneWidget);
+      // The attendee pill shows the bare count, the sentence is for screen
+      // readers only.
+      expect(find.text('2 present'), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byWidgetPredicate(
+            (w) => w is Semantics && w.properties.label == '2 present',
+          ),
+          matching: find.text('2'),
+        ),
+        findsOneWidget,
+      );
       // The comment count shows only where there are comments.
       expect(
         find.descendant(
