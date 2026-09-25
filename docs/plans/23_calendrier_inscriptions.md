@@ -8,8 +8,49 @@ abandonnée : un événement est un objet à part, pas une session dans un nouve
 1). Révisé le même jour après les réponses du PO à Q147 à Q160 et Q102, et l'ajout de la vue
 détaillée plein écran et des commentaires. Q153, Q161, Q162, Q163 et Q165 tranchées le même
 jour, puis Q154, Q164, Q166 à Q168 (partage d'un événement, demandé par le PO) le même
-jour. Plus aucune question ouverte. **En attente de validation par le PO** avant implémentation
-(règle 1, AGENTS.md).
+jour. Plus aucune question ouverte. **Validé par le PO le 2026-09-25**, implémentation demandée
+le même jour.
+
+**Implémenté le 2026-09-25.** Base distante reconstruite le même jour avec l'accord du PO
+(seeds commités avant, `9bc7240`, rejoués après : comptages identiques à l'export). Vérifié :
+`flutter analyze --fatal-infos` sans remarque, 439 tests Flutter verts (dont l'analyseur
+d'agenda sur des fichiers d'exemple Google, Apple et Outlook, les règles du planning, les
+écrans du planning et de l'accueil, le texte à liens), test de contraste des huit teintes,
+`rls_smoke.sql` : 69 tests d'accès verts, dont 19 du planning, nettoyage complet. Essayé dans
+le navigateur intégré (compte du PO, données de test supprimées ensuite) : création avec lieu,
+point, description, couleur ; liste par année et mois, événement passé estompé ; vue détaillée
+et carte ; réponses depuis le détail et depuis l'accueil ; commentaire avec lien et emoji ;
+commentaires ajoutés et supprimés en direct depuis la base ; clone ; suggestions de lieu avec
+point pré-rempli ; « Démarrer la session » (session liée, zone reprise) ; partage (lien copié
+faute de feuille de partage dans ce navigateur) ; page d'import. Défauts trouvés et corrigés
+pendant l'essai : adresse mail prise pour un lien web, virgule collée à un lien, onglet
+Planning masqué le temps du chargement, carte du formulaire ouverte sur la France au lieu de
+la ville de l'association.
+**Non vérifié dans le navigateur** : l'import d'un fichier de bout en bout (la boîte de
+sélection de fichier du système ne se pilote pas ; l'analyse du fichier et la fonction d'import
+sont couvertes par les tests), l'arrivée sur un événement partagé après connexion (il faudrait
+déconnecter le compte du PO). Pendant l'essai, le PO a demandé que l'import vise toujours sa
+propre association (décision 14) : fait dans l'app et dans la base, SQL modifié **après** la
+reconstruction, donc à rejouer (nouvelle reconstruction, PO prévenu). Q169 (import depuis un
+lien public) abandonnée par le PO. **Essayé par le PO le 2026-09-25** : import par fichier de
+l'agenda LSG (38 événements), présentation validée.
+Écarts avec le plan, décidés à l'implémentation, sans effet sur l'usage :
+- Couleurs : les huit teintes sont les mêmes dans toutes les palettes (`eventHues`,
+  `palettes.dart`), comme les anneaux des badges, et passent le test de contraste 3:1 sur le
+  fond et les cartes de chaque palette. L'app n'a pas de mode sombre : « en clair et en
+  sombre » ne s'applique pas.
+- Le déclencheur s'appelle `events_guard` ; il ne pose pas le responsable par défaut : c'est
+  le formulaire qui propose le créateur, qu'on peut retirer (responsable facultatif).
+- Une seconde RPC, `import_events_preview`, fournit les chiffres de l'avertissement avant un
+  import.
+- « Itinéraire » ouvre un lien Google Maps (point, ou nom du lieu sans point), qui fonctionne
+  sur Android, iPhone et ordinateur.
+- Le « lien en attente » pendant la connexion est gardé dans le stockage de l'onglet. Constat
+  en passant : l'ancien mécanisme (`/join/:code`) ne le gardait qu'en mémoire, perdue au
+  rechargement de la connexion Google ; le nouveau couvre les deux cas (invitation et
+  événement). Pas encore essayé dans le navigateur.
+- Création de session : les suggestions de zone (lieux de l'association, Q148) sont limitées
+  aux 8 plus récentes.
 
 ## En bref, pour les membres
 
@@ -127,7 +168,8 @@ déjà en place (`flutter_map`, plans 06 et 18).
     qu'un événement de 19 h à Paris s'affiche à 19 h. Correspondance : `SUMMARY` → libellé,
     `DTSTART` → date et heure, `LOCATION` → lieu, `GEO` → point, `DESCRIPTION` → description ;
     responsable et créateur = l'importateur ; pas de couleur ; origine « importé ». Un
-    `super_admin` choisit l'association cible, un responsable local importe dans la sienne.
+    import vise toujours l'association de celui qui importe, jamais une autre, même pour un
+    `super_admin` (décision du PO du 2026-09-25, pendant l'essai).
 15. **Ré-import** (Q155) : un import remplace les événements « importés » de l'association,
     après un avertissement qui dit combien d'événements seront effacés, avec combien de
     réponses et de commentaires. Les événements « manuels » ne sont jamais touchés. Seuls les
@@ -139,7 +181,10 @@ déjà en place (`flutter_map`, plans 06 et 18).
     sessions en direct sont filtrées par `session_id`) ; un commentaire ajouté, modifié ou
     supprimé apparaît sans recharger. Le reste (planning, réponses, pastilles de l'accueil et
     du planning) se recharge à l'ouverture et en tirant vers le bas.
-18. **Partage** (demande PO) : un bouton « Partager » sur la vue détaillée, pour tout membre,
+18. **Partage** (demande PO). **Révisé par le PO le 2026-09-25 après essai** : le bouton ne
+    fait que copier le lien seul (« Lien copié »), sur ordinateur comme sur téléphone, sans
+    feuille de partage du système ni texte autour ; on le colle ensuite où l'on veut. Le texte
+    ci-dessous décrit la première version, remplacée : un bouton « Partager » sur la vue détaillée, pour tout membre,
     ouvre la feuille de partage du téléphone (WhatsApp, SMS, mail…), ou copie le lien quand le
     navigateur n'en a pas (ordinateur), comme l'invitation à une session (plan 09). Le lien est
     `https://nuni.centuryspine.org/planning/<id>` et ouvre directement la vue détaillée. Un
@@ -223,12 +268,13 @@ Fichiers thématiques existants modifiés (règle 8) :
 - `realtime.sql` : `event_comments` ajoutée à la publication, `replica identity full` pour
   qu'une suppression porte `event_id` et atteigne l'abonnement filtré (même piège que `teams`
   et `scores`, déjà documenté dans ce fichier).
-- `rpc.sql` : `import_events(p_association_id uuid, p_events jsonb)`, `security definer`,
-  réservée à `is_association_manager(p_association_id)` ou `is_super_admin()` ; dans une seule
-  transaction, supprime les événements importés à venir de l'association (Q163) puis insère les
-  nouveaux avec l'origine `imported` ; renvoie le nombre d'événements supprimés et créés.
-  `import_events_preview(p_association_id uuid)` renvoie ce que l'avertissement affiche
-  (événements, réponses et commentaires qui seraient effacés).
+- `rpc.sql` : `import_events(p_events jsonb)`, `security definer`, toujours dans l'association
+  de l'appelant (décision du PO du 2026-09-25, `_import_association`), réservée à son
+  responsable local ou à un `super_admin` qui en est membre ; dans une seule transaction,
+  supprime les événements importés à venir de l'association (Q163) puis insère les nouveaux
+  avec l'origine `imported` ; renvoie le nombre d'événements supprimés et créés.
+  `import_events_preview()` renvoie ce que l'avertissement affiche (événements, réponses et
+  commentaires qui seraient effacés).
 - Nombre de commentaires et de présents dans les vues condensées : agrégats PostgREST
   (`event_comments(count)`) dans la même requête que la liste, sans colonne stockée.
 
@@ -352,4 +398,4 @@ régénération et commit des seeds (étape 0), puis reconstruction et rejeu.
 
 ## Questions PO liées
 
-Toutes tranchées : Q101, Q102, Q147 à Q168.
+Tranchées : Q101, Q102, Q147 à Q168. Q169 (import depuis un lien public) : abandonnée par le PO.

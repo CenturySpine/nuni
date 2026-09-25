@@ -65,7 +65,8 @@ Procédure (projet distant `nuni`, pas de Docker local) :
 # 0. AVANT la reconstruction, obligatoire depuis le 2026-09-23 (Q63, Q73) : sauvegarder les
 #    données réelles de la base en seeds, relire le diff et committer (avec l'accord du PO).
 #    Produit supabase/remote_seed.sql (trous, en clair) et supabase/data_seed.sql.enc (joueurs,
-#    sessions, équipes, trous joués, scores, photos de session, e-mails de rattachement : chiffré,
+#    sessions, équipes, trous joués, scores, photos de session, planning (événements, réponses,
+#    commentaires, plan 23), e-mails de rattachement : chiffré,
 #    le dépôt est public). Nécessite env/migration.json (clé service NUNI) et env/seed.json (mot
 #    de passe du seed, gabarit env/seed.example.json, conservé aussi dans le KeePass du PO).
 fvm dart run tool/export_remote_seed.dart

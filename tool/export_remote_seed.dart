@@ -10,7 +10,8 @@
 // 2. supabase/data_seed.sql.enc (encrypted, committed): associations (plan
 //    18: requests, edits of the initial ones), their local managers and
 //    their contact details, players, sessions, teams, members, played holes,
-//    scores, session photo rows and the sign-up linking e-mails (Q64) --
+//    scores, session photo rows, the planning (plan 23: events, answers,
+//    comments) and the sign-up linking e-mails (Q64) --
 //    names, e-mails, phones and photo paths of real people, so never
 //    committed in clear (the repo is public). The initial associations
 //    themselves are supabase/associations_seed.sql, replayed before. Encrypted with
@@ -260,6 +261,19 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
       .order(orderBy, ascending: true)
       .limit(100000);
 
+  // A table or column the base doesn't have yet (plan 23) reads as empty:
+  // the same run reads a base still on the previous schema just before a
+  // reconstruction, and the new one after.
+  Future<List<Map<String, dynamic>>> optional(
+    Future<List<Map<String, dynamic>>> Function() read,
+  ) async {
+    try {
+      return await read();
+    } on PostgrestException {
+      return const [];
+    }
+  }
+
   final associations = await all(
     'associations',
     'id, name, short_name, city, location_lat, location_lng, website_url, '
@@ -321,6 +335,36 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
     'id, session_id, storage_path, uploaded_by, created_at',
     'created_at',
   );
+  // Plan 23: the planning, and the event each session was started from.
+  final events = await optional(() => all('events', '*', 'created_at'));
+  final responses = await optional(
+    () => all('event_responses', '*', 'updated_at'),
+  );
+  final comments = await optional(
+    () => all('event_comments', '*', 'created_at'),
+  );
+  final sessionEvents = await optional(
+    () => nuni
+        .from('sessions')
+        .select('id, event_id')
+        .not('event_id', 'is', null)
+        .limit(100000),
+  );
+
+  final eventRows = [
+    for (final e in events)
+      {
+        ...Map.of(e)
+          ..remove('location')
+          ..remove('location_lat')
+          ..remove('location_lng'),
+        'location': e['location_lat'] == null
+            ? null
+            : _Raw(
+                "'SRID=4326;POINT(${e['location_lng']} ${e['location_lat']})'",
+              ),
+      },
+  ];
 
   final associationRows = [
     for (final a in associations)
@@ -367,6 +411,9 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
   _insert(buffer, 'association_manager_contacts', contacts);
   _insert(buffer, 'players', players);
   _insert(buffer, 'legacy_player_emails', emails);
+  _insert(buffer, 'events', eventRows);
+  _insert(buffer, 'event_responses', responses);
+  _insert(buffer, 'event_comments', comments);
   _insert(buffer, 'sessions', sessionRows);
   _insert(buffer, 'teams', teams);
   _insert(buffer, 'team_players', teamPlayers);
@@ -374,6 +421,12 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
   _insert(buffer, 'played_holes', playedHoles);
   _insert(buffer, 'scores', scores);
   _insert(buffer, 'session_photos', photos);
+  for (final s in sessionEvents) {
+    buffer.writeln(
+      'update sessions set event_id = ${_sql(s['event_id'])} '
+      'where id = ${_sql(s['id'])} and event_id is null;',
+    );
+  }
   for (final s in sessions) {
     if (s['cover_photo_id'] == null) continue;
     buffer.writeln(
@@ -390,7 +443,8 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
         'requests, ${players.length} players, ${sessions.length} sessions, '
         '${teams.length} teams, ${playedHoles.length} played holes, '
         '${scores.length} scores, ${photos.length} session photos, '
-        '${emails.length} pending e-mails',
+        '${emails.length} pending e-mails, ${events.length} events, '
+        '${responses.length} event answers, ${comments.length} event comments',
   );
 }
 

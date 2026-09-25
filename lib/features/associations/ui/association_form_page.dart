@@ -18,7 +18,7 @@ import '../../profile/data/profile_repository.dart';
 import '../../profile/ui/avatar_crop_dialog.dart';
 import '../data/associations_repository.dart';
 import '../domain/association.dart';
-import 'association_location_picker.dart';
+import '../../../shared/nuni_location_picker.dart';
 import 'association_logo.dart';
 
 /// `/associations/new` (a creation request, plan 18 decision 8) and
@@ -322,7 +322,7 @@ class _AssociationFormPageState extends ConsumerState<AssociationFormPage> {
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     const SizedBox(height: 8),
-                    AssociationLocationPicker(
+                    NuniLocationPicker(
                       value: _location,
                       initialCenter: _myPosition,
                       onChanged: (point) => setState(() => _location = point),

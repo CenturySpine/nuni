@@ -599,10 +599,215 @@ select 'stats_snapshot_not_callable',
   not has_function_privilege('authenticated', 'stats_snapshot(uuid)', 'execute')
   and not has_function_privilege('anon', 'stats_snapshot(uuid)', 'execute');
 
+-- ===== Plan 23: association planning (events, answers, comments, import, start a session) =====
+-- Association 1: owner (1), fan (7), manager (9, local manager since test 7); "foreign" (8) is in
+-- association 2; "admin" (6) is a super_admin.
+create table test_events (name text primary key, id uuid);
+grant select, insert on test_events to authenticated;
+
+-- A member creates an event: the base sets its association, creator and origin, whatever is sent.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000007","role":"authenticated"}';
+insert into events (association_id, created_by, starts_at, label, origin)
+values ('c0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000001',
+        now() + interval '2 days', 'Smoke event', 'imported');
+insert into test_events select 'future', id from events where label = 'Smoke event';
+insert into test_results (test, passed)
+select 'member_creates_event_in_own_association',
+  (select association_id = 'c0000000-0000-0000-0000-000000000001'
+      and created_by = 'a0000000-0000-0000-0000-000000000007'
+      and origin = 'manual'
+   from events where id = (select id from test_events where name = 'future'));
+-- An event without a label is refused.
+do $$
+begin
+  insert into events (starts_at, label) values (now() + interval '1 day', ' ');
+  insert into test_results (test, passed) values ('event_without_label_refused', false);
+exception when others then
+  insert into test_results (test, passed) values ('event_without_label_refused', true);
+end $$;
+-- The member answers for themself, and comments.
+insert into event_responses (event_id, player_id, response)
+select (select id from test_events where name = 'future'),
+  (select id from players where user_id = 'a0000000-0000-0000-0000-000000000007'), 'yes';
+insert into event_comments (event_id, author_player_id, body)
+select (select id from test_events where name = 'future'),
+  (select id from players where user_id = 'a0000000-0000-0000-0000-000000000007'),
+  'See https://example.org';
+reset role;
+reset request.jwt.claims;
+
+-- A member of another association sees nothing of it and cannot answer.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000008","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'other_association_cannot_read_event',
+  (select count(*) from events where id = (select id from test_events where name = 'future')) = 0
+  and (select count(*) from event_responses where event_id = (select id from test_events where name = 'future')) = 0
+  and (select count(*) from event_comments where event_id = (select id from test_events where name = 'future')) = 0;
+do $$
+begin
+  insert into event_responses (event_id, player_id, response)
+  select (select id from test_events where name = 'future'),
+    (select id from players where user_id = 'a0000000-0000-0000-0000-000000000008'), 'yes';
+  insert into test_results (test, passed) values ('other_association_cannot_answer', false);
+exception when others then
+  insert into test_results (test, passed) values ('other_association_cannot_answer', true);
+end $$;
+reset role;
+reset request.jwt.claims;
+
+-- Another member reads it all, cannot answer for someone else, nor edit the event or the comment.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'member_reads_event_answers_comments',
+  (select count(*) from events where id = (select id from test_events where name = 'future')) = 1
+  and (select count(*) from event_responses where event_id = (select id from test_events where name = 'future')) = 1
+  and (select count(*) from event_comments where event_id = (select id from test_events where name = 'future')) = 1;
+do $$
+begin
+  insert into event_responses (event_id, player_id, response)
+  select (select id from test_events where name = 'future'),
+    (select id from players where user_id = 'a0000000-0000-0000-0000-000000000009'), 'no';
+  insert into test_results (test, passed) values ('member_cannot_answer_for_another', false);
+exception when others then
+  insert into test_results (test, passed) values ('member_cannot_answer_for_another', true);
+end $$;
+update events set label = 'Hacked' where id = (select id from test_events where name = 'future');
+update event_comments set body = 'Hacked' where event_id = (select id from test_events where name = 'future');
+insert into test_results (test, passed)
+select 'member_cannot_edit_others_event_or_comment',
+  (select label from events where id = (select id from test_events where name = 'future')) = 'Smoke event'
+  and (select body from event_comments where event_id = (select id from test_events where name = 'future')) <> 'Hacked';
+-- ...and cannot import.
+do $$
+begin
+  perform import_events('[]'::jsonb);
+  insert into test_results (test, passed) values ('member_cannot_import', false);
+exception when others then
+  insert into test_results (test, passed) values ('member_cannot_import', sqlerrm = 'not_association_manager');
+end $$;
+reset role;
+reset request.jwt.claims;
+
+-- The author edits their comment, which is marked edited.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000007","role":"authenticated"}';
+update event_comments set body = 'See you there'
+where event_id = (select id from test_events where name = 'future');
+insert into test_results (test, passed)
+select 'author_edits_comment',
+  (select body = 'See you there' and edited_at is not null
+   from event_comments where event_id = (select id from test_events where name = 'future'));
+-- An event already started takes no more answers.
+insert into events (starts_at, label) values (now() - interval '1 hour', 'Smoke past');
+insert into test_events select 'past', id from events where label = 'Smoke past';
+do $$
+begin
+  insert into event_responses (event_id, player_id, response)
+  select (select id from test_events where name = 'past'),
+    (select id from players where user_id = 'a0000000-0000-0000-0000-000000000007'), 'yes';
+  insert into test_results (test, passed) values ('no_answer_after_start', false);
+exception when others then
+  insert into test_results (test, passed) values ('no_answer_after_start', sqlerrm = 'event_started');
+end $$;
+-- An event happening today, "fan" in charge, to start a session from.
+insert into events (starts_at, label, manager_player_id)
+select now() + interval '1 hour', 'Smoke today', id
+from players where user_id = 'a0000000-0000-0000-0000-000000000007';
+insert into test_events select 'today', id from events where label = 'Smoke today';
+insert into event_responses (event_id, player_id, response)
+select (select id from test_events where name = 'today'), id, 'yes'
+from players where user_id = 'a0000000-0000-0000-0000-000000000007';
+reset role;
+reset request.jwt.claims;
+
+-- The local manager edits the event, deletes the comment (moderation) and imports twice: the
+-- second import replaces the first one's events, never the members' own.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000009","role":"authenticated"}';
+update events set label = 'Smoke event renamed' where id = (select id from test_events where name = 'future');
+delete from event_comments where event_id = (select id from test_events where name = 'future');
+insert into test_results (test, passed)
+select 'local_manager_edits_event_and_moderates',
+  (select label from events where id = (select id from test_events where name = 'future')) = 'Smoke event renamed'
+  and (select count(*) from event_comments where event_id = (select id from test_events where name = 'future')) = 0;
+insert into test_results (test, passed)
+select 'first_import_creates',
+  import_events(jsonb_build_array(
+    jsonb_build_object('label', 'Imported A', 'starts_at', now() + interval '3 days', 'spot', 'Park',
+                       'location', jsonb_build_object('lat', 45.7, 'lng', 4.8)),
+    jsonb_build_object('label', 'Imported B', 'starts_at', now() + interval '4 days')
+  )) = '{"deleted": 0, "created": 2}'::jsonb;
+insert into test_results (test, passed)
+select 'import_preview_counts_imported_future_events',
+  (import_events_preview() ->> 'events')::int = 2;
+insert into test_results (test, passed)
+select 'reimport_replaces_imported_only',
+  import_events(jsonb_build_array(
+    jsonb_build_object('label', 'Imported C', 'starts_at', now() + interval '5 days')
+  )) = '{"deleted": 2, "created": 1}'::jsonb
+  and (select count(*) from events
+       where association_id = 'c0000000-0000-0000-0000-000000000001' and origin = 'manual') = 3;
+reset role;
+reset request.jwt.claims;
+
+-- An import always targets the importer's own association (PO, 2026-09-25): a super_admin who
+-- belongs to none cannot import anywhere.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000006","role":"authenticated"}';
+do $$
+begin
+  perform import_events('[]'::jsonb);
+  insert into test_results (test, passed) values ('import_only_into_own_association', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('import_only_into_own_association', sqlerrm = 'association_required');
+end $$;
+reset role;
+reset request.jwt.claims;
+
+-- Starting a session from today's event: refused to a plain member, done by its person in
+-- charge, with the members who answered "present" already in the waiting room.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+insert into event_responses (event_id, player_id, response)
+select (select id from test_events where name = 'today'), id, 'yes'
+from players where user_id = 'a0000000-0000-0000-0000-000000000001';
+do $$
+begin
+  perform create_session(jsonb_build_object('kind', 'individual', 'scoring_mode', 'stroke_play',
+    'ranking_direction', 'asc', 'event_id', (select id from test_events where name = 'today')));
+  insert into test_results (test, passed) values ('member_cannot_start_session_from_event', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('member_cannot_start_session_from_event', sqlerrm = 'event_not_startable');
+end $$;
+reset role;
+reset request.jwt.claims;
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000007","role":"authenticated"}';
+select create_session(jsonb_build_object('kind', 'individual', 'scoring_mode', 'stroke_play',
+  'ranking_direction', 'asc', 'event_id', (select id from test_events where name = 'today')));
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'person_in_charge_starts_session_from_event',
+  (select count(*) from sessions where event_id = (select id from test_events where name = 'today')) = 1
+  and exists (
+    select 1 from session_members sm
+    join sessions s on s.id = sm.session_id
+    where s.event_id = (select id from test_events where name = 'today')
+      and sm.user_id = 'a0000000-0000-0000-0000-000000000001'
+  );
+
 -- ===== Verdict =====
 select * from test_results order by n;
 
 -- ===== Cleanup =====
+delete from sessions where event_id in (select id from test_events);
+delete from events where association_id in ('c0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000002');
 delete from sessions where id in (select session_id from test_ids);
 delete from holes where cloned_from in (select private_hole from test_ids);
 delete from holes where id in (select private_hole from test_ids);
@@ -626,4 +831,5 @@ delete from auth.users where id in (
   union select 'a0000000-0000-0000-0000-000000000009'::uuid
 );
 drop table test_ids;
+drop table test_events;
 drop table test_results;

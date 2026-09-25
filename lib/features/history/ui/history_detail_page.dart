@@ -73,7 +73,7 @@ class HistoryDetailPage extends ConsumerWidget {
       ),
       // Always a way back to the tabs (PO, 2026-09-23): this page is also
       // reached straight from a session that just ended.
-      bottomNavigationBar: const NuniStandaloneBottomNav(selectedIndex: 2),
+      bottomNavigationBar: const NuniStandaloneBottomNav(selectedBranch: 2),
     );
   }
 }

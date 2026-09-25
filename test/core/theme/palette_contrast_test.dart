@@ -56,6 +56,14 @@ void main() {
       });
     }
 
+    // Event hues (plan 23): stripes and dots on cards and on the page.
+    for (final (index, hue) in eventHues.indexed) {
+      test('${palette.name}: event hue $index is >= 3:1', () {
+        expect(contrastRatio(hue, palette.surface), greaterThanOrEqualTo(3));
+        expect(contrastRatio(hue, palette.background), greaterThanOrEqualTo(3));
+      });
+    }
+
     for (final MapEntry(key: name, value: (fg, bg)) in pairs.entries) {
       final minimum = _brandPairs.contains(name) ? 3.0 : 4.5;
       test('${palette.name}: $name is AA (>= $minimum:1)', () {

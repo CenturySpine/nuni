@@ -19,6 +19,10 @@ import '../../features/join/ui/join_page.dart';
 import '../../features/legal/ui/about_page.dart';
 import '../../features/legal/ui/legal_page.dart';
 import '../../features/legal/ui/privacy_page.dart';
+import '../../features/planning/ui/event_detail_page.dart';
+import '../../features/planning/ui/event_form_page.dart';
+import '../../features/planning/ui/event_import_page.dart';
+import '../../features/planning/ui/planning_page.dart';
 import '../../features/players/ui/player_page.dart';
 import '../../features/profile/ui/profile_page.dart';
 import '../../features/sessions/ui/session_create_page.dart';
@@ -92,7 +96,37 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+          // Last, so the other branches keep their index (app_bottom_nav.dart
+          // shows it right after Home).
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/planning',
+                builder: (context, state) => const PlanningPage(),
+              ),
+            ],
+          ),
         ],
+      ),
+      // Before `/planning/:id`, which would otherwise match them.
+      GoRoute(
+        path: '/planning/new',
+        builder: (context, state) =>
+            EventFormPage(cloneOfId: state.uri.queryParameters['from']),
+      ),
+      GoRoute(
+        path: '/planning/import',
+        builder: (context, state) => const EventImportPage(),
+      ),
+      GoRoute(
+        path: '/planning/:id',
+        builder: (context, state) =>
+            EventDetailPage(eventId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/planning/:id/edit',
+        builder: (context, state) =>
+            EventFormPage(eventId: state.pathParameters['id']),
       ),
       GoRoute(
         path: '/associations/new',
@@ -150,7 +184,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/session/new',
-        builder: (context, state) => const SessionCreatePage(),
+        builder: (context, state) =>
+            SessionCreatePage(eventId: state.uri.queryParameters['event']),
       ),
       GoRoute(
         path: '/session/:id',

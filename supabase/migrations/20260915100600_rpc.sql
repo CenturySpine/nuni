@@ -100,8 +100,13 @@ grant execute on function join_session(text) to authenticated;
 -- {
 --   "kind": "individual"|"team", "scoring_mode": "...", "ranking_direction": "asc"|"desc",
 --   "city": text?, "zone": text?, "location": {"lat": number, "lng": number}?, "comment": text?,
---   "teams": [{"position": int, "player_ids": [uuid, ...]}, ...]?
+--   "teams": [{"position": int, "player_ids": [uuid, ...]}, ...]?,
+--   "event_id": uuid?
 -- }
+-- With an event_id (plan 23, Q164: "Start the session" on today's event), the session is linked
+-- to it (sessions_guard_event, triggers.sql, checks who may) and every member who answered
+-- "present" joins its waiting room, like participants added by the organizer (Q26) -- nothing
+-- more: the organizer then adds, removes or invites as for any session.
 create or replace function create_session(payload jsonb)
 returns sessions
 language plpgsql
@@ -115,7 +120,7 @@ declare
   v_player_id uuid;
 begin
   insert into sessions (
-    owner_id, kind, scoring_mode, ranking_direction, city, zone, location, comment
+    owner_id, kind, scoring_mode, ranking_direction, city, zone, location, comment, event_id
   ) values (
     auth.uid(),
     (payload ->> 'kind')::session_kind,
@@ -133,12 +138,24 @@ begin
       )::geography
       else null
     end,
-    payload ->> 'comment'
+    payload ->> 'comment',
+    (payload ->> 'event_id')::uuid
   )
   returning * into v_session;
 
   insert into session_members (session_id, user_id, team_id, role)
   values (v_session.id, auth.uid(), null, 'owner');
+
+  if v_session.event_id is not null then
+    insert into session_members (session_id, user_id, team_id, role)
+    select v_session.id, p.user_id, null, 'player'
+    from event_responses r
+    join players p on p.id = r.player_id
+    where r.event_id = v_session.event_id
+      and r.response = 'yes'
+      and p.user_id is not null
+    on conflict (session_id, user_id) do nothing;
+  end if;
 
   for v_team in select * from jsonb_array_elements(coalesce(payload -> 'teams', '[]'::jsonb))
   loop
@@ -987,3 +1004,112 @@ $$;
 
 revoke execute on function delete_association(uuid) from public;
 grant execute on function delete_association(uuid) to authenticated;
+
+-- Association planning (plan 23): an agenda is always imported into the importer's own
+-- association (PO, 2026-09-25), never another one -- even for a super_admin. Returns that
+-- association once the caller is allowed: its local manager, or a super_admin who belongs to it.
+create or replace function _import_association()
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+stable
+as $$
+declare
+  v_association_id uuid;
+begin
+  select p.association_id into v_association_id
+  from players p
+  join associations a on a.id = p.association_id and a.status = 'approved'
+  where p.user_id = auth.uid();
+
+  if v_association_id is null then
+    raise exception 'association_required' using errcode = 'P0001';
+  end if;
+  if not (is_association_manager(v_association_id) or is_super_admin()) then
+    raise exception 'not_association_manager' using errcode = 'P0001';
+  end if;
+  return v_association_id;
+end;
+$$;
+
+-- What a new import would erase (Q155, Q163): my association's imported events still to come,
+-- with their answers and comments -- what the warning before an import shows. Past imported
+-- events and members' own events are never touched.
+create or replace function import_events_preview()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+stable
+as $$
+declare
+  v_association_id uuid := _import_association();
+begin
+  return (
+    select jsonb_build_object(
+      'events', count(*),
+      'responses', coalesce(sum((select count(*) from event_responses r where r.event_id = e.id)), 0),
+      'comments', coalesce(sum((select count(*) from event_comments c where c.event_id = e.id)), 0)
+    )
+    from events e
+    where e.association_id = v_association_id
+      and e.origin = 'imported'
+      and e.starts_at > now()
+  );
+end;
+$$;
+
+-- Imports an agenda into my association's planning (plan 23, Q153 to Q155, Q163, Q167): in one
+-- transaction, erases its imported events still to come (see the preview above), then inserts
+-- the given ones as 'imported'. The agenda is read in Dart (ics_parser.dart), which already
+-- turned every repeated event into independent dated ones and left out past dates. The importer
+-- is the creator and the person in charge.
+-- p_events: [{ "label": text, "starts_at": timestamptz, "spot": text?,
+--              "location": {"lat", "lng"}?, "description": text? }, ...]
+create or replace function import_events(p_events jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_association_id uuid := _import_association();
+  v_manager_player_id uuid;
+  v_deleted int;
+  v_created int;
+begin
+  select id into v_manager_player_id from players where user_id = auth.uid();
+
+  delete from events
+  where association_id = v_association_id
+    and origin = 'imported'
+    and starts_at > now();
+  get diagnostics v_deleted = row_count;
+
+  insert into events (
+    association_id, created_by, manager_player_id, starts_at, label, spot, location, description,
+    origin
+  )
+  select
+    v_association_id,
+    auth.uid(),
+    v_manager_player_id,
+    (e ->> 'starts_at')::timestamptz,
+    btrim(e ->> 'label'),
+    nullif(btrim(e ->> 'spot'), ''),
+    case when e ? 'location' then _payload_point(e -> 'location') end,
+    nullif(btrim(e ->> 'description'), ''),
+    'imported'
+  from jsonb_array_elements(coalesce(p_events, '[]'::jsonb)) e;
+  get diagnostics v_created = row_count;
+
+  return jsonb_build_object('deleted', v_deleted, 'created', v_created);
+end;
+$$;
+
+revoke execute on function _import_association() from public;
+revoke execute on function import_events_preview() from public;
+revoke execute on function import_events(jsonb) from public;
+grant execute on function import_events_preview() to authenticated;
+grant execute on function import_events(jsonb) to authenticated;

@@ -7,6 +7,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:nuni/core/location/location_service.dart';
 import 'package:nuni/features/associations/data/associations_repository.dart';
 import 'package:nuni/features/associations/domain/association.dart';
+import 'package:nuni/features/planning/data/events_repository.dart';
 import 'package:nuni/features/profile/data/profile_repository.dart';
 import 'package:nuni/features/profile/domain/player.dart';
 import 'package:nuni/features/sessions/data/sessions_repository.dart';
@@ -54,7 +55,6 @@ void main() {
 
   setUp(() {
     repository = _MockSessionsRepository();
-    when(() => repository.zonesForCity(any())).thenAnswer((_) async => []);
     when(
       () => repository.create(
         kind: any(named: 'kind'),
@@ -64,6 +64,7 @@ void main() {
         zone: any(named: 'zone'),
         lat: any(named: 'lat'),
         lng: any(named: 'lng'),
+        eventId: any(named: 'eventId'),
       ),
     ).thenAnswer(
       (_) async => Session(
@@ -89,6 +90,9 @@ void main() {
           locationServiceProvider.overrideWithValue(_FakeLocationService()),
           myPlayerProvider.overrideWith((ref) async => player),
           associationsProvider.overrideWith((ref) async => [_lsg]),
+          spotSuggestionsForProvider.overrideWith(
+            (ref, associationId) async => const [],
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: const [
@@ -122,6 +126,7 @@ void main() {
           zone: null,
           lat: null,
           lng: null,
+          eventId: null,
         ),
       ).called(1);
     },
@@ -145,6 +150,7 @@ void main() {
         zone: any(named: 'zone'),
         lat: any(named: 'lat'),
         lng: any(named: 'lng'),
+        eventId: any(named: 'eventId'),
       ),
     ).called(1);
   });

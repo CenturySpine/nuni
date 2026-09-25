@@ -22,6 +22,8 @@ import '../../../shared/nuni_segmented.dart';
 import '../../associations/data/associations_repository.dart';
 import '../../associations/ui/association_logo.dart';
 import '../../championship/data/championship_rights.dart';
+import '../../planning/data/events_repository.dart';
+import '../../planning/domain/planning.dart';
 import '../../profile/data/profile_repository.dart';
 import '../data/libre_ranking_direction_pref.dart';
 import '../data/sessions_repository.dart';
@@ -33,8 +35,15 @@ import 'scoring_mode_info_sheet.dart';
 
 /// `/session/new` (plan 07): parameters only -- team composition happens
 /// afterwards, in the waiting room (`SessionRoomPage`).
+///
+/// `/session/new?event=:id` (plan 23, Q164) is the same form reached from
+/// "Start the session" on today's event: the zone starts as the event's
+/// place, and the members who answered "present" join the waiting room
+/// (create_session does it). Nothing else changes: a shortcut only.
 class SessionCreatePage extends ConsumerStatefulWidget {
-  const SessionCreatePage({super.key});
+  const SessionCreatePage({super.key, this.eventId});
+
+  final String? eventId;
 
   @override
   ConsumerState<SessionCreatePage> createState() => _SessionCreatePageState();
@@ -43,8 +52,6 @@ class SessionCreatePage extends ConsumerStatefulWidget {
 class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
   final _cityController = TextEditingController();
   final _zoneController = TextEditingController();
-  Timer? _zoneDebounce;
-  String _debouncedCity = '';
 
   SessionKind _kind = SessionKind.individual;
   ScoringMode _scoringMode = ScoringMode.strokePlay;
@@ -56,24 +63,25 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
   @override
   void initState() {
     super.initState();
-    _cityController.addListener(_onCityChanged);
     unawaited(_detectLocation());
+    unawaited(_prefillFromEvent());
   }
 
   @override
   void dispose() {
-    _zoneDebounce?.cancel();
-    _cityController.removeListener(_onCityChanged);
     _cityController.dispose();
     _zoneController.dispose();
     super.dispose();
   }
 
-  void _onCityChanged() {
-    _zoneDebounce?.cancel();
-    _zoneDebounce = Timer(const Duration(milliseconds: 500), () {
-      if (mounted) setState(() => _debouncedCity = _cityController.text.trim());
-    });
+  Future<void> _prefillFromEvent() async {
+    final eventId = widget.eventId;
+    if (eventId == null) return;
+    final event = await ref.read(eventByIdProvider(eventId).future);
+    final spot = event?.spot;
+    if (mounted && spot != null && _zoneController.text.isEmpty) {
+      _zoneController.text = spot;
+    }
   }
 
   Future<void> _detectLocation() async {
@@ -93,7 +101,6 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
         );
     if (mounted && city != null && _cityController.text.isEmpty) {
       _cityController.text = city;
-      _onCityChanged();
     }
   }
 
@@ -122,7 +129,11 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
         zone: zone.isEmpty ? null : zone,
         lat: _position?.latitude,
         lng: _position?.longitude,
+        eventId: widget.eventId,
       );
+      if (widget.eventId != null) {
+        ref.invalidate(eventSessionsProvider(widget.eventId!));
+      }
 
       var taggedSession = session;
       if (_isChampionship) {
@@ -157,11 +168,13 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              error.message == 'association_required'
-                  ? l10n.sessionsCreateNeedsAssociation
-                  : describeError(error, l10n),
-            ),
+            content: Text(switch (error.message) {
+              'association_required' => l10n.sessionsCreateNeedsAssociation,
+              // Plan 23, Q164: no longer the event's day, or no longer in
+              // charge of it.
+              'event_not_startable' => l10n.planningErrorNotStartable,
+              _ => describeError(error, l10n),
+            }),
           ),
         );
       }
@@ -184,9 +197,16 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final zoneSuggestions = ref.watch(zoneSuggestionsProvider(_debouncedCity));
     final player = ref.watch(myPlayerProvider).value;
     final associationId = player?.associationId;
+    // The association's places, from its sessions and its planning (plan
+    // 23, Q148), most recent first.
+    final zoneSuggestions = associationId == null
+        ? const AsyncValue<List<SpotSuggestion>>.data([])
+        : ref.watch(spotSuggestionsForProvider(associationId));
+    final event = widget.eventId == null
+        ? null
+        : ref.watch(eventByIdProvider(widget.eventId!)).value;
     final association = associationId == null
         ? null
         : ref.watch(associationByIdProvider(associationId)).value;
@@ -226,6 +246,14 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
             ),
             const SizedBox(height: 20),
           ],
+          if (event != null) ...[
+            NuniListCard(
+              leading: const Icon(PhosphorIcons.calendarDots),
+              title: l10n.sessionsCreateFromEvent(event.label),
+              subtitle: l10n.sessionsCreateFromEventMembers(event.yesCount),
+            ),
+            const SizedBox(height: 20),
+          ],
           NuniFormSection(
             title: l10n.sessionsCreateSectionLocation,
             children: [
@@ -251,11 +279,12 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            for (final zone in zones)
+                            for (final zone in zones.take(8))
                               NuniChip(
-                                label: zone,
-                                onTap: () =>
-                                    setState(() => _zoneController.text = zone),
+                                label: zone.name,
+                                onTap: () => setState(
+                                  () => _zoneController.text = zone.name,
+                                ),
                               ),
                           ],
                         ),

@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
-import '../../../core/web/web_share_support.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
+import '../../../shared/nuni_share.dart';
 import '../../join/domain/join_link.dart';
 
 /// "Inviter" (plan 09): code in large type, a QR code encoding the invite
@@ -25,38 +23,6 @@ class InviteSheet extends StatelessWidget {
         showDragHandle: true,
         builder: (context) => InviteSheet(code: code),
       );
-
-  void _showSnack(BuildContext context, String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  Future<void> _copyLink(BuildContext context, String link) async {
-    final l10n = AppLocalizations.of(context)!;
-    await Clipboard.setData(ClipboardData(text: link));
-    if (context.mounted) _showSnack(context, l10n.sessionsInviteLinkCopied);
-  }
-
-  /// Checks for the Web Share API *before* calling share_plus, rather than
-  /// letting it try and fall back on its own: on a browser without the API
-  /// (most desktop browsers), share_plus's web fallback throws in a way
-  /// that doesn't surface as a catchable Dart exception (found in testing:
-  /// an unhandled promise rejection) -- pre-checking sidesteps that path
-  /// entirely. The PO's call is "repli copie" (plan 09).
-  Future<void> _share(BuildContext context, String link) async {
-    if (!isWebShareSupported) {
-      await _copyLink(context, link);
-      return;
-    }
-    try {
-      final result = await SharePlus.instance.share(ShareParams(text: link));
-      if (result.status == ShareResultStatus.unavailable && context.mounted) {
-        await _copyLink(context, link);
-      }
-    } catch (_) {
-      if (context.mounted) await _copyLink(context, link);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,13 +69,21 @@ class InviteSheet extends StatelessWidget {
               variant: NuniButtonVariant.secondary,
               icon: PhosphorIcons.copy,
               label: l10n.sessionsInviteCopyLink,
-              onPressed: () => _copyLink(context, link),
+              onPressed: () => copyAndConfirm(
+                context,
+                text: link,
+                copiedMessage: l10n.sessionsInviteLinkCopied,
+              ),
             ),
             const SizedBox(height: 12),
             NuniButton(
               icon: PhosphorIcons.shareNetwork,
               label: l10n.sessionsInviteShare,
-              onPressed: () => _share(context, link),
+              onPressed: () => shareOrCopy(
+                context,
+                text: link,
+                copiedMessage: l10n.sessionsInviteLinkCopied,
+              ),
             ),
           ],
         ),

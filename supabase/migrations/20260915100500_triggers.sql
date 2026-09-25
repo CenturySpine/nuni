@@ -344,6 +344,144 @@ create trigger associations_set_updated_at
   before update on associations
   for each row execute function set_updated_at();
 
+-- Association planning (plan 23). An app write runs as "authenticated"; the import RPC
+-- (import_events, security definer) and the seed replay run as the schema owner, and are trusted
+-- to set what the app may not: the association, the origin, the creator.
+
+-- An event written by the app belongs to its creator's association, is 'manual', and keeps its
+-- association, origin and creator afterwards. Its person in charge, when set, is a member of that
+-- association.
+create or replace function events_guard()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if current_user = 'authenticated' then
+    if tg_op = 'INSERT' then
+      new.created_by := auth.uid();
+      new.origin := 'manual';
+      select association_id into new.association_id from players where user_id = auth.uid();
+      if new.association_id is null then
+        raise exception 'association_required' using errcode = 'P0001';
+      end if;
+    else
+      new.association_id := old.association_id;
+      new.origin := old.origin;
+      new.created_by := old.created_by;
+      new.created_at := old.created_at;
+    end if;
+  end if;
+
+  if new.manager_player_id is not null and not exists (
+    select 1 from players
+    where id = new.manager_player_id and association_id = new.association_id
+  ) then
+    raise exception 'manager_not_member' using errcode = 'P0001';
+  end if;
+
+  if tg_op = 'UPDATE' then
+    new.updated_at := now();
+  end if;
+  return new;
+end;
+$$;
+
+create trigger events_guard_trigger
+  before insert or update on events
+  for each row execute function events_guard();
+
+-- An answer is set, changed or withdrawn only until the event starts (Q157). A cascade from a
+-- deleted event finds no event any more and goes through.
+create or replace function event_responses_guard()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  v_starts_at timestamptz;
+begin
+  select starts_at into v_starts_at
+  from events
+  where id = case when tg_op = 'DELETE' then old.event_id else new.event_id end;
+
+  if found and v_starts_at <= now() and current_user = 'authenticated' then
+    raise exception 'event_started' using errcode = 'P0001';
+  end if;
+
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+create trigger event_responses_guard_trigger
+  before insert or update or delete on event_responses
+  for each row execute function event_responses_guard();
+
+-- Editing a comment changes its text only, and marks it edited (Q166).
+create or replace function event_comments_guard_update()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  new.event_id := old.event_id;
+  new.author_player_id := old.author_player_id;
+  new.created_at := old.created_at;
+  if new.body is distinct from old.body then
+    new.edited_at := now();
+  else
+    new.edited_at := old.edited_at;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger event_comments_guard_update_trigger
+  before update on event_comments
+  for each row execute function event_comments_guard_update();
+
+-- A session is linked to the event it was started from (Q164) only by the event's person in
+-- charge, the local manager or a super_admin, for an event of the session's own association
+-- happening today (within a day of now, whatever the time zone). Unlinking is free. After
+-- sessions_ta_guard_championship_trigger (name order): needs the association already set.
+create or replace function sessions_guard_event()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  v_previous uuid := case when tg_op = 'INSERT' then null else old.event_id end;
+begin
+  if new.event_id is not null
+    and new.event_id is distinct from v_previous
+    and auth.uid() is not null
+    and not exists (
+      select 1
+      from events e
+      left join players p on p.id = e.manager_player_id
+      where e.id = new.event_id
+        and e.association_id = new.association_id
+        and e.starts_at between now() - interval '24 hours' and now() + interval '24 hours'
+        and (
+          p.user_id = auth.uid()
+          or is_association_manager(e.association_id)
+          or is_super_admin()
+        )
+    ) then
+    raise exception 'event_not_startable' using errcode = 'P0001';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger sessions_tb_guard_event_trigger
+  before insert or update on sessions
+  for each row execute function sessions_guard_event();
+
 -- None of the functions above are meant to be called directly (trigger-only, or an internal
 -- helper); Postgres grants EXECUTE to PUBLIC by default at creation, so revoke it explicitly.
 -- (handle_new_user and the "returns trigger" functions can't be invoked via RPC anyway, but
@@ -363,3 +501,7 @@ revoke execute on function sessions_set_association_and_season() from public, au
 revoke execute on function players_guard_association() from public, authenticated;
 revoke execute on function played_holes_set_par() from public, authenticated;
 revoke execute on function sessions_guard_championship() from public, authenticated;
+revoke execute on function events_guard() from public, authenticated;
+revoke execute on function event_responses_guard() from public, authenticated;
+revoke execute on function event_comments_guard_update() from public, authenticated;
+revoke execute on function sessions_guard_event() from public, authenticated;

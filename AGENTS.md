@@ -187,7 +187,20 @@ GitHub Actions (Q17).
   seule implémentation, le rejeu `HoleReplay` de `hole_stats.dart`, lu par la fiche trou et
   par les badges J ; `players.stats_public` et `players.badges_public` ne décident que de l'affichage
   sur la fiche publique, jamais de l'accès aux données (Q133).
-- Temps réel : abonnements Supabase filtrés par session, jamais sur une table entière.
+- Planning (plan 23) : table `events` à part, jamais un statut de session (un événement peut
+  n'avoir rien à voir avec le jeu). Lecture, réponses (`event_responses`) et commentaires
+  (`event_comments`) réservés aux membres de l'association ; modification par le créateur, le
+  responsable de l'événement, le responsable local, le `super_admin` (`can_manage_event`).
+  L'origine (`manual` / `imported`), l'association et le créateur sont posés par la base
+  (`events_guard`) ; l'import passe par la RPC `import_events`, toujours dans l'association
+  de celui qui importe, et remplace les seuls
+  événements importés à venir. Le fichier d'agenda est lu en Dart (`ics_parser.dart`), qui
+  transforme toute répétition en événements indépendants : NUNI n'a aucune notion de
+  répétition. Listes de libellés et de lieux déduites de l'existant, sans table. Couleurs :
+  `eventHues` de `palettes.dart`. Une session démarrée depuis un événement porte
+  `sessions.event_id` (`create_session` y ajoute les « présents »).
+- Temps réel : abonnements Supabase filtrés par session (ou par événement pour les
+  commentaires du planning), jamais sur une table entière.
 
 ## Interdits
 

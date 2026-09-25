@@ -15,6 +15,21 @@ abstract final class PhosphorIcons {
   static const _regular = 'PhosphorRegular';
   static const _fill = 'PhosphorFill';
 
+  // Association planning (plan 23).
+  static const calendarDots = IconData(0xe7b4, fontFamily: _regular);
+  static const calendarDotsFill = IconData(0xe7b4, fontFamily: _fill);
+  static const calendarBlank = IconData(0xe10a, fontFamily: _regular);
+  static const calendarPlus = IconData(0xe714, fontFamily: _regular);
+  static const chatCircle = IconData(0xe168, fontFamily: _regular);
+  static const chatCircleText = IconData(0xe16e, fontFamily: _regular);
+  static const fileArrowUp = IconData(0xe61e, fontFamily: _regular);
+  static const dotsThreeVertical = IconData(0xe208, fontFamily: _regular);
+  static const clock = IconData(0xe19a, fontFamily: _regular);
+  static const path = IconData(0xe39c, fontFamily: _regular);
+  static const paperPlaneRight = IconData(0xe396, fontFamily: _regular);
+  static const x = IconData(0xe4f6, fontFamily: _regular);
+  static const question = IconData(0xe3e8, fontFamily: _regular);
+
   static const house = IconData(0xe2c2, fontFamily: _regular);
   static const arrowSquareOut = IconData(0xe5de, fontFamily: _regular);
   static const houseFill = IconData(0xe2c2, fontFamily: _fill);

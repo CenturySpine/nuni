@@ -394,6 +394,23 @@ const Color tierBronze = Color(0xFF9A5B2A);
 const Color tierSilver = Color(0xFF7A8490);
 const Color tierGold = Color(0xFFB07F0A);
 
+/// The eight hues an event of the planning may be drawn in (plan 23, Q149),
+/// in the order of the `event_color` Postgres enum: red, orange, yellow,
+/// green, teal, blue, purple, pink. The same in every palette, like the
+/// tiers above -- an association picks a colour for everyone -- and held to
+/// the same 3:1 minimum against every palette's surface and background
+/// (palette_contrast_test.dart): drawn as a stripe or a dot, never as text.
+const List<Color> eventHues = [
+  Color(0xFFD92D20),
+  Color(0xFFC4540A),
+  Color(0xFF9C7300),
+  Color(0xFF16833B),
+  Color(0xFF0A8282),
+  Color(0xFF2B6CD9),
+  Color(0xFF7A3FD1),
+  Color(0xFFC7307E),
+];
+
 /// The palette used until the user picks one; also the PWA icons' colours.
 const Palette defaultPalette = nuniSunset;
 

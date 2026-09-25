@@ -36,6 +36,7 @@ class SessionsRepository {
     String? zone,
     double? lat,
     double? lng,
+    String? eventId,
   }) async {
     final payload = <String, Object?>{
       'kind': kind.toPostgresValue(),
@@ -44,6 +45,9 @@ class SessionsRepository {
       'city': city,
       'zone': zone,
       if (lat != null && lng != null) 'location': {'lat': lat, 'lng': lng},
+      // Started from a planning event (plan 23, Q164): linked to it, and its
+      // "present" members join the waiting room.
+      'event_id': ?eventId,
     };
     final row = await _client.rpc<Map<String, dynamic>>(
       'create_session',
@@ -221,30 +225,6 @@ class SessionsRepository {
       params: {'p_session_id': sessionId},
     );
     return Session.fromJson(row);
-  }
-
-  /// Zones the owner has already typed for [city] on a past session
-  /// (most recent first), deduplicated client-side -- PostgREST has no
-  /// `select distinct`.
-  Future<List<String>> zonesForCity(String city) async {
-    if (city.trim().isEmpty) return const [];
-    final ownerId = _client.auth.currentUser!.id;
-    final rows = await _client
-        .from('sessions')
-        .select('zone, created_at')
-        .eq('owner_id', ownerId)
-        .eq('city', city)
-        .not('zone', 'is', null)
-        .order('created_at', ascending: false)
-        .limit(50);
-
-    final seen = <String>{};
-    final zones = <String>[];
-    for (final row in rows) {
-      final zone = row['zone'] as String;
-      if (seen.add(zone)) zones.add(zone);
-    }
-    return zones;
   }
 
   /// Players linked to a user (Q24), matching [query] by name (or all of
@@ -554,10 +534,6 @@ Stream<SessionRoomSnapshot> sessionRoom(Ref ref, String sessionId) =>
 @riverpod
 Future<List<Player>> playerSearch(Ref ref, String query) =>
     ref.watch(sessionsRepositoryProvider).searchPlayers(query);
-
-@riverpod
-Future<List<String>> zoneSuggestions(Ref ref, String city) =>
-    ref.watch(sessionsRepositoryProvider).zonesForCity(city);
 
 @riverpod
 Future<List<MySessionEntry>> myOngoingSessions(Ref ref) =>

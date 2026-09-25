@@ -23,3 +23,8 @@ alter table teams replica identity full;
 alter table played_holes replica identity full;
 alter table scores replica identity full;
 alter table team_players replica identity full;
+
+-- An event's open detail page follows its comment thread live (plan 23, Q166), subscribed
+-- filtered by event_id -- same widening as above, so a deleted comment reaches it too.
+alter publication supabase_realtime add table event_comments;
+alter table event_comments replica identity full;

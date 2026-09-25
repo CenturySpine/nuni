@@ -174,6 +174,10 @@ create table sessions (
   -- Recomputed instead on every insert/update by a trigger -- the client never writes it
   -- directly.
   championship_season text,
+  -- The planning event this session was started from (plan 23, Q160), if any: a shortcut only,
+  -- the session is otherwise like any other. Foreign key added below, once events exists; set
+  -- by create_session and guarded by sessions_guard_event (triggers.sql).
+  event_id uuid,
   legacy_id bigint unique,
   created_at timestamptz not null default now()
 );
@@ -250,3 +254,56 @@ create table session_photos (
 alter table sessions
   add constraint sessions_cover_photo_id_fkey
   foreign key (cover_photo_id) references session_photos (id) on delete set null;
+
+-- Association planning (plan 23): what an association plans -- game sessions, but also its
+-- Christmas dinner or general assembly (Q160), hence a table of its own rather than a session
+-- status. Only the start is stored (no end time); spot and point are optional, so an event can
+-- open for answers before its place is decided (Q150). The spot is plain text: the reusable list
+-- of spots and labels is read from what the association already used (Q147, Q148), no table.
+create table events (
+  id uuid primary key default gen_random_uuid(),
+  -- The creator's association, set by events_set_defaults (triggers.sql) for an event typed in
+  -- the app; the target association for an import (import_events, rpc.sql).
+  association_id uuid not null references associations (id) on delete cascade,
+  created_by uuid not null references auth.users (id),
+  -- The person in charge, defaulting to the creator's player; optional.
+  manager_player_id uuid references players (id) on delete set null,
+  starts_at timestamptz not null,
+  label text not null check (btrim(label) <> ''),
+  spot text check (spot is null or btrim(spot) <> ''),
+  location geography(point, 4326),
+  -- Plain numeric columns PostgREST can return as-is, same reasoning as holes.start_lat.
+  location_lat double precision generated always as (st_y(location::geometry)) stored,
+  location_lng double precision generated always as (st_x(location::geometry)) stored,
+  description text,
+  color event_color,
+  -- Never typed: 'manual' for any event written by the app, 'imported' only through
+  -- import_events (Q155).
+  origin event_origin not null default 'manual',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- A member's answer to an event (Q157): their own only, until the event starts.
+create table event_responses (
+  event_id uuid not null references events (id) on delete cascade,
+  player_id uuid not null references players (id) on delete cascade,
+  response event_response not null,
+  updated_at timestamptz not null default now(),
+  primary key (event_id, player_id)
+);
+
+-- An event's comment thread (plan 23): linear, no reply nor mention. edited_at stays null until
+-- its author edits it (the app then shows "edited", Q166).
+create table event_comments (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references events (id) on delete cascade,
+  author_player_id uuid not null references players (id) on delete cascade,
+  body text not null check (btrim(body) <> '' and char_length(body) <= 2000),
+  created_at timestamptz not null default now(),
+  edited_at timestamptz
+);
+
+alter table sessions
+  add constraint sessions_event_id_fkey
+  foreign key (event_id) references events (id) on delete set null;

@@ -14,3 +14,9 @@ create type app_role as enum ('player', 'super_admin');
 -- Associations (plan 18): a creation request or a local-manager claim waits for a super_admin.
 create type association_status as enum ('pending', 'approved', 'rejected');
 create type association_manager_status as enum ('pending', 'approved', 'rejected', 'revoked');
+-- Association planning (plan 23): a member's answer to an event, the fixed hues an event may be
+-- drawn in (Q149: only the name is stored, the app owns the actual colour), and how the event was
+-- created (Q155: a new import replaces the imported ones, never the members' own).
+create type event_response as enum ('yes', 'no', 'maybe');
+create type event_color as enum ('red', 'orange', 'yellow', 'green', 'teal', 'blue', 'purple', 'pink');
+create type event_origin as enum ('manual', 'imported');

@@ -15,6 +15,9 @@ alter table session_members enable row level security;
 alter table played_holes enable row level security;
 alter table scores enable row level security;
 alter table session_photos enable row level security;
+alter table events enable row level security;
+alter table event_responses enable row level security;
+alter table event_comments enable row level security;
 -- No policy at all: unreachable from the app (plan 13, Q64), see tables.sql.
 alter table legacy_player_emails enable row level security;
 
@@ -38,6 +41,10 @@ grant select, insert, update, delete on session_members to authenticated;
 grant select, insert, update, delete on played_holes to authenticated;
 grant select, insert, update, delete on scores to authenticated;
 grant select, insert, update, delete on session_photos to authenticated;
+-- Association planning (plan 23): what each may do is decided by the policies below.
+grant select, insert, update, delete on events to authenticated;
+grant select, insert, update, delete on event_responses to authenticated;
+grant select, insert, update, delete on event_comments to authenticated;
 -- service_role (bypasses RLS, but not table privileges, same reason as above): only what the
 -- LsgScores import script (tool/migrate_lsgscores.dart, plan 13) and the remote-seed export
 -- (tool/export_remote_seed.dart) need -- read what's already there, insert what's missing, and
@@ -56,6 +63,10 @@ grant select, insert on session_members to service_role;
 grant select, insert on played_holes to service_role;
 grant select, insert on scores to service_role;
 grant select, insert on session_photos to service_role;
+-- Read by the remote-seed export only (plan 23).
+grant select on events to service_role;
+grant select on event_responses to service_role;
+grant select on event_comments to service_role;
 
 -- user_roles: a user reads only their own row (can I see admin-only UI?), never anyone else's.
 -- No insert/update/delete policy or grant at all (plan 16): the table is only ever written by
@@ -269,3 +280,93 @@ create policy "session_photos_select" on session_photos for select to authentica
 create policy "session_photos_owner_write" on session_photos for all to authenticated
   using (is_session_owner(session_id))
   with check (is_session_owner(session_id));
+
+-- events (plan 23): the planning of an association is read by its members (and super_admins);
+-- any member adds an event to their own association (events_set_defaults, triggers.sql, sets
+-- it); its creator, person in charge, local manager or a super_admin edits or deletes it
+-- (can_manage_event, Q151 and Q161). Imports go through import_events (rpc.sql).
+create policy "events_select" on events for select to authenticated
+  using (is_association_member(association_id) or is_super_admin());
+
+create policy "events_insert_member" on events for insert to authenticated
+  with check (
+    created_by = (select auth.uid())
+    and is_association_member(association_id)
+  );
+
+create policy "events_update_manager" on events for update to authenticated
+  using (can_manage_event(id))
+  with check (can_manage_event(id));
+
+create policy "events_delete_manager" on events for delete to authenticated
+  using (can_manage_event(id));
+
+-- event_responses (Q157): read by the members of the event's association; each member writes
+-- their own answer only. The "until the event starts" rule is a trigger (triggers.sql).
+create policy "event_responses_select" on event_responses for select to authenticated
+  using (
+    exists (
+      select 1 from events e
+      where e.id = event_id
+        and (is_association_member(e.association_id) or is_super_admin())
+    )
+  );
+
+create policy "event_responses_write_self" on event_responses for all to authenticated
+  using (
+    exists (select 1 from players p where p.id = player_id and p.user_id = (select auth.uid()))
+  )
+  with check (
+    exists (select 1 from players p where p.id = player_id and p.user_id = (select auth.uid()))
+    and exists (
+      select 1 from events e
+      where e.id = event_id and is_association_member(e.association_id)
+    )
+  );
+
+-- event_comments (Q166): read and written by the members of the event's association, as
+-- themselves; edited by their author only; deleted by their author, the local manager or a
+-- super_admin (moderation).
+create policy "event_comments_select" on event_comments for select to authenticated
+  using (
+    exists (
+      select 1 from events e
+      where e.id = event_id
+        and (is_association_member(e.association_id) or is_super_admin())
+    )
+  );
+
+create policy "event_comments_insert_member" on event_comments for insert to authenticated
+  with check (
+    exists (
+      select 1 from players p where p.id = author_player_id and p.user_id = (select auth.uid())
+    )
+    and exists (
+      select 1 from events e
+      where e.id = event_id and is_association_member(e.association_id)
+    )
+  );
+
+create policy "event_comments_update_author" on event_comments for update to authenticated
+  using (
+    exists (
+      select 1 from players p where p.id = author_player_id and p.user_id = (select auth.uid())
+    )
+  )
+  with check (
+    exists (
+      select 1 from players p where p.id = author_player_id and p.user_id = (select auth.uid())
+    )
+  );
+
+create policy "event_comments_delete" on event_comments for delete to authenticated
+  using (
+    exists (
+      select 1 from players p where p.id = author_player_id and p.user_id = (select auth.uid())
+    )
+    or is_super_admin()
+    or exists (
+      select 1 from events e
+      where e.id = event_id and is_association_manager(e.association_id)
+    )
+  );

@@ -11,8 +11,9 @@ import '../../shared/nuni_avatar.dart';
 import '../../shared/nuni_logo.dart';
 import 'app_bottom_nav.dart';
 
-/// Bottom-bar shell for the four top-level destinations (Home, Holes,
-/// History, Associations): the brand mark and the current tab's name as a
+/// Bottom-bar shell for the top-level destinations (Home, Planning -- only
+/// with an association, plan 23 --, Holes, History, Associations): the brand
+/// mark and the current tab's name as a
 /// large title, the player's avatar on the right opening Profile / Settings
 /// -- there is no side drawer. A player with no association and no creation
 /// request pending is offered the association choice first, unless they put
@@ -40,6 +41,7 @@ class AppShell extends ConsumerWidget {
       l10n.navHoles,
       l10n.navHistory,
       l10n.navAssociations,
+      l10n.navPlanning,
     ];
 
     return Scaffold(
@@ -78,10 +80,11 @@ class AppShell extends ConsumerWidget {
       ),
       body: navigationShell,
       bottomNavigationBar: NuniBottomNavBar(
-        selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: (index) => navigationShell.goBranch(
-          index,
-          initialLocation: index == navigationShell.currentIndex,
+        selectedBranch: navigationShell.currentIndex,
+        showPlanning: player?.associationId != null,
+        onBranchSelected: (branch) => navigationShell.goBranch(
+          branch,
+          initialLocation: branch == navigationShell.currentIndex,
         ),
       ),
     );

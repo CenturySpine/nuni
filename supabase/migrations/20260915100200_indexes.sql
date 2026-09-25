@@ -21,3 +21,8 @@ create unique index association_managers_one_pending_claim_idx
 -- Q81: one creation request waiting at a time per person.
 create unique index associations_one_pending_request_idx
   on associations (created_by) where status = 'pending';
+-- Association planning (plan 23): an association's events by date, a thread in order, the
+-- sessions started from an event.
+create index events_association_starts_at_idx on events (association_id, starts_at);
+create index event_comments_event_created_at_idx on event_comments (event_id, created_at);
+create index sessions_event_id_idx on sessions (event_id) where event_id is not null;

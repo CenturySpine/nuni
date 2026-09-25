@@ -18,6 +18,8 @@ import '../../../shared/nuni_section_header.dart';
 import '../../../shared/nuni_status_pill.dart';
 import '../../championship/ui/championship_home_card.dart';
 import '../../join/ui/join_by_code_sheet.dart';
+import '../../planning/data/events_repository.dart';
+import '../../planning/ui/next_event_home_card.dart';
 import '../../sessions/data/sessions_repository.dart';
 import '../../sessions/domain/my_session_entry.dart';
 import '../../sessions/domain/session.dart';
@@ -51,6 +53,7 @@ class HomePage extends ConsumerWidget {
         ref
           ..invalidate(myOngoingSessionsProvider)
           ..invalidate(myRecentSessionsProvider)
+          ..invalidate(myPlanningProvider)
           ..invalidate(associationLiveSessionsProvider);
         await ref.read(associationLiveSessionsProvider.future);
       },
@@ -60,6 +63,7 @@ class HomePage extends ConsumerWidget {
         children: [
           _HeroBanner(onJoin: () => _join(context)),
           const SizedBox(height: 28),
+          const NextEventHomeSection(),
           const ChampionshipHomeSection(),
           _SessionSection(
             title: l10n.homeSectionOngoing,

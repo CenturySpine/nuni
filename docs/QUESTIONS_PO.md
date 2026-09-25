@@ -1946,6 +1946,7 @@ d'une association. Tant que la question est ouverte, le plan 23 applique cette s
 
 **Q168 ☑ — Planning : que contient le message d'un événement partagé ?**
 Réponse PO (2026-09-25) : suggestion retenue.
+Révision PO (2026-09-25), après essai sur Chrome ordinateur (fenêtre de partage de Windows) : un partage simple, le bouton copie le lien seul, partout ; plus de feuille de partage ni de libellé, date et lieu autour du lien.
 Demande PO (2026-09-25) : pouvoir partager un événement (par exemple dans WhatsApp), le lien
 menant directement à sa vue détaillée, après connexion si nécessaire.
 Constat : NUNI est une application d'une seule page ; WhatsApp, pour un lien, affiche un aperçu
@@ -1958,3 +1959,30 @@ lieu (« Session du jeudi – jeudi 2 octobre, 19 h 00 – Parc de la Tête d'Or
 langue de celui qui partage : le groupe voit l'essentiel sans ouvrir le lien. Un compte d'une
 autre association qui ouvre le lien voit « Cet événement appartient à une autre association »,
 jamais le contenu. Tant que la question est ouverte, le plan 23 applique cette suggestion.
+
+Décision du PO (2026-09-25), pendant l'essai de l'implémentation : un import vise toujours
+l'association de celui qui importe, jamais une autre, même pour un super_admin (le choix de
+l'association est retiré de l'écran ; la base le refuse aussi par un appel direct).
+
+**Q169 ☑ — Planning : importer l'agenda depuis un lien public ?**
+Réponse PO (2026-09-25) : abandonné, l'import par fichier suffit (38 événements LSG importés et affichés correctement par le PO le même jour).
+Constat du PO (2026-09-25) : l'agenda de LSG à importer est un lien public, pas un fichier.
+Vérifié le même jour : le serveur de Google renvoie bien un agenda public au format iCalendar,
+mais sans l'autorisation qui permet à une page web d'une autre adresse de le lire (en-tête
+`Access-Control-Allow-Origin` absent) ; le navigateur du téléphone refuse donc de le lire
+directement. Il faut qu'un serveur aille le chercher pour l'app.
+Suggestion :
+- c'est la base qui va chercher l'agenda (extension `http` de Postgres, proposée par Supabase),
+  dans une fonction réservée au responsable local et au super_admin, pour leur propre
+  association, qui ne lit que des adresses `https` (ou `webcal`, converties) ; le texte revient
+  à l'app, lu comme un fichier aujourd'hui (même aperçu, mêmes règles, même avertissement).
+  Aucun nouveau service à déployer, tout reste dans les fichiers de migration. L'autre voie, une
+  « Edge Function » Supabase, ajouterait une étape de déploiement à part ;
+- le lien est mémorisé sur l'association : un bouton « Mettre à jour depuis le lien » refait
+  l'import en un geste (mêmes règles de remplacement) ; pas de mise à jour automatique
+  périodique, qui demanderait une tâche planifiée pour un gain faible ;
+- liens acceptés : l'« adresse publique au format iCal » de Google Agenda (`.../basic.ics`), un
+  lien de partage ou d'intégration Google (`calendar.google.com/calendar/embed?src=...` ou
+  `.../u/0?cid=...`, dont l'adresse iCal se déduit), un lien `webcal://` (Calendrier Apple) ;
+- l'import par fichier reste possible.
+Tant que la question est ouverte, rien n'est codé.
