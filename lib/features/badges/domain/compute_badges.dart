@@ -1,10 +1,12 @@
 import 'badge.dart';
 import 'badge_facts.dart';
 import 'rules/attendance.dart';
+import 'rules/builder.dart';
 import 'rules/championship.dart';
 import 'rules/conditions.dart';
 import 'rules/explorer.dart';
 import 'rules/fun.dart';
+import 'rules/records.dart';
 import 'rules/regularity.dart';
 import 'rules/strokes.dart';
 import 'rules/team.dart';
@@ -22,7 +24,9 @@ List<BadgeResult> computeBadges(BadgeFacts facts) {
       ...championshipBadges(facts),
       ...teamBadges(facts),
       ...explorerBadges(facts),
+      ...builderBadges(facts),
       ...conditionBadges(facts),
+      ...recordBadges(facts),
       ...funBadges(facts),
     ])
       result.id: result,

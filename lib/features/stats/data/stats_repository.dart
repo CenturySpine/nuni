@@ -26,12 +26,16 @@ class StatsRepository {
     ];
   }
 
-  /// Every completed session [holeId] was played in (plan 20), whatever the
-  /// association: a hole's statistics are common to all (Q95).
-  Future<List<LiveSessionSnapshot>> fetchHoleHistory(String holeId) async {
+  /// Every completed session one of [holeIds] was played in (plan 20; plan
+  /// 21 asks for several holes at once), whatever the association: a
+  /// hole's statistics are common to all (Q95).
+  Future<List<LiveSessionSnapshot>> fetchHolesHistory(
+    Iterable<String> holeIds,
+  ) async {
+    if (holeIds.isEmpty) return const [];
     final List<dynamic> rows = await _client.rpc(
-      'hole_history',
-      params: {'p_hole_id': holeId},
+      'holes_history',
+      params: {'p_hole_ids': holeIds.toList()},
     );
     return [
       for (final row in rows)
@@ -54,4 +58,4 @@ Future<List<LiveSessionSnapshot>> playerHistory(Ref ref, String playerId) =>
 /// A hole's sessions, reloaded on every opening of its sheet (auto-disposed).
 @riverpod
 Future<List<LiveSessionSnapshot>> holeHistory(Ref ref, String holeId) =>
-    ref.watch(statsRepositoryProvider).fetchHoleHistory(holeId);
+    ref.watch(statsRepositoryProvider).fetchHolesHistory([holeId]);

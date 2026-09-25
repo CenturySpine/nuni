@@ -167,7 +167,7 @@ final class HoleHistoryProvider
   }
 }
 
-String _$holeHistoryHash() => r'fe9ea33776cad4fa30e813267816216caec4c393';
+String _$holeHistoryHash() => r'a5d807312223a4cd2df6500811f1eee3bb56c64d';
 
 /// A hole's sessions, reloaded on every opening of its sheet (auto-disposed).
 

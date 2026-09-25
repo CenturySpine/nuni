@@ -412,8 +412,8 @@ grant execute on function championship_association_results(uuid, text) to authen
 
 -- A completed session shaped like a `session_snapshot` call, stripped of what statistics never
 -- read: session and played-hole comments, the cover photo, the members' accounts. Shared by
--- player_history (plan 19) and hole_history (plan 20); not callable by the app itself, only
--- through those two.
+-- player_history (plan 19), holes_history (plan 20) and player_contributions (plan 21); not
+-- callable by the app itself, only through those three.
 create or replace function stats_snapshot(p_session_id uuid)
 returns jsonb
 language sql
@@ -463,11 +463,13 @@ $$;
 revoke execute on function player_history(uuid) from public;
 grant execute on function player_history(uuid) to authenticated;
 
--- Every completed session one directory hole was played in (plan 20), oldest first, same shape
--- and same security definer reasoning as player_history: a hole's statistics and record are
--- common to every association (Q95), while RLS only shows a session to its own association.
--- A clone is another hole with its own statistics (Q135): only hole_id matches.
-create or replace function hole_history(p_hole_id uuid)
+-- Every completed session one of the directory holes [p_hole_ids] was played in, oldest first,
+-- each session once: a hole's sheet passes its own id (plan 20), a player's badges every hole
+-- they played or created (plan 21, families H and J) in one call. Same shape and same security
+-- definer reasoning as player_history: a hole's statistics and record are common to every
+-- association (Q95), while RLS only shows a session to its own association. A clone is another
+-- hole with its own statistics (Q135): only hole_id matches.
+create or replace function holes_history(p_hole_ids uuid[])
 returns jsonb
 language sql
 security definer
@@ -478,12 +480,64 @@ as $$
   from sessions s
   where s.status = 'completed'
     and exists (
-      select 1 from played_holes ph where ph.session_id = s.id and ph.hole_id = p_hole_id
+      select 1 from played_holes ph where ph.session_id = s.id and ph.hole_id = any (p_hole_ids)
     );
 $$;
 
-revoke execute on function hole_history(uuid) from public;
-grant execute on function hole_history(uuid) to authenticated;
+revoke execute on function holes_history(uuid[]) from public;
+grant execute on function holes_history(uuid[]) to authenticated;
+
+-- What one player's account contributed to the app (plan 21, builder badges, family H), imported
+-- data included (Q116): the holes it owns, clones marked (Q120); its photos in completed
+-- sessions; and every completed session it created or has a photo in, shaped like
+-- player_history, so the client decides which count (eligible sessions, Q117) with the same
+-- Dart definition. Empty for a player without an account. security definer and no check on
+-- badges_public, same reasoning as player_history (Q133). How many players played each hole
+-- (H3) comes from holes_history, not from here.
+create or replace function player_contributions(p_player_id uuid)
+returns jsonb
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  with account as (
+    select user_id from players where id = p_player_id and user_id is not null
+  ),
+  photos as (
+    select sp.session_id, sp.created_at
+    from session_photos sp
+    join sessions s on s.id = sp.session_id
+    where sp.uploaded_by = (select user_id from account) and s.status = 'completed'
+  )
+  select jsonb_build_object(
+    'holes', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'id', h.id, 'created_at', h.created_at, 'cloned', h.cloned_from is not null
+      ) order by h.created_at), '[]'::jsonb)
+      from holes h
+      where h.owner_id = (select user_id from account)
+    ),
+    'photos', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'session_id', p.session_id, 'created_at', p.created_at
+      ) order by p.created_at), '[]'::jsonb)
+      from photos p
+    ),
+    'sessions', (
+      select coalesce(jsonb_agg(stats_snapshot(s.id) order by coalesce(s.started_at, s.created_at)), '[]'::jsonb)
+      from sessions s
+      where s.status = 'completed'
+        and (
+          s.owner_id = (select user_id from account)
+          or s.id in (select session_id from photos)
+        )
+    )
+  );
+$$;
+
+revoke execute on function player_contributions(uuid) from public;
+grant execute on function player_contributions(uuid) to authenticated;
 
 -- Adds a played hole (owner-only -- RLS `played_holes_owner_write`): appends at the next
 -- position. A plain client-side insert would need a "next position" round trip first (like

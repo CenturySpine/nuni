@@ -3,6 +3,7 @@ import 'package:nuni/core/weather/weather.dart';
 import 'package:nuni/features/badges/domain/badge.dart';
 import 'package:nuni/features/badges/domain/badge_facts.dart';
 import 'package:nuni/features/badges/domain/compute_badges.dart';
+import 'package:nuni/features/badges/domain/contributions.dart';
 import 'package:nuni/features/live/domain/live_session_snapshot.dart';
 import 'package:nuni/features/sessions/domain/scoring_mode.dart';
 import 'package:nuni/features/sessions/domain/session_kind.dart';
@@ -131,6 +132,50 @@ void expectBadge(
   expect(badges(earnedWith)[id]!.earned, isTrue, reason: '$id earned');
   expect(badges(notWith)[id]!.earned, isFalse, reason: '$id not earned');
 }
+
+/// Badges with what the account added ([contributions]) and the history of
+/// the holes ([holesHistory], [history] by default).
+Map<BadgeId, BadgeResult> builtBadges(
+  List<LiveSessionSnapshot> history, {
+  String? userId = 'u1',
+  PlayerContributions contributions = const PlayerContributions(),
+  List<LiveSessionSnapshot>? holesHistory,
+}) => {
+  for (final r in computeBadges(
+    BadgeFacts(
+      playerId: 'p',
+      associationId: 'a1',
+      history: history,
+      userId: userId,
+      contributions: contributions,
+    ).withHolesHistory(holesHistory ?? history),
+  ))
+    r.id: r,
+};
+
+/// An individual session on the hole "own" (and two others) between
+/// [players], everyone on 3.
+LiveSessionSnapshot onOwnHole(String id, List<String> players, DateTime at) =>
+    individualSession(
+      id: id,
+      playerIds: players,
+      startedAt: at,
+      holes: [
+        for (var i = 1; i <= 3; i++)
+          hole(i, {
+            for (final player in players) 't-$player': 3,
+          }, holeId: i == 1 ? 'own' : 'other$i'),
+      ],
+    );
+
+/// A duel: too few players to count (Q117).
+LiveSessionSnapshot duel() => individualSession(
+  id: 'duel',
+  playerIds: const ['p', 'x'],
+  holes: [
+    for (var i = 1; i <= 3; i++) hole(i, {'t-p': 3, 't-x': 4}),
+  ],
+);
 
 DateTime day(int y, int m, int d, [int h = 12, int min = 0]) =>
     DateTime(y, m, d, h, min);
@@ -647,6 +692,319 @@ void main() {
         ],
         BadgeId.rollerCoaster,
       );
+    });
+  });
+
+  group('H. builder', () {
+    CreatedHole created(String id, {bool cloned = false}) =>
+        CreatedHole(id: id, createdAt: day(2026, 1, 1), cloned: cloned);
+
+    test('holes created, clones excluded (Q120)', () {
+      final oneAndClones = PlayerContributions(
+        holes: [
+          created('o1'),
+          for (var i = 0; i < 4; i++) created('c$i', cloned: true),
+        ],
+      );
+      final five = PlayerContributions(
+        holes: [for (var i = 0; i < 5; i++) created('o$i')],
+      );
+      final one = builtBadges(const [], contributions: oneAndClones);
+      expect(one[BadgeId.flagPlanter]!.earned, isTrue);
+      expect(one[BadgeId.landscaper]!.earned, isFalse);
+      expect(one[BadgeId.landscaper]!.progress, 1);
+      expect(
+        builtBadges(const [], contributions: five)[BadgeId.landscaper]!.earned,
+        isTrue,
+      );
+      expect(builtBadges(const [])[BadgeId.flagPlanter]!.earned, isFalse);
+    });
+
+    test('nothing without an account', () {
+      final results = builtBadges(
+        const [],
+        userId: null,
+        contributions: PlayerContributions(holes: [created('o1')]),
+      );
+      expect(results[BadgeId.flagPlanter]!.earned, isFalse);
+    });
+
+    test('a hole of mine played by 10 different players, a clone too', () {
+      final holes = PlayerContributions(holes: [created('own', cloned: true)]);
+      final sessions = [
+        onOwnHole('s1', const ['p', 'a', 'b', 'c'], day(2026, 1, 1)),
+        onOwnHole('s2', const ['d', 'e', 'f'], day(2026, 1, 2)),
+        onOwnHole('s3', const ['g', 'h', 'i'], day(2026, 1, 3)),
+      ];
+      final ten = builtBadges(
+        const [],
+        contributions: holes,
+        holesHistory: sessions,
+      )[BadgeId.architect]!;
+      expect(ten.earned, isTrue);
+      expect(ten.earnedAt, day(2026, 1, 3));
+      // Not in the session that brought the tenth player: no link to it.
+      expect(ten.sessionId, isNull);
+      final seven = builtBadges(
+        const [],
+        contributions: holes,
+        holesHistory: sessions.take(2).toList(),
+      )[BadgeId.architect]!;
+      expect(seven.earned, isFalse);
+      expect(seven.progress, 7);
+    });
+
+    test('sessions created and completed, eligible ones only', () {
+      final mine = PlayerContributions(sessions: [game(id: 'g1')]);
+      expect(
+        builtBadges(const [], contributions: mine)[BadgeId.organizer]!.earned,
+        isTrue,
+      );
+      // Another account created it (the fixtures' owner is "u1").
+      expect(
+        builtBadges(
+          const [],
+          userId: 'u2',
+          contributions: mine,
+        )[BadgeId.organizer]!.earned,
+        isFalse,
+      );
+      expect(
+        builtBadges(
+          const [],
+          contributions: PlayerContributions(sessions: [duel()]),
+        )[BadgeId.organizer]!.earned,
+        isFalse,
+      );
+    });
+
+    test('photos added to eligible sessions only', () {
+      PlayerContributions photoIn(String sessionId) => PlayerContributions(
+        sessions: [
+          game(id: 'g1'),
+          duel(),
+        ],
+        photos: [AddedPhoto(sessionId: sessionId, createdAt: day(2026, 2, 1))],
+      );
+      final reporter = builtBadges(
+        const [],
+        userId: 'u2',
+        contributions: photoIn('g1'),
+      )[BadgeId.reporter]!;
+      expect(reporter.earned, isTrue);
+      expect(reporter.sessionId, 'g1');
+      expect(
+        builtBadges(
+          const [],
+          userId: 'u2',
+          contributions: photoIn('duel'),
+        )[BadgeId.reporter]!.earned,
+        isFalse,
+      );
+    });
+  });
+
+  group('J. hole records (all time, Q136)', () {
+    test('a record held once is kept after being beaten (Q111)', () {
+      final mine = game(id: 'g1', at: day(2026, 1, 1));
+      final beaten = game(
+        id: 'g2',
+        at: day(2026, 1, 2),
+        me: [4, 4, 4],
+        x: [2, 2, 2],
+      );
+      final held = builtBadges([mine, beaten])[BadgeId.recordHolder]!;
+      expect(held.earned, isTrue);
+      expect(held.sessionId, 'g1');
+      expect(
+        builtBadges([
+          game(me: [5, 5, 5], x: [3, 3, 3]),
+        ])[BadgeId.recordHolder]!.earned,
+        isFalse,
+      );
+    });
+
+    test('team sessions set no record (Q90)', () {
+      expect(builtBadges([teamGame()])[BadgeId.recordHolder]!.earned, isFalse);
+    });
+
+    test('5 records at the same time', () {
+      final five = game(
+        me: [3, 3, 3, 3, 3],
+        x: [4, 4, 4, 4, 4],
+        y: [5, 5, 5, 5, 5],
+      );
+      expect(builtBadges([five])[BadgeId.recordCollector]!.earned, isTrue);
+      // Three records, then those three lost while two others are won:
+      // never more than three at once.
+      final three = game(id: 'g1', at: day(2026, 1, 1));
+      final swap = game(
+        id: 'g2',
+        at: day(2026, 1, 2),
+        me: [4, 4, 4, 3, 3],
+        x: [2, 2, 2, 4, 4],
+        y: [5, 5, 5, 5, 5],
+      );
+      final result = builtBadges([three, swap])[BadgeId.recordCollector]!;
+      expect(result.earned, isFalse);
+      expect(result.progress, 3);
+    });
+
+    test('10 records taken, not my own improved (Q143)', () {
+      // Session 1: 3 first records. Then x takes them back and I take them
+      // again, twice: 3 + 3 + 3 = 9 taken. Session 6 improves my own.
+      final sessions = [
+        game(id: 'g0', at: day(2026, 1, 1), me: [3, 3, 3], x: [4, 4, 4]),
+        game(id: 'g1', at: day(2026, 1, 2), me: [4, 4, 4], x: [3, 3, 3]),
+        game(id: 'g2', at: day(2026, 1, 3), me: [3, 3, 3], x: [4, 4, 4]),
+        game(id: 'g3', at: day(2026, 1, 4), me: [4, 4, 4], x: [3, 3, 3]),
+        game(id: 'g4', at: day(2026, 1, 5), me: [3, 3, 3], x: [4, 4, 4]),
+        game(id: 'g5', at: day(2026, 1, 6), me: [2, 2, 2], x: [4, 4, 4]),
+      ];
+      final nine = builtBadges(sessions)[BadgeId.recordHunter]!;
+      expect(nine.earned, isFalse);
+      expect(nine.progress, 9);
+      final ten = builtBadges([
+        ...sessions,
+        game(id: 'g6', at: day(2026, 1, 7), me: [4, 4, 4], x: [1, 1, 1]),
+        game(id: 'g7', at: day(2026, 1, 8), me: [1, 5, 5], x: [4, 4, 4]),
+      ])[BadgeId.recordHunter]!;
+      expect(ten.earned, isTrue);
+      expect(ten.sessionId, 'g7');
+    });
+
+    test('record kept 3 sessions in a row, with me (Q144)', () {
+      LiveSessionSnapshot defence(String id, int d) =>
+          game(id: id, at: day(2026, 1, d));
+      // Played without me, nobody beats my 3: the series breaks anyway.
+      final withoutMe = individualSession(
+        id: 'away',
+        playerIds: const ['x', 'y', 'z'],
+        startedAt: day(2026, 1, 3),
+        holes: [
+          for (var i = 1; i <= 3; i++)
+            hole(i, {'t-x': 5, 't-y': 5, 't-z': 5}, holeId: 'h$i'),
+        ],
+      );
+      final kept = builtBadges([
+        defence('g0', 1),
+        defence('g1', 2),
+        defence('g2', 4),
+        defence('g3', 5),
+      ])[BadgeId.rampart]!;
+      expect(kept.earned, isTrue);
+      expect(kept.sessionId, 'g3');
+      final mine = [
+        defence('g0', 1),
+        defence('g1', 2),
+        defence('g2', 4),
+        defence('g3', 5),
+      ];
+      final broken = builtBadges(
+        mine,
+        holesHistory: [...mine, withoutMe],
+      )[BadgeId.rampart]!;
+      expect(broken.earned, isFalse);
+      expect(broken.progress, 2);
+      // ...but my record held without me (Q145).
+      final held = builtBadges(
+        mine,
+        holesHistory: [...mine, withoutMe],
+      )[BadgeId.confidence]!;
+      expect(held.earned, isTrue);
+      expect(held.earnedAt, day(2026, 1, 3));
+      expect(held.sessionId, isNull);
+      expect(builtBadges(mine)[BadgeId.confidence]!.earned, isFalse);
+      // Beaten in my absence: no confidence.
+      final beaten = individualSession(
+        id: 'beaten',
+        playerIds: const ['x', 'y', 'z'],
+        startedAt: day(2026, 1, 3),
+        holes: [
+          for (var i = 1; i <= 3; i++)
+            hole(i, {'t-x': 1, 't-y': 5, 't-z': 5}, holeId: 'h$i'),
+        ],
+      );
+      expect(
+        builtBadges(
+          mine.take(2).toList(),
+          holesHistory: [...mine.take(2), beaten],
+        )[BadgeId.confidence]!.earned,
+        isFalse,
+      );
+      // A team session on the same holes neither counts nor breaks (Q90).
+      final teamSession = snapshot(
+        id: 'team',
+        kind: SessionKind.team,
+        startedAt: day(2026, 1, 3),
+        teams: [
+          team('tA', const ['x', 'y']),
+          team('tB', const ['z', 'w']),
+        ],
+        holes: [
+          for (var i = 1; i <= 3; i++)
+            hole(i, {'tA': 1, 'tB': 1}, holeId: 'h$i'),
+        ],
+      );
+      expect(
+        builtBadges(
+          mine,
+          holesHistory: [...mine, teamSession],
+        )[BadgeId.rampart]!.earned,
+        isTrue,
+      );
+    });
+
+    test('king of a hole after 3 passages', () {
+      expect(builtBadges(games(3))[BadgeId.holeKing]!.earned, isTrue);
+      expect(builtBadges(games(2))[BadgeId.holeKing]!.earned, isFalse);
+    });
+
+    test('a record taken from me, the first time (Q142)', () {
+      final mine = game(id: 'g1', at: day(2026, 1, 1));
+      final beaten = game(
+        id: 'g2',
+        at: day(2026, 1, 2),
+        me: [4, 4, 4],
+        x: [2, 2, 2],
+      );
+      final fallen = builtBadges([mine, beaten])[BadgeId.fallenRecord]!;
+      expect(fallen.earned, isTrue);
+      expect(fallen.sessionId, 'g2');
+      expect(builtBadges([mine])[BadgeId.fallenRecord]!.earned, isFalse);
+      // Never held, nothing to lose.
+      expect(
+        builtBadges([
+          game(me: [5, 5, 5], x: [3, 3, 3]),
+        ])[BadgeId.fallenRecord]!.earned,
+        isFalse,
+      );
+    });
+
+    test('my king title taken, the first time (Q142)', () {
+      // King after 3 sessions; x then plays 4 aces and passes me.
+      final reign = games(3);
+      final coup = [
+        for (var i = 0; i < 4; i++)
+          game(id: 'c$i', at: day(2026, 2, 1 + i), me: [3, 3, 3], x: [1, 1, 1]),
+      ];
+      final taken = builtBadges([...reign, ...coup])[BadgeId.dethroned]!;
+      expect(taken.earned, isTrue);
+      expect(builtBadges(reign)[BadgeId.dethroned]!.earned, isFalse);
+    });
+
+    test('a king\'s title taken from them, not a first king (Q142)', () {
+      // x is king after 3 sessions; I play 4 aces and take the title.
+      final reign = games(3, me: const [4, 4, 4], x: const [3, 3, 3]);
+      final coup = [
+        for (var i = 0; i < 4; i++)
+          game(id: 'c$i', at: day(2026, 2, 1 + i), me: [1, 1, 1], x: [3, 3, 3]),
+      ];
+      final results = builtBadges([...reign, ...coup]);
+      expect(results[BadgeId.regicide]!.earned, isTrue);
+      expect(results[BadgeId.holeKing]!.earned, isTrue);
+      // King from the start: nobody to take the title from.
+      expect(builtBadges(games(3))[BadgeId.regicide]!.earned, isFalse);
     });
   });
 

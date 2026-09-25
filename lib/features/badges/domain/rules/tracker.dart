@@ -17,14 +17,20 @@ class BadgeTracker {
   bool get earned => _earnedAt != null;
 
   /// A value reached in [session] (a count, a streak...), or at [at] for
-  /// something that isn't a session (a championship season's end); earns
-  /// the badge once it reaches the target.
-  void reach(int value, PlayedSession? session, {DateTime? at}) {
+  /// something that isn't one of the player's sessions (a championship
+  /// season's end, a hole created; [sessionId] then names the session, if
+  /// any); earns the badge once it reaches the target.
+  void reach(
+    int value,
+    PlayedSession? session, {
+    DateTime? at,
+    String? sessionId,
+  }) {
     if (value > _best) _best = value;
     final target = id.target ?? 1;
     if (!earned && value >= target) {
       _earnedAt = at ?? session?.date;
-      _sessionId = session?.session.id;
+      _sessionId = sessionId ?? session?.session.id;
     }
   }
 

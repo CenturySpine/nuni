@@ -144,6 +144,22 @@ import '../domain/badge.dart';
     PhosphorIcons.badgeMagicWand,
     PhosphorIcons.badgeMagicWandFill,
   ),
+  BadgeId.flagPlanter || BadgeId.landscaper => (
+    PhosphorIcons.badgeMapPinPlus,
+    PhosphorIcons.badgeMapPinPlusFill,
+  ),
+  BadgeId.architect => (
+    PhosphorIcons.badgeBlueprint,
+    PhosphorIcons.badgeBlueprintFill,
+  ),
+  BadgeId.organizer || BadgeId.gameMaster => (
+    PhosphorIcons.badgeMegaphone,
+    PhosphorIcons.badgeMegaphoneFill,
+  ),
+  BadgeId.reporter || BadgeId.photographer => (
+    PhosphorIcons.badgeCamera,
+    PhosphorIcons.badgeCameraFill,
+  ),
   BadgeId.rain => (
     PhosphorIcons.badgeCloudRain,
     PhosphorIcons.badgeCloudRainFill,
@@ -173,6 +189,36 @@ import '../domain/badge.dart';
     PhosphorIcons.badgeCloudSnow,
     PhosphorIcons.badgeCloudSnowFill,
   ),
+  BadgeId.recordHolder => (
+    PhosphorIcons.badgeStar,
+    PhosphorIcons.badgeStarFill,
+  ),
+  BadgeId.recordHunter => (
+    PhosphorIcons.badgeTarget,
+    PhosphorIcons.badgeTargetFill,
+  ),
+  BadgeId.confidence => (
+    PhosphorIcons.badgeHourglass,
+    PhosphorIcons.badgeHourglassFill,
+  ),
+  BadgeId.rampart => (
+    PhosphorIcons.badgeCastleTurret,
+    PhosphorIcons.badgeCastleTurretFill,
+  ),
+  BadgeId.recordCollector => (
+    PhosphorIcons.badgeMagnet,
+    PhosphorIcons.badgeMagnetFill,
+  ),
+  BadgeId.holeKing => (PhosphorIcons.badgeCrown, PhosphorIcons.badgeCrownFill),
+  BadgeId.fallenRecord => (
+    PhosphorIcons.badgeStarHalf,
+    PhosphorIcons.badgeStarHalfFill,
+  ),
+  BadgeId.dethroned => (
+    PhosphorIcons.badgeCrownCross,
+    PhosphorIcons.badgeCrownCrossFill,
+  ),
+  BadgeId.regicide => (PhosphorIcons.badgeSword, PhosphorIcons.badgeSwordFill),
   BadgeId.redLantern || BadgeId.teamRedLantern => (
     PhosphorIcons.badgeLamp,
     PhosphorIcons.badgeLampFill,
@@ -197,10 +243,11 @@ NuniTone badgeTone(BadgeFamily family) => switch (family) {
   BadgeFamily.attendance ||
   BadgeFamily.regularity ||
   BadgeFamily.conditions => NuniTone.fairway,
-  BadgeFamily.strokes => NuniTone.primary,
+  BadgeFamily.strokes || BadgeFamily.records => NuniTone.primary,
   BadgeFamily.wins || BadgeFamily.championship => NuniTone.sunshine,
   BadgeFamily.team ||
   BadgeFamily.explorer ||
+  BadgeFamily.builder ||
   BadgeFamily.fun => NuniTone.highlight,
 };
 

@@ -14,7 +14,9 @@ enum BadgeFamily {
   championship(BadgeScope.both),
   team(BadgeScope.team),
   explorer(BadgeScope.both),
+  builder(BadgeScope.both),
   conditions(BadgeScope.both),
+  records(BadgeScope.individual),
   fun(BadgeScope.individual);
 
   const BadgeFamily(this.scope);
@@ -119,6 +121,15 @@ enum BadgeId {
   guest(BadgeFamily.explorer),
   improviser(BadgeFamily.explorer, target: 10),
 
+  // H. Builder: what the player's account added to the app.
+  flagPlanter(BadgeFamily.builder, tier: BadgeTier.bronze, target: 1),
+  landscaper(BadgeFamily.builder, tier: BadgeTier.silver, target: 5),
+  architect(BadgeFamily.builder, target: 10),
+  organizer(BadgeFamily.builder, tier: BadgeTier.bronze, target: 1),
+  gameMaster(BadgeFamily.builder, tier: BadgeTier.silver, target: 10),
+  reporter(BadgeFamily.builder, tier: BadgeTier.bronze, target: 1),
+  photographer(BadgeFamily.builder, tier: BadgeTier.silver, target: 10),
+
   // I. Playing conditions.
   rain(BadgeFamily.conditions),
   frosty(BadgeFamily.conditions),
@@ -128,6 +139,19 @@ enum BadgeId {
   earlyBird(BadgeFamily.conditions),
   marathon(BadgeFamily.conditions),
   snow(BadgeFamily.conditions),
+
+  // J. Hole records, all time only (Q136).
+  recordHolder(BadgeFamily.records),
+  recordCollector(BadgeFamily.records, target: 5),
+  recordHunter(BadgeFamily.records, target: 10),
+  rampart(BadgeFamily.records, target: 3),
+  confidence(BadgeFamily.records),
+  holeKing(BadgeFamily.records),
+  // Losing a title, the first time (Q142): a reason to come back for it;
+  // and taking a king's title from them.
+  fallenRecord(BadgeFamily.records),
+  dethroned(BadgeFamily.records),
+  regicide(BadgeFamily.records),
 
   // K. Fun.
   redLantern(BadgeFamily.fun),

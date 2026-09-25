@@ -2,6 +2,10 @@
 
 ## Statut
 
+**Clôturé le 2026-09-25.** Lots 1 et 2 livrés, essayés et validés par le PO : 90 badges en
+onze familles (74 au lot 1, 16 au lot 2 avec J4 à J9 ajoutés par le PO, Q142 à Q145). Plus
+aucune question ouverte sur ce plan.
+
 Fiche synthétique (2026-09-24), catalogue trié par le PO le même jour (Q96) ; Q97, Q98 et Q111 à
 Q114 tranchées le 2026-09-24. Plan détaillé rédigé le 2026-09-24. Plus d'hypothèse en attente propre au plan 21 (Q126 porte sur le
 championnat, plan 26). Q94, Q115 à Q117, Q120 et Q123 à Q128 tranchées le 2026-09-24. Dépend du plan 26 (par de chaque trou joué) et des plans 19 et 20 (fiche joueur, lectures des statistiques) : implémenté juste après eux.
@@ -34,6 +38,31 @@ appliqué et testé (48 tests). Puis, le même jour : chaque badge de classement
 stricte), « Solo » et « Collectif » sont supprimés (Q140) : le lot 1 compte 74 badges. Chaque
 famille porte une pastille « Individuel », « Équipe » ou « Individuel et équipe » (demande du
 PO). Recalcul sur les données réelles du PO : 17 badges sur 74, hors places de championnat.
+
+**Lot 2 codé, mis en base, essayé et validé par le PO le 2026-09-25, committé.** Fait : RPC `player_contributions`
+(trous du compte avec clones marqués, photos, sessions créées ou photographiées au format
+`player_history`) et `holes_history(uuid[])`, qui remplace `hole_history` (la fiche trou lui
+passe son seul trou) ; 3 tests de plus dans `rls_smoke.sql` (53). Le calcul de la fiche trou
+devient un rejeu passage par passage (`HoleReplay`, `holePassages` dans `hole_stats.dart`) : la
+fiche en lit l'état final, les badges J chaque état intermédiaire. Familles H (`rules/builder.dart`)
+et J (`rules/records.dart`), plus J4 à J9 ajoutés par le PO (Q142 à Q145) : 90 badges, 32
+chaînes de plus EN/FR, 14 tests de plus (359 au total).
+`flutter analyze --fatal-infos` sans remarque, tests verts. Base reconstruite (règle 8, seeds
+régénérés puis rejoués, comptages identiques, 53 tests `rls_smoke.sql` verts). Calcul sur les
+données réelles du PO par les nouvelles RPC : 26 badges sur 90 (hors places de championnat),
+en 21 ms. Limite connue : H1 et H2 datent des trous importés au jour de l'import (2026-09-23),
+LsgScores ne transmettant pas leur date de création.
+Précisions d'implémentation du lot 2 :
+- H3 compte tous les joueurs des sessions éligibles où le trou a été joué, sessions par équipes
+  comprises (tous les membres d'une équipe jouent le trou). La date d'obtention est celle de la
+  session qui amène le 10e joueur ; le lien vers la session n'est donné que si le joueur y a
+  joué (sinon elle peut appartenir à une autre association, illisible pour lui).
+- H4, H5 : date de la session (son démarrage), comme les autres badges ; H6, H7 : date de la
+  photo.
+- J1 à J3 : l'état est relevé après chaque passage (un trou joué dans une session), pas après
+  chaque joueur : un joueur battu dans le même passage n'a jamais détenu le record. J3 peut
+  s'obtenir sans jouer (un autre joueur fait baisser sa propre moyenne) : pas de lien de session
+  dans ce cas.
 Précisions d'implémentation (interprétations des conditions, validées par le PO le 2026-09-25) :
 - C1 à C4 : « au par ou mieux », « birdie ou mieux »… : un eagle compte aussi comme birdie, pour
   qu'un joueur dont le premier coup sous le par est un eagle obtienne aussi « Petit oiseau ».
@@ -343,7 +372,13 @@ H6 et H7 que les photos de sessions éligibles ; H1 et H2 ne dépendent d'aucune
 |---|---|---|---|
 | J1 | Recordman | A détenu le record d'un trou | `star` |
 | J2 | Collectionneur de records | A détenu 5 records en même temps | `magnet` |
+| J7 | Chasseur de records | A pris 10 records de trou : premier record d'un trou, record égalé plus récemment ou battu, chaque reprise d'un même trou comptant (Q143) | `target` |
+| J8 | Rempart | A gardé son record sur un trou pendant 3 sessions d'affilée où le trou est joué, à chaque fois présent ; après la session de la prise ; une session sans lui casse la série, une session par équipes ou « Libre » ne compte pas et ne casse rien (Q144) | `castle-turret` |
+| J9 | Confiance | A vu son record sur un trou résister à une session individuelle éligible jouée sans lui, où quelqu'un a un score sur le trou (Q145) | `hourglass` |
 | J3 | Roi du trou | A été « roi du trou » (meilleure moyenne) sur un trou | `crown` |
+| J4 | Record tombé | S'est fait prendre le record d'un trou, la première fois (Q142) | `star-half` |
+| J5 | Détrôné | S'est fait prendre son titre de roi d'un trou, la première fois (Q142) | `crown-cross` |
+| J6 | Régicide | A pris à son roi le titre de roi d'un trou (Q142 ; pas pour le premier roi d'un trou) | `sword` |
 
 Calcul en rejouant chronologiquement tous les passages individuels des trous que le joueur a
 joués ; un badge obtenu est gardé à vie (Q111). Mêmes règles que la fiche trou (plan 20), écrites
@@ -385,14 +420,14 @@ automatiquement le record de saison, et le badge serait gratuit.
   icône en contour (police `PhosphorRegular`) grise sur fond neutre ; pour un badge à compteur,
   une barre de progression et « 7 / 10 ». Les badges à obtenir ne s'affichent que sur sa propre
   fiche.
-- **Donner envie (décision 17).** Sur sa propre fiche, les 74 badges sont toujours visibles,
+- **Donner envie (décision 17).** Sur sa propre fiche, les 90 badges sont toujours visibles,
   obtenus ou non, chacun avec sa condition : un joueur découvre ainsi Lève-tôt ou Sous la neige
   avant de les avoir. En fin de session, la feuille « Nouveaux badges » montre aussi jusqu'à
   3 badges proches, ceux dont la progression est la plus avancée (Q128, décision 19).
 - **Bloc « Badges »** (`PlayerBadgesSection`, comme `PlayerStatsSection` au plan 19) : affiché sur
   mon profil (`/profile`, sous les statistiques, avec l'interrupteur « Badges publics » dans le
   bloc) et sur la fiche publique (`/players/:id`) si l'interrupteur l'autorise. Compteur
-  « 23 / 74 », puis une grille par famille (en-tête `NuniSectionHeader`). Sur la fiche d'un autre joueur, seuls les
+  « 23 / 90 », puis une grille par famille (en-tête `NuniSectionHeader`). Sur la fiche d'un autre joueur, seuls les
   badges obtenus ; une famille sans badge obtenu est cachée. Badges masqués : mention
   « Badges privés ».
 - **Détail** : un appui ouvre une feuille du bas avec le médaillon, le nom, la condition, et pour
@@ -459,7 +494,7 @@ Livraison en deux lots (Q137, tranchée), chacun essayé par le PO puis committ�
   (64 badges), avec le bloc « Badges » et l'interrupteur « Badges publics » (colonne déjà en
   base).
 - **Lot 2** : étape 3 (RPC `player_contributions`, `holes_history` qui remplace
-  `hole_history`, reconstruction) et familles H et J (10 badges).
+  `hole_history`, reconstruction) et familles H et J (16 badges avec J4 à J9, Q142 à Q145 : 90 au total).
 
 1. **Domaine et règles** : énumérations, `BadgeFacts`, les onze fichiers de règles, avec leurs
    tests (`test/features/badges/domain/`) : pour chaque badge un cas obtenu et un cas non
@@ -493,7 +528,7 @@ Livraison en deux lots (Q137, tranchée), chacun essayé par le PO puis committ�
 
 ## Critères d'acceptation
 
-- Les 74 badges du catalogue existent, chacun couvert par un test « obtenu » et un test « pas
+- Les 90 badges du catalogue existent, chacun couvert par un test « obtenu » et un test « pas
   obtenu ».
 - Sur les données réelles, un ancien joueur LSG voit ses badges dès la première ouverture,
   annoncés en une seule feuille.
@@ -505,7 +540,8 @@ Livraison en deux lots (Q137, tranchée), chacun essayé par le PO puis committ�
   compteurs.
 - Clore une session qui fait franchir un seuil affiche la feuille « Nouveaux badges » ; le même
   badge n'est plus annoncé ensuite sur cet appareil.
-- Un record battu ne retire pas J1, J2 ni J3.
+- Un record battu ne retire pas J1, J2 ni J3 ; il donne J4 (ou J5 pour un titre de roi) la
+  première fois, et J6 à celui qui prend le titre d'un roi.
 - Le médaillon suit la palette choisie, validé par le PO dans `/dev/theme`.
 - Chaînes EN/FR, `flutter analyze` sans remarque, tests verts, build Vercel vert.
 

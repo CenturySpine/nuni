@@ -550,18 +550,47 @@ reset request.jwt.claims;
 set role authenticated;
 set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000008","role":"authenticated"}';
 insert into test_results (test, passed)
-select 'hole_history_readable_by_anyone',
-  jsonb_array_length(hole_history((select private_hole from test_ids))) = 1
-  and jsonb_array_length(hole_history((select private_hole from test_ids))->0->'members') = 0
-  and not (hole_history((select private_hole from test_ids))->0->'session' ? 'comment')
+select 'holes_history_readable_by_anyone',
+  jsonb_array_length(holes_history(array[(select private_hole from test_ids)])) = 1
+  and jsonb_array_length(holes_history(array[(select private_hole from test_ids)])->0->'members') = 0
+  and not (holes_history(array[(select private_hole from test_ids)])->0->'session' ? 'comment')
   and not exists (
-    select 1 from jsonb_array_elements(hole_history((select private_hole from test_ids))->0->'played_holes') ph
+    select 1 from jsonb_array_elements(holes_history(array[(select private_hole from test_ids)])->0->'played_holes') ph
     where ph ? 'comment'
   );
 -- A clone has its own statistics (Q135): never played, empty history.
 insert into test_results (test, passed)
-select 'hole_history_empty_for_unplayed_clone',
-  jsonb_array_length(hole_history((select id from holes where cloned_from = (select private_hole from test_ids) limit 1))) = 0;
+select 'holes_history_empty_for_unplayed_clone',
+  jsonb_array_length(holes_history(array[(select id from holes where cloned_from = (select private_hole from test_ids) limit 1)])) = 0;
+-- Several holes in one call, each session once (plan 21).
+insert into test_results (test, passed)
+select 'holes_history_each_session_once',
+  jsonb_array_length(holes_history(array[
+    (select private_hole from test_ids),
+    (select id from holes where cloned_from = (select private_hole from test_ids) limit 1)
+  ])) = 1;
+reset role;
+reset request.jwt.claims;
+
+-- ===== Plan 21: a player's contributions (builder badges, family H), readable by anyone =====
+-- The owner created the hole and the completed session without playing in it.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000008","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'player_contributions_readable_by_anyone',
+  (select c->'holes'->0->>'id' = (select private_hole from test_ids)::text
+      and not (c->'holes'->0->>'cloned')::boolean
+      and jsonb_array_length(c->'sessions') = 1
+      and jsonb_array_length(c->'sessions'->0->'members') = 0
+      and jsonb_array_length(c->'photos') = 0
+   from (select player_contributions((select id from players where user_id = (select owner_user from test_ids))) c) x);
+-- member1's clone is marked as such (Q120); member1 created no session.
+insert into test_results (test, passed)
+select 'player_contributions_clone_marked',
+  (select jsonb_array_length(c->'holes') = 1
+      and (c->'holes'->0->>'cloned')::boolean
+      and jsonb_array_length(c->'sessions') = 0
+   from (select player_contributions((select member1_player from test_ids)) c) x);
 reset role;
 reset request.jwt.claims;
 -- The shared stripping helper is not callable by the app.

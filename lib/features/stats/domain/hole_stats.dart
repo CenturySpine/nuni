@@ -97,12 +97,127 @@ class _PlayerTally {
   int passages = 0;
   int toPar = 0;
 
-  /// Rank of their latest passage in chronological order (see [computeHoleStats]).
+  /// Rank of their latest passage in chronological order (see [HoleReplay]).
   int lastPassage = 0;
 }
 
+/// One passage of a hole: a played hole of a session, where every player
+/// may have a score.
+typedef HolePassage = ({LiveSessionSnapshot snapshot, PlayedHole hole});
+
+/// The passages of [holeId] that count strokes (Q90, Q94), in chronological
+/// order: oldest session first, then the order holes were played in it.
+/// Only eligible sessions, of [season] when given (Q117, Q123).
+List<HolePassage> holePassages(
+  String holeId,
+  List<LiveSessionSnapshot> snapshots, {
+  String? season,
+}) => [
+  for (final snapshot in _playedSessions(holeId, snapshots, season))
+    if (countsStrokes(snapshot.session))
+      for (final hole in [
+        for (final hole in snapshot.playedHoles)
+          if (hole.hole?.id == holeId) hole,
+      ]..sort((a, b) => a.position.compareTo(b.position)))
+        (snapshot: snapshot, hole: hole),
+];
+
+/// Replays one hole's passages in chronological order ([holePassages]),
+/// applying the record and "roi du trou" rules after each one. The hole's
+/// sheet reads the final state (plan 20), the "Records" badges every state
+/// in between (plan 21, J1 to J3): both apply the same rules.
+class HoleReplay {
+  var passages = 0;
+  var totalStrokes = 0;
+  var totalToPar = 0;
+  HoleRecord? _record;
+  String? _recordPassageId;
+  final _players = <String, _PlayerTally>{};
+
+  /// Passages per number of strokes.
+  final distribution = <int, int>{};
+
+  // Chronological rank of each passage, for "most recent" ties.
+  var _passageRank = 0;
+
+  HoleRecord? get record => _record;
+
+  /// Plays [passage], which must come after every passage played so far.
+  void play(HolePassage passage) {
+    final (:snapshot, :hole) = passage;
+    final date = sessionDate(snapshot.session);
+    _passageRank++;
+    // Individual sessions: one player per team. Same hole, same strokes:
+    // alphabetical order decides who is shown -- nothing tells who holed
+    // out first.
+    final entries = [
+      for (final team in snapshot.teams)
+        if (team.players.isNotEmpty)
+          if (hole.scoreFor(team.id) case final score?)
+            (team.players.first, score.value),
+    ]..sort((a, b) => compareNames(a.$1.name, b.$1.name));
+    for (final (player, strokes) in entries) {
+      passages++;
+      totalStrokes += strokes;
+      totalToPar += strokes - hole.par;
+      distribution[strokes] = (distribution[strokes] ?? 0) + 1;
+      _players.putIfAbsent(player.playerId, () => _PlayerTally(player.name))
+        ..passages += 1
+        ..toPar += strokes - hole.par
+        ..lastPassage = _passageRank;
+      // A later passage that equals the record takes it (Q94, revised
+      // 2026-09-24), so a lucky birdie never locks it for good.
+      final record = _record;
+      if (record == null ||
+          strokes < record.strokes ||
+          (strokes == record.strokes && hole.id != _recordPassageId)) {
+        _recordPassageId = hole.id;
+        _record = HoleRecord(
+          playerId: player.playerId,
+          name: player.name,
+          strokes: strokes,
+          date: date,
+        );
+      }
+    }
+  }
+
+  /// The "roi du trou" now. Ties: the one who played the hole most
+  /// recently takes the title (PO, 2026-09-24, like the record: it rewards
+  /// playing), then alphabetical order within one passage. Averages
+  /// compared by cross-multiplying, exactly.
+  HoleKing? get king {
+    _PlayerTally? best;
+    String? bestId;
+    for (final MapEntry(key: id, value: x) in _players.entries) {
+      if (x.passages < minHolePassages) continue;
+      final y = best;
+      if (y != null) {
+        final byAverage = (x.toPar * y.passages).compareTo(
+          y.toPar * x.passages,
+        );
+        if (byAverage > 0) continue;
+        if (byAverage == 0) {
+          final byRecency = y.lastPassage.compareTo(x.lastPassage);
+          if (byRecency > 0) continue;
+          if (byRecency == 0 && compareNames(x.name, y.name) >= 0) continue;
+        }
+      }
+      best = x;
+      bestId = id;
+    }
+    if (best == null) return null;
+    return HoleKing(
+      playerId: bestId!,
+      name: best.name,
+      passages: best.passages,
+      averageToPar: best.toPar / best.passages,
+    );
+  }
+}
+
 /// Computes [holeId]'s statistics from its sessions ([snapshots], any
-/// order, as `hole_history` returns them), over all time or one [season].
+/// order, as `holes_history` returns them), over all time or one [season].
 /// Only eligible sessions count (Q117, Q123); the difference to par uses
 /// each passage's own par (`played_holes.par`, plan 26).
 HoleStats computeHoleStats(
@@ -110,99 +225,19 @@ HoleStats computeHoleStats(
   List<LiveSessionSnapshot> snapshots, {
   String? season,
 }) {
-  final played = _playedSessions(holeId, snapshots, season);
-
-  var passages = 0;
-  var totalStrokes = 0;
-  var totalToPar = 0;
-  HoleRecord? record;
-  final players = <String, _PlayerTally>{};
-  final distribution = <int, int>{};
-
-  // Oldest session first, then the order holes were played in it: a later
-  // passage that equals the record takes it (Q94, revised 2026-09-24), so a
-  // lucky birdie never locks it for good. Within one passage, alphabetical
-  // order decides: nothing tells who holed out first.
-  String? recordPassageId;
-  // Chronological rank of each passage (a played hole of a session), for
-  // "most recent" ties.
-  var passageRank = 0;
-  for (final snapshot in played) {
-    if (!countsStrokes(snapshot.session)) continue;
-    final date = sessionDate(snapshot.session);
-    final holes = [
-      for (final hole in snapshot.playedHoles)
-        if (hole.hole?.id == holeId) hole,
-    ]..sort((a, b) => a.position.compareTo(b.position));
-    for (final hole in holes) {
-      passageRank++;
-      // Individual sessions: one player per team. Same hole, same strokes:
-      // alphabetical order decides who is shown.
-      final entries = [
-        for (final team in snapshot.teams)
-          if (team.players.isNotEmpty)
-            if (hole.scoreFor(team.id) case final score?)
-              (team.players.first, score.value),
-      ]..sort((a, b) => compareNames(a.$1.name, b.$1.name));
-      for (final (player, strokes) in entries) {
-        passages++;
-        totalStrokes += strokes;
-        totalToPar += strokes - hole.par;
-        distribution[strokes] = (distribution[strokes] ?? 0) + 1;
-        players.putIfAbsent(player.playerId, () => _PlayerTally(player.name))
-          ..passages += 1
-          ..toPar += strokes - hole.par
-          ..lastPassage = passageRank;
-        if (record == null ||
-            strokes < record.strokes ||
-            (strokes == record.strokes && hole.id != recordPassageId)) {
-          recordPassageId = hole.id;
-          record = HoleRecord(
-            playerId: player.playerId,
-            name: player.name,
-            strokes: strokes,
-            date: date,
-          );
-        }
-      }
-    }
+  final replay = HoleReplay();
+  for (final passage in holePassages(holeId, snapshots, season: season)) {
+    replay.play(passage);
   }
-
-  // Ties: the one who played the hole most recently takes the title (PO,
-  // 2026-09-24, like the record: it rewards playing), then alphabetical order
-  // within one passage. Averages compared by cross-multiplying, exactly.
-  final contenders =
-      [
-        for (final entry in players.entries)
-          if (entry.value.passages >= minHolePassages) entry,
-      ]..sort((a, b) {
-        final x = a.value;
-        final y = b.value;
-        final byAverage = (x.toPar * y.passages).compareTo(
-          y.toPar * x.passages,
-        );
-        if (byAverage != 0) return byAverage;
-        final byRecency = y.lastPassage.compareTo(x.lastPassage);
-        return byRecency != 0 ? byRecency : compareNames(x.name, y.name);
-      });
-  final king = contenders.isEmpty
-      ? null
-      : HoleKing(
-          playerId: contenders.first.key,
-          name: contenders.first.value.name,
-          passages: contenders.first.value.passages,
-          averageToPar:
-              contenders.first.value.toPar / contenders.first.value.passages,
-        );
-
-  final sortedStrokes = distribution.keys.toList()..sort();
+  final passages = replay.passages;
+  final sortedStrokes = replay.distribution.keys.toList()..sort();
   return HoleStats(
-    sessions: played.length,
+    sessions: _playedSessions(holeId, snapshots, season).length,
     passages: passages,
-    averageStrokes: passages == 0 ? null : totalStrokes / passages,
-    averageToPar: passages == 0 ? null : totalToPar / passages,
-    record: record,
-    king: king,
-    distribution: {for (final s in sortedStrokes) s: distribution[s]!},
+    averageStrokes: passages == 0 ? null : replay.totalStrokes / passages,
+    averageToPar: passages == 0 ? null : replay.totalToPar / passages,
+    record: replay.record,
+    king: replay.king,
+    distribution: {for (final s in sortedStrokes) s: replay.distribution[s]!},
   );
 }

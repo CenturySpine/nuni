@@ -6,6 +6,7 @@ import '../../sessions/domain/scoring_mode.dart';
 import '../../sessions/domain/session.dart';
 import '../../sessions/domain/session_kind.dart';
 import '../../stats/domain/eligible_session.dart';
+import 'contributions.dart';
 
 /// One eligible session a player played (plan 21, "Session jouée"), with
 /// what the rules keep asking: the player's team, the final standings, and
@@ -139,17 +140,44 @@ class SeasonPlacing {
 
 /// Everything the rules read about one player (plan 21, "Données et
 /// calcul"): their eligible sessions, oldest first, their current
-/// association (G4) and their finished championship seasons.
+/// association (G4), their finished championship seasons, what their
+/// account added to the app (family H) and the history of every hole they
+/// played or own (H3, family J).
 class BadgeFacts {
   BadgeFacts({
     required this.playerId,
     required this.associationId,
     required List<LiveSessionSnapshot> history,
     this.seasonPlacings = const [],
+    this.userId,
+    this.contributions = const PlayerContributions(),
+    this.holesHistory = const [],
   }) : sessions = _played(playerId, history);
+
+  BadgeFacts._withHolesHistory(BadgeFacts facts, this.holesHistory)
+    : playerId = facts.playerId,
+      associationId = facts.associationId,
+      sessions = facts.sessions,
+      seasonPlacings = facts.seasonPlacings,
+      userId = facts.userId,
+      contributions = facts.contributions;
+
+  /// The same facts with [holesHistory], read once [playedHoleIds] is
+  /// known, without replaying the sessions again.
+  BadgeFacts withHolesHistory(List<LiveSessionSnapshot> holesHistory) =>
+      BadgeFacts._withHolesHistory(this, holesHistory);
 
   final String playerId;
   final String? associationId;
+
+  /// The player's account; null for a player imported without one, who has
+  /// no builder badge.
+  final String? userId;
+  final PlayerContributions contributions;
+
+  /// Every completed session one of [playedHoleIds] or of the player's own
+  /// holes was played in, whoever played (`holes_history`).
+  final List<LiveSessionSnapshot> holesHistory;
 
   /// Every eligible session played, team sessions included: what the
   /// badges that aren't about scores count (attendance, regularity,
@@ -170,6 +198,12 @@ class BadgeFacts {
     for (final s in sessions)
       if (s.session.kind == SessionKind.team) s,
   ];
+
+  /// Every directory hole of the player's eligible sessions.
+  late final Set<String> playedHoleIds = {
+    for (final s in sessions)
+      for (final hole in s.holes) ?hole.hole?.id,
+  };
 
   static List<PlayedSession> _played(
     String playerId,

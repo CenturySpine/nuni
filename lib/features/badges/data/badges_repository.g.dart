@@ -8,8 +8,102 @@ part of 'badges_repository.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// What [playerId]'s account added to the app (plan 21, family H), whoever
+/// asks; empty for a player without an account.
+
+@ProviderFor(playerContributions)
+final playerContributionsProvider = PlayerContributionsFamily._();
+
+/// What [playerId]'s account added to the app (plan 21, family H), whoever
+/// asks; empty for a player without an account.
+
+final class PlayerContributionsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<PlayerContributions>,
+          PlayerContributions,
+          FutureOr<PlayerContributions>
+        >
+    with
+        $FutureModifier<PlayerContributions>,
+        $FutureProvider<PlayerContributions> {
+  /// What [playerId]'s account added to the app (plan 21, family H), whoever
+  /// asks; empty for a player without an account.
+  PlayerContributionsProvider._({
+    required PlayerContributionsFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'playerContributionsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$playerContributionsHash();
+
+  @override
+  String toString() {
+    return r'playerContributionsProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<PlayerContributions> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<PlayerContributions> create(Ref ref) {
+    final argument = this.argument as String;
+    return playerContributions(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is PlayerContributionsProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$playerContributionsHash() =>
+    r'ae78200bc48e6370fa8ce4e8b0332f49ed4963f6';
+
+/// What [playerId]'s account added to the app (plan 21, family H), whoever
+/// asks; empty for a player without an account.
+
+final class PlayerContributionsFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<PlayerContributions>, String> {
+  PlayerContributionsFamily._()
+    : super(
+        retry: null,
+        name: r'playerContributionsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// What [playerId]'s account added to the app (plan 21, family H), whoever
+  /// asks; empty for a player without an account.
+
+  PlayerContributionsProvider call(String playerId) =>
+      PlayerContributionsProvider._(argument: playerId, from: this);
+
+  @override
+  String toString() => r'playerContributionsProvider';
+}
+
 /// A player's badges (plan 21), recomputed from what is already readable:
-/// their history (`player_history`, plan 19) and, for E3 to E5, the
+/// their history (`player_history`, plan 19), what their account added
+/// (`player_contributions`), the history of every hole they played or own
+/// (`holes_history`, for H3 and the records) and, for E3 to E5, the
 /// classement of every finished championship season they played in. No
 /// badge is stored (decision 8). Hiding badges is a display choice only
 /// (Q133): this never looks at `badges_public`.
@@ -18,7 +112,9 @@ part of 'badges_repository.dart';
 final playerBadgesProvider = PlayerBadgesFamily._();
 
 /// A player's badges (plan 21), recomputed from what is already readable:
-/// their history (`player_history`, plan 19) and, for E3 to E5, the
+/// their history (`player_history`, plan 19), what their account added
+/// (`player_contributions`), the history of every hole they played or own
+/// (`holes_history`, for H3 and the records) and, for E3 to E5, the
 /// classement of every finished championship season they played in. No
 /// badge is stored (decision 8). Hiding badges is a display choice only
 /// (Q133): this never looks at `badges_public`.
@@ -34,7 +130,9 @@ final class PlayerBadgesProvider
         $FutureModifier<List<BadgeResult>>,
         $FutureProvider<List<BadgeResult>> {
   /// A player's badges (plan 21), recomputed from what is already readable:
-  /// their history (`player_history`, plan 19) and, for E3 to E5, the
+  /// their history (`player_history`, plan 19), what their account added
+  /// (`player_contributions`), the history of every hole they played or own
+  /// (`holes_history`, for H3 and the records) and, for E3 to E5, the
   /// classement of every finished championship season they played in. No
   /// badge is stored (decision 8). Hiding badges is a display choice only
   /// (Q133): this never looks at `badges_public`.
@@ -82,10 +180,12 @@ final class PlayerBadgesProvider
   }
 }
 
-String _$playerBadgesHash() => r'48963ebf205edcb522f755d0d9a48bc2ba0be248';
+String _$playerBadgesHash() => r'9396a7c0d4e8c9e6b94c6627860b45eba4ec228f';
 
 /// A player's badges (plan 21), recomputed from what is already readable:
-/// their history (`player_history`, plan 19) and, for E3 to E5, the
+/// their history (`player_history`, plan 19), what their account added
+/// (`player_contributions`), the history of every hole they played or own
+/// (`holes_history`, for H3 and the records) and, for E3 to E5, the
 /// classement of every finished championship season they played in. No
 /// badge is stored (decision 8). Hiding badges is a display choice only
 /// (Q133): this never looks at `badges_public`.
@@ -102,7 +202,9 @@ final class PlayerBadgesFamily extends $Family
       );
 
   /// A player's badges (plan 21), recomputed from what is already readable:
-  /// their history (`player_history`, plan 19) and, for E3 to E5, the
+  /// their history (`player_history`, plan 19), what their account added
+  /// (`player_contributions`), the history of every hole they played or own
+  /// (`holes_history`, for H3 and the records) and, for E3 to E5, the
   /// classement of every finished championship season they played in. No
   /// badge is stored (decision 8). Hiding badges is a display choice only
   /// (Q133): this never looks at `badges_public`.

@@ -179,8 +179,11 @@ GitHub Actions (Q17).
   terminées, d'au moins 3 joueurs et d'au moins 3 trous joués (Q117, Q123). Définition écrite
   une seule fois dans `lib/features/stats/domain/`. Le classement d'une session n'est pas
   concerné. L'historique d'un joueur se lit par la RPC `player_history`, celui d'un trou par
-  `hole_history` (commun à toutes les associations, Q95 ; un clone a le sien, Q135), toutes deux
-  ouvertes à tout compte connecté ; `players.stats_public` et `players.badges_public` ne décident que de l'affichage
+  `holes_history` (un ou plusieurs trous ; commun à toutes les associations, Q95 ; un clone a
+  le sien, Q135), les contributions d'un compte (badges « Bâtisseur ») par
+  `player_contributions`, toutes ouvertes à tout compte connecté. Record et roi du trou : une
+  seule implémentation, le rejeu `HoleReplay` de `hole_stats.dart`, lu par la fiche trou et
+  par les badges J ; `players.stats_public` et `players.badges_public` ne décident que de l'affichage
   sur la fiche publique, jamais de l'accès aux données (Q133).
 - Temps réel : abonnements Supabase filtrés par session, jamais sur une table entière.
 

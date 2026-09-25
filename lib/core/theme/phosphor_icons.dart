@@ -122,6 +122,12 @@ abstract final class PhosphorIcons {
   static const badgeCloudSnowFill = IconData(0xe1b8, fontFamily: _fill);
   static const badgeCompass = IconData(0xe1c8, fontFamily: _regular);
   static const badgeCompassFill = IconData(0xe1c8, fontFamily: _fill);
+  static const badgeHourglass = IconData(0xe2b2, fontFamily: _regular);
+  static const badgeHourglassFill = IconData(0xe2b2, fontFamily: _fill);
+  static const badgeCastleTurret = IconData(0xe9d0, fontFamily: _regular);
+  static const badgeCastleTurretFill = IconData(0xe9d0, fontFamily: _fill);
+  static const badgeCrownCross = IconData(0xee5e, fontFamily: _regular);
+  static const badgeCrownCrossFill = IconData(0xee5e, fontFamily: _fill);
   static const badgeCrown = IconData(0xe614, fontFamily: _regular);
   static const badgeCrownFill = IconData(0xe614, fontFamily: _fill);
   static const badgeEquals = IconData(0xe21c, fontFamily: _regular);
@@ -192,6 +198,10 @@ abstract final class PhosphorIcons {
   static const badgeSneakerMoveFill = IconData(0xed60, fontFamily: _fill);
   static const badgeStack = IconData(0xe466, fontFamily: _regular);
   static const badgeStackFill = IconData(0xe466, fontFamily: _fill);
+  static const badgeSword = IconData(0xe5ba, fontFamily: _regular);
+  static const badgeSwordFill = IconData(0xe5ba, fontFamily: _fill);
+  static const badgeStarHalf = IconData(0xe70a, fontFamily: _regular);
+  static const badgeStarHalfFill = IconData(0xe70a, fontFamily: _fill);
   static const badgeStar = IconData(0xe46a, fontFamily: _regular);
   static const badgeStarFill = IconData(0xe46a, fontFamily: _fill);
   static const badgeSuitcaseRolling = IconData(0xe9b0, fontFamily: _regular);
@@ -206,6 +216,8 @@ abstract final class PhosphorIcons {
   static const badgeTimerFill = IconData(0xe492, fontFamily: _fill);
   static const badgeTrendDown = IconData(0xe4ac, fontFamily: _regular);
   static const badgeTrendDownFill = IconData(0xe4ac, fontFamily: _fill);
+  static const badgeTarget = IconData(0xe47c, fontFamily: _regular);
+  static const badgeTargetFill = IconData(0xe47c, fontFamily: _fill);
   static const badgeTrophy = IconData(0xe67e, fontFamily: _regular);
   static const badgeTrophyFill = IconData(0xe67e, fontFamily: _fill);
   static const badgeUsersFour = IconData(0xe68c, fontFamily: _regular);

@@ -1598,3 +1598,74 @@ disparaissent : ils deviennent la « Première victoire » de chaque version. Le
 question est ouverte, le plan 21 garde la règle actuelle (pas de version équipe).
 Précision du PO le même jour : chaque famille affiche une pastille « Individuel », « Équipe » ou
 « Individuel et équipe », selon les sessions que ses badges lisent.
+
+**Q142 ☑ — Badges « se faire détrôner » et « se faire prendre le record » : les ajouter ?**
+Réponse PO (2026-09-25) : oui, avec un badge de plus : « Détrôné » pour le roi qui perd son
+titre (la première fois), « Régicide » pour celui qui le lui prend (il peut s'obtenir en même
+temps que J3 « Roi du trou » ; devenir le premier roi d'un trou n'est pas un régicide).
+« Record tombé » ajouté comme suggéré (pas d'objection du PO). Lot 2 : 87 badges.
+Idée du PO (2026-09-25), pendant le lot 2 : des badges « stat trou » pour obtenir le record,
+obtenir le titre de roi, se faire détrôner, se faire prendre le record.
+Constat : obtenir le record et le titre de roi existent déjà (J1 « Recordman », J3 « Roi du
+trou », lot 2). Les deux autres sont nouveaux. Le rejeu du lot 2 voit déjà chaque changement de
+détenteur, trou par trou : les ajouter ne demande ni donnée ni appel de plus.
+Suggestion : les ajouter au lot 2, dans la famille J, en badges uniques gardés à vie (Q111) :
+J4 « Détrôné » (avoir été roi d'un trou puis perdu le titre au profit d'un autre joueur) et
+J5 « Record tombé » (avoir détenu un record puis se l'être fait prendre), 86 badges au total.
+Ils consolent sans rien coûter à obtenir un exploit, et donnent une raison de revenir reprendre
+son titre. Une série (« 5 records perdus ») n'est pas proposée : elle récompenserait surtout de
+perdre souvent. Tant que la question est ouverte, le lot 2 n'en contient aucun.
+
+**Q143 ☑ — « Chasseur de records » : améliorer ou égaler son propre record compte-t-il ?**
+Réponse PO (2026-09-25) : suggestion retenue, les compteurs ne comptent que la prise d'un
+record sur quelqu'un d'autre. Confirmé le même jour : le premier record d'un trou (personne à qui le prendre) compte
+aussi.
+Demande du PO (2026-09-25) : un badge à compteur (10) du nombre de fois où le joueur a pris un
+record : premier record d'un trou, record égalé plus récemment, ou record battu. Précision
+du PO le même jour : J2 compte 5 records tenus en même temps sur 5 trous différents (c'est déjà
+le cas, un seul record par trou).
+Constat : quand le joueur détient déjà le record d'un trou et l'égale ou l'améliore, le
+record ne change pas de mains.
+Suggestion : ne compter que les records pris, quand le trou n'avait pas de record ou qu'un
+autre joueur le détenait ; pas quand le joueur améliore ou égale le sien. Sinon, un joueur
+seul sur un trou peu fréquenté ferait monter le compteur en rejouant son trou, sans jamais
+rien prendre à personne. Un même trou compte à chaque reprise (pris, perdu, repris). Tant que
+la question est ouverte, le lot 2 applique cette suggestion (J7 « Chasseur de records »).
+
+**Q144 ☑ — Badge « garder son record 3 sessions d'affilée » : quelles règles ?**
+Réponse PO (2026-09-25) : suggestion retenue pour (a) à (d), nom « Rempart » et icône
+`castle-turret` validés. Codé : J8, compteur « 2 / 3 » (meilleure série).
+Idée du PO (2026-09-25) : garder son record sur un trou pendant 3 sessions d'affilée où le
+trou est joué ; une session où le trou est joué sans le joueur casse la série (d'où 3 et pas 5).
+Constat : faisable sans donnée de plus, avec le rejeu du lot 2. Aucun frein bloquant ; quatre
+points à fixer :
+- (a) La session où le joueur prend le record compte-t-elle comme la 1re des 3 ?
+- (b) Les sessions par équipes et en mode « Libre » ne comptent pas pour les records (Q90) :
+  si le trou y est joué, cassent-elles la série ?
+- (c) Les trous sont communs à toutes les associations (Q95) : une session d'une autre
+  association sur ce trou casse la série alors que le joueur ne pouvait pas y être.
+- (d) Égaler son propre record garde le titre (même détenteur) ; un autre joueur qui l'égale
+  plus récemment le prend (Q94 révisée) et casse la série.
+Suggestion : (a) non, 3 sessions après la prise : « garder » veut dire défendre, et avec la
+prise le badge tomberait après 2 défenses seulement ; (b) non, elles sont ignorées, ni
+comptées ni cassantes, puisqu'aucun record ne s'y joue ; (c) oui, elle casse la série, la
+règle reste simple et c'est rare (un trou est surtout joué par son association) ; (d) comme
+écrit. Badge unique gardé à vie, famille J, nom « Rempart » (icône `castle-turret`, le bouclier étant déjà pris). Tant que
+la question est ouverte, rien n'est codé.
+
+**Q145 ☑ — Badge « Confiance » : garder son record pendant une session jouée sans soi ?**
+Réponse PO (2026-09-25) : suggestion retenue. Codé : J9.
+Idée du PO (2026-09-25) : un badge « orgueil » ou « confiance » quand le record d'un joueur sur
+un trou résiste à une session où ce trou est joué sans lui.
+Constat : faisable avec le rejeu du lot 2, sans donnée de plus. C'est le pendant de Rempart :
+la session sans le joueur casse la série de Rempart mais donne ce badge. Seul frein : il
+s'obtient sans rien faire ce jour-là ; c'est l'esprit voulu (le record parle pour lui).
+Suggestion : nom « Confiance » (EN « Confidence »), icône `hourglass` ; condition affichée
+« Voir son record sur un trou résister à une session jouée sans vous ». Règle : le joueur
+détient le record du trou avant une session éligible individuelle (Q90, Q117), de n'importe
+quelle association (Q95), à laquelle il ne participe pas et où au moins un joueur a un score
+sur ce trou ; il le détient encore à la fin de cette session. Sessions par équipes et « Libre »
+ignorées, comme pour Rempart. Badge unique gardé à vie, famille J, sans lien vers la session
+(il n'y était pas, elle peut appartenir à une autre association). Pas de version à compteur :
+elle dépendrait surtout de l'activité des autres joueurs. Tant que la question est ouverte,
+rien n'est codé.
