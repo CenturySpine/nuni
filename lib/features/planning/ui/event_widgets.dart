@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -7,9 +8,11 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/palettes.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/nuni_avatar.dart';
 import '../../../shared/nuni_card.dart';
 import '../../../shared/nuni_chip.dart';
 import '../../../shared/nuni_status_pill.dart';
+import '../../players/data/players_repository.dart';
 import '../domain/event.dart';
 
 /// The colour an event is drawn in (Q149), or null without one.
@@ -118,7 +121,7 @@ class EventResponseButtons extends StatelessWidget {
 }
 
 /// A condensed event (planning list, home): a stripe of its colour, its day
-/// in a tile, label, time and place, my answer, present count and comments.
+/// in a tile with the person in charge's avatar under it, label, time and place, my answer, present count and comments.
 class EventCard extends StatelessWidget {
   const EventCard({
     super.key,
@@ -178,7 +181,15 @@ class EventCard extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _DayTile(date: local),
+                        Column(
+                          children: [
+                            _DayTile(date: local),
+                            if (event.managerPlayerId != null) ...[
+                              const SizedBox(height: 8),
+                              _ManagerAvatar(playerId: event.managerPlayerId!),
+                            ],
+                          ],
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -274,6 +285,35 @@ class _DayTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The event's person in charge, as a small avatar under the day tile; their
+/// name on long press and for screen readers.
+class _ManagerAvatar extends ConsumerWidget {
+  const _ManagerAvatar({required this.playerId});
+
+  final String playerId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final player = ref.watch(playerByIdProvider(playerId)).value;
+    final label = player == null
+        ? l10n.planningManager
+        : '${l10n.planningManager} · ${player.name}';
+    return Tooltip(
+      message: label,
+      child: Semantics(
+        label: label,
+        excludeSemantics: true,
+        child: NuniAvatar(
+          name: player?.name,
+          imageUrl: player?.avatarUrl,
+          size: 28,
+        ),
       ),
     );
   }

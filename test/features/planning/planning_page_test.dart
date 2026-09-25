@@ -9,9 +9,11 @@ import 'package:nuni/features/planning/domain/event.dart';
 import 'package:nuni/features/planning/ui/event_widgets.dart';
 import 'package:nuni/features/planning/ui/next_event_home_card.dart';
 import 'package:nuni/features/planning/ui/planning_page.dart';
+import 'package:nuni/features/players/data/players_repository.dart';
 import 'package:nuni/features/profile/data/profile_repository.dart';
 import 'package:nuni/features/profile/domain/player.dart';
 import 'package:nuni/l10n/generated/app_localizations.dart';
+import 'package:nuni/shared/nuni_avatar.dart';
 
 void main() {
   const me = Player(id: 'me', name: 'Me', locale: 'en', associationId: 'lsg');
@@ -24,6 +26,7 @@ void main() {
     DateTime startsAt, {
     List<EventAnswer> answers = const [],
     int comments = 0,
+    String? managerPlayerId,
   }) => Event(
     id: id,
     associationId: 'lsg',
@@ -32,6 +35,7 @@ void main() {
     label: label,
     answers: answers,
     commentCount: comments,
+    managerPlayerId: managerPlayerId,
   );
 
   final events = [
@@ -76,6 +80,9 @@ void main() {
         overrides: [
           myPlayerProvider.overrideWith((ref) async => player),
           myPlanningProvider.overrideWith((ref) async => planning ?? events),
+          playerByIdProvider.overrideWith(
+            (ref, id) async => Player(id: id, name: 'Anna Bell', locale: 'en'),
+          ),
           canModeratePlanningProvider.overrideWith(
             (ref, associationId) async => manager,
           ),
@@ -117,6 +124,28 @@ void main() {
       expect(find.text('New event'), findsOneWidget);
       // A plain member has no import action.
       expect(find.text('Import an agenda'), findsNothing);
+    });
+
+    testWidgets('shows the person in charge under the day tile', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const PlanningPage(),
+        planning: [
+          event(
+            'managed',
+            'Managed outing',
+            today.add(const Duration(days: 3)),
+            managerPlayerId: 'p2',
+          ),
+          event('free', 'Free outing', today.add(const Duration(days: 4))),
+        ],
+      );
+      // Only the managed event has an avatar, with the manager's initials.
+      expect(find.byType(NuniAvatar), findsOneWidget);
+      expect(find.text('AB'), findsOneWidget);
+      expect(find.byTooltip('In charge · Anna Bell'), findsOneWidget);
     });
 
     testWidgets('offers the import to the local manager', (tester) async {
