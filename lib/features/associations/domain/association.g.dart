@@ -15,6 +15,11 @@ _Association _$AssociationFromJson(Map<String, dynamic> json) => _Association(
   locationLng: (json['location_lng'] as num).toDouble(),
   websiteUrl: json['website_url'] as String?,
   logoPath: json['logo_path'] as String?,
+  partners:
+      (json['partners'] as List<dynamic>?)
+          ?.map((e) => AssociationPartner.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <AssociationPartner>[],
   status: $enumDecode(_$AssociationStatusEnumMap, json['status']),
   createdBy: json['created_by'] as String?,
 );
@@ -29,6 +34,7 @@ Map<String, dynamic> _$AssociationToJson(_Association instance) =>
       'location_lng': instance.locationLng,
       'website_url': instance.websiteUrl,
       'logo_path': instance.logoPath,
+      'partners': instance.partners,
       'status': _$AssociationStatusEnumMap[instance.status]!,
       'created_by': instance.createdBy,
     };
@@ -38,6 +44,15 @@ const _$AssociationStatusEnumMap = {
   AssociationStatus.approved: 'approved',
   AssociationStatus.rejected: 'rejected',
 };
+
+_AssociationPartner _$AssociationPartnerFromJson(Map<String, dynamic> json) =>
+    _AssociationPartner(
+      label: json['label'] as String,
+      url: json['url'] as String?,
+    );
+
+Map<String, dynamic> _$AssociationPartnerToJson(_AssociationPartner instance) =>
+    <String, dynamic>{'label': instance.label, 'url': instance.url};
 
 _AssociationManager _$AssociationManagerFromJson(Map<String, dynamic> json) =>
     _AssociationManager(

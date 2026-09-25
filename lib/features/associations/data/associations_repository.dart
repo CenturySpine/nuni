@@ -34,6 +34,9 @@ typedef AssociationDraft = ({
   double? lat,
   double? lng,
   String? websiteUrl,
+
+  /// The whole list, in order (plan 27); null leaves it unchanged.
+  List<AssociationPartner>? partners,
   String? email,
   String? phone,
   String? message,
@@ -259,6 +262,36 @@ class AssociationsRepository {
     params: {'p_manager_id': managerId},
   );
 
+  /// The local admins of every association (plan 27): player ids by
+  /// association. Public, like the managers (Q174).
+  Future<Map<String, Set<String>>> fetchAdmins() async {
+    final rows = await _client
+        .from('association_admins')
+        .select('association_id, player_id');
+    final admins = <String, Set<String>>{};
+    for (final row in rows) {
+      admins
+          .putIfAbsent(row['association_id'] as String, () => {})
+          .add(row['player_id'] as String);
+    }
+    return admins;
+  }
+
+  /// Names a member local admin: the manager or a super_admin (plan 27).
+  Future<void> addAdmin(String associationId, String playerId) =>
+      _client.rpc<void>(
+        'add_association_admin',
+        params: {'p_association_id': associationId, 'p_player_id': playerId},
+      );
+
+  /// Ends a local admin's role: the manager, a super_admin, or the admin
+  /// themself renouncing (Q170).
+  Future<void> removeAdmin(String associationId, String playerId) =>
+      _client.rpc<void>(
+        'remove_association_admin',
+        params: {'p_association_id': associationId, 'p_player_id': playerId},
+      );
+
   Future<Map<String, String>> _playerNames(List<String> userIds) async {
     if (userIds.isEmpty) return const {};
     final rows = await _client
@@ -277,6 +310,10 @@ class AssociationsRepository {
     if (draft.lat != null && draft.lng != null)
       'location': {'lat': draft.lat, 'lng': draft.lng},
     'website_url': ?draft.websiteUrl,
+    if (draft.partners case final partners?)
+      'partners': [
+        for (final p in partners) {'label': p.label, 'url': ?p.url},
+      ],
     'email': ?draft.email,
     'phone': ?draft.phone,
     'message': ?draft.message,
@@ -294,6 +331,10 @@ Future<List<Association>> associations(Ref ref) =>
 @riverpod
 Future<Map<String, ManagerSummary>> associationManagers(Ref ref) =>
     ref.watch(associationsRepositoryProvider).fetchApprovedManagers();
+
+@riverpod
+Future<Map<String, Set<String>>> associationAdmins(Ref ref) =>
+    ref.watch(associationsRepositoryProvider).fetchAdmins();
 
 @riverpod
 Future<List<AssociationManager>> myManagerRows(Ref ref) =>

@@ -21,7 +21,8 @@ values
   ('a0000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@smoke.nuni', '{"full_name":"Smoke Admin"}', now(), now()),
   ('a0000000-0000-0000-0000-000000000007', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'fan@smoke.nuni', '{"full_name":"Smoke Fan"}', now(), now()),
   ('a0000000-0000-0000-0000-000000000008', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'foreign@smoke.nuni', '{"full_name":"Smoke Foreign"}', now(), now()),
-  ('a0000000-0000-0000-0000-000000000009', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'manager@smoke.nuni', '{"full_name":"Smoke Manager"}', now(), now());
+  ('a0000000-0000-0000-0000-000000000009', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'manager@smoke.nuni', '{"full_name":"Smoke Manager"}', now(), now()),
+  ('a0000000-0000-0000-0000-000000000010', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'deputy@smoke.nuni', '{"full_name":"Smoke Deputy"}', now(), now());
 
 -- An approved association for the session owner (plan 18: creating a session requires one); the
 -- other fixture users have none. "admin" is a super_admin, to exercise the review RPCs.
@@ -32,12 +33,14 @@ update players set association_id = 'c0000000-0000-0000-0000-000000000001'
 where user_id = 'a0000000-0000-0000-0000-000000000001';
 insert into user_roles (user_id, role) values ('a0000000-0000-0000-0000-000000000006', 'super_admin');
 -- Plan 26: "fan" belongs to the session's association without playing in it, "manager" is its
--- local manager from test 7 on (not playing either), "foreign" belongs to another association.
+-- local manager from test 7 on (not playing either), "foreign" belongs to another association,
+-- "deputy" is a plain member until plan 27 names them local admin.
 insert into associations (id, name, city, location, status)
 values ('c0000000-0000-0000-0000-000000000002', 'Smoke Other', 'Othertown',
         st_setsrid(st_makepoint(4.0, 45.0), 4326)::geography, 'approved');
 update players set association_id = 'c0000000-0000-0000-0000-000000000001'
-where user_id in ('a0000000-0000-0000-0000-000000000007', 'a0000000-0000-0000-0000-000000000009');
+where user_id in ('a0000000-0000-0000-0000-000000000007', 'a0000000-0000-0000-0000-000000000009',
+                  'a0000000-0000-0000-0000-000000000010');
 update players set association_id = 'c0000000-0000-0000-0000-000000000002'
 where user_id = 'a0000000-0000-0000-0000-000000000008';
 
@@ -802,6 +805,170 @@ select 'person_in_charge_starts_session_from_event',
       and sm.user_id = 'a0000000-0000-0000-0000-000000000001'
   );
 
+-- ===== Plan 27: local admins and partners =====
+-- Association 1: manager (9) names deputy (10); owner (1) is a plain member, fan (7) a second
+-- admin who renounces; foreign (8) belongs to association 2.
+create table test_plan27 as
+select
+  (select id from players where user_id = 'a0000000-0000-0000-0000-000000000010') as deputy_player,
+  (select id from players where user_id = 'a0000000-0000-0000-0000-000000000007') as fan_player,
+  (select id from players where user_id = 'a0000000-0000-0000-0000-000000000008') as foreign_player,
+  (select id from players where user_id = 'a0000000-0000-0000-0000-000000000009') as manager_player;
+grant select on test_plan27 to authenticated;
+
+-- A plain member names nobody.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+do $$
+begin
+  perform add_association_admin('c0000000-0000-0000-0000-000000000001', (select deputy_player from test_plan27));
+  insert into test_results (test, passed) values ('member_cannot_name_admin', false);
+exception when others then
+  insert into test_results (test, passed) values ('member_cannot_name_admin', sqlerrm = 'not_association_manager');
+end $$;
+reset role;
+reset request.jwt.claims;
+
+-- The manager names two members; neither a member of another association nor themself.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000009","role":"authenticated"}';
+select add_association_admin('c0000000-0000-0000-0000-000000000001', (select deputy_player from test_plan27));
+select add_association_admin('c0000000-0000-0000-0000-000000000001', (select fan_player from test_plan27));
+insert into test_results (test, passed)
+select 'manager_names_admins',
+  (select count(*) from association_admins where association_id = 'c0000000-0000-0000-0000-000000000001') = 2;
+do $$
+begin
+  perform add_association_admin('c0000000-0000-0000-0000-000000000001', (select foreign_player from test_plan27));
+  insert into test_results (test, passed) values ('admin_must_be_member', false);
+exception when others then
+  insert into test_results (test, passed) values ('admin_must_be_member', sqlerrm = 'player_not_member');
+end $$;
+do $$
+begin
+  perform add_association_admin('c0000000-0000-0000-0000-000000000001', (select manager_player from test_plan27));
+  insert into test_results (test, passed) values ('manager_cannot_be_admin', false);
+exception when others then
+  insert into test_results (test, passed) values ('manager_cannot_be_admin', sqlerrm = 'player_is_manager');
+end $$;
+-- Partners: kept in order, trimmed, the link optional; an empty label is refused.
+select update_association('c0000000-0000-0000-0000-000000000001', jsonb_build_object('partners',
+  jsonb_build_array(
+    jsonb_build_object('label', ' Bakery ', 'url', 'bakery.example'),
+    jsonb_build_object('label', 'Town hall', 'url', '  ')
+  )));
+insert into test_results (test, passed)
+select 'manager_sets_partners',
+  (select partners from associations where id = 'c0000000-0000-0000-0000-000000000001')
+    = '[{"label": "Bakery", "url": "bakery.example"}, {"label": "Town hall"}]'::jsonb;
+do $$
+begin
+  perform update_association('c0000000-0000-0000-0000-000000000001', jsonb_build_object('partners',
+    jsonb_build_array(jsonb_build_object('label', ' ', 'url', 'x.example'))));
+  insert into test_results (test, passed) values ('partner_without_label_refused', false);
+exception when others then
+  insert into test_results (test, passed) values ('partner_without_label_refused', sqlerrm = 'invalid_partners');
+end $$;
+do $$
+begin
+  perform update_association('c0000000-0000-0000-0000-000000000001', jsonb_build_object('partners',
+    (select jsonb_agg(jsonb_build_object('label', 'P' || i)) from generate_series(1, 21) i)));
+  insert into test_results (test, passed) values ('more_than_20_partners_refused', false);
+exception when others then
+  insert into test_results (test, passed) values ('more_than_20_partners_refused', true);
+end $$;
+reset role;
+reset request.jwt.claims;
+
+-- Everyone reads the admins and the partners, even from another association.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000008","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'admins_and_partners_public',
+  (select count(*) from association_admins where association_id = 'c0000000-0000-0000-0000-000000000001') = 2
+  and (select jsonb_array_length(partners) from associations where id = 'c0000000-0000-0000-0000-000000000001') = 2;
+reset role;
+reset request.jwt.claims;
+
+-- A plain member removes nobody; an admin renounces on their own.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+do $$
+begin
+  perform remove_association_admin('c0000000-0000-0000-0000-000000000001', (select deputy_player from test_plan27));
+  insert into test_results (test, passed) values ('member_cannot_remove_admin', false);
+exception when others then
+  insert into test_results (test, passed) values ('member_cannot_remove_admin', sqlerrm = 'not_association_manager');
+end $$;
+reset role;
+reset request.jwt.claims;
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000007","role":"authenticated"}';
+select remove_association_admin('c0000000-0000-0000-0000-000000000001', (select fan_player from test_plan27));
+insert into test_results (test, passed)
+select 'admin_renounces',
+  not exists (select 1 from association_admins where player_id = (select fan_player from test_plan27));
+reset role;
+reset request.jwt.claims;
+
+-- The admin has the manager's day-to-day rights: championship, any event, moderation, import,
+-- "start the session"...
+insert into event_comments (event_id, author_player_id, body)
+values ((select id from test_events where name = 'future'), (select fan_player from test_plan27), 'Fan comment');
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000010","role":"authenticated"}';
+select set_session_championship((select session_id from test_ids), false);
+update events set label = 'Smoke event by deputy' where id = (select id from test_events where name = 'future');
+delete from event_comments where event_id = (select id from test_events where name = 'future');
+insert into test_results (test, passed)
+select 'admin_tags_championship_edits_event_and_moderates',
+  not (select is_championship from sessions where id = (select session_id from test_ids))
+  and (select label from events where id = (select id from test_events where name = 'future')) = 'Smoke event by deputy'
+  and (select count(*) from event_comments where event_id = (select id from test_events where name = 'future')) = 0;
+insert into test_results (test, passed)
+select 'admin_imports', (import_events_preview() ->> 'events')::int = 1;
+select create_session(jsonb_build_object('kind', 'individual', 'scoring_mode', 'stroke_play',
+  'ranking_direction', 'asc', 'event_id', (select id from test_events where name = 'today')));
+insert into test_results (test, passed)
+select 'admin_starts_session_from_event',
+  exists (
+    select 1 from sessions
+    where event_id = (select id from test_events where name = 'today')
+      and owner_id = 'a0000000-0000-0000-0000-000000000010'
+  );
+-- ...but neither edits the association (nor its logo) nor names anyone.
+do $$
+begin
+  perform update_association('c0000000-0000-0000-0000-000000000001', '{"name": "Hacked"}'::jsonb);
+  insert into test_results (test, passed) values ('admin_cannot_edit_association', false);
+exception when others then
+  insert into test_results (test, passed) values ('admin_cannot_edit_association', sqlerrm = 'not_association_manager');
+end $$;
+do $$
+begin
+  insert into storage.objects (bucket_id, name)
+  values ('association-logos', 'c0000000-0000-0000-0000-000000000001/deputy.jpg');
+  insert into test_results (test, passed) values ('admin_cannot_upload_logo', false);
+exception when others then
+  insert into test_results (test, passed) values ('admin_cannot_upload_logo', true);
+end $$;
+do $$
+begin
+  perform add_association_admin('c0000000-0000-0000-0000-000000000001', (select fan_player from test_plan27));
+  insert into test_results (test, passed) values ('admin_cannot_name_admin', false);
+exception when others then
+  insert into test_results (test, passed) values ('admin_cannot_name_admin', sqlerrm = 'not_association_manager');
+end $$;
+-- Leaving the association ends the role (Q171), and the rights with it.
+update players set association_id = null where user_id = 'a0000000-0000-0000-0000-000000000010';
+insert into test_results (test, passed)
+select 'leaving_association_drops_admin',
+  not exists (select 1 from association_admins where player_id = (select deputy_player from test_plan27))
+  and not is_association_staff('c0000000-0000-0000-0000-000000000001');
+reset role;
+reset request.jwt.claims;
+drop table test_plan27;
+
 -- ===== Verdict =====
 select * from test_results order by n;
 
@@ -819,6 +986,7 @@ delete from players where user_id in (
   union select 'a0000000-0000-0000-0000-000000000007'::uuid
   union select 'a0000000-0000-0000-0000-000000000008'::uuid
   union select 'a0000000-0000-0000-0000-000000000009'::uuid
+  union select 'a0000000-0000-0000-0000-000000000010'::uuid
 );
 delete from associations where id in ('c0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000002') or name = 'Smoke Pending';
 delete from user_roles where user_id = 'a0000000-0000-0000-0000-000000000006';
@@ -829,6 +997,7 @@ delete from auth.users where id in (
   union select 'a0000000-0000-0000-0000-000000000007'::uuid
   union select 'a0000000-0000-0000-0000-000000000008'::uuid
   union select 'a0000000-0000-0000-0000-000000000009'::uuid
+  union select 'a0000000-0000-0000-0000-000000000010'::uuid
 );
 drop table test_ids;
 drop table test_events;

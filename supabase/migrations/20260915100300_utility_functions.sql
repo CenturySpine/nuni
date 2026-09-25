@@ -62,6 +62,26 @@ as $$
   );
 $$;
 
+-- Local manager or local admin of an association (plan 27): the people who run it day to day
+-- -- championship tagging, the planning's moderation, import and "start the session". Editing
+-- the association itself (and naming admins) stays is_association_manager alone.
+create or replace function is_association_staff(p_association_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select is_association_manager(p_association_id)
+    or exists (
+      select 1
+      from association_admins aa
+      join players p on p.id = aa.player_id
+      where aa.association_id = p_association_id
+        and p.user_id = auth.uid()
+    );
+$$;
+
 -- Who may read a session and everything in it (plan 26, decision 12): its participants, every
 -- member of its association once it has started (even without playing -- read-only, the write
 -- policies are unchanged; a draft's waiting room stays its participants' own, Q132), and
@@ -102,7 +122,7 @@ as $$
 $$;
 
 -- Who may edit or delete an event (plan 23, Q151 and Q161): its creator, its designated person
--- in charge, the association's local manager, a super_admin.
+-- in charge, the association's local manager or admins (plan 27), a super_admin.
 create or replace function can_manage_event(p_event_id uuid)
 returns boolean
 language sql
@@ -118,7 +138,7 @@ as $$
       and (
         e.created_by = auth.uid()
         or p.user_id = auth.uid()
-        or is_association_manager(e.association_id)
+        or is_association_staff(e.association_id)
         or is_super_admin()
       )
   );
@@ -130,11 +150,13 @@ revoke execute on function is_session_member(uuid) from public;
 revoke execute on function is_session_owner(uuid) from public;
 revoke execute on function is_super_admin() from public;
 revoke execute on function is_association_manager(uuid) from public;
+revoke execute on function is_association_staff(uuid) from public;
 revoke execute on function can_read_session(uuid) from public;
 grant execute on function is_session_member(uuid) to authenticated;
 grant execute on function is_session_owner(uuid) to authenticated;
 grant execute on function is_super_admin() to authenticated;
 grant execute on function is_association_manager(uuid) to authenticated;
+grant execute on function is_association_staff(uuid) to authenticated;
 grant execute on function can_read_session(uuid) to authenticated;
 revoke execute on function is_association_member(uuid) from public;
 revoke execute on function can_manage_event(uuid) from public;

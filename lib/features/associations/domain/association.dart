@@ -32,6 +32,8 @@ abstract class Association with _$Association {
     @JsonKey(name: 'location_lng') required double locationLng,
     @JsonKey(name: 'website_url') String? websiteUrl,
     @JsonKey(name: 'logo_path') String? logoPath,
+    // Sponsors or collaborators (plan 27), in the manager's order (Q176).
+    @Default(<AssociationPartner>[]) List<AssociationPartner> partners,
     required AssociationStatus status,
     @JsonKey(name: 'created_by') String? createdBy,
   }) = _Association;
@@ -45,6 +47,17 @@ abstract class Association with _$Association {
     final short = shortName?.trim();
     return short == null || short.isEmpty ? name : short;
   }
+}
+
+/// One entry of `associations.partners` (plan 27): a free label, and a link
+/// when the partner has one (Q175).
+@freezed
+abstract class AssociationPartner with _$AssociationPartner {
+  const factory AssociationPartner({required String label, String? url}) =
+      _AssociationPartner;
+
+  factory AssociationPartner.fromJson(Map<String, Object?> json) =>
+      _$AssociationPartnerFromJson(json);
 }
 
 /// Mirrors the `association_manager_status` Postgres enum (plan 18).

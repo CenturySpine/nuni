@@ -9,25 +9,28 @@ part of 'championship_rights.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Whether the signed-in user may tag or untag a session of
-/// [associationId] for the championship (plan 26, decision 11): a
-/// super_admin, or that association's approved local manager. Only decides
-/// what the app shows -- the `set_session_championship` RPC enforces it.
+/// [associationId] for the championship (plan 26, decision 11; plan 27): a
+/// super_admin, that association's approved local manager or one of its
+/// local admins. Only decides what the app shows -- the
+/// `set_session_championship` RPC enforces it.
 
 @ProviderFor(canTagChampionship)
 final canTagChampionshipProvider = CanTagChampionshipFamily._();
 
 /// Whether the signed-in user may tag or untag a session of
-/// [associationId] for the championship (plan 26, decision 11): a
-/// super_admin, or that association's approved local manager. Only decides
-/// what the app shows -- the `set_session_championship` RPC enforces it.
+/// [associationId] for the championship (plan 26, decision 11; plan 27): a
+/// super_admin, that association's approved local manager or one of its
+/// local admins. Only decides what the app shows -- the
+/// `set_session_championship` RPC enforces it.
 
 final class CanTagChampionshipProvider
     extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
     with $FutureModifier<bool>, $FutureProvider<bool> {
   /// Whether the signed-in user may tag or untag a session of
-  /// [associationId] for the championship (plan 26, decision 11): a
-  /// super_admin, or that association's approved local manager. Only decides
-  /// what the app shows -- the `set_session_championship` RPC enforces it.
+  /// [associationId] for the championship (plan 26, decision 11; plan 27): a
+  /// super_admin, that association's approved local manager or one of its
+  /// local admins. Only decides what the app shows -- the
+  /// `set_session_championship` RPC enforces it.
   CanTagChampionshipProvider._({
     required CanTagChampionshipFamily super.from,
     required String super.argument,
@@ -72,12 +75,13 @@ final class CanTagChampionshipProvider
 }
 
 String _$canTagChampionshipHash() =>
-    r'8c7d9855093e65f999570ab869b988c2521026d7';
+    r'dbbfd2929ece31d226b88c5d14b72f285926253f';
 
 /// Whether the signed-in user may tag or untag a session of
-/// [associationId] for the championship (plan 26, decision 11): a
-/// super_admin, or that association's approved local manager. Only decides
-/// what the app shows -- the `set_session_championship` RPC enforces it.
+/// [associationId] for the championship (plan 26, decision 11; plan 27): a
+/// super_admin, that association's approved local manager or one of its
+/// local admins. Only decides what the app shows -- the
+/// `set_session_championship` RPC enforces it.
 
 final class CanTagChampionshipFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<bool>, String> {
@@ -91,9 +95,10 @@ final class CanTagChampionshipFamily extends $Family
       );
 
   /// Whether the signed-in user may tag or untag a session of
-  /// [associationId] for the championship (plan 26, decision 11): a
-  /// super_admin, or that association's approved local manager. Only decides
-  /// what the app shows -- the `set_session_championship` RPC enforces it.
+  /// [associationId] for the championship (plan 26, decision 11; plan 27): a
+  /// super_admin, that association's approved local manager or one of its
+  /// local admins. Only decides what the app shows -- the
+  /// `set_session_championship` RPC enforces it.
 
   CanTagChampionshipProvider call(String associationId) =>
       CanTagChampionshipProvider._(argument: associationId, from: this);

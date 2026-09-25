@@ -1986,3 +1986,83 @@ Suggestion :
   `.../u/0?cid=...`, dont l'adresse iCal se déduit), un lien `webcal://` (Calendrier Apple) ;
 - l'import par fichier reste possible.
 Tant que la question est ouverte, rien n'est codé.
+
+## Administrateurs locaux et partenaires d'association (plan 27, 2026-09-25)
+
+Demande du PO du 2026-09-25 : le responsable local (ou un super_admin) nomme un ou plusieurs
+administrateurs parmi les membres, avec les droits du responsable sauf la modification des
+informations de l'association ; les informations de l'association listent des partenaires
+(libellé libre + lien). Les questions ci-dessous portent sur ce que la demande ne fixe pas.
+
+**Q170 ☑ — Administrateurs : un administrateur peut-il renoncer lui-même à son rôle ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Constat : la demande fixe qui nomme (responsable local, super_admin), pas qui peut mettre fin
+au rôle.
+Suggestion : oui, bouton « Ne plus être administrateur » sur la page de l'association. Un rôle
+qu'on ne peut pas quitter oblige à passer par le responsable pour un simple désistement ; le
+renoncement ne donne aucun droit nouveau, donc aucun risque. Tant que la question est ouverte,
+le plan 27 applique cette suggestion.
+
+**Q171 ☑ — Administrateurs : que se passe-t-il quand un administrateur quitte l'association ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Constat : un responsable local ne peut pas quitter l'association qu'il gère (Q146) ; rien n'est
+fixé pour un administrateur.
+Suggestion : il peut la quitter, et perd alors automatiquement le rôle (la base le retire,
+quelle que soit la façon dont il part ou change d'association). L'interdiction de Q146 existe
+parce qu'une association sans responsable n'a plus personne pour modifier ses informations ;
+un administrateur n'a pas ce rôle, rien ne justifie de le retenir. Tant que la question est
+ouverte, le plan 27 applique cette suggestion.
+
+**Q172 ☑ — Administrateurs : restent-ils en place quand le responsable local est retiré ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Constat : un super_admin peut retirer le responsable local (Q78), ce qui rouvre la revendication
+du rôle.
+Suggestion : oui, les administrateurs gardent leurs droits ; en l'absence de responsable, seul
+le super_admin peut en nommer ou en retirer, et le nouveau responsable, une fois validé, les
+gère. Les retirer tous d'un coup laisserait l'association sans personne pour le championnat et
+le planning pendant la vacance, précisément au moment où c'est le plus utile. Tant que la
+question est ouverte, le plan 27 applique cette suggestion.
+
+**Q173 ☑ — Administrateurs : un nombre maximal par association ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Suggestion : pas de limite. Le responsable choisit ses administrateurs parmi ses membres et en
+répond ; une limite ne protège de rien et gênerait une grande association. Tant que la question
+est ouverte, le plan 27 applique cette suggestion.
+
+**Q174 ☑ — Administrateurs : qui voit la liste des administrateurs ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Constat : le nom du responsable local est visible de tout compte connecté sur la page de
+l'association.
+Suggestion : pareil pour les administrateurs (nom et photo, sans coordonnées) : les membres
+savent à qui s'adresser pour une session à marquer « championnat » ou un événement à corriger.
+Le plan 27 applique cette suggestion.
+
+**Q175 ☑ — Partenaires : titre de la section, et le lien est-il obligatoire ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Constat : la demande parle de « sponsors ou collaborateurs », avec un libellé libre et un lien.
+Suggestion : une seule liste intitulée « Partenaires » (« Partners »), sans distinguer sponsor
+et collaborateur : le libellé libre peut le préciser (« Boulangerie Dupont — sponsor ») sans
+ajouter de champ. Lien **facultatif** : un partenaire sans site (commerçant local, mairie) peut
+figurer quand même ; son libellé s'affiche alors sans lien. Tant que la question est ouverte, le
+plan 27 applique cette suggestion.
+
+**Q176 ☑ — Partenaires : ordre d'affichage et nombre maximal ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Suggestion : l'ordre est choisi par le responsable (glisser pour réordonner dans le
+formulaire, composant standard de Flutter), car un sponsor principal se met en tête ; au plus
+20 partenaires, pour que la page reste lisible et qu'une erreur de saisie ne la remplisse pas.
+Le plan 27 applique cette suggestion.
+
+**Q177 ☑ — Administrateurs locaux : quel nom à l'écran, alors qu'« administrateur » désigne déjà le super_admin ?**
+Réponse PO (2026-09-25) : suggestion retenue.
+Constat (implémentation du plan 27, 2026-09-25) : l'app appelle déjà « administrateur » le
+super_admin, dans une dizaine de textes : « Un administrateur valide la demande », « Message
+pour l'administrateur », et surtout la confidentialité : « votre e-mail, votre téléphone et
+votre message, visibles seulement de vous et des administrateurs ». Un administrateur local ne
+voit pas ces coordonnées : garder le même mot rendrait ces phrases fausses aux yeux des membres.
+Suggestion : le nouveau rôle s'appelle partout « administrateur local » (« local admin »),
+jamais « administrateur » seul, et les textes existants gardent « administrateur » pour le
+super_admin. C'est le terme de la demande du PO, et le mot « local » le rattache au
+« responsable local », dont il partage les droits. L'autre voie, renommer le super_admin
+« l'équipe NUNI » dans les textes existants, lèverait toute ambiguïté mais changerait des
+textes déjà validés. Le plan 27 applique la suggestion.

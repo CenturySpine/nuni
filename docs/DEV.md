@@ -66,7 +66,7 @@ Procédure (projet distant `nuni`, pas de Docker local) :
 #    données réelles de la base en seeds, relire le diff et committer (avec l'accord du PO).
 #    Produit supabase/remote_seed.sql (trous, en clair) et supabase/data_seed.sql.enc (joueurs,
 #    sessions, équipes, trous joués, scores, photos de session, planning (événements, réponses,
-#    commentaires, plan 23), e-mails de rattachement : chiffré,
+#    commentaires, plan 23), administrateurs locaux (plan 27), e-mails de rattachement : chiffré,
 #    le dépôt est public). Nécessite env/migration.json (clé service NUNI) et env/seed.json (mot
 #    de passe du seed, gabarit env/seed.example.json, conservé aussi dans le KeePass du PO).
 fvm dart run tool/export_remote_seed.dart
@@ -129,6 +129,22 @@ liée ne survit pas telle quelle.
 Le contenu de `reset.sql` (liste des `drop table/function/type ... cascade` et `drop policy on
 storage.objects`) se déduit des fichiers de migration au moment du changement ; il n'est pas
 committé (fichier de travail temporaire).
+
+**Règle d'écriture de `reset.sql` (PO, 2026-09-25) : une ligne par objet, chaque objet nommé.**
+Relever les noms dans les migrations (`create table`, `create or replace function`, `create
+type`, `create policy ... on storage.objects`, le déclencheur `on_auth_user_created` sur
+`auth.users`) et écrire un `drop ... if exists <nom> cascade;` pour chacun. **Jamais de boucle
+qui supprime « tout ce qui existe »** (par exemple un bloc `do $$ ... for r in select ... from
+pg_proc ... loop execute 'drop function ...'`). Deux raisons :
+- une liste nommée ne supprime que ce que les migrations recréent : rien d'autre dans la base
+  (fonction d'une extension, objet ajouté à la main) ne peut partir par erreur ;
+- le contrôle automatique des permissions de Claude Code refuse une suppression en masse sans
+  liste (motif « Cloud Storage Mass Delete », constaté le 2026-09-25 au plan 27), alors qu'il
+  a toujours accepté les listes nommées des reconstructions précédentes.
+Une fonction du schéma sans surcharge se supprime par son seul nom (`drop function if exists
+public.<nom> cascade;`) ; si deux fonctions portent le même nom, écrire leurs paramètres.
+Quand une migration supprime ou renomme un objet, ajouter aussi son **ancien** nom à la liste
+de la reconstruction qui suit, sinon il reste dans la base.
 
 Après la mise en service, cette procédure disparaît : les migrations redeviennent additives, plus
 jamais d'édition d'un fichier déjà appliqué en production.

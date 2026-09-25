@@ -6,6 +6,7 @@ alter table user_roles enable row level security;
 alter table associations enable row level security;
 alter table association_managers enable row level security;
 alter table association_manager_contacts enable row level security;
+alter table association_admins enable row level security;
 alter table players enable row level security;
 alter table holes enable row level security;
 alter table sessions enable row level security;
@@ -32,6 +33,7 @@ grant select on user_roles to authenticated;
 grant select on associations to authenticated;
 grant select on association_managers to authenticated;
 grant select on association_manager_contacts to authenticated;
+grant select on association_admins to authenticated;
 grant select, update on players to authenticated;
 grant select, insert, update, delete on holes to authenticated;
 grant select, insert, update, delete on sessions to authenticated;
@@ -53,6 +55,7 @@ grant select on user_roles to service_role;
 grant select on associations to service_role;
 grant select on association_managers to service_role;
 grant select on association_manager_contacts to service_role;
+grant select on association_admins to service_role;
 grant select, insert on holes to service_role;
 grant select, insert on players to service_role;
 grant select, insert on legacy_player_emails to service_role;
@@ -93,6 +96,11 @@ create policy "association_managers_select" on association_managers for select t
     or user_id = (select auth.uid())
     or is_super_admin()
   );
+
+-- association_admins (plan 27): public, like the approved manager (Q174) -- a name, nothing
+-- private. Written only by the add/remove RPCs.
+create policy "association_admins_select" on association_admins for select to authenticated
+  using (true);
 
 -- association_manager_contacts: never public -- the manager (or claimant) themself and
 -- super_admins only.
@@ -325,7 +333,7 @@ create policy "event_responses_write_self" on event_responses for all to authent
   );
 
 -- event_comments (Q166): read and written by the members of the event's association, as
--- themselves; edited by their author only; deleted by their author, the local manager or a
+-- themselves; edited by their author only; deleted by their author, the local manager or admins, a
 -- super_admin (moderation).
 create policy "event_comments_select" on event_comments for select to authenticated
   using (
@@ -367,6 +375,6 @@ create policy "event_comments_delete" on event_comments for delete to authentica
     or is_super_admin()
     or exists (
       select 1 from events e
-      where e.id = event_id and is_association_manager(e.association_id)
+      where e.id = event_id and is_association_staff(e.association_id)
     )
   );

@@ -235,8 +235,8 @@ create trigger played_holes_set_par_trigger
   before insert on played_holes
   for each row execute function played_holes_set_par();
 
--- Championship flag of a session (plan 26, decision 11): only a super_admin or the approved
--- local manager of the session's association sets or clears it, through
+-- Championship flag of a session (plan 26, decision 11; plan 27): only a super_admin, the approved
+-- local manager or an admin of the session's association sets or clears it, through
 -- set_session_championship (rpc.sql). Any other signed-in write (the organizer's own update,
 -- create_session) keeps the previous value -- same silent guard as association_id below. No
 -- signed-in caller (seed replay, LsgScores import): the row keeps what it carries (Q131).
@@ -251,7 +251,7 @@ begin
   if new.is_championship is distinct from v_previous
     and auth.uid() is not null
     and not is_super_admin()
-    and not is_association_manager(new.association_id) then
+    and not is_association_staff(new.association_id) then
     new.is_championship := v_previous;
   end if;
   return new;
@@ -339,6 +339,29 @@ $$;
 create trigger players_guard_association_trigger
   before update on players
   for each row execute function players_guard_association();
+
+-- A local admin who leaves their association, or switches to another one, is no longer its
+-- admin (plan 27, Q171), whatever the way out (leaving, joining another, delete_association).
+-- security definer: the player updating their own row has no right on association_admins.
+create or replace function players_drop_association_admin()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  delete from association_admins
+  where player_id = new.id
+    and association_id is distinct from new.association_id;
+  return null;
+end;
+$$;
+
+create trigger players_drop_association_admin_trigger
+  after update of association_id on players
+  for each row
+  when (old.association_id is distinct from new.association_id)
+  execute function players_drop_association_admin();
 
 create trigger associations_set_updated_at
   before update on associations
@@ -445,7 +468,7 @@ create trigger event_comments_guard_update_trigger
   for each row execute function event_comments_guard_update();
 
 -- A session is linked to the event it was started from (Q164) only by the event's person in
--- charge, the local manager or a super_admin, for an event of the session's own association
+-- charge, the local manager or admins or a super_admin, for an event of the session's own association
 -- happening today (within a day of now, whatever the time zone). Unlinking is free. After
 -- sessions_ta_guard_championship_trigger (name order): needs the association already set.
 create or replace function sessions_guard_event()
@@ -468,7 +491,7 @@ begin
         and e.starts_at between now() - interval '24 hours' and now() + interval '24 hours'
         and (
           p.user_id = auth.uid()
-          or is_association_manager(e.association_id)
+          or is_association_staff(e.association_id)
           or is_super_admin()
         )
     ) then
@@ -499,6 +522,7 @@ revoke execute on function team_players_set_session_id() from public, authentica
 revoke execute on function scores_set_session_id() from public, authenticated;
 revoke execute on function sessions_set_association_and_season() from public, authenticated;
 revoke execute on function players_guard_association() from public, authenticated;
+revoke execute on function players_drop_association_admin() from public, authenticated;
 revoke execute on function played_holes_set_par() from public, authenticated;
 revoke execute on function sessions_guard_championship() from public, authenticated;
 revoke execute on function events_guard() from public, authenticated;

@@ -45,6 +45,7 @@ class _AssociationFormPageState extends ConsumerState<AssociationFormPage> {
   final _email = TextEditingController();
   final _phone = TextEditingController();
   final _message = TextEditingController();
+  final _partners = <_PartnerRow>[];
   LatLng? _location;
   LatLng? _myPosition;
   Association? _association;
@@ -95,6 +96,10 @@ class _AssociationFormPageState extends ConsumerState<AssociationFormPage> {
         _city.text = association.city;
         _website.text = association.websiteUrl ?? '';
         _location = LatLng(association.locationLat, association.locationLng);
+        _partners.addAll([
+          for (final partner in association.partners)
+            _PartnerRow(label: partner.label, url: partner.url),
+        ]);
       }
       if (contact != null) {
         _hasContact = true;
@@ -118,8 +123,23 @@ class _AssociationFormPageState extends ConsumerState<AssociationFormPage> {
     ]) {
       controller.dispose();
     }
+    for (final row in _partners) {
+      row.dispose();
+    }
     super.dispose();
   }
+
+  void _addPartner() => setState(() => _partners.add(_PartnerRow()));
+
+  void _removePartner(_PartnerRow row) {
+    setState(() => _partners.remove(row));
+    row.dispose();
+  }
+
+  void _reorderPartners(int from, int to) => setState(() {
+    final row = _partners.removeAt(from);
+    _partners.insert(to, row);
+  });
 
   String? _required(TextEditingController controller) =>
       _submitted && controller.text.trim().isEmpty
@@ -139,7 +159,9 @@ class _AssociationFormPageState extends ConsumerState<AssociationFormPage> {
       _city.text.trim().isNotEmpty &&
       _location != null &&
       (!_hasContact ||
-          (_email.text.trim().contains('@') && _phone.text.trim().isNotEmpty));
+          (_email.text.trim().contains('@') &&
+              _phone.text.trim().isNotEmpty)) &&
+      _partners.every((row) => row.isBlank || row.isValid);
 
   AssociationDraft _draft() => (
     name: _name.text.trim(),
@@ -148,6 +170,16 @@ class _AssociationFormPageState extends ConsumerState<AssociationFormPage> {
     lat: _location?.latitude,
     lng: _location?.longitude,
     websiteUrl: _website.text.trim(),
+    partners: _isRequest
+        ? null
+        : [
+            for (final row in _partners)
+              if (!row.isBlank)
+                AssociationPartner(
+                  label: row.label.text.trim(),
+                  url: row.url.text.trim().isEmpty ? null : row.url.text.trim(),
+                ),
+          ],
     email: _hasContact ? _email.text.trim() : null,
     phone: _hasContact ? _phone.text.trim() : null,
     message: _isRequest ? _message.text.trim() : null,
@@ -337,6 +369,49 @@ class _AssociationFormPageState extends ConsumerState<AssociationFormPage> {
                     ],
                   ],
                 ),
+                if (!_isRequest) ...[
+                  const SizedBox(height: 20),
+                  NuniFormSection(
+                    title: l10n.associationsPartnersTitle,
+                    children: [
+                      Text(
+                        l10n.associationsPartnersHelp,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      ReorderableListView(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        buildDefaultDragHandles: false,
+                        onReorderItem: _reorderPartners,
+                        children: [
+                          for (final (index, row) in _partners.indexed)
+                            _PartnerFields(
+                              key: row.key,
+                              row: row,
+                              index: index,
+                              submitted: _submitted,
+                              onChanged: () => setState(() {}),
+                              onRemove: () => _removePartner(row),
+                            ),
+                        ],
+                      ),
+                      if (_partners.length < _maxPartners)
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: TextButton.icon(
+                            onPressed: _addPartner,
+                            icon: const Icon(PhosphorIcons.plus, size: 18),
+                            label: Text(l10n.associationsPartnerAdd),
+                          ),
+                        )
+                      else
+                        Text(
+                          l10n.associationsPartnersMax(_maxPartners),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                    ],
+                  ),
+                ],
                 if (_hasContact) ...[
                   const SizedBox(height: 20),
                   NuniFormSection(
@@ -396,6 +471,117 @@ class _AssociationFormPageState extends ConsumerState<AssociationFormPage> {
                 ),
               ),
             ),
+    );
+  }
+}
+
+/// Same cap as the `associations.partners` check (plan 27, Q176).
+const _maxPartners = 20;
+
+/// One partner being edited (plan 27): a required label, an optional link
+/// (Q175). A row left entirely empty is dropped on save.
+class _PartnerRow {
+  _PartnerRow({String label = '', String? url})
+    : label = TextEditingController(text: label),
+      url = TextEditingController(text: url ?? '');
+
+  final key = UniqueKey();
+  final TextEditingController label;
+  final TextEditingController url;
+
+  bool get isBlank => label.text.trim().isEmpty && url.text.trim().isEmpty;
+
+  bool get hasLabel => label.text.trim().isNotEmpty;
+
+  /// A host with a dot, no spaces, an optional http(s) scheme:
+  /// "boulangerie.fr", "https://www.example.org/page".
+  bool get hasValidUrl {
+    final text = url.text.trim();
+    return text.isEmpty ||
+        RegExp(r'^(https?://)?[^\s/.]+(\.[^\s/.]+)+(/\S*)?$').hasMatch(text);
+  }
+
+  bool get isValid => hasLabel && hasValidUrl && label.text.trim().length <= 80;
+
+  void dispose() {
+    label.dispose();
+    url.dispose();
+  }
+}
+
+class _PartnerFields extends StatelessWidget {
+  const _PartnerFields({
+    super.key,
+    required this.row,
+    required this.index,
+    required this.submitted,
+    required this.onChanged,
+    required this.onRemove,
+  });
+
+  final _PartnerRow row;
+  final int index;
+  final bool submitted;
+  final VoidCallback onChanged;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final showErrors = submitted && !row.isBlank;
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ReorderableDragStartListener(
+            index: index,
+            child: Tooltip(
+              message: l10n.associationsPartnerMove,
+              child: const Padding(
+                padding: EdgeInsets.fromLTRB(0, 16, 8, 16),
+                child: Icon(PhosphorIcons.list),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Column(
+              children: [
+                TextField(
+                  controller: row.label,
+                  maxLength: 80,
+                  textCapitalization: TextCapitalization.sentences,
+                  onChanged: (_) => onChanged(),
+                  decoration: InputDecoration(
+                    labelText: l10n.associationsPartnerLabel,
+                    counterText: '',
+                    errorText: showErrors && !row.hasLabel
+                        ? l10n.associationsFieldRequired
+                        : null,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: row.url,
+                  keyboardType: TextInputType.url,
+                  onChanged: (_) => onChanged(),
+                  decoration: InputDecoration(
+                    labelText: l10n.associationsPartnerUrl,
+                    errorText: showErrors && !row.hasValidUrl
+                        ? l10n.associationsPartnerUrlInvalid
+                        : null,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: l10n.associationsPartnerRemove,
+            onPressed: onRemove,
+            icon: const Icon(PhosphorIcons.trash),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -92,6 +92,47 @@ final class AssociationManagersProvider
 String _$associationManagersHash() =>
     r'7d5853af6f1c6dfead58ad241c75c00b0f29cbf5';
 
+@ProviderFor(associationAdmins)
+final associationAdminsProvider = AssociationAdminsProvider._();
+
+final class AssociationAdminsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Map<String, Set<String>>>,
+          Map<String, Set<String>>,
+          FutureOr<Map<String, Set<String>>>
+        >
+    with
+        $FutureModifier<Map<String, Set<String>>>,
+        $FutureProvider<Map<String, Set<String>>> {
+  AssociationAdminsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'associationAdminsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$associationAdminsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<Map<String, Set<String>>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Map<String, Set<String>>> create(Ref ref) {
+    return associationAdmins(ref);
+  }
+}
+
+String _$associationAdminsHash() => r'16d64a9b65065288a5a46582c976f41001517161';
+
 @ProviderFor(myManagerRows)
 final myManagerRowsProvider = MyManagerRowsProvider._();
 

@@ -274,13 +274,9 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
     }
   }
 
-  final associations = await all(
-    'associations',
-    'id, name, short_name, city, location_lat, location_lng, website_url, '
-        'logo_path, status, created_by, created_at, updated_at, reviewed_by, '
-        'reviewed_at',
-    'created_at',
-  );
+  // Every column (plan 27), same reason as the players below: `partners`
+  // doesn't exist yet on a base still on the previous schema.
+  final associations = await all('associations', '*', 'created_at');
   final managers = await all(
     'association_managers',
     'id, association_id, user_id, status, requested_at, reviewed_by, '
@@ -296,6 +292,10 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
   // `stats_public` and `badges_public` don't exist yet on a base still on the
   // previous schema, and a "private" choice must survive a reconstruction.
   final players = await all('players', '*', 'created_at');
+  // Plan 27: the local admins, absent from a base still on the previous schema.
+  final admins = await optional(
+    () => all('association_admins', '*', 'created_at'),
+  );
   final emails = await all(
     'legacy_player_emails',
     'player_id, email',
@@ -410,6 +410,7 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
   _insert(buffer, 'association_managers', managers);
   _insert(buffer, 'association_manager_contacts', contacts);
   _insert(buffer, 'players', players);
+  _insert(buffer, 'association_admins', admins);
   _insert(buffer, 'legacy_player_emails', emails);
   _insert(buffer, 'events', eventRows);
   _insert(buffer, 'event_responses', responses);
@@ -443,7 +444,7 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
         'requests, ${players.length} players, ${sessions.length} sessions, '
         '${teams.length} teams, ${playedHoles.length} played holes, '
         '${scores.length} scores, ${photos.length} session photos, '
-        '${emails.length} pending e-mails, ${events.length} events, '
+        '${emails.length} pending e-mails, ${admins.length} local admins, ${events.length} events, '
         '${responses.length} event answers, ${comments.length} event comments',
   );
 }

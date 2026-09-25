@@ -21,9 +21,11 @@ import '../../../shared/nuni_section_header.dart';
 import '../../../shared/nuni_status_pill.dart';
 import '../../players/data/players_repository.dart';
 import '../../profile/data/profile_repository.dart';
+import '../../profile/domain/player.dart';
 import '../data/association_choice_skip_pref.dart';
 import '../data/associations_repository.dart';
 import '../domain/association.dart';
+import 'admin_picker_sheet.dart';
 import 'association_logo.dart';
 import 'claim_manager_sheet.dart';
 
@@ -37,8 +39,9 @@ Future<void> openAssociationWebsite(String url) => launchUrl(
 /// `/associations/:id` (plan 18): the association's public card, and the
 /// actions that apply to the viewer -- join it (Q79), claim its local
 /// manager role (decision 7, Q78), edit it (its manager or a super_admin),
-/// remove its manager or delete it (super_admin, Q89) -- then its members,
-/// alphabetically, each opening their public page.
+/// remove its manager or delete it (super_admin, Q89) -- then its partners
+/// and local admins (plan 27: named by the manager or a super_admin), then
+/// its members, alphabetically, each opening their public page.
 class AssociationDetailPage extends ConsumerWidget {
   const AssociationDetailPage({super.key, required this.associationId});
 
@@ -120,13 +123,17 @@ class _DetailState extends ConsumerState<_Detail> {
 
   /// Q146: a player goes back to no association; a local manager can't
   /// (the button isn't offered).
-  Future<void> _leave() async {
+  Future<void> _leave({required bool iAmAdmin}) async {
     final l10n = AppLocalizations.of(context)!;
     final association = widget.association;
     final confirmed = await NuniConfirmDialog.show(
       context,
       title: l10n.associationsLeaveConfirmTitle(association.name),
-      message: l10n.associationsLeaveConfirmMessage,
+      // A local admin may leave (Q171), and loses the role with it.
+      message: iAmAdmin
+          ? '${l10n.associationsLeaveConfirmMessage} '
+                '${l10n.associationsLeaveAdminNote}'
+          : l10n.associationsLeaveConfirmMessage,
       confirmLabel: l10n.associationsLeave,
       danger: true,
     );
@@ -135,8 +142,48 @@ class _DetailState extends ConsumerState<_Detail> {
       await ref.read(associationsRepositoryProvider).leave();
       // Leaving is a choice: don't bring the first sign-in choice back.
       await ref.read(associationChoiceSkippedProvider.notifier).skip();
-      ref.invalidate(myPlayerProvider);
+      ref
+        ..invalidate(myPlayerProvider)
+        ..invalidate(associationAdminsProvider);
     }, l10n.associationsLeft(association.name));
+  }
+
+  Future<void> _addAdmin(List<Player> candidates) async {
+    final l10n = AppLocalizations.of(context)!;
+    final player = await showAdminPickerSheet(context, candidates);
+    if (player == null || !mounted) return;
+    await _run(() async {
+      await ref
+          .read(associationsRepositoryProvider)
+          .addAdmin(widget.association.id, player.id);
+      ref.invalidate(associationAdminsProvider);
+    }, l10n.associationsAdminAdded(player.name));
+  }
+
+  /// Removed by the manager or a super_admin, or renounced by the admin
+  /// themself (Q170).
+  Future<void> _removeAdmin(Player admin, {required bool isMe}) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await NuniConfirmDialog.show(
+      context,
+      title: isMe
+          ? l10n.associationsAdminRenounceTitle
+          : l10n.associationsAdminRemoveTitle(admin.name),
+      message: isMe
+          ? l10n.associationsAdminRenounceMessage
+          : l10n.associationsAdminRemoveMessage,
+      confirmLabel: isMe
+          ? l10n.associationsAdminRenounce
+          : l10n.associationsAdminRemove,
+      danger: true,
+    );
+    if (!confirmed || !mounted) return;
+    await _run(() async {
+      await ref
+          .read(associationsRepositoryProvider)
+          .removeAdmin(widget.association.id, admin.id);
+      ref.invalidate(associationAdminsProvider);
+    }, isMe ? l10n.associationsAdminRenounced : l10n.associationsAdminRemoved);
   }
 
   Future<void> _revoke(ManagerSummary manager) async {
@@ -234,6 +281,11 @@ class _DetailState extends ConsumerState<_Detail> {
           row.associationId == association.id &&
           row.status == AssociationManagerStatus.pending,
     );
+    final adminIds =
+        ref.watch(associationAdminsProvider).value?[association.id] ??
+        const <String>{};
+    final iAmAdmin = player != null && adminIds.contains(player.id);
+    final canNameAdmins = isApproved && (iAmManager || isSuperAdmin);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
@@ -300,6 +352,24 @@ class _DetailState extends ConsumerState<_Detail> {
             ],
           ),
         ),
+        if (association.partners.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          NuniSectionHeader(title: l10n.associationsPartnersTitle),
+          NuniGroupedList(
+            children: [
+              for (final partner in association.partners)
+                ListTile(
+                  title: Text(partner.label),
+                  trailing: partner.url == null
+                      ? null
+                      : const Icon(PhosphorIcons.arrowSquareOut, size: 18),
+                  onTap: partner.url == null
+                      ? null
+                      : () => openAssociationWebsite(partner.url!),
+                ),
+            ],
+          ),
+        ],
         const SizedBox(height: 16),
         NuniCard(
           child: Row(
@@ -324,6 +394,16 @@ class _DetailState extends ConsumerState<_Detail> {
             ],
           ),
         ),
+        _Admins(
+          associationId: association.id,
+          adminIds: adminIds,
+          managerUserId: manager?.userId,
+          myPlayerId: player?.id,
+          canName: canNameAdmins,
+          busy: _busy,
+          onAdd: _addAdmin,
+          onRemove: _removeAdmin,
+        ),
         if (myPendingClaim) ...[
           const SizedBox(height: 12),
           NuniStatusPill(
@@ -346,7 +426,7 @@ class _DetailState extends ConsumerState<_Detail> {
             label: l10n.associationsLeave,
             variant: NuniButtonVariant.secondary,
             icon: PhosphorIcons.signOut,
-            onPressed: _busy ? null : _leave,
+            onPressed: _busy ? null : () => _leave(iAmAdmin: iAmAdmin),
           ),
           const SizedBox(height: 10),
         ],
@@ -402,6 +482,114 @@ class _DetailState extends ConsumerState<_Detail> {
         const SizedBox(height: 14),
         _Members(associationId: association.id),
       ],
+    );
+  }
+}
+
+/// The local admins (plan 27), public like the manager (Q174): each can
+/// renounce (Q170); the manager and a super_admin add and remove them.
+/// Hidden when there are none, except for those who can name one.
+class _Admins extends ConsumerWidget {
+  const _Admins({
+    required this.associationId,
+    required this.adminIds,
+    required this.managerUserId,
+    required this.myPlayerId,
+    required this.canName,
+    required this.busy,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  final String associationId;
+  final Set<String> adminIds;
+  final String? managerUserId;
+  final String? myPlayerId;
+  final bool canName;
+  final bool busy;
+  final void Function(List<Player> candidates) onAdd;
+  final void Function(Player admin, {required bool isMe}) onRemove;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final textTheme = Theme.of(context).textTheme;
+    final members =
+        ref.watch(associationPlayersProvider(associationId)).value ??
+        const <Player>[];
+    final admins = [
+      for (final member in members)
+        if (adminIds.contains(member.id)) member,
+    ];
+    if (admins.isEmpty && !canName) return const SizedBox.shrink();
+    final candidates = [
+      for (final member in members)
+        if (!adminIds.contains(member.id) && member.userId != managerUserId)
+          member,
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          NuniSectionHeader(title: l10n.associationsAdminsTitle),
+          if (canName) ...[
+            Text(l10n.associationsAdminsHelp, style: textTheme.bodySmall),
+            const SizedBox(height: 8),
+          ],
+          if (admins.isEmpty)
+            NuniCard(
+              child: Text(
+                l10n.associationsAdminsEmpty,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            )
+          else
+            NuniGroupedList(
+              children: [
+                for (final admin in admins)
+                  ListTile(
+                    leading: NuniAvatar(
+                      name: admin.name,
+                      imageUrl: admin.avatarUrl,
+                      size: 36,
+                    ),
+                    title: Text(admin.name),
+                    trailing: canName && admin.id != myPlayerId
+                        ? TextButton(
+                            onPressed: busy
+                                ? null
+                                : () => onRemove(admin, isMe: false),
+                            child: Text(l10n.associationsAdminRemove),
+                          )
+                        : null,
+                    onTap: () => context.push('/players/${admin.id}'),
+                  ),
+              ],
+            ),
+          for (final admin in admins)
+            if (admin.id == myPlayerId) ...[
+              const SizedBox(height: 10),
+              NuniButton(
+                label: l10n.associationsAdminRenounce,
+                variant: NuniButtonVariant.secondary,
+                onPressed: busy ? null : () => onRemove(admin, isMe: true),
+              ),
+            ],
+          if (canName) ...[
+            const SizedBox(height: 10),
+            NuniButton(
+              label: l10n.associationsAdminAdd,
+              variant: NuniButtonVariant.secondary,
+              icon: PhosphorIcons.userPlus,
+              onPressed: busy ? null : () => onAdd(candidates),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

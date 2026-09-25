@@ -8,20 +8,20 @@ part of 'planning_rights.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Whether the user is [associationId]'s local manager or a super_admin --
-/// the same people who tag the championship.
+/// Whether the user is [associationId]'s local manager or admin, or a
+/// super_admin (plan 27) -- the same people who tag the championship.
 
 @ProviderFor(canModeratePlanning)
 final canModeratePlanningProvider = CanModeratePlanningFamily._();
 
-/// Whether the user is [associationId]'s local manager or a super_admin --
-/// the same people who tag the championship.
+/// Whether the user is [associationId]'s local manager or admin, or a
+/// super_admin (plan 27) -- the same people who tag the championship.
 
 final class CanModeratePlanningProvider
     extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
     with $FutureModifier<bool>, $FutureProvider<bool> {
-  /// Whether the user is [associationId]'s local manager or a super_admin --
-  /// the same people who tag the championship.
+  /// Whether the user is [associationId]'s local manager or admin, or a
+  /// super_admin (plan 27) -- the same people who tag the championship.
   CanModeratePlanningProvider._({
     required CanModeratePlanningFamily super.from,
     required String super.argument,
@@ -66,10 +66,10 @@ final class CanModeratePlanningProvider
 }
 
 String _$canModeratePlanningHash() =>
-    r'c33e3481c0a0fa70b67de9028eed58d954b8a843';
+    r'de92485e3422fee50593f50aa022f0ffebc9e396';
 
-/// Whether the user is [associationId]'s local manager or a super_admin --
-/// the same people who tag the championship.
+/// Whether the user is [associationId]'s local manager or admin, or a
+/// super_admin (plan 27) -- the same people who tag the championship.
 
 final class CanModeratePlanningFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<bool>, String> {
@@ -82,8 +82,8 @@ final class CanModeratePlanningFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Whether the user is [associationId]'s local manager or a super_admin --
-  /// the same people who tag the championship.
+  /// Whether the user is [associationId]'s local manager or admin, or a
+  /// super_admin (plan 27) -- the same people who tag the championship.
 
   CanModeratePlanningProvider call(String associationId) =>
       CanModeratePlanningProvider._(argument: associationId, from: this);

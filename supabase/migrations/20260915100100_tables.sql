@@ -19,6 +19,11 @@ create table associations (
   website_url text,
   -- Path in the "association-logos" bucket; empty until a local manager uploads one.
   logo_path text,
+  -- Partners (plan 27: sponsors or collaborators), in the order the manager chose (Q176): a JSON
+  -- array of {"label", "url"?}, the link optional (Q175), at most 20. Written by
+  -- update_association, which checks each entry.
+  partners jsonb not null default '[]'::jsonb
+    check (jsonb_typeof(partners) = 'array' and jsonb_array_length(partners) <= 20),
   status association_status not null default 'pending',
   -- Null for the initial list, seeded rather than requested.
   created_by uuid references auth.users (id),
@@ -137,6 +142,20 @@ create table association_manager_contacts (
   phone text not null check (btrim(phone) <> ''),
   -- Free text from the requester to the super_admin (Q86).
   request_message text
+);
+
+-- Local admins of an association (plan 27): members named by its local manager or a super_admin,
+-- with the manager's day-to-day rights (is_association_staff) but not the editing of the
+-- association itself. No limit on their number (Q173); readable by everyone, like the manager
+-- (Q174). A row goes away when its player leaves the association (Q171, triggers.sql) or
+-- renounces (Q170); it stays when the manager is revoked (Q172). Written only through the
+-- add/remove RPCs of rpc.sql.
+create table association_admins (
+  association_id uuid not null references associations (id) on delete cascade,
+  player_id uuid not null references players (id) on delete cascade,
+  appointed_by uuid references auth.users (id) on delete set null,
+  created_at timestamptz not null default now(),
+  primary key (association_id, player_id)
 );
 
 create table sessions (

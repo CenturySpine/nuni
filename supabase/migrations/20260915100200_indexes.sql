@@ -18,6 +18,9 @@ create unique index association_managers_one_approved_idx
   on association_managers (association_id) where status = 'approved';
 create unique index association_managers_one_pending_claim_idx
   on association_managers (association_id, user_id) where status = 'pending';
+-- Plan 27: a player's admin rows (is_association_staff, the leave trigger); the primary key
+-- already covers the lookup by association.
+create index association_admins_player_idx on association_admins (player_id);
 -- Q81: one creation request waiting at a time per person.
 create unique index associations_one_pending_request_idx
   on associations (created_by) where status = 'pending';

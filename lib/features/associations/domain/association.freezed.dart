@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Association {
 
- String get id; String get name;@JsonKey(name: 'short_name') String? get shortName; String get city;@JsonKey(name: 'location_lat') double get locationLat;@JsonKey(name: 'location_lng') double get locationLng;@JsonKey(name: 'website_url') String? get websiteUrl;@JsonKey(name: 'logo_path') String? get logoPath; AssociationStatus get status;@JsonKey(name: 'created_by') String? get createdBy;
+ String get id; String get name;@JsonKey(name: 'short_name') String? get shortName; String get city;@JsonKey(name: 'location_lat') double get locationLat;@JsonKey(name: 'location_lng') double get locationLng;@JsonKey(name: 'website_url') String? get websiteUrl;@JsonKey(name: 'logo_path') String? get logoPath; List<AssociationPartner> get partners; AssociationStatus get status;@JsonKey(name: 'created_by') String? get createdBy;
 /// Create a copy of Association
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +30,20 @@ $AssociationCopyWith<Association> get copyWith => _$AssociationCopyWithImpl<Asso
 @override
 bool operator ==(Object other) {
   final _this = this as Association;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Association&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.shortName, _this.shortName) || other.shortName == _this.shortName)&&(identical(other.city, _this.city) || other.city == _this.city)&&(identical(other.locationLat, _this.locationLat) || other.locationLat == _this.locationLat)&&(identical(other.locationLng, _this.locationLng) || other.locationLng == _this.locationLng)&&(identical(other.websiteUrl, _this.websiteUrl) || other.websiteUrl == _this.websiteUrl)&&(identical(other.logoPath, _this.logoPath) || other.logoPath == _this.logoPath)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.createdBy, _this.createdBy) || other.createdBy == _this.createdBy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Association&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.shortName, _this.shortName) || other.shortName == _this.shortName)&&(identical(other.city, _this.city) || other.city == _this.city)&&(identical(other.locationLat, _this.locationLat) || other.locationLat == _this.locationLat)&&(identical(other.locationLng, _this.locationLng) || other.locationLng == _this.locationLng)&&(identical(other.websiteUrl, _this.websiteUrl) || other.websiteUrl == _this.websiteUrl)&&(identical(other.logoPath, _this.logoPath) || other.logoPath == _this.logoPath)&&const DeepCollectionEquality().equals(other.partners, _this.partners)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.createdBy, _this.createdBy) || other.createdBy == _this.createdBy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Association;
-  return Object.hash(runtimeType,_this.id,_this.name,_this.shortName,_this.city,_this.locationLat,_this.locationLng,_this.websiteUrl,_this.logoPath,_this.status,_this.createdBy);
+  return Object.hash(runtimeType,_this.id,_this.name,_this.shortName,_this.city,_this.locationLat,_this.locationLng,_this.websiteUrl,_this.logoPath,const DeepCollectionEquality().hash(_this.partners),_this.status,_this.createdBy);
 }
 
 @override
 String toString() {
   final _this = this as Association;
-  return 'Association(id: ${_this.id}, name: ${_this.name}, shortName: ${_this.shortName}, city: ${_this.city}, locationLat: ${_this.locationLat}, locationLng: ${_this.locationLng}, websiteUrl: ${_this.websiteUrl}, logoPath: ${_this.logoPath}, status: ${_this.status}, createdBy: ${_this.createdBy})';
+  return 'Association(id: ${_this.id}, name: ${_this.name}, shortName: ${_this.shortName}, city: ${_this.city}, locationLat: ${_this.locationLat}, locationLng: ${_this.locationLng}, websiteUrl: ${_this.websiteUrl}, logoPath: ${_this.logoPath}, partners: ${_this.partners}, status: ${_this.status}, createdBy: ${_this.createdBy})';
 }
 
 
@@ -54,7 +54,7 @@ abstract mixin class $AssociationCopyWith<$Res>  {
   factory $AssociationCopyWith(Association value, $Res Function(Association) _then) = _$AssociationCopyWithImpl;
 @useResult
 $Res call({
- String id, String name,@JsonKey(name: 'short_name') String? shortName, String city,@JsonKey(name: 'location_lat') double locationLat,@JsonKey(name: 'location_lng') double locationLng,@JsonKey(name: 'website_url') String? websiteUrl,@JsonKey(name: 'logo_path') String? logoPath, AssociationStatus status,@JsonKey(name: 'created_by') String? createdBy
+ String id, String name,@JsonKey(name: 'short_name') String? shortName, String city,@JsonKey(name: 'location_lat') double locationLat,@JsonKey(name: 'location_lng') double locationLng,@JsonKey(name: 'website_url') String? websiteUrl,@JsonKey(name: 'logo_path') String? logoPath, List<AssociationPartner> partners, AssociationStatus status,@JsonKey(name: 'created_by') String? createdBy
 });
 
 
@@ -71,7 +71,7 @@ class _$AssociationCopyWithImpl<$Res>
 
 /// Create a copy of Association
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? shortName = freezed,Object? city = null,Object? locationLat = null,Object? locationLng = null,Object? websiteUrl = freezed,Object? logoPath = freezed,Object? status = null,Object? createdBy = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? shortName = freezed,Object? city = null,Object? locationLat = null,Object? locationLng = null,Object? websiteUrl = freezed,Object? logoPath = freezed,Object? partners = null,Object? status = null,Object? createdBy = freezed,}) {
   return _then(Association(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -81,7 +81,8 @@ as String,locationLat: null == locationLat ? _self.locationLat : locationLat // 
 as double,locationLng: null == locationLng ? _self.locationLng : locationLng // ignore: cast_nullable_to_non_nullable
 as double,websiteUrl: freezed == websiteUrl ? _self.websiteUrl : websiteUrl // ignore: cast_nullable_to_non_nullable
 as String?,logoPath: freezed == logoPath ? _self.logoPath : logoPath // ignore: cast_nullable_to_non_nullable
-as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String?,partners: null == partners ? _self.partners : partners // ignore: cast_nullable_to_non_nullable
+as List<AssociationPartner>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as AssociationStatus,createdBy: freezed == createdBy ? _self.createdBy : createdBy // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
@@ -168,10 +169,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'short_name')  String? shortName,  String city, @JsonKey(name: 'location_lat')  double locationLat, @JsonKey(name: 'location_lng')  double locationLng, @JsonKey(name: 'website_url')  String? websiteUrl, @JsonKey(name: 'logo_path')  String? logoPath,  AssociationStatus status, @JsonKey(name: 'created_by')  String? createdBy)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'short_name')  String? shortName,  String city, @JsonKey(name: 'location_lat')  double locationLat, @JsonKey(name: 'location_lng')  double locationLng, @JsonKey(name: 'website_url')  String? websiteUrl, @JsonKey(name: 'logo_path')  String? logoPath,  List<AssociationPartner> partners,  AssociationStatus status, @JsonKey(name: 'created_by')  String? createdBy)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Association() when $default != null:
-return $default(_that.id,_that.name,_that.shortName,_that.city,_that.locationLat,_that.locationLng,_that.websiteUrl,_that.logoPath,_that.status,_that.createdBy);case _:
+return $default(_that.id,_that.name,_that.shortName,_that.city,_that.locationLat,_that.locationLng,_that.websiteUrl,_that.logoPath,_that.partners,_that.status,_that.createdBy);case _:
   return orElse();
 
 }
@@ -189,10 +190,10 @@ return $default(_that.id,_that.name,_that.shortName,_that.city,_that.locationLat
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'short_name')  String? shortName,  String city, @JsonKey(name: 'location_lat')  double locationLat, @JsonKey(name: 'location_lng')  double locationLng, @JsonKey(name: 'website_url')  String? websiteUrl, @JsonKey(name: 'logo_path')  String? logoPath,  AssociationStatus status, @JsonKey(name: 'created_by')  String? createdBy)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'short_name')  String? shortName,  String city, @JsonKey(name: 'location_lat')  double locationLat, @JsonKey(name: 'location_lng')  double locationLng, @JsonKey(name: 'website_url')  String? websiteUrl, @JsonKey(name: 'logo_path')  String? logoPath,  List<AssociationPartner> partners,  AssociationStatus status, @JsonKey(name: 'created_by')  String? createdBy)  $default,) {final _that = this;
 switch (_that) {
 case _Association():
-return $default(_that.id,_that.name,_that.shortName,_that.city,_that.locationLat,_that.locationLng,_that.websiteUrl,_that.logoPath,_that.status,_that.createdBy);case _:
+return $default(_that.id,_that.name,_that.shortName,_that.city,_that.locationLat,_that.locationLng,_that.websiteUrl,_that.logoPath,_that.partners,_that.status,_that.createdBy);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -209,10 +210,10 @@ return $default(_that.id,_that.name,_that.shortName,_that.city,_that.locationLat
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name, @JsonKey(name: 'short_name')  String? shortName,  String city, @JsonKey(name: 'location_lat')  double locationLat, @JsonKey(name: 'location_lng')  double locationLng, @JsonKey(name: 'website_url')  String? websiteUrl, @JsonKey(name: 'logo_path')  String? logoPath,  AssociationStatus status, @JsonKey(name: 'created_by')  String? createdBy)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name, @JsonKey(name: 'short_name')  String? shortName,  String city, @JsonKey(name: 'location_lat')  double locationLat, @JsonKey(name: 'location_lng')  double locationLng, @JsonKey(name: 'website_url')  String? websiteUrl, @JsonKey(name: 'logo_path')  String? logoPath,  List<AssociationPartner> partners,  AssociationStatus status, @JsonKey(name: 'created_by')  String? createdBy)?  $default,) {final _that = this;
 switch (_that) {
 case _Association() when $default != null:
-return $default(_that.id,_that.name,_that.shortName,_that.city,_that.locationLat,_that.locationLng,_that.websiteUrl,_that.logoPath,_that.status,_that.createdBy);case _:
+return $default(_that.id,_that.name,_that.shortName,_that.city,_that.locationLat,_that.locationLng,_that.websiteUrl,_that.logoPath,_that.partners,_that.status,_that.createdBy);case _:
   return null;
 
 }
@@ -224,7 +225,7 @@ return $default(_that.id,_that.name,_that.shortName,_that.city,_that.locationLat
 @JsonSerializable()
 
 class _Association extends Association {
-  const _Association({required this.id, required this.name, @JsonKey(name: 'short_name') this.shortName, required this.city, @JsonKey(name: 'location_lat') required this.locationLat, @JsonKey(name: 'location_lng') required this.locationLng, @JsonKey(name: 'website_url') this.websiteUrl, @JsonKey(name: 'logo_path') this.logoPath, required this.status, @JsonKey(name: 'created_by') this.createdBy}): super._();
+  const _Association({required this.id, required this.name, @JsonKey(name: 'short_name') this.shortName, required this.city, @JsonKey(name: 'location_lat') required this.locationLat, @JsonKey(name: 'location_lng') required this.locationLng, @JsonKey(name: 'website_url') this.websiteUrl, @JsonKey(name: 'logo_path') this.logoPath,  List<AssociationPartner> partners = const <AssociationPartner>[], required this.status, @JsonKey(name: 'created_by') this.createdBy}): _partners = partners,super._();
   factory _Association.fromJson(Map<String, dynamic> json) => _$AssociationFromJson(json);
 
 @override final  String id;
@@ -235,6 +236,13 @@ class _Association extends Association {
 @override@JsonKey(name: 'location_lng') final  double locationLng;
 @override@JsonKey(name: 'website_url') final  String? websiteUrl;
 @override@JsonKey(name: 'logo_path') final  String? logoPath;
+ final  List<AssociationPartner> _partners;
+@override@JsonKey() List<AssociationPartner> get partners {
+  if (_partners is EqualUnmodifiableListView) return _partners;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_partners);
+}
+
 @override final  AssociationStatus status;
 @override@JsonKey(name: 'created_by') final  String? createdBy;
 
@@ -251,18 +259,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Association&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.shortName, shortName) || other.shortName == shortName)&&(identical(other.city, city) || other.city == city)&&(identical(other.locationLat, locationLat) || other.locationLat == locationLat)&&(identical(other.locationLng, locationLng) || other.locationLng == locationLng)&&(identical(other.websiteUrl, websiteUrl) || other.websiteUrl == websiteUrl)&&(identical(other.logoPath, logoPath) || other.logoPath == logoPath)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Association&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.shortName, shortName) || other.shortName == shortName)&&(identical(other.city, city) || other.city == city)&&(identical(other.locationLat, locationLat) || other.locationLat == locationLat)&&(identical(other.locationLng, locationLng) || other.locationLng == locationLng)&&(identical(other.websiteUrl, websiteUrl) || other.websiteUrl == websiteUrl)&&(identical(other.logoPath, logoPath) || other.logoPath == logoPath)&&const DeepCollectionEquality().equals(other.partners, _partners)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,name,shortName,city,locationLat,locationLng,websiteUrl,logoPath,status,createdBy);
+    return Object.hash(runtimeType,id,name,shortName,city,locationLat,locationLng,websiteUrl,logoPath,const DeepCollectionEquality().hash(_partners),status,createdBy);
 }
 
 @override
 String toString() {
-    return 'Association(id: $id, name: $name, shortName: $shortName, city: $city, locationLat: $locationLat, locationLng: $locationLng, websiteUrl: $websiteUrl, logoPath: $logoPath, status: $status, createdBy: $createdBy)';
+    return 'Association(id: $id, name: $name, shortName: $shortName, city: $city, locationLat: $locationLat, locationLng: $locationLng, websiteUrl: $websiteUrl, logoPath: $logoPath, partners: $partners, status: $status, createdBy: $createdBy)';
 }
 
 
@@ -273,7 +281,7 @@ abstract mixin class _$AssociationCopyWith<$Res> implements $AssociationCopyWith
   factory _$AssociationCopyWith(_Association value, $Res Function(_Association) _then) = __$AssociationCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name,@JsonKey(name: 'short_name') String? shortName, String city,@JsonKey(name: 'location_lat') double locationLat,@JsonKey(name: 'location_lng') double locationLng,@JsonKey(name: 'website_url') String? websiteUrl,@JsonKey(name: 'logo_path') String? logoPath, AssociationStatus status,@JsonKey(name: 'created_by') String? createdBy
+ String id, String name,@JsonKey(name: 'short_name') String? shortName, String city,@JsonKey(name: 'location_lat') double locationLat,@JsonKey(name: 'location_lng') double locationLng,@JsonKey(name: 'website_url') String? websiteUrl,@JsonKey(name: 'logo_path') String? logoPath, List<AssociationPartner> partners, AssociationStatus status,@JsonKey(name: 'created_by') String? createdBy
 });
 
 
@@ -290,7 +298,7 @@ class __$AssociationCopyWithImpl<$Res>
 
 /// Create a copy of Association
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? shortName = freezed,Object? city = null,Object? locationLat = null,Object? locationLng = null,Object? websiteUrl = freezed,Object? logoPath = freezed,Object? status = null,Object? createdBy = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? shortName = freezed,Object? city = null,Object? locationLat = null,Object? locationLng = null,Object? websiteUrl = freezed,Object? logoPath = freezed,Object? partners = null,Object? status = null,Object? createdBy = freezed,}) {
   return _then(_Association(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -300,8 +308,282 @@ as String,locationLat: null == locationLat ? _self.locationLat : locationLat // 
 as double,locationLng: null == locationLng ? _self.locationLng : locationLng // ignore: cast_nullable_to_non_nullable
 as double,websiteUrl: freezed == websiteUrl ? _self.websiteUrl : websiteUrl // ignore: cast_nullable_to_non_nullable
 as String?,logoPath: freezed == logoPath ? _self.logoPath : logoPath // ignore: cast_nullable_to_non_nullable
-as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String?,partners: null == partners ? _self._partners : partners // ignore: cast_nullable_to_non_nullable
+as List<AssociationPartner>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as AssociationStatus,createdBy: freezed == createdBy ? _self.createdBy : createdBy // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$AssociationPartner {
+
+ String get label; String? get url;
+/// Create a copy of AssociationPartner
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AssociationPartnerCopyWith<AssociationPartner> get copyWith => _$AssociationPartnerCopyWithImpl<AssociationPartner>(this as AssociationPartner, _$identity);
+
+  /// Serializes this AssociationPartner to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as AssociationPartner;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AssociationPartner&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.url, _this.url) || other.url == _this.url));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as AssociationPartner;
+  return Object.hash(runtimeType,_this.label,_this.url);
+}
+
+@override
+String toString() {
+  final _this = this as AssociationPartner;
+  return 'AssociationPartner(label: ${_this.label}, url: ${_this.url})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AssociationPartnerCopyWith<$Res>  {
+  factory $AssociationPartnerCopyWith(AssociationPartner value, $Res Function(AssociationPartner) _then) = _$AssociationPartnerCopyWithImpl;
+@useResult
+$Res call({
+ String label, String? url
+});
+
+
+
+
+}
+/// @nodoc
+class _$AssociationPartnerCopyWithImpl<$Res>
+    implements $AssociationPartnerCopyWith<$Res> {
+  _$AssociationPartnerCopyWithImpl(this._self, this._then);
+
+  final AssociationPartner _self;
+  final $Res Function(AssociationPartner) _then;
+
+/// Create a copy of AssociationPartner
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? label = null,Object? url = freezed,}) {
+  return _then(AssociationPartner(
+label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as String,url: freezed == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [AssociationPartner].
+extension AssociationPartnerPatterns on AssociationPartner {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AssociationPartner value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AssociationPartner() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AssociationPartner value)  $default,){
+final _that = this;
+switch (_that) {
+case _AssociationPartner():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AssociationPartner value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AssociationPartner() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String label,  String? url)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AssociationPartner() when $default != null:
+return $default(_that.label,_that.url);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String label,  String? url)  $default,) {final _that = this;
+switch (_that) {
+case _AssociationPartner():
+return $default(_that.label,_that.url);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String label,  String? url)?  $default,) {final _that = this;
+switch (_that) {
+case _AssociationPartner() when $default != null:
+return $default(_that.label,_that.url);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _AssociationPartner implements AssociationPartner {
+  const _AssociationPartner({required this.label, this.url});
+  factory _AssociationPartner.fromJson(Map<String, dynamic> json) => _$AssociationPartnerFromJson(json);
+
+@override final  String label;
+@override final  String? url;
+
+/// Create a copy of AssociationPartner
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AssociationPartnerCopyWith<_AssociationPartner> get copyWith => __$AssociationPartnerCopyWithImpl<_AssociationPartner>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$AssociationPartnerToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AssociationPartner&&(identical(other.label, label) || other.label == label)&&(identical(other.url, url) || other.url == url));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,label,url);
+}
+
+@override
+String toString() {
+    return 'AssociationPartner(label: $label, url: $url)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AssociationPartnerCopyWith<$Res> implements $AssociationPartnerCopyWith<$Res> {
+  factory _$AssociationPartnerCopyWith(_AssociationPartner value, $Res Function(_AssociationPartner) _then) = __$AssociationPartnerCopyWithImpl;
+@override @useResult
+$Res call({
+ String label, String? url
+});
+
+
+
+
+}
+/// @nodoc
+class __$AssociationPartnerCopyWithImpl<$Res>
+    implements _$AssociationPartnerCopyWith<$Res> {
+  __$AssociationPartnerCopyWithImpl(this._self, this._then);
+
+  final _AssociationPartner _self;
+  final $Res Function(_AssociationPartner) _then;
+
+/// Create a copy of AssociationPartner
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? label = null,Object? url = freezed,}) {
+  return _then(_AssociationPartner(
+label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as String,url: freezed == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

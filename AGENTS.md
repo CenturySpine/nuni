@@ -64,7 +64,8 @@ Documents de référence, à lire avant d'agir :
    n'ajoute pas de nouveau fichier. Comme le CLI Supabase suit les migrations déjà appliquées par
    nom de fichier (pas par contenu), éditer un fichier déjà poussé sans le rejouer désynchronise
    le projet distant : il faut reconstruire le schéma distant depuis zéro (procédure dans
-   `docs/DEV.md`). **Toujours prévenir le PO avant de lancer cette reconstruction**, même si elle
+   `docs/DEV.md` ; le script de suppression nomme chaque objet, jamais de boucle « tout
+   supprimer »). **Toujours prévenir le PO avant de lancer cette reconstruction**, même si elle
    est sans risque à ce stade. Après la mise en service, on repasse en migrations additives
    normales (plus jamais d'édition d'un fichier déjà appliqué en production).
    **Exception, données réelles conservées par seed (Q63, 2026-09-23) :** les trous importés de
@@ -161,6 +162,14 @@ GitHub Actions (Q17).
   passe par les RPC `security definer` de `rpc.sql` (demande, revendication, modification,
   validation par `super_admin`). Le mail et le téléphone des responsables vivent dans
   `association_manager_contacts`, jamais lisible au-delà du responsable et des `super_admin`.
+  Administrateurs locaux (plan 27) : membres nommés par le responsable ou un `super_admin`
+  (`association_admins`, RPC `add_association_admin` / `remove_association_admin`), avec les
+  droits courants du responsable (championnat, planning) mais pas la modification de
+  l'association. Un seul test de droit pour ces droits courants : `is_association_staff` en
+  base, `canManageAssociation` dans l'app ; `is_association_manager` ne sert plus qu'à la
+  modification de l'association, au logo et à la nomination. Partenaires :
+  `associations.partners` (liste JSON libellé + lien facultatif), écrite par
+  `update_association`.
 - Équipes : table de jointure `team_players` ; la taille d'équipe est une règle applicative.
 - Trous (plan 26) : tous publics (plus de visibilité), modifiables par leur seul auteur,
   clonables (`holes.cloned_from`). Le par d'un trou joué est `played_holes.par` (copié du trou à

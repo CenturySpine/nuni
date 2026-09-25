@@ -632,8 +632,8 @@ $$;
 revoke execute on function clone_hole(uuid) from public;
 grant execute on function clone_hole(uuid) to authenticated;
 
--- Tags or untags a session for the championship (plan 26, decision 11): a super_admin or the
--- approved local manager of the session's association, at any time, played in or not. security
+-- Tags or untags a session for the championship (plan 26, decision 11; plan 27): a super_admin,
+-- the approved local manager or an admin of the session's association, at any time. security
 -- definer: such a caller is usually not the session's owner, whom sessions_update_owner
 -- requires; sessions_guard_championship (triggers.sql) then lets the change through for them.
 create or replace function set_session_championship(p_session_id uuid, p_value boolean)
@@ -649,7 +649,7 @@ begin
   if v_session.id is null then
     raise exception 'session_not_found' using errcode = 'P0001';
   end if;
-  if not (is_super_admin() or is_association_manager(v_session.association_id)) then
+  if not (is_super_admin() or is_association_staff(v_session.association_id)) then
     raise exception 'not_championship_manager' using errcode = 'P0001';
   end if;
 
@@ -680,6 +680,40 @@ as $$
     st_makepoint((p_point ->> 'lng')::double precision, (p_point ->> 'lat')::double precision),
     4326
   )::geography;
+$$;
+
+-- Partners list from the payload of update_association (plan 27): a JSON array of
+-- {"label": text, "url": text?}, kept in its order (Q176). Each label is trimmed and required
+-- (80 characters at most); the link is optional (Q175), trimmed, empty meaning none, 500
+-- characters at most. More than 20 entries is refused by the column's check.
+create or replace function _payload_partners(p_partners jsonb)
+returns jsonb
+language plpgsql
+immutable
+set search_path = public
+as $$
+declare
+  v_entry jsonb;
+  v_label text;
+  v_url text;
+  v_result jsonb := '[]'::jsonb;
+begin
+  if p_partners is null or jsonb_typeof(p_partners) <> 'array' then
+    raise exception 'invalid_partners' using errcode = 'P0001';
+  end if;
+  for v_entry in select value from jsonb_array_elements(p_partners) loop
+    v_label := btrim(v_entry ->> 'label');
+    v_url := nullif(btrim(v_entry ->> 'url'), '');
+    if v_label is null or v_label = '' or length(v_label) > 80
+      or length(v_url) > 500 then
+      raise exception 'invalid_partners' using errcode = 'P0001';
+    end if;
+    v_result := v_result || jsonb_build_array(
+      jsonb_strip_nulls(jsonb_build_object('label', v_label, 'url', v_url))
+    );
+  end loop;
+  return v_result;
+end;
 $$;
 
 -- Asks for a new association (decision 8): created 'pending' with its requester as its pending
@@ -780,6 +814,7 @@ $$;
 -- present in the payload change; an empty short_name/website_url/logo_path clears it. "email" /
 -- "phone" update the caller's own contact details as that association's manager. payload:
 -- { "name"?, "short_name"?, "city"?, "location"?: {"lat", "lng"}, "website_url"?, "logo_path"?,
+--   "partners"?: [{"label", "url"?}] (plan 27, _payload_partners),
 --   "email"?, "phone"? }
 create or replace function update_association(p_association_id uuid, payload jsonb)
 returns associations
@@ -812,6 +847,10 @@ begin
     logo_path = case
       when payload ? 'logo_path' then nullif(btrim(payload ->> 'logo_path'), '')
       else logo_path
+    end,
+    partners = case
+      when payload ? 'partners' then _payload_partners(payload -> 'partners')
+      else partners
     end
   where id = p_association_id
   returning * into v_association;
@@ -908,6 +947,15 @@ begin
   where id = p_manager_id
   returning * into v_manager;
 
+  -- An admin who becomes the manager already has every right (plan 27, decision 1).
+  if p_approve then
+    delete from association_admins aa
+    using players p
+    where p.id = aa.player_id
+      and aa.association_id = v_manager.association_id
+      and p.user_id = v_manager.user_id;
+  end if;
+
   return v_manager;
 end;
 $$;
@@ -935,6 +983,62 @@ begin
     raise exception 'manager_not_approved' using errcode = 'P0001';
   end if;
   return v_manager;
+end;
+$$;
+
+-- Names a member of the association as a local admin (plan 27): its approved local manager or a
+-- super_admin, no review (decision 4). The player must have an account and belong to the
+-- association; its manager can't be named (decision 1). Naming someone already admin is a no-op.
+create or replace function add_association_admin(p_association_id uuid, p_player_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_user_id uuid;
+begin
+  if not (is_association_manager(p_association_id) or is_super_admin()) then
+    raise exception 'not_association_manager' using errcode = 'P0001';
+  end if;
+  select user_id into v_user_id
+  from players
+  where id = p_player_id and association_id = p_association_id and user_id is not null;
+  if v_user_id is null then
+    raise exception 'player_not_member' using errcode = 'P0001';
+  end if;
+  if exists (
+    select 1 from association_managers
+    where association_id = p_association_id and user_id = v_user_id and status = 'approved'
+  ) then
+    raise exception 'player_is_manager' using errcode = 'P0001';
+  end if;
+
+  insert into association_admins (association_id, player_id, appointed_by)
+  values (p_association_id, p_player_id, auth.uid())
+  on conflict do nothing;
+end;
+$$;
+
+-- Ends a local admin's role (plan 27): removed by the association's manager or a super_admin, or
+-- renounced by the admin themself (Q170).
+create or replace function remove_association_admin(p_association_id uuid, p_player_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not (
+    is_association_manager(p_association_id)
+    or is_super_admin()
+    or exists (select 1 from players where id = p_player_id and user_id = auth.uid())
+  ) then
+    raise exception 'not_association_manager' using errcode = 'P0001';
+  end if;
+
+  delete from association_admins
+  where association_id = p_association_id and player_id = p_player_id;
 end;
 $$;
 
@@ -970,6 +1074,8 @@ revoke execute on function update_association(uuid, jsonb) from public;
 revoke execute on function review_association(uuid, boolean) from public;
 revoke execute on function review_association_manager(uuid, boolean) from public;
 revoke execute on function revoke_association_manager(uuid) from public;
+revoke execute on function add_association_admin(uuid, uuid) from public;
+revoke execute on function remove_association_admin(uuid, uuid) from public;
 revoke execute on function set_session_association(uuid, uuid) from public;
 grant execute on function request_association(jsonb) to authenticated;
 grant execute on function claim_association_manager(uuid, text, text, text) to authenticated;
@@ -977,6 +1083,8 @@ grant execute on function update_association(uuid, jsonb) to authenticated;
 grant execute on function review_association(uuid, boolean) to authenticated;
 grant execute on function review_association_manager(uuid, boolean) to authenticated;
 grant execute on function revoke_association_manager(uuid) to authenticated;
+grant execute on function add_association_admin(uuid, uuid) to authenticated;
+grant execute on function remove_association_admin(uuid, uuid) to authenticated;
 grant execute on function set_session_association(uuid, uuid) to authenticated;
 
 -- Deletes an association (super_admin only, PO 2026-09-23, Q89). Refused while it has sessions:
@@ -1007,7 +1115,8 @@ grant execute on function delete_association(uuid) to authenticated;
 
 -- Association planning (plan 23): an agenda is always imported into the importer's own
 -- association (PO, 2026-09-25), never another one -- even for a super_admin. Returns that
--- association once the caller is allowed: its local manager, or a super_admin who belongs to it.
+-- association once the caller is allowed: its local manager or an admin (plan 27), or a
+-- super_admin who belongs to it.
 create or replace function _import_association()
 returns uuid
 language plpgsql
@@ -1026,7 +1135,7 @@ begin
   if v_association_id is null then
     raise exception 'association_required' using errcode = 'P0001';
   end if;
-  if not (is_association_manager(v_association_id) or is_super_admin()) then
+  if not (is_association_staff(v_association_id) or is_super_admin()) then
     raise exception 'not_association_manager' using errcode = 'P0001';
   end if;
   return v_association_id;

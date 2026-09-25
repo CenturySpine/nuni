@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/supabase/supabase_providers.dart';
-import '../../championship/data/championship_rights.dart';
+import '../../associations/data/association_rights.dart';
 import '../../profile/data/profile_repository.dart';
 import '../domain/event.dart';
 import '../domain/planning.dart';
@@ -17,23 +17,24 @@ class EventRights {
     required this.canStartSession,
   });
 
-  /// Edit and delete (Q151, Q161): creator, person in charge, local manager,
-  /// super_admin.
+  /// Edit and delete (Q151, Q161): creator, person in charge, local manager or
+  /// admins, super_admin.
   final bool canManage;
 
-  /// Delete anyone's comment, import an agenda: local manager, super_admin.
+  /// Delete anyone's comment, import an agenda: local manager or admins,
+  /// super_admin.
   final bool canModerate;
 
   /// "Start the session" (Q164): on the event's day, for its person in
-  /// charge, the local manager or a super_admin.
+  /// charge, the local manager or admins, a super_admin.
   final bool canStartSession;
 }
 
-/// Whether the user is [associationId]'s local manager or a super_admin --
-/// the same people who tag the championship.
+/// Whether the user is [associationId]'s local manager or admin, or a
+/// super_admin (plan 27) -- the same people who tag the championship.
 @riverpod
 Future<bool> canModeratePlanning(Ref ref, String associationId) =>
-    ref.watch(canTagChampionshipProvider(associationId).future);
+    ref.watch(canManageAssociationProvider(associationId).future);
 
 @riverpod
 Future<EventRights> eventRights(Ref ref, Event event) async {

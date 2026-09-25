@@ -27,6 +27,26 @@ void main() {
     expect(lyon.label, 'Lyon Street Golf');
   });
 
+  test('reads the partners in order, the link optional (plan 27)', () {
+    final association = Association.fromJson({
+      'id': 'lyon',
+      'name': 'Lyon Street Golf',
+      'city': 'Lyon',
+      'location_lat': 45.749,
+      'location_lng': 4.8459,
+      'status': 'approved',
+      'partners': [
+        {'label': 'Bakery', 'url': 'bakery.example'},
+        {'label': 'Town hall'},
+      ],
+    });
+    expect(association.partners, const [
+      AssociationPartner(label: 'Bakery', url: 'bakery.example'),
+      AssociationPartner(label: 'Town hall'),
+    ]);
+    expect(lyon.partners, isEmpty);
+  });
+
   test('distanceKm is close to the real distance Lyon - Grenoble', () {
     final km = distanceKm(45.749, 4.8459, 45.188, 5.724);
     expect(km, closeTo(94, 5));
