@@ -45,10 +45,21 @@ l'agenda LSG (38 événements), présentation validée.
   import.
 - « Itinéraire » ouvre un lien Google Maps (point, ou nom du lieu sans point), qui fonctionne
   sur Android, iPhone et ordinateur.
-- Le « lien en attente » pendant la connexion est gardé dans le stockage de l'onglet. Constat
-  en passant : l'ancien mécanisme (`/join/:code`) ne le gardait qu'en mémoire, perdue au
-  rechargement de la connexion Google ; le nouveau couvre les deux cas (invitation et
-  événement). Pas encore essayé dans le navigateur.
+- Le « lien en attente » pendant la connexion est gardé dans le stockage du site
+  (`localStorage`), commun à toutes les fenêtres de NUNI sur l'appareil, valable 5 minutes et
+  effacé une fois utilisé. Constat en passant : l'ancien mécanisme (`/join/:code`) ne le
+  gardait qu'en mémoire, perdue au rechargement de la connexion Google ; le nouveau couvre les
+  deux cas (invitation et événement).
+- Correction du 2026-09-25, après essai du PO sur l'app installée (PWA) Android : la première
+  version gardait le lien dans le stockage de l'onglet (`sessionStorage`). Le retour de la
+  connexion Google arrivait dans une autre fenêtre, qui ne le connaissait pas : le PO arrivait
+  sur l'accueil au lieu de l'événement. Passé au stockage du site, avec une durée de validité
+  de 5 minutes (PO) pour qu'un lien abandonné ne détourne pas une connexion bien plus tardive.
+  Vérifié : tests du garde (`test/core/router/auth_guard_test.dart`), et dans Chromium que le
+  lien est gardé dans le stockage du site et lisible d'une autre fenêtre. Non vérifié : la
+  connexion Google de bout en bout (compte réel nécessaire), à essayer par le PO sur le
+  téléphone. Le cas « déjà connecté » (lien ouvert directement) a été essayé par le PO : il
+  fonctionne.
 - Création de session : les suggestions de zone (lieux de l'association, Q148) sont limitées
   aux 8 plus récentes.
 
@@ -306,8 +317,9 @@ Fichiers thématiques existants modifiés (règle 8) :
   copie du lien) extraite dans `lib/shared/` et réutilisée par l'invitation et l'événement.
 - Garde d'authentification (`auth_guard.dart`) : le mécanisme qui garde `/join/:code` pendant
   la connexion (`PendingJoinCode`) est généralisé en « lien en attente » pour tout chemin
-  protégé (au moins `/join/:code` et `/planning/:id`), mémorisé dans le stockage du navigateur
-  pour survivre au rechargement de la connexion Google, et effacé une fois utilisé.
+  protégé (au moins `/join/:code` et `/planning/:id`), mémorisé dans le stockage du site
+  (commun à toutes les fenêtres, pour survivre au retour de la connexion Google), valable
+  5 minutes et effacé une fois utilisé.
 - Barre du bas : cinquième destination, branche ajoutée au `StatefulShellRoute`, masquée sans
   association ; chemins de `NuniStandaloneBottomNav` mis à jour.
 - Chaînes EN et FR dans les ARB, dates formatées par `intl` dans la langue de l'app.

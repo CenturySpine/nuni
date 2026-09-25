@@ -1965,6 +1965,11 @@ Décision du PO (2026-09-25), pendant l'essai de l'implémentation : un import v
 l'association de celui qui importe, jamais une autre, même pour un super_admin (le choix de
 l'association est retiré de l'écran ; la base le refuse aussi par un appel direct).
 
+Décision du PO (2026-09-25), après essai sur l'app installée Android : un lien partagé ouvert
+sans être connecté doit mener à l'événement après la connexion, dans l'app installée comme dans
+Chrome (téléphone et ordinateur). Le lien est gardé pendant la connexion dans le stockage commun
+du site (et non plus de l'onglet), valable 5 minutes.
+
 **Q169 ☑ — Planning : importer l'agenda depuis un lien public ?**
 Réponse PO (2026-09-25) : abandonné, l'import par fichier suffit (38 événements LSG importés et affichés correctement par le PO le même jour).
 Constat du PO (2026-09-25) : l'agenda de LSG à importer est un lien public, pas un fichier.

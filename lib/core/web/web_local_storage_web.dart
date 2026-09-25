@@ -2,20 +2,20 @@ import 'package:web/web.dart' as web;
 
 // Storage can be unavailable (private browsing, blocked site data): the
 // app then simply forgets, never fails.
-String? readSessionValue(String key) {
+String? readLocalValue(String key) {
   try {
-    return web.window.sessionStorage.getItem(key);
+    return web.window.localStorage.getItem(key);
   } catch (_) {
     return null;
   }
 }
 
-void writeSessionValue(String key, String? value) {
+void writeLocalValue(String key, String? value) {
   try {
     if (value == null) {
-      web.window.sessionStorage.removeItem(key);
+      web.window.localStorage.removeItem(key);
     } else {
-      web.window.sessionStorage.setItem(key, value);
+      web.window.localStorage.setItem(key, value);
     }
   } catch (_) {
     // Nothing to do: see above.
