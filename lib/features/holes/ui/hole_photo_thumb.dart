@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
+import '../../../shared/display_sized_image.dart';
 
 /// A square hole photo, or a framed placeholder when the hole has none (or
 /// the image fails to load) -- PO, 2026-09-23. Shared by the hole list
@@ -35,18 +36,28 @@ class HolePhotoThumb extends StatelessWidget {
         ),
       ),
     );
-    final content = url == null
+    Widget content(double side) => url == null
         ? placeholder
         : ClipRRect(
             borderRadius: radius,
-            child: Image.network(
-              url!,
+            child: Image(
+              image: displaySizedImage(
+                context,
+                NetworkImage(url!),
+                width: side,
+                height: side,
+              ),
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => placeholder,
             ),
           );
     return size == null
-        ? AspectRatio(aspectRatio: 1, child: content)
-        : SizedBox.square(dimension: size, child: content);
+        ? AspectRatio(
+            aspectRatio: 1,
+            child: LayoutBuilder(
+              builder: (context, constraints) => content(constraints.maxWidth),
+            ),
+          )
+        : SizedBox.square(dimension: size, child: content(size!));
   }
 }

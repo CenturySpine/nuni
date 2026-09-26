@@ -2290,3 +2290,47 @@ sessions de jeu (Q198).
 Suggestion : oui, L8 « Coach » : 5 sessions Training créées et terminées, chacune avec au moins
 3 présents. Il valorise ceux qui animent les entraînements, un rôle que les badges de jeu ne
 voient pas. Le plan 29 applique cette suggestion.
+
+## Photos : plantage iPhone et miniatures (plan 30, 2026-09-26)
+
+Constat du PO (vidéo du 2026-09-26) : sur iPhone, l'onglet Safari de NUNI plante en faisant
+défiler la liste des trous, puis affiche « Un problème récurrent est survenu ». Cause : chaque
+vignette de 48 px était décodée à la pleine taille de la photo (jusqu'à 1600 px pour une photo
+envoyée depuis l'app, sans limite pour une photo importée de LsgScores, copiée telle quelle par
+`tool/migrate_lsgscores.dart`), et iOS ferme un onglet qui dépasse sa mémoire. Corrigé le
+2026-09-26 sans question (défaut) : toute image réseau est décodée à sa taille d'affichage
+(`lib/shared/display_sized_image.dart`). Reste le téléchargement, qui est toujours celui de la
+photo entière.
+
+**Q201 ☑ — Photos : créer une miniature à l'envoi pour ne plus télécharger la photo entière dans les listes ?**
+Réponse PO (2026-09-26) : suggestion retenue.
+Constat : la liste des trous télécharge deux photos entières par trou (souvent plusieurs
+centaines de Ko, davantage pour les photos importées) pour afficher 48 px ; même chose pour la
+couverture d'une session dans l'historique (64 px) et la galerie de photos (84 px). Sur le
+terrain, en données mobiles, la liste est lente à remplir et consomme du forfait.
+Suggestion : oui. À l'envoi, l'app produit en plus une miniature de 256 px (le même
+redimensionnement qu'aujourd'hui, `resizeForUpload`), rangée à côté de la photo sous un nom
+dérivé (`<chemin>.thumb.jpg`) : aucune colonne ni migration, et une photo sans miniature
+s'affiche comme aujourd'hui. Les photos déjà en ligne reçoivent leur miniature par un script
+lancé une fois (`tool/`, même principe que l'import LsgScores). Alternative écartée : les
+transformations d'images de Supabase, qui fabriquent la miniature à la demande, mais sont
+réservées aux formules payantes et facturées au volume. Le plan 30 applique cette suggestion.
+
+**Q202 ☑ — Photos : réduire à 1600 px les photos importées de LsgScores ?**
+Réponse PO (2026-09-26) : suggestion retenue.
+Constat : les photos envoyées depuis NUNI sont plafonnées à 1600 px ; celles importées de
+LsgScores sont restées à leur taille d'origine (photo d'appareil, souvent 4000 px et plusieurs
+Mo). Elles ralentissent la fiche trou, qui les affiche en grand.
+Suggestion : oui, dans le même script que Q201 : chaque photo de plus de 1600 px est
+réencodée à 1600 px au même emplacement. La perte n'est pas visible à l'écran d'un téléphone,
+et le téléchargement de la fiche trou est divisé par cinq à dix. Le plan 30 applique cette
+suggestion.
+
+**Q203 ☑ — Photos : quelle image s'affiche quand on touche une photo, et les photos de la fiche trou s'agrandissent-elles ?**
+Réponse PO (2026-09-26) : toute image qu'on touche pour l'agrandir s'affiche en version
+d'origine, jamais réduite ; les photos de départ et d'arrivée de la fiche trou s'ouvrent en
+plein écran avec zoom, comme la galerie de session.
+Constat : seule la visionneuse de la galerie de session agrandissait une photo ; les photos de
+la fiche trou ne réagissaient pas au toucher.
+Suggestion retenue : réutiliser la visionneuse de la galerie, pour que le zoom sur le départ ou
+l'arrivée aide à repérer l'emplacement exact sur le terrain. Le plan 30 applique cette décision.

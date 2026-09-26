@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/theme/app_theme.dart';
 import '../core/theme/phosphor_icons.dart';
+import 'display_sized_image.dart';
 
 /// A player's round avatar: their photo when there is one, otherwise their
 /// initials on a tint picked from the name (stable: the same player always
@@ -71,8 +72,13 @@ class NuniAvatar extends StatelessWidget {
       // can't be loaded (e.g. a Google photo blocked by the browser).
       child: imageUrl == null
           ? fallback
-          : Image.network(
-              imageUrl!,
+          : Image(
+              image: displaySizedImage(
+                context,
+                NetworkImage(imageUrl!),
+                width: size,
+                height: size,
+              ),
               width: size,
               height: size,
               fit: BoxFit.cover,

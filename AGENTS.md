@@ -218,6 +218,12 @@ GitHub Actions (Q17).
   répétition. Liste de libellés déduite de l'existant, sans table ; lieux : les spots (plan 28). Couleurs :
   `eventHues` de `palettes.dart`. Une session démarrée depuis un événement porte
   `sessions.event_id` (`create_session` y ajoute les « présents »).
+- Images réseau : jamais `Image.network` ni `NetworkImage` nus ; toujours passer le fournisseur
+  par `displaySizedImage` (`lib/shared/display_sized_image.dart`), qui le décode à sa taille
+  d'affichage. Une photo décodée en pleine résolution fait planter Safari sur iPhone dès
+  quelques vignettes (liste des trous, 2026-09-26). Seule exception : la vue agrandie qui
+  s'ouvre quand on touche une image (visionneuse de la galerie de session) affiche la photo
+  d'origine, non réduite (PO, 2026-09-26).
 - Temps réel : abonnements Supabase filtrés par session (ou par événement pour les
   commentaires du planning), jamais sur une table entière.
 

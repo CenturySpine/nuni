@@ -11,6 +11,7 @@ import '../../../shared/nuni_loading.dart';
 import '../../../shared/photo_field.dart';
 import '../data/history_repository.dart';
 import '../domain/session_photo.dart';
+import '../../../shared/display_sized_image.dart';
 
 /// The history detail's photo section (plan 10): a grid, add (owner only,
 /// multi-pick), tap for a full-screen swipeable viewer with set-cover/delete
@@ -156,7 +157,17 @@ class _Thumbnail extends ConsumerWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(NuniRadius.control),
-            child: Image.network(url, width: 84, height: 84, fit: BoxFit.cover),
+            child: Image(
+              image: displaySizedImage(
+                context,
+                NetworkImage(url),
+                width: 84,
+                height: 84,
+              ),
+              width: 84,
+              height: 84,
+              fit: BoxFit.cover,
+            ),
           ),
           if (isCover)
             Positioned(
@@ -275,6 +286,8 @@ class _PhotoViewerDialogState extends ConsumerState<_PhotoViewerDialog> {
             onPageChanged: (i) => setState(() => _index = i),
             itemBuilder: (context, i) => InteractiveViewer(
               child: Center(
+                // The enlarged, zoomable view shows the original photo, not
+                // a display-sized decode (PO, 2026-09-26).
                 child: Image.network(
                   repo.photoUrl(widget.photos[i].storagePath),
                   fit: BoxFit.contain,

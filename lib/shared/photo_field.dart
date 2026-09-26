@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../core/theme/app_theme.dart';
 import '../core/theme/phosphor_icons.dart';
+import 'display_sized_image.dart';
 
 /// Re-encodes [bytes] as JPEG, capped at [maxWidth] wide (never upscaled),
 /// to keep uploads small on mobile connections (plan 06). Returns the
@@ -109,8 +110,12 @@ class _PhotoFieldState extends State<PhotoField> {
                         : DecorationImage(
                             image: _localPreview != null
                                 ? MemoryImage(_localPreview!)
-                                : NetworkImage(widget.imageUrl!)
-                                      as ImageProvider,
+                                : displaySizedImage(
+                                    context,
+                                    NetworkImage(widget.imageUrl!),
+                                    width: 120,
+                                    height: 120,
+                                  ),
                             fit: BoxFit.cover,
                           ),
                   ),

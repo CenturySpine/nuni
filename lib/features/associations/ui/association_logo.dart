@@ -5,6 +5,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/nuni_avatar.dart';
 import '../data/associations_repository.dart';
 import '../domain/association.dart';
+import '../../../shared/display_sized_image.dart';
 
 /// An association's logo on a rounded square tile, or -- while it has none
 /// (plan 18: empty until a local manager uploads one) -- its abbreviation
@@ -46,8 +47,15 @@ class AssociationLogo extends ConsumerWidget {
       ),
       child: path == null
           ? fallback
-          : Image.network(
-              ref.watch(associationsRepositoryProvider).logoUrl(path),
+          : Image(
+              image: displaySizedImage(
+                context,
+                NetworkImage(
+                  ref.watch(associationsRepositoryProvider).logoUrl(path),
+                ),
+                width: size,
+                height: size,
+              ),
               width: size,
               height: size,
               fit: BoxFit.cover,
