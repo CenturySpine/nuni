@@ -3,18 +3,33 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../shared/display_sized_image.dart';
+import '../../../shared/nuni_photo_thumbnail.dart';
 
 /// A square hole photo, or a framed placeholder when the hole has none (or
 /// the image fails to load) -- PO, 2026-09-23. Shared by the hole list
 /// (small thumbnails) and the hole detail sheet (large ones).
 class HolePhotoThumb extends StatelessWidget {
-  const HolePhotoThumb({super.key, this.url, this.size, this.iconSize = 24});
+  const HolePhotoThumb({
+    super.key,
+    this.url,
+    this.thumbnailUrl,
+    this.size,
+    this.iconSize = 24,
+    this.onTap,
+  });
 
   final String? url;
+
+  /// The photo's thumbnail (plan 30), loaded instead of [url] when given,
+  /// with [url] as a fallback.
+  final String? thumbnailUrl;
 
   /// Fixed side length; null fills the available width (square).
   final double? size;
   final double iconSize;
+
+  /// Called when an existing photo is tapped (not the placeholder).
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -38,17 +53,28 @@ class HolePhotoThumb extends StatelessWidget {
     );
     Widget content(double side) => url == null
         ? placeholder
-        : ClipRRect(
-            borderRadius: radius,
-            child: Image(
-              image: displaySizedImage(
-                context,
-                NetworkImage(url!),
-                width: side,
-                height: side,
-              ),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => placeholder,
+        : GestureDetector(
+            onTap: onTap,
+            child: ClipRRect(
+              borderRadius: radius,
+              child: thumbnailUrl != null
+                  ? NuniPhotoThumbnail(
+                      thumbnailUrl: thumbnailUrl!,
+                      url: url!,
+                      width: side,
+                      height: side,
+                      placeholder: placeholder,
+                    )
+                  : Image(
+                      image: displaySizedImage(
+                        context,
+                        NetworkImage(url!),
+                        width: side,
+                        height: side,
+                      ),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => placeholder,
+                    ),
             ),
           );
     return size == null

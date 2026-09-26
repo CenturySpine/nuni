@@ -22,7 +22,7 @@ import '../../sessions/ui/scoring_mode_label.dart';
 import '../../sessions/ui/session_kind_label.dart';
 import '../data/history_repository.dart';
 import '../domain/history_entry.dart';
-import '../../../shared/display_sized_image.dart';
+import '../../../shared/nuni_photo_thumbnail.dart';
 
 /// History tab body (plan 10, reshaped by plan 26, Q129): every completed
 /// session of the caller's association (plus the ones they played in
@@ -160,20 +160,15 @@ class _HistoryCard extends ConsumerWidget {
           if (session.coverPhotoPath != null)
             ClipRRect(
               borderRadius: BorderRadius.circular(NuniRadius.control),
-              child: Image(
-                image: displaySizedImage(
-                  context,
-                  NetworkImage(
-                    ref
-                        .read(historyRepositoryProvider)
-                        .photoUrl(session.coverPhotoPath!),
-                  ),
-                  width: 64,
-                  height: 64,
-                ),
+              child: NuniPhotoThumbnail(
+                thumbnailUrl: ref
+                    .read(historyRepositoryProvider)
+                    .thumbnailUrl(session.coverPhotoPath!),
+                url: ref
+                    .read(historyRepositoryProvider)
+                    .photoUrl(session.coverPhotoPath!),
                 width: 64,
                 height: 64,
-                fit: BoxFit.cover,
               ),
             )
           else

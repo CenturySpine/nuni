@@ -1,28 +1,14 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 
 import '../core/theme/app_theme.dart';
 import '../core/theme/phosphor_icons.dart';
 import 'display_sized_image.dart';
+import 'photo_bytes.dart';
 
-/// Re-encodes [bytes] as JPEG, capped at [maxWidth] wide (never upscaled),
-/// to keep uploads small on mobile connections (plan 06). Returns the
-/// original bytes unchanged if they can't be decoded as an image.
-Uint8List resizeForUpload(
-  Uint8List bytes, {
-  int maxWidth = 1600,
-  int quality = 80,
-}) {
-  final decoded = img.decodeImage(bytes);
-  if (decoded == null) return bytes;
-  final resized = decoded.width > maxWidth
-      ? img.copyResize(decoded, width: maxWidth)
-      : decoded;
-  return Uint8List.fromList(img.encodeJpg(resized, quality: quality));
-}
+export 'photo_bytes.dart' show resizeForUpload;
 
 /// A square photo slot: shows the current photo (network or a freshly picked
 /// local preview), a placeholder otherwise. Tapping opens the platform's

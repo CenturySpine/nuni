@@ -6,6 +6,23 @@ Plan rédigé le 2026-09-26, à la suite du plantage de la liste des trous sur i
 PO du même jour). **Validé par le PO le 2026-09-26** (Q201 à Q203 tranchées) ; implémentation
 demandée le même jour.
 
+**Code écrit et poussé sur `main` le 2026-09-26 à la demande du PO, avant son essai (il essaie en local).** Vérifié : `flutter analyze --fatal-infos`
+sans remarque (script compris), 469 tests Flutter verts (dont les nouveaux : taille et chemin de
+la miniature, repli miniature → photo → vide, visionneuse en version d'origine), build web
+release compilé. **Pas encore vérifié** : l'essai dans un navigateur (le conteneur de
+l'assistant n'a pas `env/dev.json`, donc pas d'accès à Supabase), le script de reprise sur les
+vrais buckets (il exige la clé service, `env/migration.json`, sur le poste du PO), et la liste
+sur iPhone.
+Écarts avec le plan, décidés à l'implémentation :
+- La miniature est limitée par son plus petit côté (256 px), pas par sa largeur : une photo en
+  paysage garde ainsi assez de hauteur pour une case carrée nette.
+- Le formulaire d'un trou garde la photo entière dans sa case de 120 px (hors listes, une seule
+  photo à la fois, décodée à sa taille d'affichage).
+- La visionneuse de la galerie de session devient un composant partagé, `NuniPhotoViewer`,
+  réutilisé par la fiche trou ; elle affiche une icône quand une photo ne se charge pas.
+- Défaut corrigé au passage : `resizeForUpload` levait une exception sur un fichier illisible
+  au lieu de renvoyer le fichier tel quel, comme l'annonce son commentaire.
+
 Déjà fait (correctif du défaut, hors plan) : toute image réseau est décodée à sa taille
 d'affichage (`lib/shared/display_sized_image.dart`), ce qui supprime le plantage. Ce plan traite
 ce qui reste : la quantité de données téléchargées.

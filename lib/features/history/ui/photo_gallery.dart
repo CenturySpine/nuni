@@ -8,10 +8,11 @@ import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_confirm_dialog.dart';
 import '../../../shared/nuni_loading.dart';
+import '../../../shared/nuni_photo_thumbnail.dart';
+import '../../../shared/nuni_photo_viewer.dart';
 import '../../../shared/photo_field.dart';
 import '../data/history_repository.dart';
 import '../domain/session_photo.dart';
-import '../../../shared/display_sized_image.dart';
 
 /// The history detail's photo section (plan 10): a grid, add (owner only,
 /// multi-pick), tap for a full-screen swipeable viewer with set-cover/delete
@@ -150,23 +151,18 @@ class _Thumbnail extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final url = ref.read(historyRepositoryProvider).photoUrl(photo.storagePath);
+    final repo = ref.read(historyRepositoryProvider);
     return GestureDetector(
       onTap: onTap,
       child: Stack(
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(NuniRadius.control),
-            child: Image(
-              image: displaySizedImage(
-                context,
-                NetworkImage(url),
-                width: 84,
-                height: 84,
-              ),
+            child: NuniPhotoThumbnail(
+              thumbnailUrl: repo.thumbnailUrl(photo.storagePath),
+              url: repo.photoUrl(photo.storagePath),
               width: 84,
               height: 84,
-              fit: BoxFit.cover,
             ),
           ),
           if (isCover)
@@ -205,22 +201,7 @@ class _PhotoViewerDialog extends ConsumerStatefulWidget {
 }
 
 class _PhotoViewerDialogState extends ConsumerState<_PhotoViewerDialog> {
-  late final PageController _controller;
-  late int _index;
   bool _busy = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _index = widget.initialIndex;
-    _controller = PageController(initialPage: _index);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   void _showSnack(String message) {
     if (!mounted) return;
@@ -274,66 +255,36 @@ class _PhotoViewerDialogState extends ConsumerState<_PhotoViewerDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final repo = ref.read(historyRepositoryProvider);
-    final current = widget.photos[_index];
 
-    return Dialog.fullscreen(
-      backgroundColor: Colors.black,
-      child: Stack(
-        children: [
-          PageView.builder(
-            controller: _controller,
-            itemCount: widget.photos.length,
-            onPageChanged: (i) => setState(() => _index = i),
-            itemBuilder: (context, i) => InteractiveViewer(
-              child: Center(
-                // The enlarged, zoomable view shows the original photo, not
-                // a display-sized decode (PO, 2026-09-26).
-                child: Image.network(
-                  repo.photoUrl(widget.photos[i].storagePath),
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 8,
-            right: 8,
-            left: 8,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(PhosphorIcons.xCircle, color: Colors.white),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                if (widget.isOwner)
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          current.id == widget.coverPhotoId
-                              ? PhosphorIcons.starFill
-                              : PhosphorIcons.star,
-                          color: Colors.white,
-                        ),
-                        tooltip: l10n.historyPhotosSetCover,
-                        onPressed: _busy ? null : () => _setCover(current),
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          PhosphorIcons.trash,
-                          color: Colors.white,
-                        ),
-                        tooltip: l10n.historyPhotosDeleteConfirmTitle,
-                        onPressed: _busy ? null : () => _delete(current),
-                      ),
-                    ],
+    return NuniPhotoViewer(
+      urls: [
+        for (final photo in widget.photos) repo.photoUrl(photo.storagePath),
+      ],
+      initialIndex: widget.initialIndex,
+      actionsBuilder: !widget.isOwner
+          ? null
+          : (context, index) {
+              final current = widget.photos[index];
+              return Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      current.id == widget.coverPhotoId
+                          ? PhosphorIcons.starFill
+                          : PhosphorIcons.star,
+                      color: Colors.white,
+                    ),
+                    tooltip: l10n.historyPhotosSetCover,
+                    onPressed: _busy ? null : () => _setCover(current),
                   ),
-              ],
-            ),
-          ),
-        ],
-      ),
+                  IconButton(
+                    icon: const Icon(PhosphorIcons.trash, color: Colors.white),
+                    tooltip: l10n.historyPhotosDeleteConfirmTitle,
+                    onPressed: _busy ? null : () => _delete(current),
+                  ),
+                ],
+              );
+            },
     );
   }
 }

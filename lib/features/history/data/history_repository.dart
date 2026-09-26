@@ -5,7 +5,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/supabase/photo_storage.dart';
 import '../../../core/supabase/supabase_providers.dart';
+import '../../../shared/photo_bytes.dart';
 import '../../live/data/live_repository.dart';
 import '../../live/domain/live_session_snapshot.dart';
 import '../domain/history_entry.dart';
@@ -48,16 +50,13 @@ class HistoryRepository {
     required Uint8List bytes,
   }) async {
     final path = '$sessionId/${const Uuid().v4()}.jpg';
-    await _client.storage
-        .from('session-photos')
-        .uploadBinary(
-          path,
-          bytes,
-          fileOptions: const FileOptions(
-            contentType: 'image/jpeg',
-            upsert: true,
-          ),
-        );
+    final bucket = _client.storage.from('session-photos');
+    await bucket.uploadBinary(
+      path,
+      bytes,
+      fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true),
+    );
+    await bucket.uploadThumbnail(path, bytes);
     final row = await _client
         .from('session_photos')
         .insert({
@@ -73,13 +72,18 @@ class HistoryRepository {
   String photoUrl(String path) =>
       _client.storage.from('session-photos').getPublicUrl(path);
 
+  /// The photo's thumbnail (plan 30), for the lists.
+  String thumbnailUrl(String path) => photoUrl(thumbnailPath(path));
+
   /// Purge order (Q37): the storage object first, so the operation never
   /// leaves a `session_photos` row pointing at a file that's already gone --
   /// if the storage call fails, the row (and the acceptance criterion "a
   /// deleted photo disappears from the bucket") simply isn't satisfied yet,
   /// and the caller can retry.
   Future<void> deletePhoto(SessionPhoto photo) async {
-    await _client.storage.from('session-photos').remove([photo.storagePath]);
+    await _client.storage.from('session-photos').removePhotos([
+      photo.storagePath,
+    ]);
     await _client.from('session_photos').delete().eq('id', photo.id);
   }
 
@@ -103,7 +107,7 @@ class HistoryRepository {
   }) async {
     if (photos.isNotEmpty) {
       try {
-        await _client.storage.from('session-photos').remove([
+        await _client.storage.from('session-photos').removePhotos([
           for (final p in photos) p.storagePath,
         ]);
       } catch (_) {

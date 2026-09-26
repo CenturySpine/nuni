@@ -237,6 +237,9 @@ class _HolesListView extends ConsumerWidget {
     // Read lazily: a list without photos never needs the storage client.
     String? url(String? path) =>
         path == null ? null : ref.read(holesRepositoryProvider).photoUrl(path);
+    String? thumbnailUrl(String? path) => path == null
+        ? null
+        : ref.read(holesRepositoryProvider).thumbnailUrl(path);
     if (holes.isEmpty) {
       return NuniEmptyState(icon: PhosphorIcons.mapPin, message: emptyMessage);
     }
@@ -255,12 +258,14 @@ class _HolesListView extends ConsumerWidget {
               // 2026-09-23).
               HolePhotoThumb(
                 url: url(hole.photoStartPath),
+                thumbnailUrl: thumbnailUrl(hole.photoStartPath),
                 size: 48,
                 iconSize: 18,
               ),
               const SizedBox(width: 6),
               HolePhotoThumb(
                 url: url(hole.photoEndPath),
+                thumbnailUrl: thumbnailUrl(hole.photoEndPath),
                 size: 48,
                 iconSize: 18,
               ),

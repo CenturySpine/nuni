@@ -6,7 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/location/location_service.dart';
+import '../../../core/supabase/photo_storage.dart';
 import '../../../core/supabase/supabase_providers.dart';
+import '../../../shared/photo_bytes.dart';
 import '../domain/hole.dart';
 
 part 'holes_repository.g.dart';
@@ -152,7 +154,9 @@ class HolesRepository {
       if (source == null) return null;
       final target = '$ownerId/$cloneId/$name.jpg';
       try {
-        await _client.storage.from('holes').copy(source, target);
+        final bucket = _client.storage.from('holes');
+        await bucket.copy(source, target);
+        await bucket.copyThumbnail(source, target);
         return target;
       } on StorageException catch (error) {
         debugPrint('Hole photo not copied to the clone: ${error.message}');
@@ -197,16 +201,13 @@ class HolesRepository {
   }) async {
     final ownerId = _client.auth.currentUser!.id;
     final path = '$ownerId/$folderId/${isStart ? 'start' : 'end'}.jpg';
-    await _client.storage
-        .from('holes')
-        .uploadBinary(
-          path,
-          bytes,
-          fileOptions: const FileOptions(
-            contentType: 'image/jpeg',
-            upsert: true,
-          ),
-        );
+    final bucket = _client.storage.from('holes');
+    await bucket.uploadBinary(
+      path,
+      bytes,
+      fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true),
+    );
+    await bucket.uploadThumbnail(path, bytes);
     return path;
   }
 
@@ -217,7 +218,7 @@ class HolesRepository {
   Future<void> deletePhotos(Set<String> paths) async {
     if (paths.isEmpty) return;
     try {
-      await _client.storage.from('holes').remove(paths.toList());
+      await _client.storage.from('holes').removePhotos(paths);
     } on StorageException catch (error) {
       debugPrint('Unreferenced hole photos not deleted: ${error.message}');
     }
@@ -225,6 +226,9 @@ class HolesRepository {
 
   String photoUrl(String path) =>
       _client.storage.from('holes').getPublicUrl(path);
+
+  /// The photo's thumbnail (plan 30), for the lists.
+  String thumbnailUrl(String path) => photoUrl(thumbnailPath(path));
 }
 
 final holesRepositoryProvider = Provider<HolesRepository>(

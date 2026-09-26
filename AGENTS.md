@@ -222,8 +222,13 @@ GitHub Actions (Q17).
   par `displaySizedImage` (`lib/shared/display_sized_image.dart`), qui le décode à sa taille
   d'affichage. Une photo décodée en pleine résolution fait planter Safari sur iPhone dès
   quelques vignettes (liste des trous, 2026-09-26). Seule exception : la vue agrandie qui
-  s'ouvre quand on touche une image (visionneuse de la galerie de session) affiche la photo
-  d'origine, non réduite (PO, 2026-09-26).
+  s'ouvre quand on touche une image, toujours `NuniPhotoViewer` (galerie de session, fiche
+  trou), affiche la photo d'origine, non réduite (PO, 2026-09-26, Q203).
+- Photos de trou et de session (plan 30) : une miniature de 256 px vit à côté de chaque photo
+  (`thumbnailPath` de `lib/shared/photo_bytes.dart`, chemin dérivé, jamais en base). Envoi,
+  suppression et copie passent par l'extension `PhotoStorage`
+  (`lib/core/supabase/photo_storage.dart`), qui traite la miniature avec la photo ; les listes
+  affichent `NuniPhotoThumbnail`, qui retombe sur la photo entière si la miniature manque.
 - Temps réel : abonnements Supabase filtrés par session (ou par événement pour les
   commentaires du planning), jamais sur une table entière.
 

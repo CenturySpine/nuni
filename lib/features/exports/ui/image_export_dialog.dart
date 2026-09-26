@@ -18,7 +18,7 @@ import '../../history/domain/history_entry.dart';
 import '../../history/domain/session_photo.dart';
 import 'image_export.dart';
 import 'results_card.dart';
-import '../../../shared/display_sized_image.dart';
+import '../../../shared/nuni_photo_thumbnail.dart';
 
 /// "Exporter en image" (plan 10, Q16 -- both variants): a full-screen
 /// preview of the `ResultsCard`, scaled to fit via `FittedBox` for on-screen
@@ -189,18 +189,15 @@ class _ImageExportDialogState extends ConsumerState<_ImageExportDialog> {
                       _PhotoStripTile(
                         selected: _selectedPhotoId == photo.id,
                         onTap: _busy ? null : () => _useSessionPhoto(photo),
-                        child: Image(
-                          image: displaySizedImage(
-                            context,
-                            NetworkImage(
-                              ref
-                                  .read(historyRepositoryProvider)
-                                  .photoUrl(photo.storagePath),
-                            ),
-                            width: 56,
-                            height: 56,
-                          ),
-                          fit: BoxFit.cover,
+                        child: NuniPhotoThumbnail(
+                          thumbnailUrl: ref
+                              .read(historyRepositoryProvider)
+                              .thumbnailUrl(photo.storagePath),
+                          url: ref
+                              .read(historyRepositoryProvider)
+                              .photoUrl(photo.storagePath),
+                          width: 56,
+                          height: 56,
                         ),
                       ),
                     _PhotoStripTile(

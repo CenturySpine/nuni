@@ -19,6 +19,7 @@ import '../data/holes_repository.dart';
 import '../domain/distance_format.dart';
 import '../domain/hole.dart';
 import 'hole_photo_thumb.dart';
+import '../../../shared/nuni_photo_viewer.dart';
 
 /// The "fiche en lecture" (plan 06): a read-only bottom sheet reached by
 /// tapping a hole in the list or on the map. Editing has its own route
@@ -76,6 +77,14 @@ class _HoleDetailContent extends ConsumerWidget {
     final endUrl = hole.photoEndPath == null
         ? null
         : repo.photoUrl(hole.photoEndPath!);
+    // Tapping a photo opens both, original size, in the full-screen viewer
+    // (plan 30, Q203).
+    final viewerUrls = [?startUrl, ?endUrl];
+    void openViewer(String url) => NuniPhotoViewer.show(
+      context,
+      urls: viewerUrls,
+      initialIndex: viewerUrls.indexOf(url),
+    );
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -125,6 +134,7 @@ class _HoleDetailContent extends ConsumerWidget {
               child: _PhotoWithCaption(
                 url: startUrl,
                 caption: l10n.holesFormPhotoStart,
+                onTap: startUrl == null ? null : () => openViewer(startUrl),
               ),
             ),
             const SizedBox(width: 10),
@@ -132,6 +142,7 @@ class _HoleDetailContent extends ConsumerWidget {
               child: _PhotoWithCaption(
                 url: endUrl,
                 caption: l10n.holesFormPhotoEnd,
+                onTap: endUrl == null ? null : () => openViewer(endUrl),
               ),
             ),
           ],
@@ -234,15 +245,20 @@ class _CloneButtonState extends ConsumerState<_CloneButton> {
 }
 
 class _PhotoWithCaption extends StatelessWidget {
-  const _PhotoWithCaption({required this.url, required this.caption});
+  const _PhotoWithCaption({
+    required this.url,
+    required this.caption,
+    this.onTap,
+  });
 
   final String? url;
   final String caption;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) => Column(
     children: [
-      HolePhotoThumb(url: url, iconSize: 32),
+      HolePhotoThumb(url: url, iconSize: 32, onTap: onTap),
       const SizedBox(height: 6),
       Text(caption, style: Theme.of(context).textTheme.labelMedium),
     ],

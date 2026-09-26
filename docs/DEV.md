@@ -49,6 +49,21 @@ sont des variables d'environnement du projet Vercel. Pas de GitHub Actions.
 Reproduire le build Vercel en local (Linux, macOS ou Git Bash) : `bash tool/vercel_build.sh`,
 avec `FLUTTER_DIR` pointant sur un SDK déjà installé pour éviter le téléchargement.
 
+## Photos : miniatures et réduction (plan 30)
+
+Chaque photo de trou ou de session a une miniature de 256 px rangée à côté d'elle
+(`<chemin>.thumb.jpg`), créée par l'app à l'envoi et lue par les listes. Pour les photos
+envoyées avant le plan 30, lancer une fois le script de reprise, après la mise en ligne de
+l'app du plan 30. Il crée les miniatures manquantes et réduit à 1600 px les photos plus
+larges (celles importées de LsgScores). Relançable sans effet de bord ; le stockage survit
+aux reconstructions du schéma, donc inutile de le relancer après l'une d'elles.
+Nécessite `env/migration.json` (clé service NUNI).
+
+```powershell
+fvm dart run tool/backfill_photo_thumbnails.dart --dry-run   # compte sans rien écrire
+fvm dart run tool/backfill_photo_thumbnails.dart
+```
+
 ## Supabase : modifier le schéma avant la première mise en service
 
 Règle (AGENTS.md, point 8) : tant que `main` n'a pas été mis en service, `supabase/migrations`
