@@ -6,9 +6,9 @@ import 'package:image_picker/image_picker.dart';
 import '../core/theme/app_theme.dart';
 import '../core/theme/phosphor_icons.dart';
 import 'display_sized_image.dart';
-import 'photo_bytes.dart';
+import 'photo_resize.dart';
 
-export 'photo_bytes.dart' show resizeForUpload;
+export 'photo_resize.dart' show shrinkPhoto;
 
 /// A square photo slot: shows the current photo (network or a freshly picked
 /// local preview), a placeholder otherwise. Tapping opens the platform's
@@ -53,7 +53,7 @@ class _PhotoFieldState extends State<PhotoField> {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked == null) return;
     setState(() => _resizing = true);
-    final bytes = resizeForUpload(await picked.readAsBytes());
+    final bytes = await shrinkPhoto(await picked.readAsBytes());
     if (!mounted) return;
     setState(() {
       _localPreview = bytes;

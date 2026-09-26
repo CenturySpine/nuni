@@ -100,7 +100,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       await ref
           .read(profileRepositoryProvider)
           .uploadMyAvatar(
-            resizeForUpload(cropped, maxWidth: 512, quality: 85),
+            await shrinkPhoto(cropped, maxWidth: 512, quality: 85),
             previousUrl: player.avatarUrl,
           );
       _refreshPlayerReads();

@@ -36,6 +36,18 @@ void main() {
     expect(makeThumbnail(Uint8List.fromList([1, 2, 3])), isNull);
   });
 
+  test('photo size is capped in width, ratio kept, never upscaled', () {
+    expect(photoSize(4000, 3000, 1600), (1600, 1200));
+    expect(photoSize(3000, 4000, 1600), (1600, 2133));
+    expect(photoSize(800, 600, 1600), (800, 600));
+  });
+
+  test('thumbnail size caps the shortest side, never upscaled', () {
+    expect(thumbnailSize(1600, 1200, 256), (341, 256));
+    expect(thumbnailSize(1200, 1600, 256), (256, 341));
+    expect(thumbnailSize(200, 100, 256), (200, 100));
+  });
+
   test('the thumbnail path is derived from the photo path', () {
     const path = 'owner/hole/start.jpg';
     expect(thumbnailPath(path), 'owner/hole/start.jpg.thumb.jpg');

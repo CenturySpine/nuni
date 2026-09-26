@@ -97,7 +97,8 @@ class _ImageExportDialogState extends ConsumerState<_ImageExportDialog> {
   Future<void> _pickFromDevice() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked == null || !mounted) return;
-    final bytes = resizeForUpload(await picked.readAsBytes(), maxWidth: 1080);
+    final bytes = await shrinkPhoto(await picked.readAsBytes(), maxWidth: 1080);
+    if (!mounted) return;
     setState(() {
       _backgroundPhoto = bytes;
       _backgroundAspectRatio = _aspectRatioOf(bytes);

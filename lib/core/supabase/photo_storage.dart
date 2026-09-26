@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../shared/photo_bytes.dart';
+import '../../shared/photo_resize.dart';
 
 /// Keeps a photo's thumbnail (plan 30, Q201) in step with the photo: same
 /// bucket, same folder -- so the same storage policies -- at the derived
@@ -10,7 +11,7 @@ import '../../shared/photo_bytes.dart';
 extension PhotoStorage on StorageFileApi {
   /// Uploads the thumbnail of [photo], already uploaded at [path].
   Future<void> uploadThumbnail(String path, Uint8List photo) async {
-    final thumbnail = makeThumbnail(photo);
+    final thumbnail = await photoThumbnail(photo);
     if (thumbnail == null) return;
     try {
       await uploadBinary(

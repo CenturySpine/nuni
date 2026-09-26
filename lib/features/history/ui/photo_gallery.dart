@@ -51,7 +51,7 @@ class _PhotoGalleryState extends ConsumerState<PhotoGallery> {
     try {
       final repo = ref.read(historyRepositoryProvider);
       for (final file in picked) {
-        final bytes = resizeForUpload(await file.readAsBytes());
+        final bytes = await shrinkPhoto(await file.readAsBytes());
         await repo.uploadPhoto(sessionId: widget.sessionId, bytes: bytes);
       }
       ref.invalidate(sessionPhotosProvider(widget.sessionId));

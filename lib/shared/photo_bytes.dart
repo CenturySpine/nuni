@@ -32,11 +32,18 @@ Uint8List resizeForUpload(
 }) {
   final decoded = decodePhoto(bytes);
   if (decoded == null) return bytes;
-  final resized = decoded.width > maxWidth
-      ? img.copyResize(decoded, width: maxWidth)
+  final (width, _) = photoSize(decoded.width, decoded.height, maxWidth);
+  final resized = width < decoded.width
+      ? img.copyResize(decoded, width: width)
       : decoded;
-  return Uint8List.fromList(img.encodeJpg(resized, quality: quality));
+  return _encodeJpg(resized, quality);
 }
+
+/// 4:2:0 chroma, like browsers and cameras: the image package defaults to
+/// 4:4:4, about twice the weight for no visible gain on a photo.
+Uint8List _encodeJpg(img.Image image, int quality) => Uint8List.fromList(
+  img.encodeJpg(image, quality: quality, chroma: img.JpegChroma.yuv420),
+);
 
 /// A JPEG thumbnail of [bytes] whose shortest side is at most [shortSide]
 /// (plan 30), or null if [bytes] can't be decoded as an image.
@@ -47,14 +54,34 @@ Uint8List? makeThumbnail(
 }) {
   final decoded = decodePhoto(bytes);
   if (decoded == null) return null;
-  final small = decoded.width <= decoded.height
-      ? (decoded.width > shortSide
-            ? img.copyResize(decoded, width: shortSide)
-            : decoded)
-      : (decoded.height > shortSide
-            ? img.copyResize(decoded, height: shortSide)
-            : decoded);
-  return Uint8List.fromList(img.encodeJpg(small, quality: quality));
+  final (width, height) = thumbnailSize(
+    decoded.width,
+    decoded.height,
+    shortSide,
+  );
+  final small = width < decoded.width
+      ? img.copyResize(decoded, width: width, height: height)
+      : decoded;
+  return _encodeJpg(small, quality);
+}
+
+/// Size of a [width] x [height] photo capped at [maxWidth] wide, ratio
+/// kept, never upscaled.
+(int, int) photoSize(int width, int height, int maxWidth) => width > maxWidth
+    ? (maxWidth, (height * maxWidth / width).round())
+    : (width, height);
+
+/// Size of the thumbnail of a [width] x [height] photo: shortest side capped
+/// at [shortSide], ratio kept, never upscaled.
+(int, int) thumbnailSize(int width, int height, int shortSide) {
+  if (width <= height) {
+    return width > shortSide
+        ? (shortSide, (height * shortSide / width).round())
+        : (width, height);
+  }
+  return height > shortSide
+      ? ((width * shortSide / height).round(), shortSide)
+      : (width, height);
 }
 
 /// Storage path of the thumbnail of the photo at [path], stored next to it

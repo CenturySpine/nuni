@@ -244,7 +244,7 @@ class _AssociationFormPageState extends ConsumerState<AssociationFormPage> {
           .read(associationsRepositoryProvider)
           .uploadLogo(
             association,
-            resizeForUpload(cropped, maxWidth: 512, quality: 85),
+            await shrinkPhoto(cropped, maxWidth: 512, quality: 85),
           );
       ref.invalidate(associationsProvider);
       final updated = await ref.read(
