@@ -35,11 +35,16 @@ Future<void> showAddPlayedHoleSheet(
   BuildContext context, {
   required String sessionId,
   required SessionKind kind,
+  bool freeHolesOnly = false,
 }) => showModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
   showDragHandle: true,
-  builder: (context) => AddPlayedHoleSheet(sessionId: sessionId, kind: kind),
+  builder: (context) => AddPlayedHoleSheet(
+    sessionId: sessionId,
+    kind: kind,
+    freeHolesOnly: freeHolesOnly,
+  ),
 );
 
 class AddPlayedHoleSheet extends ConsumerStatefulWidget {
@@ -47,10 +52,15 @@ class AddPlayedHoleSheet extends ConsumerStatefulWidget {
     super.key,
     required this.sessionId,
     required this.kind,
+    this.freeHolesOnly = false,
   });
 
   final String sessionId;
   final SessionKind kind;
+
+  /// A simulator session (plan 29, Q189): straight to a free hole, no hole
+  /// directory.
+  final bool freeHolesOnly;
 
   @override
   ConsumerState<AddPlayedHoleSheet> createState() => _AddPlayedHoleSheetState();
@@ -63,7 +73,7 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
   int? _draggingRadiusM;
   Hole? _selectedHole;
   // Generic "free hole" picked instead of a directory hole (plan 17).
-  bool _freeHole = false;
+  late bool _freeHole = widget.freeHolesOnly;
   final _labelController = TextEditingController();
   final _commentController = TextEditingController();
   // This session's par (plan 26): preset from the picked hole, none for a
@@ -301,20 +311,28 @@ class _AddPlayedHoleSheetState extends ConsumerState<AddPlayedHoleSheet> {
       children: [
         Row(
           children: [
-            IconButton(
-              icon: const Icon(PhosphorIcons.caretRight),
-              onPressed: () => setState(() {
-                _selectedHole = null;
-                _freeHole = false;
-                _par = null;
-              }),
-              tooltip: l10n.commonBack,
-            ),
+            if (!widget.freeHolesOnly)
+              IconButton(
+                icon: const Icon(PhosphorIcons.caretRight),
+                onPressed: () => setState(() {
+                  _selectedHole = null;
+                  _freeHole = false;
+                  _par = null;
+                }),
+                tooltip: l10n.commonBack,
+              ),
             Expanded(
               child: Text(title, style: Theme.of(context).textTheme.titleLarge),
             ),
           ],
         ),
+        if (widget.freeHolesOnly) ...[
+          const SizedBox(height: 4),
+          Text(
+            l10n.sessionsSimulatorFreeHoles,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
         const SizedBox(height: 8),
         if (_freeHole) ...[
           TextField(

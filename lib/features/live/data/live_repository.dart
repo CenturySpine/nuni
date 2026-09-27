@@ -2,10 +2,11 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide Session;
 
 import '../../../core/supabase/supabase_providers.dart';
 import '../domain/game_mode.dart';
+import '../../sessions/domain/session.dart';
 import '../domain/live_session_snapshot.dart';
 
 part 'live_repository.g.dart';
@@ -103,13 +104,16 @@ class LiveRepository {
   /// serializes without a timezone offset, so Postgres read it as if it
   /// were already UTC -- every session closed before this fix has an
   /// `ended_at` shifted by the closer's local UTC offset.
-  Future<void> closeSession(String sessionId) => _client
+  /// An end already typed in, for a session entered afterwards (plan 31),
+  /// is kept.
+  Future<void> closeSession(Session session) => _client
       .from('sessions')
       .update({
         'status': 'completed',
-        'ended_at': DateTime.now().toUtc().toIso8601String(),
+        if (session.endedAt == null)
+          'ended_at': DateTime.now().toUtc().toIso8601String(),
       })
-      .eq('id', sessionId);
+      .eq('id', session.id);
 
   /// A live view of a session in progress: the full snapshot, refreshed
   /// from scratch on every realtime "something changed" signal (Q36) on

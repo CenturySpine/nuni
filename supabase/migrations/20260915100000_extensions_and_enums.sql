@@ -20,3 +20,7 @@ create type association_manager_status as enum ('pending', 'approved', 'rejected
 create type event_response as enum ('yes', 'no', 'maybe');
 create type event_color as enum ('red', 'orange', 'yellow', 'green', 'teal', 'blue', 'purple', 'pink');
 create type event_origin as enum ('manual', 'imported');
+-- Session natures (plan 29, Q187, Q192): the tags a session may carry besides "Parcours" (having a
+-- scorecard, i.e. a non-null scoring_mode). No reference table (AGENTS.md); adding one costs a
+-- value here and two strings in the app.
+create type session_tag as enum ('training', 'simulator', 'association_life');

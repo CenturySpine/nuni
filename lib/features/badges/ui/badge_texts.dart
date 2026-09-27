@@ -96,6 +96,16 @@ extension BadgeTexts on AppLocalizations {
     BadgeId.adultsOnly => badgeAdultsOnlyName,
     BadgeId.persistent => badgePersistentName,
     BadgeId.rollerCoaster => badgeRollerCoasterName,
+    BadgeId.warmUp => badgeWarmUpName,
+    BadgeId.studious => badgeStudiousName,
+    BadgeId.hardWorker => badgeHardWorkerName,
+    BadgeId.partyAnimal => badgePartyAnimalName,
+    BadgeId.clubSoul => badgeClubSoulName,
+    BadgeId.allRounder => badgeAllRounderName,
+    BadgeId.virtualPlayer => badgeVirtualPlayerName,
+    BadgeId.instructor => badgeInstructorName,
+    BadgeId.coach => badgeCoachName,
+    BadgeId.headCoach => badgeHeadCoachName,
   };
 
   String badgeCondition(BadgeId id) => switch (id) {
@@ -189,6 +199,16 @@ extension BadgeTexts on AppLocalizations {
     BadgeId.adultsOnly => badgeAdultsOnlyCondition,
     BadgeId.persistent => badgePersistentCondition,
     BadgeId.rollerCoaster => badgeRollerCoasterCondition,
+    BadgeId.warmUp => badgeWarmUpCondition,
+    BadgeId.studious => badgeStudiousCondition,
+    BadgeId.hardWorker => badgeHardWorkerCondition,
+    BadgeId.partyAnimal => badgePartyAnimalCondition,
+    BadgeId.clubSoul => badgeClubSoulCondition,
+    BadgeId.allRounder => badgeAllRounderCondition,
+    BadgeId.virtualPlayer => badgeVirtualPlayerCondition,
+    BadgeId.instructor => badgeInstructorCondition,
+    BadgeId.coach => badgeCoachCondition,
+    BadgeId.headCoach => badgeHeadCoachCondition,
   };
 
   String badgeFamilyName(BadgeFamily family) => switch (family) {
@@ -203,6 +223,7 @@ extension BadgeTexts on AppLocalizations {
     BadgeFamily.conditions => badgeFamilyConditions,
     BadgeFamily.records => badgeFamilyRecords,
     BadgeFamily.fun => badgeFamilyFun,
+    BadgeFamily.clubLife => badgeFamilyClubLife,
   };
 
   String badgeScopeName(BadgeScope scope) => switch (scope) {

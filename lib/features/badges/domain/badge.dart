@@ -5,7 +5,8 @@ enum BadgeScope { individual, team, both }
 /// The badge families of plan 21 ("Catalogue retenu"), in display order,
 /// with the sessions they read: rankings and strokes are individual (Q90,
 /// Q138), their team version is in [team] (Q141), the rest reads both.
-/// H (contributions) and J (records) come with the second lot (Q137).
+/// H (contributions) and J (records) come with the second lot (Q137), L
+/// (club life) with plan 29.
 enum BadgeFamily {
   attendance(BadgeScope.both),
   regularity(BadgeScope.both),
@@ -17,7 +18,10 @@ enum BadgeFamily {
   builder(BadgeScope.both),
   conditions(BadgeScope.both),
   records(BadgeScope.individual),
-  fun(BadgeScope.individual);
+  fun(BadgeScope.individual),
+  // Plan 29: every activity session (a game, a training, a club event),
+  // individual or team.
+  clubLife(BadgeScope.both);
 
   const BadgeFamily(this.scope);
 
@@ -157,7 +161,22 @@ enum BadgeId {
   redLantern(BadgeFamily.fun),
   adultsOnly(BadgeFamily.fun),
   persistent(BadgeFamily.fun, target: 5),
-  rollerCoaster(BadgeFamily.fun);
+  rollerCoaster(BadgeFamily.fun),
+
+  // L. Club life (plan 29, Q196, Q199, Q200): completed sessions with at
+  // least 3 attendees, whatever their natures (Q190).
+  warmUp(BadgeFamily.clubLife, tier: BadgeTier.bronze, target: 1),
+  studious(BadgeFamily.clubLife, tier: BadgeTier.silver, target: 5),
+  hardWorker(BadgeFamily.clubLife, tier: BadgeTier.gold, target: 10),
+  partyAnimal(BadgeFamily.clubLife, tier: BadgeTier.bronze, target: 1),
+  clubSoul(BadgeFamily.clubLife, tier: BadgeTier.silver, target: 5),
+  // A game, a training and a club event: its progress counts the kinds.
+  allRounder(BadgeFamily.clubLife, target: 3),
+  virtualPlayer(BadgeFamily.clubLife, target: 1),
+  // Trainings organized: created by the player and completed (Q200).
+  instructor(BadgeFamily.clubLife, tier: BadgeTier.bronze, target: 1),
+  coach(BadgeFamily.clubLife, tier: BadgeTier.silver, target: 5),
+  headCoach(BadgeFamily.clubLife, tier: BadgeTier.gold, target: 10);
 
   const BadgeId(
     this.family, {

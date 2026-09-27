@@ -209,8 +209,8 @@ PlayerStats computePlayerStats(
     final session = snapshot.session;
     final team = teamOf(snapshot, playerId)!;
     final standings = computeStandings(
-      scoringMode: session.scoringMode,
-      rankingDirection: session.rankingDirection,
+      scoringMode: session.scoringMode!,
+      rankingDirection: session.rankingDirection!,
       teams: snapshot.teams,
       playedHoles: snapshot.playedHoles,
     );

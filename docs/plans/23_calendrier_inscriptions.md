@@ -11,6 +11,8 @@ jour, puis Q154, Q164, Q166 à Q168 (partage d'un événement, demandé par le P
 jour. Plus aucune question ouverte. **Validé par le PO le 2026-09-25**, implémentation demandée
 le même jour.
 
+**Clôturé par le PO le 2026-09-27.**
+
 **Implémenté le 2026-09-25.** Base distante reconstruite le même jour avec l'accord du PO
 (seeds commités avant, `9bc7240`, rejoués après : comptages identiques à l'export). Vérifié :
 `flutter analyze --fatal-infos` sans remarque, 439 tests Flutter verts (dont l'analyseur

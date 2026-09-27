@@ -1165,6 +1165,285 @@ select 'import_links_spot_by_name',
 reset role;
 reset request.jwt.claims;
 
+-- ===== Plan 29: session natures =====
+-- The owner creates a training without scores at a free place: no scorecard, the tag kept, and
+-- the organizer is its first attendee.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+select create_session(jsonb_build_object('tags', jsonb_build_array('training', 'training'),
+  'kind', 'individual', 'zone', 'Smoke gym', 'city', 'Smoketown',
+  'location', jsonb_build_object('lat', 48.82, 'lng', 2.32), 'comment', 'plan29 training'));
+insert into test_results (test, passed)
+select 'no_scores_session_created',
+  exists (
+    select 1 from sessions s
+    join team_players tp on tp.session_id = s.id
+    join players p on p.id = tp.player_id and p.user_id = s.owner_id
+    where s.comment = 'plan29 training' and s.scoring_mode is null and s.kind is null
+      and s.ranking_direction is null and s.tags = '{training}' and s.zone = 'Smoke gym'
+      and s.spot_id is null and round(s.location_lat::numeric, 2) = 48.82
+  );
+do $$
+begin
+  perform create_session('{"zone": "Nowhere"}'::jsonb);
+  insert into test_results (test, passed) values ('session_needs_a_nature', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('session_needs_a_nature', sqlerrm like '%sessions_has_nature%');
+end $$;
+do $$
+begin
+  perform create_session('{"tags": ["association_life"]}'::jsonb);
+  insert into test_results (test, passed) values ('no_scores_session_needs_a_place', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('no_scores_session_needs_a_place', sqlerrm = 'spot_required');
+end $$;
+-- A scorecard still needs a spot, even with a place name.
+do $$
+begin
+  perform create_session('{"kind": "individual", "scoring_mode": "stroke_play",
+    "ranking_direction": "asc", "zone": "Nowhere"}'::jsonb);
+  insert into test_results (test, passed) values ('scored_session_needs_a_spot', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('scored_session_needs_a_spot', sqlerrm = 'spot_required');
+end $$;
+-- A scored training and a scored simulator session on the association's spot.
+select create_session(jsonb_build_object('kind', 'individual', 'scoring_mode', 'stroke_play',
+  'ranking_direction', 'asc', 'tags', jsonb_build_array('training'),
+  'spot_id', (select id from spots where name = 'Quick spot' and association_id = 'c0000000-0000-0000-0000-000000000001'),
+  'comment', 'plan29 scored training'));
+select create_session(jsonb_build_object('kind', 'individual', 'scoring_mode', 'stroke_play',
+  'ranking_direction', 'asc', 'tags', jsonb_build_array('simulator'),
+  'spot_id', (select id from spots where name = 'Quick spot' and association_id = 'c0000000-0000-0000-0000-000000000001'),
+  'comment', 'plan29 simulator'));
+reset role;
+reset request.jwt.claims;
+
+create table test_p29 as
+select
+  (select id from sessions where comment = 'plan29 training') as training,
+  (select code from sessions where comment = 'plan29 training') as training_code,
+  (select id from sessions where comment = 'plan29 scored training') as scored_training,
+  (select id from sessions where comment = 'plan29 simulator') as simulator;
+grant select on test_p29 to authenticated;
+
+-- Attendees: added by the organizer, or by code, they're on the single team; the organizer may
+-- step out of it and stay the organizer.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+insert into session_members (session_id, user_id, role)
+select training, 'a0000000-0000-0000-0000-000000000002', 'player' from test_p29;
+reset role;
+reset request.jwt.claims;
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000003","role":"authenticated"}';
+select join_session((select training_code from test_p29));
+reset role;
+reset request.jwt.claims;
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+update session_members set team_id = null
+where session_id = (select training from test_p29) and user_id = 'a0000000-0000-0000-0000-000000000001';
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'no_scores_attendees_on_single_team',
+  (select count(*) from team_players where session_id = (select training from test_p29)) = 2
+  and (select count(*) from teams where session_id = (select training from test_p29)) = 1
+  and exists (
+    select 1 from team_players tp join players p on p.id = tp.player_id
+    where tp.session_id = (select training from test_p29)
+      and p.user_id = 'a0000000-0000-0000-0000-000000000003'
+  )
+  and exists (
+    select 1 from session_members
+    where session_id = (select training from test_p29)
+      and user_id = 'a0000000-0000-0000-0000-000000000001' and role = 'owner' and team_id is null
+  );
+
+-- Completed straight from the draft; its tags stay free for the organizer, never all removed.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+update sessions set status = 'completed', started_at = now(), ended_at = now()
+where id = (select training from test_p29);
+select set_session_tags((select training from test_p29), '{simulator,association_life}');
+insert into test_results (test, passed)
+select 'no_scores_tags_free',
+  (select tags from sessions where id = (select training from test_p29))
+    = '{simulator,association_life}'::session_tag[];
+do $$
+begin
+  perform set_session_tags((select training from test_p29), '{}');
+  insert into test_results (test, passed) values ('no_scores_keeps_a_tag', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('no_scores_keeps_a_tag', sqlerrm = 'session_nature_required');
+end $$;
+
+-- The scorecard and "simulator" with a scorecard are frozen.
+do $$
+begin
+  update sessions set scoring_mode = 'match_play', ranking_direction = 'desc'
+  where id = (select scored_training from test_p29);
+  insert into test_results (test, passed) values ('scorecard_frozen', false);
+exception when others then
+  insert into test_results (test, passed) values ('scorecard_frozen', sqlerrm = 'session_nature_frozen');
+end $$;
+do $$
+begin
+  perform set_session_tags((select simulator from test_p29), '{}');
+  insert into test_results (test, passed) values ('scored_simulator_frozen', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('scored_simulator_frozen', sqlerrm = 'session_nature_frozen');
+end $$;
+-- A simulator session plays free holes only.
+do $$
+begin
+  perform add_played_hole((select simulator from test_p29), (select private_hole from test_ids),
+    'individual');
+  insert into test_results (test, passed) values ('simulator_free_holes_only', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('simulator_free_holes_only', sqlerrm = 'simulator_free_holes_only');
+end $$;
+-- "Training" with a scorecard: the organizer until the session is completed...
+select set_session_tags((select scored_training from test_p29), '{}');
+select set_session_tags((select scored_training from test_p29), '{training}');
+update sessions set status = 'completed', started_at = now(), ended_at = now()
+where id = (select scored_training from test_p29);
+do $$
+begin
+  perform set_session_tags((select scored_training from test_p29), '{}');
+  insert into test_results (test, passed) values ('scored_training_locked_for_organizer', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('scored_training_locked_for_organizer', sqlerrm = 'session_tag_locked');
+end $$;
+reset role;
+reset request.jwt.claims;
+-- ...the local manager at any time; never on a championship session.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000009","role":"authenticated"}';
+do $$
+begin
+  perform set_session_championship((select scored_training from test_p29), true);
+  insert into test_results (test, passed) values ('training_not_championship', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('training_not_championship', sqlerrm = 'not_game_session');
+end $$;
+select set_session_tags((select scored_training from test_p29), '{association_life}');
+select set_session_championship((select scored_training from test_p29), true);
+do $$
+begin
+  perform set_session_tags((select scored_training from test_p29), '{training}');
+  insert into test_results (test, passed) values ('championship_refuses_training', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('championship_refuses_training', sqlerrm = 'championship_session');
+end $$;
+select set_session_report((select training from test_p29), '  Great session  ');
+insert into test_results (test, passed)
+select 'staff_edits_tags_and_report',
+  (select tags = '{association_life}' and is_championship from sessions
+   where id = (select scored_training from test_p29))
+  and (select comment from sessions where id = (select training from test_p29)) = 'Great session';
+reset role;
+reset request.jwt.claims;
+-- Someone else changes neither.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000004","role":"authenticated"}';
+do $$
+begin
+  perform set_session_tags((select training from test_p29), '{training}');
+  insert into test_results (test, passed) values ('outsider_cannot_tag', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('outsider_cannot_tag', sqlerrm = 'not_session_manager');
+end $$;
+reset role;
+reset request.jwt.claims;
+
+-- ===== Plan 31: one form to create and edit a session =====
+-- A session entered afterwards keeps its past start and end, even once started; never a future
+-- start.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+select create_session(jsonb_build_object('tags', jsonb_build_array('association_life'),
+  'zone', 'Smoke hall', 'title', '  General assembly  ', 'comment', 'plan31 past',
+  'started_at', now() - interval '10 days', 'ended_at', now() - interval '10 days' + interval '2 hours'));
+select start_session((select id from sessions where comment = 'plan31 past'));
+insert into test_results (test, passed)
+select 'past_session_keeps_its_dates',
+  (select title = 'General assembly' and status = 'live'
+     and started_at < now() - interval '9 days'
+     and ended_at - started_at = interval '2 hours'
+   from sessions where comment = 'plan31 past');
+do $$
+begin
+  perform create_session(jsonb_build_object('tags', jsonb_build_array('training'),
+    'zone', 'Future hall', 'started_at', now() + interval '1 day'));
+  insert into test_results (test, passed) values ('no_future_start', false);
+exception when others then
+  insert into test_results (test, passed) values ('no_future_start', sqlerrm = 'invalid_schedule');
+end $$;
+-- The organizer edits name, place, dates, tags and report in one call.
+select update_session((select training from test_p29), jsonb_build_object(
+  'title', 'Putting clinic', 'comment', 'Edited report',
+  'tags', jsonb_build_array('training'),
+  'place', jsonb_build_object('zone', 'Other gym', 'city', 'Othercity',
+    'location', jsonb_build_object('lat', 48.9, 'lng', 2.4)),
+  'started_at', now() - interval '3 days', 'ended_at', now() - interval '3 days' + interval '1 hour'));
+insert into test_results (test, passed)
+select 'organizer_edits_everything',
+  (select title = 'Putting clinic' and comment = 'Edited report' and tags = '{training}'
+     and zone = 'Other gym' and city = 'Othercity' and spot_id is null
+     and round(location_lat::numeric, 1) = 48.9 and started_at < now() - interval '2 days'
+   from sessions where id = (select training from test_p29));
+-- A session with a scorecard keeps a spot; the scorecard itself never changes.
+do $$
+begin
+  perform update_session((select scored_training from test_p29),
+    '{"place": {"zone": "Somewhere"}}'::jsonb);
+  insert into test_results (test, passed) values ('scored_session_keeps_a_spot', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('scored_session_keeps_a_spot', sqlerrm = 'spot_required');
+end $$;
+do $$
+begin
+  perform update_session((select training from test_p29),
+    jsonb_build_object('started_at', now() - interval '1 hour', 'ended_at', now() - interval '2 hours'));
+  insert into test_results (test, passed) values ('edit_end_after_start', false);
+exception when others then
+  insert into test_results (test, passed) values ('edit_end_after_start', sqlerrm = 'invalid_schedule');
+end $$;
+reset role;
+reset request.jwt.claims;
+-- The local manager changes tags and report, not the name, place or dates (Q209).
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000009","role":"authenticated"}';
+select update_session((select training from test_p29),
+  '{"tags": ["training", "association_life"], "comment": "Staff report"}'::jsonb);
+do $$
+begin
+  perform update_session((select training from test_p29), '{"title": "Staff title"}'::jsonb);
+  insert into test_results (test, passed) values ('staff_cannot_rename', false);
+exception when others then
+  insert into test_results (test, passed) values ('staff_cannot_rename', sqlerrm = 'not_session_owner');
+end $$;
+insert into test_results (test, passed)
+select 'staff_edits_tags_and_report_in_form',
+  (select tags = '{training,association_life}' and comment = 'Staff report'
+     and title = 'Putting clinic'
+   from sessions where id = (select training from test_p29));
+reset role;
+reset request.jwt.claims;
+drop table test_p29;
+
 -- ===== Verdict =====
 select * from test_results order by n;
 

@@ -4,7 +4,7 @@
 
 Plan rédigé le 2026-09-26, à la suite du plantage de la liste des trous sur iPhone (vidéo du
 PO du même jour). **Validé par le PO le 2026-09-26** (Q201 à Q203 tranchées) ; implémentation
-demandée le même jour.
+demandée le même jour. **Clôturé par le PO le 2026-09-27.**
 
 **Code écrit et poussé sur `main` le 2026-09-26 à la demande du PO, avant son essai (il essaie en local).** Vérifié : `flutter analyze --fatal-infos`
 sans remarque (script compris), 469 tests Flutter verts (dont les nouveaux : taille et chemin de

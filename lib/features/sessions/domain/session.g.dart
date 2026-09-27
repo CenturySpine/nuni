@@ -11,14 +11,21 @@ _Session _$SessionFromJson(Map<String, dynamic> json) => _Session(
   code: json['code'] as String,
   ownerId: json['owner_id'] as String,
   status: $enumDecode(_$SessionStatusEnumMap, json['status']),
-  kind: $enumDecode(_$SessionKindEnumMap, json['kind']),
-  scoringMode: $enumDecode(_$ScoringModeEnumMap, json['scoring_mode']),
-  rankingDirection: $enumDecode(
+  kind: $enumDecodeNullable(_$SessionKindEnumMap, json['kind']),
+  scoringMode: $enumDecodeNullable(_$ScoringModeEnumMap, json['scoring_mode']),
+  rankingDirection: $enumDecodeNullable(
     _$RankingDirectionEnumMap,
     json['ranking_direction'],
   ),
+  tags:
+      (json['tags'] as List<dynamic>?)
+          ?.map((e) => $enumDecode(_$SessionTagEnumMap, e))
+          .toList() ??
+      const <SessionTag>[],
+  title: json['title'] as String?,
   city: json['city'] as String?,
   zone: json['zone'] as String?,
+  spotId: json['spot_id'] as String?,
   locationLat: (json['location_lat'] as num?)?.toDouble(),
   locationLng: (json['location_lng'] as num?)?.toDouble(),
   weather: json['weather'] == null
@@ -44,11 +51,14 @@ Map<String, dynamic> _$SessionToJson(_Session instance) => <String, dynamic>{
   'code': instance.code,
   'owner_id': instance.ownerId,
   'status': _$SessionStatusEnumMap[instance.status]!,
-  'kind': _$SessionKindEnumMap[instance.kind]!,
-  'scoring_mode': _$ScoringModeEnumMap[instance.scoringMode]!,
-  'ranking_direction': _$RankingDirectionEnumMap[instance.rankingDirection]!,
+  'kind': _$SessionKindEnumMap[instance.kind],
+  'scoring_mode': _$ScoringModeEnumMap[instance.scoringMode],
+  'ranking_direction': _$RankingDirectionEnumMap[instance.rankingDirection],
+  'tags': instance.tags.map((e) => _$SessionTagEnumMap[e]!).toList(),
+  'title': instance.title,
   'city': instance.city,
   'zone': instance.zone,
+  'spot_id': instance.spotId,
   'location_lat': instance.locationLat,
   'location_lng': instance.locationLng,
   'weather': instance.weather,
@@ -84,4 +94,10 @@ const _$ScoringModeEnumMap = {
 const _$RankingDirectionEnumMap = {
   RankingDirection.asc: 'asc',
   RankingDirection.desc: 'desc',
+};
+
+const _$SessionTagEnumMap = {
+  SessionTag.training: 'training',
+  SessionTag.simulator: 'simulator',
+  SessionTag.associationLife: 'association_life',
 };

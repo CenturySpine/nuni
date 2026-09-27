@@ -11,6 +11,8 @@ import '../../../shared/nuni_logo.dart';
 import '../../history/domain/history_entry.dart';
 import '../../live/domain/live_team.dart';
 import '../../sessions/ui/scoring_mode_label.dart';
+import '../../sessions/ui/session_nature.dart';
+import '../../stats/domain/eligible_session.dart';
 
 /// The "carte de résultats" (plan 10, Q16 -- both variants kept): a square
 /// share card on the app's own themed background, or -- on a chosen photo --
@@ -58,8 +60,7 @@ class ResultsCard extends StatelessWidget {
     final cardHeight = onPhoto ? 1080.0 / ratio : 1080.0;
 
     final subtitleParts = [
-      if (session.city != null && session.city!.isNotEmpty) session.city!,
-      if (session.zone != null && session.zone!.isNotEmpty) session.zone!,
+      sessionHeading(session),
       if (session.startedAt != null)
         DateFormat.yMMMd(locale).format(session.startedAt!),
     ];
@@ -106,14 +107,20 @@ class ResultsCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        subtitleParts.isEmpty
-                            ? session.code
-                            : subtitleParts.join(' · '),
+                        subtitleParts.join(' · '),
                         style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(color: foreground),
                       ),
                       Text(
-                        scoringModeLabel(l10n, session.scoringMode),
+                        [
+                          // The place, when the name is the title (plan 31).
+                          ?sessionSubheading(session),
+                          // Without a scorecard, its natures (plan 29).
+                          if (session.scoringMode case final mode?)
+                            scoringModeLabel(l10n, mode)
+                          else
+                            sessionNatureLabels(l10n, session).join(' · '),
+                        ].join(' · '),
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(
                               color: foreground.withValues(alpha: 0.9),
@@ -152,6 +159,14 @@ class ResultsCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (!session.hasScoring)
+                  Text(
+                    l10n.sessionsAttendeesCount(
+                      sessionPlayerCount(entry.snapshot),
+                    ),
+                    style: Theme.of(context).textTheme.titleLarge
+                        ?.copyWith(color: foreground),
+                  ),
                 for (final standing in entry.standings.take(5))
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6),

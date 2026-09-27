@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -34,10 +36,12 @@ import '../../live/ui/ranking_card.dart';
 import '../../sessions/data/sessions_repository.dart';
 import '../../sessions/ui/championship_toggle.dart';
 import '../../sessions/ui/scoring_mode_label.dart';
+import '../../sessions/ui/session_nature.dart';
+import '../../sessions/ui/session_nature_rules.dart';
+import '../../stats/domain/eligible_session.dart';
 import '../data/history_repository.dart';
 import '../domain/history_entry.dart';
 import 'photo_gallery.dart';
-import 'session_edit_sheet.dart';
 
 /// `/history/:id` (plan 10): the same components as the live screen
 /// (`RankingCard`, `PlayedHoleCard`), read-only, plus the gallery and the
@@ -84,9 +88,10 @@ class _DetailView extends ConsumerWidget {
   final String sessionId;
   final HistoryEntry entry;
 
-  Future<void> _edit(BuildContext context, WidgetRef ref) async {
-    await showSessionEditSheet(context, entry.snapshot.session);
-  }
+  /// The session form (plan 31), for the organizer and the association's
+  /// staff; it refreshes what depends on the session itself.
+  void _edit(BuildContext context) =>
+      unawaited(context.push('/session/$sessionId/edit'));
 
   /// Par and comment of a played hole (plan 26, Q121), organizer only.
   Future<void> _editPlayedHole(
@@ -184,18 +189,16 @@ class _DetailView extends ConsumerWidget {
         associationId != null &&
         (ref.watch(canTagChampionshipProvider(associationId)).value ?? false);
 
-    final subtitleParts = [
-      if (session.city != null && session.city!.isNotEmpty) session.city!,
-      if (session.zone != null && session.zone!.isNotEmpty) session.zone!,
-    ];
-
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
       children: [
         Text(
-          subtitleParts.isEmpty ? session.code : subtitleParts.join(' · '),
+          sessionHeading(session),
           style: Theme.of(context).textTheme.headlineSmall,
         ),
+        // The place, under the session's name (plan 31).
+        if (sessionSubheading(session) case final place?)
+          Text(place, style: Theme.of(context).textTheme.titleSmall),
         if (session.startedAt != null) ...[
           const SizedBox(height: 2),
           Text(
@@ -206,52 +209,68 @@ class _DetailView extends ConsumerWidget {
           ),
         ],
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            NuniStatusPill(label: scoringModeLabel(l10n, session.scoringMode)),
-            if (session.isChampionship)
-              NuniStatusPill(
-                label: l10n.championshipTitle,
-                icon: PhosphorIcons.crown,
-                tone: NuniTone.sunshine,
+            Expanded(
+              child: SessionNaturePills(
+                session: session,
+                trailing: [
+                  if (session.hasScoring)
+                    NuniStatusPill(
+                      label: scoringModeLabel(l10n, session.scoringMode!),
+                      tone: NuniTone.neutral,
+                    ),
+                  if (session.weather != null)
+                    NuniStatusPill(
+                      label: '${session.weather!.temperatureC.round()}°C',
+                      icon: weatherIcon(session.weather!.code),
+                      tone: NuniTone.neutral,
+                    ),
+                ],
               ),
-            if (session.weather != null)
-              NuniStatusPill(
-                label: '${session.weather!.temperatureC.round()}°C',
-                icon: weatherIcon(session.weather!.code),
-                tone: NuniTone.neutral,
+            ),
+            // The organizer or the association's staff (plan 29, Q191).
+            if (isOwner || canTagChampionship)
+              IconButton(
+                icon: const Icon(PhosphorIcons.pencilSimple, size: 20),
+                tooltip: l10n.historyEditTitle,
+                visualDensity: VisualDensity.compact,
+                onPressed: () => _edit(context),
               ),
           ],
         ),
-        if (session.comment != null && session.comment!.isNotEmpty) ...[
-          const SizedBox(height: 14),
-          NuniCard(
-            color: context.nuni.surfaceMuted,
-            child: Text(
-              session.comment!,
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(fontStyle: FontStyle.italic),
-            ),
-          ),
-        ],
+        const SizedBox(height: 14),
+        SessionReportCard(
+          report: session.comment,
+          onEdit: isOwner || canTagChampionship ? () => _edit(context) : null,
+        ),
         if (canTagChampionship) ...[
           const SizedBox(height: 14),
           NuniCard(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: ChampionshipToggle(
               value: session.isChampionship,
-              onChanged: (value) => _toggleChampionship(context, ref, value),
+              // Only a game counts (plan 29).
+              onChanged: !isGameSession(session) && !session.isChampionship
+                  ? null
+                  : (value) => _toggleChampionship(context, ref, value),
+              subtitle: isGameSession(session)
+                  ? null
+                  : l10n.sessionsChampionshipGameOnly,
             ),
           ),
         ],
         const SizedBox(height: 20),
-        RankingCard(
-          session: session,
-          teams: entry.snapshot.teams,
-          playedHoles: playedHoles,
-        ),
+        // No scorecard (plan 29): who attended, no ranking nor holes.
+        if (!session.hasScoring)
+          _AttendeesCard(teams: entry.snapshot.teams)
+        else
+          RankingCard(
+            session: session,
+            teams: entry.snapshot.teams,
+            playedHoles: playedHoles,
+          ),
         if (session.isChampionship) ...[
           const SizedBox(height: 12),
           _ChampionshipPointsCard(
@@ -275,7 +294,7 @@ class _DetailView extends ConsumerWidget {
             child: PlayedHoleCard(
               playedHole: playedHole,
               teams: entry.snapshot.teams,
-              scoringMode: session.scoringMode,
+              scoringMode: session.scoringMode!,
               canEditTeam: (_) => false,
               onScoreSubmit: (_, _, _) async {},
               onEdit: isOwner
@@ -292,26 +311,30 @@ class _DetailView extends ConsumerWidget {
         const SizedBox(height: 28),
         NuniGroupedList(
           children: [
-            _ActionTile(
-              icon: PhosphorIcons.filePdf,
-              label: l10n.historyExportPdfAction,
-              onTap: () => exportSessionPdf(
-                context,
-                entry,
-                photoUrl: ref.read(historyRepositoryProvider).photoUrl,
+            // A scorecard, so none without one (plan 29).
+            if (session.hasScoring)
+              _ActionTile(
+                icon: PhosphorIcons.filePdf,
+                label: l10n.historyExportPdfAction,
+                onTap: () => exportSessionPdf(
+                  context,
+                  entry,
+                  photoUrl: ref.read(historyRepositoryProvider).photoUrl,
+                ),
               ),
-            ),
             _ActionTile(
               icon: PhosphorIcons.imageSquare,
               label: l10n.historyExportImageAction,
               onTap: () => showImageExportDialog(context, entry),
             ),
-            if (isOwner) ...[
+            // The staff edits too, within its rights (plan 31, Q209).
+            if (isOwner || canTagChampionship)
               _ActionTile(
                 icon: PhosphorIcons.pencilSimple,
                 label: l10n.historyEditAction,
-                onTap: () => _edit(context, ref),
+                onTap: () => _edit(context),
               ),
+            if (isOwner) ...[
               _ActionTile(
                 icon: PhosphorIcons.trash,
                 label: l10n.sessionsRoomDeleteSession,
@@ -420,6 +443,59 @@ class _ChampionshipPointsCard extends StatelessWidget {
                   ],
                 ),
               ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Who attended a session without scorecard (plan 29): the players of its
+/// single team.
+class _AttendeesCard extends StatelessWidget {
+  const _AttendeesCard({required this.teams});
+
+  final List<LiveTeam> teams;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final names = [
+      for (final team in teams)
+        for (final player in team.players) player.name,
+    ]..sort();
+    return NuniCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const NuniIconTile(
+                icon: PhosphorIcons.users,
+                tone: NuniTone.fairway,
+                size: 36,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  l10n.sessionsAttendeesTitle,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              NuniStatusPill(label: '${names.length}', tone: NuniTone.neutral),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (names.isEmpty)
+            Text(l10n.sessionsAttendeesEmpty)
+          else
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final name in names)
+                  NuniStatusPill(label: name, tone: NuniTone.neutral),
+              ],
+            ),
         ],
       ),
     );

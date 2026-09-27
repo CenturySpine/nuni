@@ -40,10 +40,11 @@ class _RankingCardState extends State<RankingCard> {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final mode = widget.session.scoringMode;
+    // Only shown for a session with a scorecard (plan 29).
+    final mode = widget.session.scoringMode!;
     final standings = computeStandings(
       scoringMode: mode,
-      rankingDirection: widget.session.rankingDirection,
+      rankingDirection: widget.session.rankingDirection!,
       teams: widget.teams,
       playedHoles: widget.playedHoles,
     );

@@ -19,7 +19,10 @@ import '../../live/domain/live_team.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../sessions/domain/session_kind.dart';
 import '../../sessions/ui/scoring_mode_label.dart';
-import '../../sessions/ui/session_kind_label.dart';
+import '../../sessions/domain/session.dart';
+import '../../sessions/domain/session_tag.dart';
+import '../../sessions/ui/session_nature.dart';
+import '../../stats/domain/eligible_session.dart';
 import '../data/history_repository.dart';
 import '../domain/history_entry.dart';
 import '../../../shared/nuni_photo_thumbnail.dart';
@@ -36,9 +39,39 @@ class HistoryPage extends ConsumerStatefulWidget {
   ConsumerState<HistoryPage> createState() => _HistoryPageState();
 }
 
+/// The history's filter by pill (plan 29).
+enum _NatureFilter {
+  course,
+  training,
+  simulator,
+  associationLife,
+  championship,
+}
+
+bool _hasNature(Session session, _NatureFilter filter) => switch (filter) {
+  _NatureFilter.course => session.hasScoring,
+  _NatureFilter.training => session.hasTag(SessionTag.training),
+  _NatureFilter.simulator => session.hasTag(SessionTag.simulator),
+  _NatureFilter.associationLife => session.hasTag(SessionTag.associationLife),
+  _NatureFilter.championship => session.isChampionship,
+};
+
 class _HistoryPageState extends ConsumerState<HistoryPage> {
   String? _cityFilter;
   bool _mineOnly = false;
+  _NatureFilter? _natureFilter;
+
+  String _natureLabel(AppLocalizations l10n, _NatureFilter filter) =>
+      switch (filter) {
+        _NatureFilter.course => l10n.sessionNatureCourse,
+        _NatureFilter.training => sessionTagLabel(l10n, SessionTag.training),
+        _NatureFilter.simulator => sessionTagLabel(l10n, SessionTag.simulator),
+        _NatureFilter.associationLife => sessionTagLabel(
+          l10n,
+          SessionTag.associationLife,
+        ),
+        _NatureFilter.championship => l10n.championshipTitle,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +105,9 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           for (final e in entries)
             if ((_cityFilter == null ||
                     e.snapshot.session.city == _cityFilter) &&
-                (!_mineOnly || e.playedBy(myPlayerId)))
+                (!_mineOnly || e.playedBy(myPlayerId)) &&
+                (_natureFilter == null ||
+                    _hasNature(e.snapshot.session, _natureFilter!)))
               e,
         ];
 
@@ -88,6 +123,17 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                   selected: _mineOnly,
                   onTap: () => setState(() => _mineOnly = !_mineOnly),
                 ),
+                // One pill at a time; tapping it again shows everything.
+                for (final filter in _NatureFilter.values)
+                  NuniChip(
+                    label: _natureLabel(l10n, filter),
+                    selected: _natureFilter == filter,
+                    onTap: () => setState(
+                      () => _natureFilter = _natureFilter == filter
+                          ? null
+                          : filter,
+                    ),
+                  ),
               ],
             ),
             const SizedBox(height: 10),
@@ -144,11 +190,6 @@ class _HistoryCard extends ConsumerWidget {
     final teamById = {for (final t in entry.snapshot.teams) t.id: t};
     final leaders = entry.leaders;
 
-    final subtitleParts = [
-      if (session.city != null && session.city!.isNotEmpty) session.city!,
-      if (session.zone != null && session.zone!.isNotEmpty) session.zone!,
-    ];
-
     final textTheme = Theme.of(context).textTheme;
 
     return NuniCard(
@@ -173,7 +214,9 @@ class _HistoryCard extends ConsumerWidget {
             )
           else
             NuniIconTile(
-              icon: session.kind == SessionKind.team
+              icon: !session.hasScoring && session.tags.isNotEmpty
+                  ? sessionTagIcon(session.tags.first)
+                  : session.kind == SessionKind.team
                   ? PhosphorIcons.users
                   : PhosphorIcons.golf,
               tone: session.kind == SessionKind.team
@@ -190,9 +233,7 @@ class _HistoryCard extends ConsumerWidget {
                   children: [
                     Flexible(
                       child: Text(
-                        subtitleParts.isEmpty
-                            ? session.code
-                            : subtitleParts.join(' · '),
+                        sessionHeading(session),
                         style: textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -216,11 +257,23 @@ class _HistoryCard extends ConsumerWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${session.startedAt == null ? '' : DateFormat.yMMMd(locale).format(session.startedAt!.toLocal())} · '
-                  '${sessionKindLabel(l10n, session.kind)} · '
-                  '${scoringModeLabel(l10n, session.scoringMode)}',
+                  [
+                    if (session.startedAt != null)
+                      DateFormat.yMMMd(locale)
+                          .format(session.startedAt!.toLocal()),
+                    // The place, when the name is the title (plan 31).
+                    ?sessionSubheading(session),
+                    if (session.scoringMode case final mode?)
+                      scoringModeLabel(l10n, mode)
+                    else
+                      l10n.sessionsAttendeesCount(
+                        sessionPlayerCount(entry.snapshot),
+                      ),
+                  ].join(' · '),
                   style: textTheme.bodySmall,
                 ),
+                const SizedBox(height: 6),
+                SessionNaturePills(session: session),
                 if (leaders.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Row(

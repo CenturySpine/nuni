@@ -211,6 +211,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             SessionRoomPage(sessionId: state.pathParameters['id']!),
       ),
+      // The creation form, filled in (plan 31).
+      GoRoute(
+        path: '/session/:id/edit',
+        builder: (context, state) =>
+            SessionCreatePage(sessionId: state.pathParameters['id']!),
+      ),
       GoRoute(
         path: '/history/:id',
         builder: (context, state) =>

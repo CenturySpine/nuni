@@ -26,6 +26,7 @@ import '../../players/data/players_repository.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../profile/domain/player.dart';
 import '../../sessions/domain/session.dart';
+import '../../sessions/ui/session_nature.dart';
 import '../data/events_repository.dart';
 import '../data/planning_rights.dart';
 import '../domain/event.dart';
@@ -450,7 +451,7 @@ class _SessionsBlock extends ConsumerWidget {
           for (final session in sessions) ...[
             NuniListCard(
               leading: const Icon(PhosphorIcons.golf),
-              title: session.zone ?? session.city ?? session.code,
+              title: sessionHeading(session),
               subtitle: session.code,
               onTap: () => context.push(
                 session.status == SessionStatus.completed

@@ -156,10 +156,13 @@ set search_path = public
 as $$
 declare
   v_status session_status;
+  v_scoring scoring_mode;
 begin
   if new.team_id is distinct from old.team_id then
-    select status into v_status from sessions where id = new.session_id;
-    if v_status <> 'draft' then
+    select status, scoring_mode into v_status, v_scoring from sessions where id = new.session_id;
+    -- A session without scores (plan 29) has no teams to freeze: its single team is its list of
+    -- attendees, editable while it isn't completed (session_members_owner_update).
+    if v_status <> 'draft' and v_scoring is not null then
       raise exception 'teams_frozen_after_start' using errcode = 'P0001';
     end if;
   end if;
@@ -170,6 +173,73 @@ $$;
 create trigger session_members_guard_frozen_teams_trigger
   before update on session_members
   for each row execute function session_members_guard_frozen_teams();
+
+-- Attendees of a session without scores (plan 29, Q194): the players of its single team, created
+-- with the session (create_session). Whoever joins it -- added by the organizer, by code, from
+-- the event's "present" answers, or the organizer themself at creation -- is placed on that team
+-- straight away. Only for a signed-in write: a seed replay carries its own team_id, and an
+-- organizer who left the attendees keeps team_id null.
+create or replace function session_members_place_attendee()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if new.team_id is null and auth.uid() is not null then
+    select t.id into new.team_id
+    from sessions s
+    join teams t on t.session_id = s.id
+    where s.id = new.session_id and s.scoring_mode is null
+    order by t.position
+    limit 1;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger session_members_place_attendee_trigger
+  before insert on session_members
+  for each row execute function session_members_place_attendee();
+
+-- Keeps the single team's players in step with its members' team_id in a session without scores
+-- (plan 29): a member placed on the team is an attendee, one taken off it or removed is not.
+-- security definer: team_players is otherwise writable by the owner in draft only, while the
+-- attendees change until the session is completed, including through join_session.
+create or replace function session_members_sync_attendance()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_session_id uuid := case when tg_op = 'DELETE' then old.session_id else new.session_id end;
+  v_user_id uuid := case when tg_op = 'DELETE' then old.user_id else new.user_id end;
+  v_player_id uuid;
+begin
+  if not exists (select 1 from sessions where id = v_session_id and scoring_mode is null) then
+    return null;
+  end if;
+  select id into v_player_id from players where user_id = v_user_id;
+  if v_player_id is null then
+    return null;
+  end if;
+
+  if tg_op <> 'INSERT' and old.team_id is not null
+    and (tg_op = 'DELETE' or new.team_id is distinct from old.team_id) then
+    delete from team_players where team_id = old.team_id and player_id = v_player_id;
+  end if;
+  if tg_op <> 'DELETE' and new.team_id is not null
+    and (tg_op = 'INSERT' or new.team_id is distinct from old.team_id) then
+    insert into team_players (team_id, player_id) values (new.team_id, v_player_id)
+    on conflict do nothing;
+  end if;
+  return null;
+end;
+$$;
+
+create trigger session_members_sync_attendance_trigger
+  after insert or update of team_id or delete on session_members
+  for each row execute function session_members_sync_attendance();
 
 -- Denormalized session_id (Q35, plan 08): populated from the parent row so scores and
 -- team_players can be realtime-filtered by session_id like teams/played_holes already are.
@@ -545,6 +615,64 @@ create trigger sessions_tc_copy_spot_trigger
   before insert or update on sessions
   for each row execute function sessions_copy_spot();
 
+-- A session's natures after its creation (plan 29, Q193, Q197), whoever writes (the organizer's
+-- own update, or set_session_tags for the staff). Nothing depending on them is stored, so a change
+-- breaks no data; it only changes what the players see. Three kinds:
+--   - frozen: the scorecard (scoring mode, format, direction) and "simulator" on a session with a
+--     scorecard (it decides which holes are offered);
+--   - free: "association life", and "training" or "simulator" without a scorecard (badges L only);
+--   - sensitive: "training" on a session with a scorecard (it takes the session in or out of the
+--     statistics, records and badges A to K): the organizer until the session is completed, the
+--     local staff and super_admins at any time.
+-- No signed-in caller (seed replay): anything goes.
+create or replace function sessions_guard_nature()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  v_changed session_tag[];
+begin
+  if auth.uid() is null then
+    return new;
+  end if;
+  if new.scoring_mode is distinct from old.scoring_mode
+    or new.kind is distinct from old.kind
+    or new.ranking_direction is distinct from old.ranking_direction then
+    raise exception 'session_nature_frozen' using errcode = 'P0001';
+  end if;
+
+  -- Tags added or removed.
+  select coalesce(array_agg(t), '{}') into v_changed
+  from (
+    (select unnest(new.tags) except select unnest(old.tags))
+    union
+    (select unnest(old.tags) except select unnest(new.tags))
+  ) changed(t);
+
+  if old.scoring_mode is not null then
+    if 'simulator' = any (v_changed) then
+      raise exception 'session_nature_frozen' using errcode = 'P0001';
+    end if;
+    if 'training' = any (v_changed)
+      and old.status = 'completed'
+      and not is_super_admin()
+      and not is_association_staff(old.association_id) then
+      raise exception 'session_tag_locked' using errcode = 'P0001';
+    end if;
+  end if;
+  -- Clearer than the sessions_championship_game check failing: untag the championship first.
+  if new.is_championship and new.tags && array['training', 'simulator']::session_tag[] then
+    raise exception 'championship_session' using errcode = 'P0001';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger sessions_td_guard_nature_trigger
+  before update on sessions
+  for each row execute function sessions_guard_nature();
+
 -- A renamed or moved spot shows its new name, city and point everywhere it's used (Q182): its
 -- sessions and events are rewritten, their own triggers above recopying from the spot. A deleted
 -- spot leaves them their last copy (on delete set null). security definer: the staff member
@@ -595,4 +723,7 @@ revoke execute on function event_responses_guard() from public, authenticated;
 revoke execute on function event_comments_guard_update() from public, authenticated;
 revoke execute on function sessions_guard_event() from public, authenticated;
 revoke execute on function sessions_copy_spot() from public, authenticated;
+revoke execute on function sessions_guard_nature() from public, authenticated;
+revoke execute on function session_members_place_attendee() from public, authenticated;
+revoke execute on function session_members_sync_attendance() from public, authenticated;
 revoke execute on function spots_propagate() from public, authenticated;

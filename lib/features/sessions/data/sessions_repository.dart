@@ -18,6 +18,7 @@ import '../domain/session.dart';
 import '../domain/session_kind.dart';
 import '../domain/session_member.dart';
 import '../domain/session_room.dart';
+import '../domain/session_tag.dart';
 import '../domain/team.dart';
 import '../domain/team_composition.dart';
 
@@ -28,29 +29,50 @@ class SessionsRepository {
 
   final SupabaseClient _client;
 
+  /// Without a [scoringMode] (plan 29), the session has no scorecard: [kind]
+  /// and [rankingDirection] are ignored, [tags] must hold at least one tag,
+  /// and it may be held at a free place ([zone] with its point and city)
+  /// instead of a spot.
   Future<Session> create({
-    required SessionKind kind,
-    required ScoringMode scoringMode,
-    required RankingDirection rankingDirection,
-    required String spotId,
+    SessionKind? kind,
+    ScoringMode? scoringMode,
+    RankingDirection? rankingDirection,
+    Set<SessionTag> tags = const {},
+    String? spotId,
+    String? zone,
     String? city,
     double? lat,
     double? lng,
     String? eventId,
+    String? title,
+    String? comment,
+    DateTime? startedAt,
+    DateTime? endedAt,
   }) async {
     final payload = <String, Object?>{
-      'kind': kind.toPostgresValue(),
-      'scoring_mode': scoringMode.toPostgresValue(),
-      'ranking_direction': rankingDirection.name,
+      if (scoringMode != null) ...{
+        'kind': kind!.toPostgresValue(),
+        'scoring_mode': scoringMode.toPostgresValue(),
+        'ranking_direction': rankingDirection!.name,
+      },
+      'tags': [for (final tag in tags) tag.toPostgresValue()],
       // The association's spot (plan 28): the base copies its name and city
       // into the session's zone and city.
-      'spot_id': spotId,
+      'spot_id': ?spotId,
+      // A free place (plan 29, Q195), for a session without scorecard.
+      'zone': ?zone,
       // Only kept when the spot has no city of its own (Q186).
       'city': ?city,
       if (lat != null && lng != null) 'location': {'lat': lat, 'lng': lng},
       // Started from a planning event (plan 23, Q164): linked to it, and its
       // "present" members join the waiting room.
       'event_id': ?eventId,
+      // Plan 31: its name and report, and for a session entered afterwards
+      // (Q206) its past start and end.
+      'title': ?title,
+      'comment': ?comment,
+      'started_at': ?startedAt?.toUtc().toIso8601String(),
+      'ended_at': ?endedAt?.toUtc().toIso8601String(),
     };
     final row = await _client.rpc<Map<String, dynamic>>(
       'create_session',
@@ -76,6 +98,20 @@ class SessionsRepository {
     return Session.fromJson(row);
   }
 
+  /// The caller's role in a session, null when not a member (plan 31: the
+  /// form lets an organizer, co-organizers included, change everything).
+  Future<MemberRole?> myRole(String sessionId) async {
+    final row = await _client
+        .from('session_members')
+        .select('role')
+        .eq('session_id', sessionId)
+        .eq('user_id', _client.auth.currentUser!.id)
+        .maybeSingle();
+    return row == null
+        ? null
+        : memberRoleFromPostgresValue(row['role'] as String);
+  }
+
   /// Tags/untags a session for the championship (plan 26, decision 11):
   /// only a super_admin or the approved local manager of the session's
   /// association, at any time, played in or not -- the
@@ -92,6 +128,110 @@ class SessionsRepository {
       params: {'p_session_id': sessionId, 'p_value': isChampionship},
     );
     return Session.fromJson(row);
+  }
+
+  /// Replaces a session's tags (plan 29): the organizer, the association's
+  /// staff or a super_admin. The base refuses a frozen one
+  /// (`session_nature_frozen`), a training with scores after completion for
+  /// the organizer (`session_tag_locked`) and a training or simulator on a
+  /// championship session (`championship_session`).
+  Future<Session> setTags({
+    required String sessionId,
+    required Set<SessionTag> tags,
+  }) async {
+    final row = await _client.rpc<Map<String, dynamic>>(
+      'set_session_tags',
+      params: {
+        'p_session_id': sessionId,
+        'p_tags': [for (final tag in tags) tag.toPostgresValue()],
+      },
+    );
+    return Session.fromJson(row);
+  }
+
+  /// The session's report (plan 29, `sessions.comment`): the organizer, the
+  /// association's staff or a super_admin. Blank clears it.
+  Future<Session> setReport({
+    required String sessionId,
+    required String report,
+  }) async {
+    final row = await _client.rpc<Map<String, dynamic>>(
+      'set_session_report',
+      params: {'p_session_id': sessionId, 'p_report': report},
+    );
+    return Session.fromJson(row);
+  }
+
+  /// Puts a member of a session without scorecard among its attendees, or
+  /// takes them out, staying a member (plan 29): the organizer who didn't
+  /// come. The base keeps the single team's players in step.
+  Future<void> setAttending({
+    required String sessionId,
+    required String userId,
+    required String? teamId,
+  }) => _client
+      .from('session_members')
+      .update({'team_id': teamId})
+      .eq('session_id', sessionId)
+      .eq('user_id', userId);
+
+  /// Saves the session form in edit mode (plan 31, `update_session`): only
+  /// the fields given change -- [title], [comment] and [tags] as they are
+  /// (null clears the name or the report); the place when [placeChanged]
+  /// ([spotId], or a free place [zone] at [lat]/[lng] in [city]); and the
+  /// schedule when [startedAt] is given. The organizer may send everything,
+  /// the association's staff the tags and report only (Q209).
+  Future<Session> updateSession({
+    required String sessionId,
+    bool setTitle = false,
+    String? title,
+    bool setComment = false,
+    String? comment,
+    Set<SessionTag>? tags,
+    bool placeChanged = false,
+    String? spotId,
+    String? zone,
+    String? city,
+    double? lat,
+    double? lng,
+    DateTime? startedAt,
+    DateTime? endedAt,
+  }) async {
+    final payload = <String, Object?>{
+      if (setTitle) 'title': title,
+      if (setComment) 'comment': comment,
+      if (tags != null) 'tags': [for (final tag in tags) tag.toPostgresValue()],
+      if (placeChanged)
+        'place': {
+          'spot_id': ?spotId,
+          'zone': ?zone,
+          'city': ?city,
+          if (lat != null && lng != null) 'location': {'lat': lat, 'lng': lng},
+        },
+      if (startedAt != null) 'started_at': startedAt.toUtc().toIso8601String(),
+      if (endedAt != null) 'ended_at': endedAt.toUtc().toIso8601String(),
+    };
+    final row = await _client.rpc<Map<String, dynamic>>(
+      'update_session',
+      params: {'p_session_id': sessionId, 'payload': payload},
+    );
+    return Session.fromJson(row);
+  }
+
+  /// "End the session" for a session without scorecard (plan 29), allowed
+  /// straight from the draft for a logbook filled in afterwards: it gets a
+  /// start then, corrected later from the history if needed.
+  Future<void> finish(Session session) {
+    final now = DateTime.now().toUtc().toIso8601String();
+    return _client
+        .from('sessions')
+        .update({
+          'status': 'completed',
+          if (session.startedAt == null) 'started_at': now,
+          // An end typed in for a session entered afterwards (plan 31).
+          if (session.endedAt == null) 'ended_at': now,
+        })
+        .eq('id', session.id);
   }
 
   /// Edits a completed session's schedule and comment (plan 10, owner-only --

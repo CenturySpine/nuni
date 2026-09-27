@@ -346,6 +346,31 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
         .not('spot_id', 'is', null)
         .limit(100000),
   );
+  // Plan 29: the tags of each session, absent from a base still on the
+  // previous schema. Written in the insert itself: a session without
+  // scorecard is refused without one.
+  final sessionTags = {
+    for (final s in await optional(
+      () => nuni
+          .from('sessions')
+          .select('id, tags')
+          .neq('tags', '{}')
+          .limit(100000),
+    ))
+      s['id'] as String: (s['tags'] as List<dynamic>).cast<String>(),
+  };
+  // Plan 31: the name of each session, absent from a base still on the previous
+  // schema.
+  final sessionTitles = {
+    for (final s in await optional(
+      () => nuni
+          .from('sessions')
+          .select('id, title')
+          .not('title', 'is', null)
+          .limit(100000),
+    ))
+      s['id'] as String: s['title'] as String,
+  };
   // Plan 23: the planning, and the event each session was started from.
   final events = await optional(() => all('events', '*', 'created_at'));
   final responses = await optional(
@@ -411,6 +436,9 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
           ..remove('location_lng')
           // Set once the photos exist (foreign key), see the update below.
           ..remove('cover_photo_id'),
+        if (sessionTags[s['id']] case final tags?)
+          'tags': _Raw("'{${tags.join(',')}}'::session_tag[]"),
+        'title': ?sessionTitles[s['id']],
         'location': s['location_lat'] == null
             ? null
             : _Raw(

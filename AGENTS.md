@@ -57,25 +57,18 @@ Documents de référence, à lire avant d'agir :
    navigateur intégré, puis de laisser le PO tester et donner son retour. Le commit/push est une
    étape séparée, déclenchée uniquement par une demande explicite du PO dans son message, jamais
    déduite d'une habitude prise plus tôt dans la conversation.
-8. **Migrations Supabase avant la première mise en service.** Tant que `main` n'a pas été mis en
-   service, `supabase/migrations` n'est pas un historique à préserver mais le schéma courant :
-   aucune donnée en base n'est vitale, ce sont toujours des données de test. Un changement de
-   schéma, RLS, RPC, trigger, etc. modifie directement le fichier thématique existant concerné,
-   n'ajoute pas de nouveau fichier. Comme le CLI Supabase suit les migrations déjà appliquées par
-   nom de fichier (pas par contenu), éditer un fichier déjà poussé sans le rejouer désynchronise
-   le projet distant : il faut reconstruire le schéma distant depuis zéro (procédure dans
-   `docs/DEV.md` ; le script de suppression nomme chaque objet, jamais de boucle « tout
-   supprimer »). **Toujours prévenir le PO avant de lancer cette reconstruction**, même si elle
-   est sans risque à ce stade. Après la mise en service, on repasse en migrations additives
-   normales (plus jamais d'édition d'un fichier déjà appliqué en production).
-   **Exception, données réelles conservées par seed (Q63, 2026-09-23) :** les trous importés de
-   LsgScores et repositionnés à la main (et ceux créés depuis dans l'app) sont des données à
-   garder, comme les joueurs, sessions, scores et championnats (Q73). Avant toute reconstruction,
-   régénérer les seeds depuis la base (`fvm dart run tool/export_remote_seed.dart` :
-   `supabase/remote_seed.sql` en clair pour les trous, `supabase/data_seed.sql.enc` chiffré pour
-   le reste, mot de passe dans `env/seed.json`), relire le diff, le committer avec l'accord du
-   PO, puis les rejouer après la reconstruction (étapes 0, 5 et 6 de `docs/DEV.md`). Ne jamais
-   committer une copie déchiffrée du seed des données (noms, e-mails, photos de personnes).
+8. **Migrations Supabase additives depuis la version 1.0.0 (PO, 2026-09-27).** La base de
+   production contient des données réelles et n'est plus jamais reconstruite. Les fichiers déjà
+   présents dans `supabase/migrations` sont appliqués en production : ne plus jamais les
+   modifier. Tout changement de schéma, RLS, RPC, trigger, etc. est un **nouveau** fichier
+   (`npx supabase migration new <name>`) qui modifie l'existant, puis `npx supabase db push`,
+   puis `supabase/tests/rls_smoke.sql` (procédure dans `docs/DEV.md`). **Toujours prévenir le
+   PO de ce que change une migration avant de la pousser**, et sauvegarder les données
+   (`fvm dart run tool/export_remote_seed.dart`) avant toute migration qui transforme ou
+   supprime des données. Les seeds (`supabase/remote_seed.sql` en clair pour les trous,
+   `supabase/data_seed.sql.enc` chiffré pour le reste, mot de passe dans `env/seed.json`)
+   restent une sauvegarde ; ne jamais committer une copie déchiffrée du seed des données (noms,
+   e-mails, photos de personnes).
 
 ## Ton des échanges avec le PO
 
@@ -179,6 +172,16 @@ GitHub Actions (Q17).
   membres de leur association (`can_read_session`), en lecture seule pour ces derniers. Le
   marquage « championnat » est réservé au responsable local et au `super_admin`
   (`set_session_championship`) ; l'organisateur ne peut plus le changer.
+- Natures de session (plan 29) : « Parcours » = `sessions.scoring_mode` non nul (avec `kind` et
+  `ranking_direction`, tous nuls ou tous renseignés, figés à la création) ; les autres natures
+  sont `sessions.tags` (énumération `session_tag` : `training`, `simulator`,
+  `association_life`), au moins une nature par session. Une session sans Parcours n'a qu'une
+  équipe, ses **présents** : deux déclencheurs y placent tout membre et tiennent `team_players` à
+  jour ; elle a sa propre salle (`AttendanceRoomView`), pas de trou ni de classement. Règles de
+  modification des pastilles dans un seul déclencheur (`sessions_guard_nature`), RPC
+  `set_session_tags` et `set_session_report` (compte rendu = `sessions.comment`) pour
+  l'organisateur, le staff et le `super_admin`. Championnat réservé aux sessions de jeu
+  (contrainte en base).
 - Calcul des scores et du classement en Dart, testé unitairement ; la base ne stocke que les
   valeurs saisies.
 - Badges (plan 21) : calculés en Dart à chaque affichage (`lib/features/badges/domain/`, une
@@ -186,9 +189,11 @@ GitHub Actions (Q17).
   annoncés ou vus vit sur l'appareil (`SeenBadgesStore`). L'annonce passe par `BadgeAnnouncer`,
   monté une fois dans `app.dart`. Toute icône de badge est une constante de
   `phosphor_icons.dart` (`badge…` et `badge…Fill`), sinon la version publiée ne l'embarque pas.
-- Statistiques, records et badges (plans 19 à 21) : seulement les **sessions éligibles**,
-  terminées, d'au moins 3 joueurs et d'au moins 3 trous joués (Q117, Q123). Définition écrite
-  une seule fois dans `lib/features/stats/domain/`. Le classement d'une session n'est pas
+- Statistiques, records et badges A à K (plans 19 à 21) : seulement les **sessions éligibles**,
+  terminées, **de jeu** (Parcours, ni Training ni Simulateur, `isGameSession`, plan 29), d'au
+  moins 3 joueurs et d'au moins 3 trous joués (Q117, Q123). Les badges L « Vie du club » lisent
+  les **sessions d'activité** (`isActivitySession` : terminées, au moins 3 présents, toutes
+  natures). Définitions écrites une seule fois dans `lib/features/stats/domain/eligible_session.dart`. Le classement d'une session n'est pas
   concerné. L'historique d'un joueur se lit par la RPC `player_history`, celui d'un trou par
   `holes_history` (un ou plusieurs trous ; commun à toutes les associations, Q95 ; un clone a
   le sien, Q135), les contributions d'un compte (badges « Bâtisseur ») par

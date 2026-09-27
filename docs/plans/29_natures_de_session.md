@@ -5,7 +5,14 @@
 Plan rédigé le 2026-09-25 à partir de la demande du PO du même jour et de trois échanges de
 cadrage. Décisions du PO : Q187 à Q200, toutes tranchées. Les points marqués (H) sont des
 choix de mise en œuvre de l'assistant. **Plan validé entièrement par le PO le 2026-09-25**,
-choix (H) compris ; rien n'est implémenté.
+choix (H) compris.
+
+**Implémenté le 2026-09-27** : schéma, RPC, écrans, badges L, tests unitaires ; `flutter
+analyze` et tests verts. Seeds régénérés, base distante reconstruite et données rejouées avec
+l'accord du PO ; `supabase/tests/rls_smoke.sql` vert. Essai dans le navigateur (compte du PO) :
+création sans Parcours à un lieu libre, présents, compte rendu, natures, « Terminer » depuis le
+brouillon, historique et filtre, export image, badges L. Q204 tranchée par le PO (suggestion
+retenue). **Essayé et validé par le PO, clôturé le 2026-09-27.**
 
 ## Objectif
 
@@ -219,6 +226,39 @@ l'implémentation, et une icône absente sera remplacée par une voisine, sous l
 - L'historique affiche les pastilles de chaque session et filtre par pastille.
 - Les badges L1 à L10 s'obtiennent à partir de 3 présents, pas avant.
 - Les sessions existantes s'affichent « Parcours » et leurs stats et badges sont inchangés.
+
+## Mise en œuvre (2026-09-27)
+
+Choix de mise en œuvre (H) faits à l'implémentation, en plus de ceux du plan :
+
+- **Présents** : un déclencheur place tout nouveau membre d'une session sans Parcours dans
+  l'équipe unique (`session_members_place_attendee`), un autre tient `team_players` à jour quand
+  un membre entre, sort ou change d'équipe (`session_members_sync_attendance`). Ajout manuel, code,
+  « présents » de l'événement et organisateur passent donc tous par le même chemin. L'organisateur
+  qui se retire des présents reste membre (organisateur) avec `team_id` nul. Ajout et retrait
+  possibles jusqu'à la fin de la session (Q204, hypothèse).
+- **Règles des pastilles** : écrites une fois dans un déclencheur (`sessions_guard_nature`), qui
+  s'applique à toute écriture (mise à jour directe de l'organisateur ou RPC `set_session_tags`
+  pour le staff) : Parcours, format et sens figés ; Simulateur figé avec Parcours ; Training avec
+  Parcours réservé au staff une fois la session terminée ; ni Training ni Simulateur sur une
+  session de championnat (retirer le championnat d'abord). Codes d'erreur traduits dans l'app.
+- **Compte rendu** : RPC `set_session_report` pour l'organisateur, le staff et le
+  `super_admin` ; carte « Compte rendu » avec crayon sur la salle d'une session sans Parcours et
+  sur le détail de toute session. La fiche « Modifier » de l'organisateur garde son champ,
+  renommé « Compte rendu ».
+- **Simulateur** : la base refuse aussi un trou du référentiel (`add_played_hole`), en plus du
+  sélecteur masqué.
+- **Écrans** : une session sans Parcours a sa propre salle (`AttendanceRoomView`) en brouillon
+  et en cours, avec « Démarrer » (brouillon) et « Terminer » ; terminée, elle s'ouvre dans
+  l'historique comme les autres. Le crayon « Modifier les natures » est offert à l'organisateur
+  et au staff dans la salle et le détail de l'historique, à l'organisateur dans le menu de la page
+  en direct. Filtre de l'historique : une pastille à la fois, toucher à nouveau pour tout voir.
+- **Export image** sans Parcours : la ligne du mode de scoring devient celle des natures, et le
+  nombre de présents remplace le classement.
+- **Badges L** : couleur de famille « sunshine », portée « individuel et équipe » ; icônes
+  Phosphor relevées dans la version publiée (`barbell` e0b6, `confetti` e81a, `puzzle-piece`
+  e596, `monitor-play` e58c, `chalkboard-teacher` e600), toutes présentes dans les polices
+  embarquées.
 
 ## Hors périmètre
 

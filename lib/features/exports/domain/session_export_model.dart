@@ -72,7 +72,16 @@ class SessionExportModel {
 
 SessionExportModel buildExportModel(HistoryEntry entry) {
   final snapshot = entry.snapshot;
+  // No scorecard (plan 29): nothing to tabulate.
   final mode = snapshot.session.scoringMode;
+  if (mode == null) {
+    return SessionExportModel(
+      holes: const [],
+      teams: const [],
+      showStrokes: false,
+      showPoints: false,
+    );
+  }
   final showStrokes = mode != ScoringMode.free;
   final showPoints = mode != ScoringMode.strokePlay;
 

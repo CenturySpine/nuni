@@ -235,6 +235,26 @@ import '../domain/badge.dart';
     PhosphorIcons.badgeMountains,
     PhosphorIcons.badgeMountainsFill,
   ),
+  BadgeId.warmUp || BadgeId.studious || BadgeId.hardWorker => (
+    PhosphorIcons.badgeBarbell,
+    PhosphorIcons.badgeBarbellFill,
+  ),
+  BadgeId.partyAnimal || BadgeId.clubSoul => (
+    PhosphorIcons.badgeConfetti,
+    PhosphorIcons.badgeConfettiFill,
+  ),
+  BadgeId.allRounder => (
+    PhosphorIcons.badgePuzzlePiece,
+    PhosphorIcons.badgePuzzlePieceFill,
+  ),
+  BadgeId.virtualPlayer => (
+    PhosphorIcons.badgeMonitorPlay,
+    PhosphorIcons.badgeMonitorPlayFill,
+  ),
+  BadgeId.instructor || BadgeId.coach || BadgeId.headCoach => (
+    PhosphorIcons.badgeChalkboardTeacher,
+    PhosphorIcons.badgeChalkboardTeacherFill,
+  ),
 };
 
 /// A family's accent (plan 21, "Couleur de famille"): a palette has four
@@ -249,6 +269,7 @@ NuniTone badgeTone(BadgeFamily family) => switch (family) {
   BadgeFamily.explorer ||
   BadgeFamily.builder ||
   BadgeFamily.fun => NuniTone.highlight,
+  BadgeFamily.clubLife => NuniTone.sunshine,
 };
 
 NuniMedalTier _tier(BadgeTier tier) => switch (tier) {

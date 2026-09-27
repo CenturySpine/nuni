@@ -25,6 +25,8 @@ Future<void> exportSessionPdf(
   final session = entry.snapshot.session;
 
   final titleParts = [
+    // The session's name first, when it has one (plan 31).
+    ?session.title,
     if (session.city != null && session.city!.isNotEmpty) session.city!,
     if (session.zone != null && session.zone!.isNotEmpty) session.zone!,
   ];
@@ -54,7 +56,7 @@ Future<void> exportSessionPdf(
               .add_Hm()
               .format(session.startedAt!.toLocal()),
     durationLine: durationLine,
-    scoringModeLine: scoringModeLabel(l10n, session.scoringMode),
+    scoringModeLine: scoringModeLabel(l10n, session.scoringMode!),
     weatherLine: weatherLine,
     comment: session.comment,
     rankingTitle: l10n.sessionsLiveRankingTitle,

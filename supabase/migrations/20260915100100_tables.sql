@@ -192,16 +192,27 @@ create table sessions (
   code text not null unique,
   owner_id uuid not null references auth.users (id),
   status session_status not null default 'draft',
-  kind session_kind not null,
-  scoring_mode scoring_mode not null,
-  ranking_direction ranking_direction not null,
+  -- The scorecard (plan 29, "Parcours"): all three set, or all three null for a session without
+  -- scores (a training, a Christmas dinner...), whose attendees are the players of its single
+  -- team. Frozen after creation (Q193, sessions_guard_nature in triggers.sql).
+  kind session_kind,
+  scoring_mode scoring_mode,
+  ranking_direction ranking_direction,
+  -- The other natures (plan 29): cumulative, set at creation and afterwards through
+  -- set_session_tags (rpc.sql), within the rules of sessions_guard_nature (Q197).
+  tags session_tag[] not null default '{}',
+  -- An optional name (plan 31, Q205: "AG 2026", "Tournoi de Noël"), shown as the session's
+  -- title when set; otherwise its place stays the title.
+  title text check (title is null or (btrim(title) <> '' and char_length(title) <= 80)),
   -- While spot_id is set, city and zone are copies of the spot's city and name, kept in step by
   -- sessions_tc_copy_spot and spots_propagate (triggers.sql): every screen and export reads them
   -- as before, and they keep the place once the spot is deleted (Q182).
   city text,
   zone text,
   -- The association's spot where it's played (plan 28): required by create_session for every
-  -- new session; null for the sessions imported or created before plan 28 and not taken over.
+  -- new session with a scorecard; null for the sessions imported or created before plan 28 and
+  -- not taken over, and for a session without scores held elsewhere (plan 29, Q195), whose zone
+  -- is then the free place's name.
   spot_id uuid references spots (id) on delete set null,
   location geography(point, 4326),
   -- Plain numeric columns PostgREST can return as-is, same reasoning as
@@ -233,7 +244,18 @@ create table sessions (
   -- by create_session and guarded by sessions_guard_event (triggers.sql).
   event_id uuid,
   legacy_id bigint unique,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  constraint sessions_scorecard_complete check (
+    (scoring_mode is null) = (kind is null) and (kind is null) = (ranking_direction is null)
+  ),
+  -- Every session has a nature (Q187): "Parcours", or at least one tag.
+  constraint sessions_has_nature check (scoring_mode is not null or cardinality(tags) > 0),
+  -- Only a game session counts for the championship (plan 29): "Parcours", neither training
+  -- nor simulator.
+  constraint sessions_championship_game check (
+    not is_championship
+    or (scoring_mode is not null and not tags && array['training', 'simulator']::session_tag[])
+  )
 );
 
 create table teams (

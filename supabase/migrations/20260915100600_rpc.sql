@@ -70,6 +70,14 @@ begin
     raise exception 'no linked player for the current user' using errcode = 'P0001';
   end if;
 
+  -- A session without scores (plan 29): session_members_place_attendee (triggers.sql) puts the
+  -- newcomer on its single team, among the attendees.
+  if v_session.scoring_mode is null then
+    insert into session_members (session_id, user_id, team_id, role)
+    values (v_session.id, auth.uid(), null, 'player');
+    return v_session;
+  end if;
+
   if not exists (select 1 from teams where session_id = v_session.id) then
     insert into session_members (session_id, user_id, team_id, role)
     values (v_session.id, auth.uid(), null, 'player');
@@ -95,14 +103,36 @@ $$;
 revoke execute on function join_session(text) from public;
 grant execute on function join_session(text) to authenticated;
 
+-- Whether a start and end typed in are acceptable (plans 10 and 31): neither in the future (a few
+-- minutes' leeway for clocks), the end after the start; either may be missing.
+create or replace function _valid_schedule(p_started timestamptz, p_ended timestamptz)
+returns boolean
+language sql
+stable
+set search_path = public
+as $$
+  select coalesce(p_started <= now() + interval '5 minutes', true)
+    and coalesce(p_ended <= now() + interval '5 minutes', true)
+    and coalesce(p_ended > p_started, true);
+$$;
+
 -- Create a draft session, optionally with teams (Q24: every player_id must already be linked
 -- to a user). payload shape:
 -- {
---   "kind": "individual"|"team", "scoring_mode": "...", "ranking_direction": "asc"|"desc",
---   "spot_id": uuid, "location": {"lat": number, "lng": number}?, "city": text?, "comment": text?,
---   "teams": [{"position": int, "player_ids": [uuid, ...]}, ...]?,
---   "event_id": uuid?
+--   "kind": "individual"|"team"?, "scoring_mode": "..."?, "ranking_direction": "asc"|"desc"?,
+--   "tags": ["training"|"simulator"|"association_life", ...]?,
+--   "spot_id": uuid?, "zone": text?, "location": {"lat": number, "lng": number}?, "city": text?,
+--   "comment": text?, "teams": [{"position": int, "player_ids": [uuid, ...]}, ...]?,
+--   "event_id": uuid?, "title": text?, "started_at": timestamptz?, "ended_at": timestamptz?
 -- }
+-- A session entered afterwards (plan 31, Q206) sends its past start, and its end: kept as they
+-- are, start_session and "End" then leave them alone. Neither may be in the future (the planning
+-- is for what's coming, plan 23).
+-- Without a scoring mode (plan 29), the session has no scorecard: kind and ranking direction are
+-- dropped, at least one tag is required (sessions_has_nature), and its single team -- its
+-- attendees, the organizer first (session_members_place_attendee) -- is created here; "teams" is
+-- ignored. Such a session is played on a spot or at a free place (Q195): "zone" names it, and
+-- the point and city come from the address search.
 -- With an event_id (plan 23, Q164: "Start the session" on today's event), the session is linked
 -- to it (sessions_guard_event, triggers.sql, checks who may) and every member who answered
 -- "present" joins its waiting room, like participants added by the organizer (Q26) -- nothing
@@ -123,19 +153,35 @@ declare
   v_team_id uuid;
   v_player_id uuid;
   v_spot_id uuid := (payload ->> 'spot_id')::uuid;
+  v_scoring scoring_mode := (payload ->> 'scoring_mode')::scoring_mode;
+  v_zone text := nullif(btrim(payload ->> 'zone'), '');
+  v_started timestamptz := (payload ->> 'started_at')::timestamptz;
+  v_ended timestamptz := (payload ->> 'ended_at')::timestamptz;
 begin
-  if v_spot_id is null then
+  if v_spot_id is null and (v_scoring is not null or v_zone is null) then
     raise exception 'spot_required' using errcode = 'P0001';
+  end if;
+  if not _valid_schedule(v_started, v_ended) then
+    raise exception 'invalid_schedule' using errcode = 'P0001';
   end if;
 
   insert into sessions (
-    owner_id, kind, scoring_mode, ranking_direction, spot_id, city, location, comment, event_id
+    owner_id, kind, scoring_mode, ranking_direction, tags, spot_id, zone, city, location, comment,
+    event_id, title, started_at, ended_at
   ) values (
     auth.uid(),
-    (payload ->> 'kind')::session_kind,
-    (payload ->> 'scoring_mode')::scoring_mode,
-    (payload ->> 'ranking_direction')::ranking_direction,
+    case when v_scoring is not null then (payload ->> 'kind')::session_kind end,
+    v_scoring,
+    case when v_scoring is not null then (payload ->> 'ranking_direction')::ranking_direction end,
+    coalesce(
+      (
+        select array_agg(distinct t.value::session_tag order by t.value::session_tag)
+        from jsonb_array_elements_text(coalesce(payload -> 'tags', '[]'::jsonb)) as t(value)
+      ),
+      '{}'
+    ),
     v_spot_id,
+    case when v_spot_id is null then v_zone end,
     nullif(btrim(payload ->> 'city'), ''),
     coalesce(
       case when jsonb_typeof(payload -> 'location') = 'object'
@@ -143,10 +189,17 @@ begin
       end,
       (select location from spots where id = v_spot_id)
     ),
-    payload ->> 'comment',
-    (payload ->> 'event_id')::uuid
+    nullif(btrim(payload ->> 'comment'), ''),
+    (payload ->> 'event_id')::uuid,
+    nullif(btrim(payload ->> 'title'), ''),
+    v_started,
+    v_ended
   )
   returning * into v_session;
+
+  if v_scoring is null then
+    insert into teams (session_id, position) values (v_session.id, 1);
+  end if;
 
   insert into session_members (session_id, user_id, team_id, role)
   values (v_session.id, auth.uid(), null, 'owner');
@@ -162,7 +215,9 @@ begin
     on conflict (session_id, user_id) do nothing;
   end if;
 
-  for v_team in select * from jsonb_array_elements(coalesce(payload -> 'teams', '[]'::jsonb))
+  for v_team in
+    select * from jsonb_array_elements(coalesce(payload -> 'teams', '[]'::jsonb))
+    where v_scoring is not null
   loop
     insert into teams (session_id, position)
     values (v_session.id, (v_team ->> 'position')::int)
@@ -211,7 +266,10 @@ begin
     raise exception 'invalid_status' using errcode = 'P0001';
   end if;
 
-  if v_session.kind = 'individual' then
+  if v_session.scoring_mode is null then
+    -- Plan 29: no scorecard, so no team to form -- the attendees are already on the single one.
+    null;
+  elsif v_session.kind = 'individual' then
     if not exists (select 1 from session_members where session_id = p_session_id) then
       raise exception 'no_participants' using errcode = 'P0001';
     end if;
@@ -249,7 +307,8 @@ begin
     end if;
   end if;
 
-  update sessions set status = 'live', started_at = now()
+  -- A start already set is a session entered afterwards (plan 31): kept.
+  update sessions set status = 'live', started_at = coalesce(started_at, now())
   where id = p_session_id
   returning * into v_session;
 
@@ -290,12 +349,15 @@ as $$
         'kind', s.kind,
         'scoring_mode', s.scoring_mode,
         'ranking_direction', s.ranking_direction,
+        'tags', to_jsonb(s.tags),
         'city', s.city,
         'zone', s.zone,
+        'spot_id', s.spot_id,
         'location_lat', s.location_lat,
         'location_lng', s.location_lng,
         'weather', s.weather,
         'comment', s.comment,
+        'title', s.title,
         'cover_photo_id', s.cover_photo_id,
         'is_championship', s.is_championship,
         'association_id', s.association_id,
@@ -585,6 +647,13 @@ as $$
 declare
   v_row played_holes;
 begin
+  -- A simulator session plays free holes only (plan 29, Q189).
+  if p_hole_id is not null and exists (
+    select 1 from sessions where id = p_session_id and 'simulator' = any (tags)
+  ) then
+    raise exception 'simulator_free_holes_only' using errcode = 'P0001';
+  end if;
+
   insert into played_holes (session_id, hole_id, label, par, comment, game_mode, position)
   values (
     p_session_id,
@@ -657,6 +726,13 @@ begin
   if not (is_super_admin() or is_association_staff(v_session.association_id)) then
     raise exception 'not_championship_manager' using errcode = 'P0001';
   end if;
+  -- Only a game session counts (plan 29): a scorecard, neither training nor simulator.
+  if p_value and (
+    v_session.scoring_mode is null
+    or v_session.tags && array['training', 'simulator']::session_tag[]
+  ) then
+    raise exception 'not_game_session' using errcode = 'P0001';
+  end if;
 
   update sessions set is_championship = p_value
   where id = p_session_id
@@ -667,6 +743,174 @@ $$;
 
 revoke execute on function set_session_championship(uuid, boolean) from public;
 grant execute on function set_session_championship(uuid, boolean) to authenticated;
+
+-- Replaces a session's tags (plan 29, Q191): its organizer (or a co-organizer), the local manager
+-- or admins of its association, or a super_admin. security definer, same reasoning as
+-- set_session_championship; which tag may still change is sessions_guard_nature's call
+-- (triggers.sql, Q197), and a session keeps at least one nature (sessions_has_nature).
+create or replace function set_session_tags(p_session_id uuid, p_tags session_tag[])
+returns sessions
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_session sessions;
+begin
+  select * into v_session from sessions where id = p_session_id;
+  if v_session.id is null then
+    raise exception 'session_not_found' using errcode = 'P0001';
+  end if;
+  if not (
+    is_session_owner(p_session_id)
+    or is_association_staff(v_session.association_id)
+    or is_super_admin()
+  ) then
+    raise exception 'not_session_manager' using errcode = 'P0001';
+  end if;
+  if v_session.scoring_mode is null and coalesce(cardinality(p_tags), 0) = 0 then
+    raise exception 'session_nature_required' using errcode = 'P0001';
+  end if;
+
+  update sessions
+  set tags = coalesce(
+    (select array_agg(distinct t.tag order by t.tag) from unnest(p_tags) as t(tag)),
+    '{}'
+  )
+  where id = p_session_id
+  returning * into v_session;
+  return v_session;
+end;
+$$;
+
+revoke execute on function set_session_tags(uuid, session_tag[]) from public;
+grant execute on function set_session_tags(uuid, session_tag[]) to authenticated;
+
+-- A session's report (plan 29: the "compte rendu", sessions.comment), by the same people as its
+-- tags. Blank clears it. The organizer could write it directly; the staff needs this.
+create or replace function set_session_report(p_session_id uuid, p_report text)
+returns sessions
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_session sessions;
+begin
+  select * into v_session from sessions where id = p_session_id;
+  if v_session.id is null then
+    raise exception 'session_not_found' using errcode = 'P0001';
+  end if;
+  if not (
+    is_session_owner(p_session_id)
+    or is_association_staff(v_session.association_id)
+    or is_super_admin()
+  ) then
+    raise exception 'not_session_manager' using errcode = 'P0001';
+  end if;
+
+  update sessions set comment = nullif(btrim(p_report), '')
+  where id = p_session_id
+  returning * into v_session;
+  return v_session;
+end;
+$$;
+
+revoke execute on function set_session_report(uuid, text) from public;
+grant execute on function set_session_report(uuid, text) to authenticated;
+
+-- Saves the session form in edit mode (plan 31): one write for everything it shows. Only the keys
+-- present change. payload:
+-- { "title": text?, "comment": text?, "tags": [session_tag, ...]?,
+--   "place": {"spot_id": uuid?, "zone": text?, "city": text?, "location": {"lat", "lng"}?}?,
+--   "started_at": timestamptz?, "ended_at": timestamptz? }
+-- Who (Q209): the organizer, everything; the association's staff and super_admins, the tags and
+-- the report only (their rights of plan 29). The scorecard never changes (Q193, Q208), and which
+-- tag may still change stays sessions_guard_nature's call (Q197). The place (Q207) follows the
+-- creation's rules: a spot of the session's association (sessions_copy_spot copies its name and
+-- city), or a free place without scorecard. The point is the one sent, else the spot's, else the
+-- session's own (a spot with a variable location has none, Q186).
+create or replace function update_session(p_session_id uuid, payload jsonb)
+returns sessions
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_session sessions;
+  v_place jsonb := payload -> 'place';
+  v_spot_id uuid := (payload -> 'place' ->> 'spot_id')::uuid;
+  v_zone text := nullif(btrim(payload -> 'place' ->> 'zone'), '');
+  v_started timestamptz;
+  v_ended timestamptz;
+begin
+  select * into v_session from sessions where id = p_session_id;
+  if v_session.id is null then
+    raise exception 'session_not_found' using errcode = 'P0001';
+  end if;
+  if not is_session_owner(p_session_id) then
+    if not (is_association_staff(v_session.association_id) or is_super_admin()) then
+      raise exception 'not_session_manager' using errcode = 'P0001';
+    end if;
+    if payload ?| array['title', 'place', 'started_at', 'ended_at'] then
+      raise exception 'not_session_owner' using errcode = 'P0001';
+    end if;
+  end if;
+
+  if v_place is not null
+    and v_spot_id is null
+    and (v_session.scoring_mode is not null or v_zone is null) then
+    raise exception 'spot_required' using errcode = 'P0001';
+  end if;
+
+  v_started := case when payload ? 'started_at'
+    then (payload ->> 'started_at')::timestamptz else v_session.started_at end;
+  v_ended := case when payload ? 'ended_at'
+    then (payload ->> 'ended_at')::timestamptz else v_session.ended_at end;
+  if (payload ? 'started_at' or payload ? 'ended_at')
+    and not _valid_schedule(v_started, v_ended) then
+    raise exception 'invalid_schedule' using errcode = 'P0001';
+  end if;
+
+  if payload ? 'tags'
+    and v_session.scoring_mode is null
+    and jsonb_array_length(coalesce(payload -> 'tags', '[]'::jsonb)) = 0 then
+    raise exception 'session_nature_required' using errcode = 'P0001';
+  end if;
+
+  update sessions s set
+    title = case when payload ? 'title'
+      then nullif(btrim(payload ->> 'title'), '') else s.title end,
+    comment = case when payload ? 'comment'
+      then nullif(btrim(payload ->> 'comment'), '') else s.comment end,
+    tags = case when payload ? 'tags' then coalesce(
+      (
+        select array_agg(distinct t.value::session_tag order by t.value::session_tag)
+        from jsonb_array_elements_text(payload -> 'tags') as t(value)
+      ),
+      '{}'
+    ) else s.tags end,
+    spot_id = case when v_place is not null then v_spot_id else s.spot_id end,
+    zone = case when v_place is not null and v_spot_id is null then v_zone else s.zone end,
+    city = case when v_place is not null
+      then nullif(btrim(v_place ->> 'city'), '') else s.city end,
+    location = case when v_place is not null then coalesce(
+      case when jsonb_typeof(v_place -> 'location') = 'object'
+        then _payload_point(v_place -> 'location')
+      end,
+      (select sp.location from spots sp where sp.id = v_spot_id),
+      s.location
+    ) else s.location end,
+    started_at = v_started,
+    ended_at = v_ended
+  where s.id = p_session_id
+  returning * into v_session;
+  return v_session;
+end;
+$$;
+
+revoke execute on function update_session(uuid, jsonb) from public;
+grant execute on function update_session(uuid, jsonb) to authenticated;
 
 -- ---------------------------------------------------------------------------------------------
 -- Associations (plan 18). The tables are read-only for the app (rls.sql): every write is one of

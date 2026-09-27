@@ -28,6 +28,13 @@ abstract final class PhosphorIcons {
   static const path = IconData(0xe39c, fontFamily: _regular);
   static const paperPlaneRight = IconData(0xe396, fontFamily: _regular);
   static const x = IconData(0xe4f6, fontFamily: _regular);
+
+  // Session natures (plan 29).
+  static const barbell = IconData(0xe0b6, fontFamily: _regular);
+  static const monitorPlay = IconData(0xe58c, fontFamily: _regular);
+  static const confetti = IconData(0xe81a, fontFamily: _regular);
+  static const notePencil = IconData(0xe34c, fontFamily: _regular);
+  static const user = IconData(0xe4c2, fontFamily: _regular);
   static const question = IconData(0xe3e8, fontFamily: _regular);
 
   // Spots (plan 28).
@@ -246,4 +253,15 @@ abstract final class PhosphorIcons {
   static const badgeWindFill = IconData(0xe5d2, fontFamily: _fill);
   static const badgeXCircle = IconData(0xe4f8, fontFamily: _regular);
   static const badgeXCircleFill = IconData(0xe4f8, fontFamily: _fill);
+  // Plan 29, family L (club life).
+  static const badgeBarbell = IconData(0xe0b6, fontFamily: _regular);
+  static const badgeBarbellFill = IconData(0xe0b6, fontFamily: _fill);
+  static const badgeConfetti = IconData(0xe81a, fontFamily: _regular);
+  static const badgeConfettiFill = IconData(0xe81a, fontFamily: _fill);
+  static const badgePuzzlePiece = IconData(0xe596, fontFamily: _regular);
+  static const badgePuzzlePieceFill = IconData(0xe596, fontFamily: _fill);
+  static const badgeMonitorPlay = IconData(0xe58c, fontFamily: _regular);
+  static const badgeMonitorPlayFill = IconData(0xe58c, fontFamily: _fill);
+  static const badgeChalkboardTeacher = IconData(0xe600, fontFamily: _regular);
+  static const badgeChalkboardTeacherFill = IconData(0xe600, fontFamily: _fill);
 }

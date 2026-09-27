@@ -34,8 +34,8 @@ class ChampionshipSessionResult {
 
   factory ChampionshipSessionResult.fromSnapshot(LiveSessionSnapshot snapshot) {
     final standings = computeStandings(
-      scoringMode: snapshot.session.scoringMode,
-      rankingDirection: snapshot.session.rankingDirection,
+      scoringMode: snapshot.session.scoringMode!,
+      rankingDirection: snapshot.session.rankingDirection!,
       teams: snapshot.teams,
       playedHoles: snapshot.playedHoles,
     );

@@ -2291,6 +2291,69 @@ Suggestion : oui, L8 « Coach » : 5 sessions Training créées et terminées, c
 3 présents. Il valorise ceux qui animent les entraînements, un rôle que les badges de jeu ne
 voient pas. Le plan 29 applique cette suggestion.
 
+**Q204 ☑ — Natures de session : l'organisateur ajoute-t-il des présents une fois la session « en cours » ?**
+Réponse PO (2026-09-27) : oui, suggestion retenue.
+Constat (implémentation du plan 29, 2026-09-27) : pour une session avec Parcours, l'organisateur
+n'ajoute des joueurs qu'au brouillon, parce que les équipes sont figées au démarrage (Q15). Une
+session sans Parcours n'a ni équipe à former ni score : rien ne dépend de la liste des présents.
+Suggestion : oui, jusqu'à ce qu'elle soit terminée (ajout, retrait, et l'organisateur qui
+s'inscrit ou se retire lui-même). Cas d'usage : un retardataire à un training démarré ; le code
+et le QR le permettaient déjà pour lui-même. Techniquement, une exception de deux lignes à la
+règle d'ajout du brouillon, limitée aux sessions sans Parcours. Hypothèse appliquée par
+l'implémentation en attendant la réponse.
+
+## Formulaire unique de session (plan 31, 2026-09-27)
+
+Demande du PO du 2026-09-27, après avoir saisi l'AG du 14 septembre après coup : créer et
+modifier une session avec le même écran, et pouvoir tout corriger ensuite (nom, lieu, date…).
+
+**Q205 ☑ — Formulaire de session : ajouter un nom de session ?**
+Réponse PO (2026-09-27) : suggestion retenue : un nom facultatif proposé pour toute session,
+avec ou sans Parcours ; affiché en titre seulement quand il est rempli.
+Constat : une session n'a pas de nom ; son titre partout est son lieu (`zone`, `city`). Pour
+l'AG, le titre est le nom de la salle.
+Suggestion : un champ « Nom » facultatif (`sessions.title`), affiché en titre quand il existe,
+le lieu passant en sous-titre ; sans nom, rien ne change. Plutôt que de détourner le nom du
+lieu : celui d'un spot est partagé par toutes ses sessions (plan 28), le renommer pour une AG
+renommerait le spot partout.
+
+**Q206 ☑ — Formulaire de session : choisir la date et l'heure dès la création ?**
+Réponse PO (2026-09-27) : suggestion retenue.
+Constat : la date d'une session est l'heure de son démarrage ; une session saisie après coup
+prend la date du jour de saisie, à corriger ensuite.
+Suggestion : oui, « Date et heure de début », maintenant par défaut, jamais dans le futur (le
+planning prévoit, la session garde la trace, plan 23). Une date passée donne une session saisie
+après coup : la date est gardée au démarrage ou à « Terminer », une heure de fin apparaît (début
++ 2 h par défaut) et la météo est lue dans les archives.
+
+**Q207 ☑ — Formulaire de session : le lieu se modifie-t-il après coup ?**
+Réponse PO (2026-09-27) : oui, sauf contrainte liée aux spots et à leur point. Vérifié : aucune
+contrainte bloquante (voir le plan 31, « Lieu modifiable »).
+Suggestion : oui, à tout moment, par l'organisateur, avec les mêmes choix qu'à la création
+(spot, ou lieu libre sans Parcours). La météo est relue pour le nouveau point.
+
+**Q208 ☑ — Formulaire de session : Parcours, format et mode de scoring modifiables au brouillon (revient sur Q193) ?**
+Réponse PO (2026-09-27) : non. Les règles déjà décidées (Q193, Q197) ne changent pas :
+Parcours, format et mode restent figés dès la création, les tags suivent Q197. Le formulaire
+de modification les affiche grisés, avec la raison.
+Constat : Q193 les fige dès la création, pour qu'un changement ne casse pas des scores. Au
+brouillon, il n'existe encore ni trou joué ni score ; seules des équipes ont pu être formées.
+Suggestion : modifiables tant que la session est un brouillon, figés dès le démarrage. Changer
+le format ou Parcours défait les équipes : chacun revient dans la liste des participants, sans
+perte. Cela rend la modification identique à la création tant que rien n'a été joué.
+
+**Q209 ☑ — Formulaire de session : que modifie le staff qui n'est pas l'organisateur ?**
+Réponse PO (2026-09-27) : suggestion retenue.
+Suggestion : le même écran, avec seulement natures, compte rendu et championnat actifs (ses
+droits du plan 29), le reste grisé. Le nom, le lieu et la date restent à l'organisateur, qui
+connaît la session.
+
+**Q210 ☑ — Formulaire de session : le compte rendu dans le formulaire ?**
+Réponse PO (2026-09-27) : suggestion retenue.
+Suggestion : oui, un champ « Compte rendu » à la création et à la modification ; la carte du
+compte rendu reste affichée sur la salle et le détail, son crayon ouvrant le formulaire. Une
+seule façon de modifier au lieu de trois fiches (Modifier, natures, compte rendu).
+
 ## Photos : plantage iPhone et miniatures (plan 30, 2026-09-26)
 
 Constat du PO (vidéo du 2026-09-26) : sur iPhone, l'onglet Safari de NUNI plante en faisant

@@ -201,14 +201,19 @@ create policy "team_players_owner_draft_write" on team_players for all to authen
 -- (Q26), reassign team_id while draft or promote a co-organizer's role at any time before
 -- completion (team_id itself is frozen after draft by the session_members_guard_frozen_teams
 -- trigger, regardless of who performs the update), remove a member at any time. A member can
--- leave on their own while the session is still draft.
+-- leave on their own while the session is still draft. A session without scores (plan 29) also
+-- takes attendees while live: no team or score depends on them.
 create policy "session_members_select" on session_members for select to authenticated
   using (can_read_session(session_id));
 
 create policy "session_members_owner_add_draft" on session_members for insert to authenticated
   with check (
     is_session_owner(session_id)
-    and exists (select 1 from sessions s where s.id = session_id and s.status = 'draft')
+    and exists (
+      select 1 from sessions s
+      where s.id = session_id
+        and (s.status = 'draft' or (s.status = 'live' and s.scoring_mode is null))
+    )
   );
 
 create policy "session_members_owner_update" on session_members for update to authenticated

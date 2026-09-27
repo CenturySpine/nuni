@@ -84,8 +84,8 @@ class PlayedSession {
     LiveSessionSnapshot snapshot,
     List<PlayedHole> holes,
   ) => computeStandings(
-    scoringMode: snapshot.session.scoringMode,
-    rankingDirection: snapshot.session.rankingDirection,
+    scoringMode: snapshot.session.scoringMode!,
+    rankingDirection: snapshot.session.rankingDirection!,
     teams: snapshot.teams,
     playedHoles: holes,
   );
@@ -152,12 +152,14 @@ class BadgeFacts {
     this.userId,
     this.contributions = const PlayerContributions(),
     this.holesHistory = const [],
-  }) : sessions = _played(playerId, history);
+  }) : sessions = _played(playerId, history),
+       activitySessions = _attended(playerId, history);
 
   BadgeFacts._withHolesHistory(BadgeFacts facts, this.holesHistory)
     : playerId = facts.playerId,
       associationId = facts.associationId,
       sessions = facts.sessions,
+      activitySessions = facts.activitySessions,
       seasonPlacings = facts.seasonPlacings,
       userId = facts.userId,
       contributions = facts.contributions;
@@ -185,6 +187,21 @@ class BadgeFacts {
   final List<PlayedSession> sessions;
   final List<SeasonPlacing> seasonPlacings;
 
+  /// Every activity session attended (plan 29, family L): completed, with at
+  /// least 3 attendees, whatever its natures, oldest first.
+  final List<LiveSessionSnapshot> activitySessions;
+
+  /// The activity sessions the player's account created (Q200), attended or
+  /// not, oldest first.
+  late final List<LiveSessionSnapshot> organizedSessions = userId == null
+      ? const []
+      : ([
+          for (final snapshot in contributions.sessions)
+            if (snapshot.session.ownerId == userId &&
+                isActivitySession(snapshot))
+              snapshot,
+        ]..sort(_byDate));
+
   /// The individual sessions: the only ones for a badge about a ranking --
   /// a win, a podium, a last place (Q138, PO 2026-09-25). Strokes are
   /// individual anyway (Q90).
@@ -204,6 +221,18 @@ class BadgeFacts {
     for (final s in sessions)
       for (final hole in s.holes) ?hole.hole?.id,
   };
+
+  static int _byDate(LiveSessionSnapshot a, LiveSessionSnapshot b) =>
+      sessionDate(a.session).compareTo(sessionDate(b.session));
+
+  static List<LiveSessionSnapshot> _attended(
+    String playerId,
+    List<LiveSessionSnapshot> history,
+  ) => [
+    for (final snapshot in history)
+      if (isActivitySession(snapshot) && teamOf(snapshot, playerId) != null)
+        snapshot,
+  ]..sort(_byDate);
 
   static List<PlayedSession> _played(
     String playerId,

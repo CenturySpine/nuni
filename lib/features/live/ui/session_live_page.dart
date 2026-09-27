@@ -20,7 +20,10 @@ import '../../sessions/data/sessions_repository.dart';
 import '../../sessions/domain/ranking_direction.dart';
 import '../../sessions/domain/scoring_mode.dart';
 import '../../sessions/domain/session.dart';
+import '../../sessions/domain/session_tag.dart';
 import '../../sessions/ui/invite_sheet.dart';
+import '../../sessions/ui/session_nature.dart';
+import '../../stats/domain/eligible_session.dart';
 import '../../sessions/ui/scoring_mode_label.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../stats/data/stats_repository.dart';
@@ -120,7 +123,7 @@ class SessionLivePage extends ConsumerWidget {
   }
 }
 
-enum _MenuAction { members, end, delete }
+enum _MenuAction { members, edit, end, delete }
 
 class _LiveView extends ConsumerStatefulWidget {
   const _LiveView({required this.sessionId, required this.snapshot});
@@ -197,7 +200,9 @@ class _LiveViewState extends ConsumerState<_LiveView> {
     );
     if (!confirmed || !mounted) return;
     await _run(
-      () => ref.read(liveRepositoryProvider).closeSession(widget.sessionId),
+      () => ref
+          .read(liveRepositoryProvider)
+          .closeSession(widget.snapshot.session),
     );
   }
 
@@ -257,12 +262,12 @@ class _LiveViewState extends ConsumerState<_LiveView> {
     final locale = Localizations.localeOf(context).toString();
 
     final subtitleParts = [
-      if (session.city != null && session.city!.isNotEmpty) session.city!,
-      if (session.zone != null && session.zone!.isNotEmpty) session.zone!,
+      sessionHeading(session),
       if (session.startedAt != null)
         DateFormat.yMMMd(locale).format(session.startedAt!),
     ];
-    var scoringLine = scoringModeLabel(l10n, session.scoringMode);
+    // Only a session with a scorecard reaches this page (plan 29).
+    var scoringLine = scoringModeLabel(l10n, session.scoringMode!);
     if (session.scoringMode == ScoringMode.free) {
       scoringLine +=
           ' · ${session.rankingDirection == RankingDirection.desc ? l10n.sessionsCreateFreeDirectionHighest : l10n.sessionsCreateFreeDirectionLowest}';
@@ -274,9 +279,7 @@ class _LiveViewState extends ConsumerState<_LiveView> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              subtitleParts.isEmpty ? session.code : subtitleParts.join(' · '),
-            ),
+            Text(subtitleParts.join(' · ')),
             Text(scoringLine, style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
@@ -295,6 +298,10 @@ class _LiveViewState extends ConsumerState<_LiveView> {
                   sessionId: widget.sessionId,
                   members: snapshot.members,
                 ),
+                // The session form (plan 31); the realtime snapshot follows.
+                _MenuAction.edit => context.push(
+                  '/session/${widget.sessionId}/edit',
+                ),
                 _MenuAction.end => _endSession(),
                 _MenuAction.delete => _deleteSession(),
               },
@@ -304,6 +311,13 @@ class _LiveViewState extends ConsumerState<_LiveView> {
                   child: NuniMenuRow(
                     icon: PhosphorIcons.users,
                     label: l10n.sessionsLiveMembersAction,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: _MenuAction.edit,
+                  child: NuniMenuRow(
+                    icon: PhosphorIcons.pencilSimple,
+                    label: l10n.historyEditTitle,
                   ),
                 ),
                 PopupMenuItem(
@@ -340,12 +354,22 @@ class _LiveViewState extends ConsumerState<_LiveView> {
             ),
             const SizedBox(height: 12),
           ],
+          SessionNaturePills(session: session),
+          const SizedBox(height: 12),
           if (canTagChampionship) ...[
             NuniCard(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: ChampionshipToggle(
                 value: session.isChampionship,
-                onChanged: _busy ? null : _toggleChampionship,
+                // Only a game counts (plan 29).
+                onChanged:
+                    _busy ||
+                        (!isGameSession(session) && !session.isChampionship)
+                    ? null
+                    : _toggleChampionship,
+                subtitle: isGameSession(session)
+                    ? null
+                    : l10n.sessionsChampionshipGameOnly,
               ),
             ),
             const SizedBox(height: 12),
@@ -368,7 +392,7 @@ class _LiveViewState extends ConsumerState<_LiveView> {
                 child: PlayedHoleCard(
                   playedHole: entry.value,
                   teams: snapshot.teams,
-                  scoringMode: session.scoringMode,
+                  scoringMode: session.scoringMode!,
                   canEditTeam: (teamId) => isOwner || myTeamId == teamId,
                   onScoreSubmit: _submitScore,
                   highlighted: entry.key == 0,
@@ -389,7 +413,8 @@ class _LiveViewState extends ConsumerState<_LiveView> {
                   : () => showAddPlayedHoleSheet(
                       context,
                       sessionId: widget.sessionId,
-                      kind: session.kind,
+                      kind: session.kind!,
+                      freeHolesOnly: session.hasTag(SessionTag.simulator),
                     ),
               icon: const Icon(PhosphorIcons.plus),
               label: Text(l10n.sessionsLiveAddHoleTitle),

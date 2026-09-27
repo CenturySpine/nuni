@@ -34,9 +34,12 @@ import '../domain/session_member.dart';
 import '../domain/session_room.dart';
 import '../domain/team.dart';
 import '../domain/team_composition.dart';
+import '../../stats/domain/eligible_session.dart';
 import 'add_participant_sheet.dart';
+import 'attendance_room_view.dart';
 import 'championship_toggle.dart';
 import 'invite_sheet.dart';
+import 'session_nature.dart';
 
 /// `/session/:id`: the waiting room while `status = draft` (plan 07);
 /// `SessionLivePage` (plan 08) takes over the moment it leaves draft, via
@@ -70,6 +73,11 @@ class SessionRoomPage extends ConsumerWidget {
         bottomNavigationBar: const NuniStandaloneBottomNav(),
       ),
       data: (room) {
+        // No scorecard (plan 29): attendees and report, until completed.
+        if (!room.session.hasScoring &&
+            room.session.status != SessionStatus.completed) {
+          return AttendanceRoomView(sessionId: sessionId, room: room);
+        }
         if (room.session.status != SessionStatus.draft) {
           return SessionLivePage(sessionId: sessionId);
         }
@@ -362,8 +370,10 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
     final canTagChampionship =
         associationId != null &&
         (ref.watch(canTagChampionshipProvider(associationId)).value ?? false);
+    // Only a session with a scorecard reaches this view (plan 29).
+    final kind = room.session.kind!;
     final canStart = canStartSession(
-      kind: room.session.kind,
+      kind: kind,
       members: room.members,
       teamCount: room.teams.length,
     );
@@ -435,8 +445,26 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
               ),
             ],
           ],
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(child: SessionNaturePills(session: room.session)),
+              if (isOwner || canTagChampionship)
+                IconButton(
+                  icon: const Icon(PhosphorIcons.pencilSimple, size: 20),
+                  tooltip: l10n.historyEditTitle,
+                  visualDensity: VisualDensity.compact,
+                  // The session form (plan 31); it refreshes this room.
+                  onPressed: _busy
+                      ? null
+                      : () => unawaited(
+                          context.push('/session/${widget.sessionId}/edit'),
+                        ),
+                ),
+            ],
+          ),
           const SizedBox(height: 24),
-          if (room.session.kind == SessionKind.team)
+          if (kind == SessionKind.team)
             _TeamsSection(
               room: room,
               isOwner: isOwner,
@@ -447,14 +475,14 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
               onUnassign: _unassign,
               onPromote: _promote,
             ),
-          if (room.session.kind == SessionKind.team) const SizedBox(height: 24),
+          if (kind == SessionKind.team) const SizedBox(height: 24),
           _PoolSection(
             room: room,
             isOwner: isOwner,
             selected: _selected,
             busy: _busy,
             currentUserId: _currentUserId,
-            showSelection: room.session.kind == SessionKind.team,
+            showSelection: kind == SessionKind.team,
             onToggle: (userId, value) => setState(() {
               if (value) {
                 _selected.add(userId);
@@ -473,7 +501,7 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
               label: l10n.sessionsRoomAddParticipant,
               onPressed: _busy ? null : _addParticipant,
             ),
-            if (room.session.kind == SessionKind.team) ...[
+            if (kind == SessionKind.team) ...[
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -482,9 +510,7 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
                       variant: NuniButtonVariant.secondary,
                       icon: PhosphorIcons.users,
                       label: l10n.sessionsRoomFormTeam,
-                      onPressed:
-                          (!_busy &&
-                              _selected.length == room.session.kind.teamSize)
+                      onPressed: (!_busy && _selected.length == kind.teamSize)
                           ? _formTeam
                           : null,
                     ),
@@ -508,7 +534,16 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
               const SizedBox(height: 16),
               ChampionshipToggle(
                 value: room.session.isChampionship,
-                onChanged: _busy ? null : _toggleChampionship,
+                // Only a game counts (plan 29).
+                onChanged:
+                    _busy ||
+                        (!isGameSession(room.session) &&
+                            !room.session.isChampionship)
+                    ? null
+                    : _toggleChampionship,
+                subtitle: isGameSession(room.session)
+                    ? null
+                    : l10n.sessionsChampionshipGameOnly,
               ),
             ],
             const SizedBox(height: 8),

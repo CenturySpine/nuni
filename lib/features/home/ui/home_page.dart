@@ -25,7 +25,7 @@ import '../../sessions/domain/my_session_entry.dart';
 import '../../sessions/domain/session.dart';
 import '../../sessions/domain/session_kind.dart';
 import '../../sessions/domain/session_member.dart';
-import '../../sessions/ui/session_kind_label.dart';
+import '../../sessions/ui/session_nature.dart';
 
 /// Home tab body (plan 09): create, join, my ongoing sessions, recent
 /// sessions. Full history (beyond the short "Dernières sessions" list)
@@ -257,13 +257,18 @@ class _SessionCard extends StatelessWidget {
             : '/session/${session.id}',
       ),
       leading: NuniIconTile(
-        icon: isTeam ? PhosphorIcons.users : PhosphorIcons.golf,
+        icon: !session.hasScoring && session.tags.isNotEmpty
+            ? sessionTagIcon(session.tags.first)
+            : isTeam
+            ? PhosphorIcons.users
+            : PhosphorIcons.golf,
         tone: isTeam ? NuniTone.primary : NuniTone.fairway,
       ),
-      title: session.city ?? session.code,
+      title: sessionHeading(session),
       badge: status,
       subtitle: [
-        sessionKindLabel(l10n, session.kind),
+        // Its pills, as words (plan 29).
+        ...sessionNatureLabels(l10n, session),
         roleLabel,
         DateFormat.yMMMd(locale).format(date),
       ].join(' · '),

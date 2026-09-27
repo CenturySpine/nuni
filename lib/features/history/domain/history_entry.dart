@@ -7,12 +7,19 @@ import '../../live/domain/team_standing.dart';
 /// 08) rather than duplicating any ranking logic here.
 class HistoryEntry {
   HistoryEntry(this.snapshot)
-    : standings = computeStandings(
-        scoringMode: snapshot.session.scoringMode,
-        rankingDirection: snapshot.session.rankingDirection,
-        teams: snapshot.teams,
-        playedHoles: snapshot.playedHoles,
-      );
+    : standings = switch ((
+        snapshot.session.scoringMode,
+        snapshot.session.rankingDirection,
+      )) {
+        (final mode?, final direction?) => computeStandings(
+          scoringMode: mode,
+          rankingDirection: direction,
+          teams: snapshot.teams,
+          playedHoles: snapshot.playedHoles,
+        ),
+        // No scorecard (plan 29): no ranking.
+        _ => const [],
+      };
 
   final LiveSessionSnapshot snapshot;
   final List<TeamStanding> standings;

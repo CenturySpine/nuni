@@ -3,6 +3,7 @@ import 'package:nuni/features/sessions/domain/ranking_direction.dart';
 import 'package:nuni/features/sessions/domain/scoring_mode.dart';
 import 'package:nuni/features/sessions/domain/session.dart';
 import 'package:nuni/features/sessions/domain/session_kind.dart';
+import 'package:nuni/features/sessions/domain/session_tag.dart';
 
 void main() {
   test(
@@ -42,4 +43,38 @@ void main() {
       expect(session.locationLng, 4.85);
     },
   );
+
+  test('a session without scorecard reads its tags (plan 29)', () {
+    final session = Session.fromJson({
+      'id': 's2',
+      'code': 'XYZ789',
+      'owner_id': 'u1',
+      'status': 'completed',
+      'kind': null,
+      'scoring_mode': null,
+      'ranking_direction': null,
+      'tags': ['training', 'association_life'],
+      'created_at': '2026-09-16T10:00:00Z',
+    });
+
+    expect(session.hasScoring, isFalse);
+    expect(session.kind, isNull);
+    expect(session.tags, [SessionTag.training, SessionTag.associationLife]);
+    expect(session.hasTag(SessionTag.simulator), isFalse);
+  });
+
+  test('a plain row without tags is a course, untagged', () {
+    final session = Session.fromJson({
+      'id': 's3',
+      'code': 'ABC123',
+      'owner_id': 'u1',
+      'status': 'draft',
+      'kind': 'individual',
+      'scoring_mode': 'free',
+      'ranking_direction': 'desc',
+      'created_at': '2026-09-16T10:00:00Z',
+    });
+    expect(session.hasScoring, isTrue);
+    expect(session.tags, isEmpty);
+  });
 }

@@ -11,10 +11,14 @@ class ChampionshipToggle extends StatelessWidget {
     super.key,
     required this.value,
     required this.onChanged,
+    this.subtitle,
   });
 
   final bool value;
   final ValueChanged<bool>? onChanged;
+
+  /// Why it's off, for a session that can't count (plan 29).
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +26,7 @@ class ChampionshipToggle extends StatelessWidget {
     return SwitchListTile(
       contentPadding: EdgeInsets.zero,
       title: Text(l10n.championshipToggleLabel),
+      subtitle: subtitle == null ? null : Text(subtitle!),
       value: value,
       onChanged: onChanged == null ? null : (checked) => onChanged!(checked),
     );

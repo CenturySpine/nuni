@@ -4,6 +4,7 @@ import '../../../core/weather/weather.dart';
 import 'ranking_direction.dart';
 import 'scoring_mode.dart';
 import 'session_kind.dart';
+import 'session_tag.dart';
 
 part 'session.freezed.dart';
 part 'session.g.dart';
@@ -25,17 +26,27 @@ enum SessionStatus {
 /// `SessionRoomPage` can capture weather at kick-off without re-geolocating.
 @freezed
 abstract class Session with _$Session {
+  const Session._();
+
   const factory Session({
     required String id,
     required String code,
     @JsonKey(name: 'owner_id') required String ownerId,
     required SessionStatus status,
-    required SessionKind kind,
-    @JsonKey(name: 'scoring_mode') required ScoringMode scoringMode,
-    @JsonKey(name: 'ranking_direction')
-    required RankingDirection rankingDirection,
+    // The scorecard (plan 29, "Parcours"): all three set, or all three null
+    // for a session without scores, whose attendees are its single team's
+    // players. Frozen after creation (Q193).
+    SessionKind? kind,
+    @JsonKey(name: 'scoring_mode') ScoringMode? scoringMode,
+    @JsonKey(name: 'ranking_direction') RankingDirection? rankingDirection,
+    // Its other natures (plan 29), cumulative; empty for a plain game.
+    @Default(<SessionTag>[]) List<SessionTag> tags,
+    // An optional name (plan 31, Q205), the title when set.
+    String? title,
     String? city,
     String? zone,
+    // The association's spot (plan 28); null for a free place (plan 29).
+    @JsonKey(name: 'spot_id') String? spotId,
     @JsonKey(name: 'location_lat') double? locationLat,
     @JsonKey(name: 'location_lng') double? locationLng,
     Weather? weather,
@@ -58,4 +69,11 @@ abstract class Session with _$Session {
 
   factory Session.fromJson(Map<String, Object?> json) =>
       _$SessionFromJson(json);
+
+  /// Whether the session has a scorecard ("Parcours", plan 29): holes,
+  /// scores and a ranking. Without one, it only records who attended, a
+  /// report and photos.
+  bool get hasScoring => scoringMode != null;
+
+  bool hasTag(SessionTag tag) => tags.contains(tag);
 }
