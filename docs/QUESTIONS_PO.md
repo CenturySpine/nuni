@@ -2428,3 +2428,34 @@ prévision sur 7 jours.
 Réponse PO (2026-09-28) : oui, si ce n'est pas déjà fait. Open-Meteo y figure déjà pour la
 météo des sessions : la mention est étendue aux événements. Photon (adresses des spots), absent,
 y est ajouté.
+
+## Corrections après le premier test en direct (2026-09-28)
+
+**Q217 ☑ — Salle d'attente : distinguer les participants ajoutés de ceux qui ont rejoint.**
+Demande PO (2026-09-28) : l'organisateur doit voir clairement qui a été ajouté (à la main ou
+depuis un événement) et qui a réellement rejoint par le code ou le QR code. Mis en œuvre :
+colonne `session_members.checked_in_at` (migration `20260928100000`), posée quand un membre
+s'inscrit lui-même (création, code, QR code, « je suis présent » de l'organisateur) et quand un
+participant déjà ajouté passe par le code. Chaque participant porte une pastille « A rejoint »
+(vert) ou « Ajouté · pas encore rejoint » (jaune), et l'en-tête de la liste compte « 3 sur 5 ont
+rejoint ». Sessions existantes : seul leur créateur est marqué comme ayant rejoint.
+
+**Q218 ☐ — Un participant ajouté qui ouvre la session depuis son accueil a-t-il « rejoint » ?**
+Un participant ajouté voit la session sur son accueil et peut l'ouvrir sans passer par le code.
+Aujourd'hui, il reste « pas encore rejoint » tant qu'il n'a pas utilisé le code ou le QR code
+(lecture littérale de la demande). Suggestion : le compter comme « rejoint » dès qu'il ouvre la
+salle d'attente, car c'est la même preuve (il a l'app, il est connecté, il a vu la session) et
+cela évite à l'organisateur de demander à quelqu'un déjà présent de scanner un code pour rien.
+Hypothèse appliquée tant que la question est ouverte : code ou QR code seulement.
+
+**Q219 ☑ — Session « perdue » après un passage en arrière-plan.**
+Constat PO (2026-09-28) : un participant a perdu la session qu'il avait rejointe après un long
+passage de l'app en arrière-plan. Causes trouvées dans le code (aucune donnée n'était perdue :
+l'appartenance à la session est en base) : (1) les listes de l'accueil n'étaient lues qu'une
+fois et jamais relues au retour dans l'app ; un participant qui avait ouvert l'app avant de
+rejoindre (par exemple via le QR code ouvert dans un autre onglet) ne voyait pas la session ;
+(2) le téléphone coupe la connexion temps réel d'une app en arrière-plan : l'écran de session
+affichait alors une erreur, ou restait figé sans plus recevoir aucun changement. Corrigé :
+au retour au premier plan, l'app relit les listes de l'accueil et rouvre le temps réel des
+écrans de session (`ResumeRefresher`) ; une connexion temps réel coupée est rouverte seule
+après 3 secondes au lieu d'afficher une erreur (`ChangeSignal`).

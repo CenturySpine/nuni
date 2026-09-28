@@ -29,6 +29,7 @@ import '../domain/session_member.dart';
 import '../domain/session_room.dart';
 import 'add_participant_sheet.dart';
 import 'invite_sheet.dart';
+import 'member_join_pill.dart';
 import 'session_nature.dart';
 import 'session_nature_rules.dart';
 
@@ -309,10 +310,7 @@ class _AttendanceRoomViewState extends ConsumerState<AttendanceRoomView> {
             title: l10n.sessionsAttendeesTitle,
             trailing: attendees.isEmpty
                 ? null
-                : NuniStatusPill(
-                    label: '${attendees.length}',
-                    tone: NuniTone.neutral,
-                  ),
+                : JoinedCountPill(members: attendees),
           ),
           if (attendees.isEmpty)
             SizedBox(
@@ -342,6 +340,7 @@ class _AttendanceRoomViewState extends ConsumerState<AttendanceRoomView> {
                                 '(${l10n.sessionsRoomYou})'
                           : room.playerFor(member)?.name ?? '',
                     ),
+                    subtitle: MemberJoinPill(member: member),
                     trailing: isOwner
                         ? IconButton(
                             icon: const Icon(PhosphorIcons.xCircle, size: 18),

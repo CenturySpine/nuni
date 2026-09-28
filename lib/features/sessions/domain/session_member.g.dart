@@ -12,6 +12,9 @@ _SessionMember _$SessionMemberFromJson(Map<String, dynamic> json) =>
       userId: json['user_id'] as String,
       teamId: json['team_id'] as String?,
       role: $enumDecode(_$MemberRoleEnumMap, json['role']),
+      checkedInAt: json['checked_in_at'] == null
+          ? null
+          : DateTime.parse(json['checked_in_at'] as String),
     );
 
 Map<String, dynamic> _$SessionMemberToJson(_SessionMember instance) =>
@@ -20,6 +23,7 @@ Map<String, dynamic> _$SessionMemberToJson(_SessionMember instance) =>
       'user_id': instance.userId,
       'team_id': instance.teamId,
       'role': _$MemberRoleEnumMap[instance.role]!,
+      'checked_in_at': instance.checkedInAt?.toIso8601String(),
     };
 
 const _$MemberRoleEnumMap = {

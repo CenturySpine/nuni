@@ -119,6 +119,17 @@ select 'join_session_member1_attached_to_team1',
   (select team_id from session_members where session_id = (select session_id from test_ids) and user_id = (select member1_user from test_ids))
     = (select team1_id from test_ids);
 
+-- Joining by the code checks the member in; the creator is checked in from the start
+-- (session_members_check_in_self, 2026-09-28).
+insert into test_results (test, passed)
+select 'join_session_checks_member_in',
+  (select checked_in_at is not null from session_members
+   where session_id = (select session_id from test_ids) and user_id = (select member1_user from test_ids));
+insert into test_results (test, passed)
+select 'creator_checked_in',
+  (select checked_in_at is not null from session_members
+   where session_id = (select session_id from test_ids) and user_id = (select owner_user from test_ids));
+
 -- ===== Test 1: a non-member cannot read the session =====
 set role authenticated;
 set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000004","role":"authenticated"}';

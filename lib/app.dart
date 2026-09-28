@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/l10n/locale_controller.dart';
+import 'core/lifecycle/resume_refresher.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/palette_controller.dart';
@@ -23,9 +24,12 @@ class NuniApp extends ConsumerWidget {
       theme: buildAppTheme(palette),
       routerConfig: router,
       // New badges are announced above any page (plan 21).
-      builder: (context, child) => BadgeAnnouncer(
-        navigatorKey: router.routerDelegate.navigatorKey,
-        child: child ?? const SizedBox.shrink(),
+      // Coming back from the background reloads the sessions.
+      builder: (context, child) => ResumeRefresher(
+        child: BadgeAnnouncer(
+          navigatorKey: router.routerDelegate.navigatorKey,
+          child: child ?? const SizedBox.shrink(),
+        ),
       ),
       locale: locale,
       localizationsDelegates: const [

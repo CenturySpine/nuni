@@ -7,6 +7,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 // feature's `Session` (mirroring the `sessions` table).
 import 'package:supabase_flutter/supabase_flutter.dart' hide Session;
 
+import '../../../core/supabase/change_signal.dart';
 import '../../../core/supabase/supabase_providers.dart';
 import '../../../core/weather/weather.dart';
 import '../../profile/data/profile_repository.dart';
@@ -564,9 +565,7 @@ class SessionsRepository {
   /// rather than trying to patch each symptom.
   Stream<SessionRoomSnapshot> watchRoom(String sessionId) {
     late final StreamController<SessionRoomSnapshot> controller;
-    StreamSubscription<List<Map<String, dynamic>>>? sessionSub;
-    StreamSubscription<List<Map<String, dynamic>>>? membersSub;
-    StreamSubscription<List<Map<String, dynamic>>>? teamsSub;
+    final signals = <ChangeSignal>[];
 
     final playersByUserId = <String, Player>{};
     var isRefreshing = false;
@@ -639,26 +638,36 @@ class SessionsRepository {
 
     controller = StreamController<SessionRoomSnapshot>.broadcast(
       onListen: () {
-        sessionSub = _client
-            .from('sessions')
-            .stream(primaryKey: ['id'])
-            .eq('id', sessionId)
-            .listen((_) => unawaited(refresh()), onError: controller.addError);
-        membersSub = _client
-            .from('session_members')
-            .stream(primaryKey: ['session_id', 'user_id'])
-            .eq('session_id', sessionId)
-            .listen((_) => unawaited(refresh()), onError: controller.addError);
-        teamsSub = _client
-            .from('teams')
-            .stream(primaryKey: ['id'])
-            .eq('session_id', sessionId)
-            .listen((_) => unawaited(refresh()), onError: controller.addError);
+        void refreshNow() => unawaited(refresh());
+        signals.addAll([
+          ChangeSignal(
+            () => _client
+                .from('sessions')
+                .stream(primaryKey: ['id'])
+                .eq('id', sessionId),
+            refreshNow,
+          ),
+          ChangeSignal(
+            () => _client
+                .from('session_members')
+                .stream(primaryKey: ['session_id', 'user_id'])
+                .eq('session_id', sessionId),
+            refreshNow,
+          ),
+          ChangeSignal(
+            () => _client
+                .from('teams')
+                .stream(primaryKey: ['id'])
+                .eq('session_id', sessionId),
+            refreshNow,
+          ),
+        ]);
       },
       onCancel: () {
-        unawaited(sessionSub?.cancel());
-        unawaited(membersSub?.cancel());
-        unawaited(teamsSub?.cancel());
+        for (final signal in signals) {
+          unawaited(signal.cancel());
+        }
+        signals.clear();
       },
     );
 

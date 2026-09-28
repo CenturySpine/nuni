@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide Session;
 
+import '../../../core/supabase/change_signal.dart';
 import '../../../core/supabase/supabase_providers.dart';
 import '../domain/game_mode.dart';
 import '../../sessions/domain/session.dart';
@@ -122,7 +123,7 @@ class LiveRepository {
   /// tables plan 08 adds (`played_holes`, `scores`, `team_players`).
   Stream<LiveSessionSnapshot> watchSession(String sessionId) {
     late final StreamController<LiveSessionSnapshot> controller;
-    final subscriptions = <StreamSubscription<List<Map<String, dynamic>>>>[];
+    final signals = <ChangeSignal>[];
 
     var isRefreshing = false;
     var pending = false;
@@ -153,27 +154,30 @@ class LiveRepository {
       }
     }
 
+    void refreshNow() => unawaited(refresh());
+
     void subscribe(String table, List<String> primaryKey) {
-      subscriptions.add(
-        _client
-            .from(table)
-            .stream(primaryKey: primaryKey)
-            .eq('session_id', sessionId)
-            .listen((_) => unawaited(refresh()), onError: controller.addError),
+      signals.add(
+        ChangeSignal(
+          () => _client
+              .from(table)
+              .stream(primaryKey: primaryKey)
+              .eq('session_id', sessionId),
+          refreshNow,
+        ),
       );
     }
 
     controller = StreamController<LiveSessionSnapshot>.broadcast(
       onListen: () {
-        subscriptions.add(
-          _client
-              .from('sessions')
-              .stream(primaryKey: ['id'])
-              .eq('id', sessionId)
-              .listen(
-                (_) => unawaited(refresh()),
-                onError: controller.addError,
-              ),
+        signals.add(
+          ChangeSignal(
+            () => _client
+                .from('sessions')
+                .stream(primaryKey: ['id'])
+                .eq('id', sessionId),
+            refreshNow,
+          ),
         );
         subscribe('session_members', ['session_id', 'user_id']);
         subscribe('teams', ['id']);
@@ -182,9 +186,10 @@ class LiveRepository {
         subscribe('scores', ['played_hole_id', 'team_id']);
       },
       onCancel: () {
-        for (final sub in subscriptions) {
-          unawaited(sub.cancel());
+        for (final signal in signals) {
+          unawaited(signal.cancel());
         }
+        signals.clear();
       },
     );
 

@@ -39,6 +39,7 @@ import 'add_participant_sheet.dart';
 import 'attendance_room_view.dart';
 import 'championship_toggle.dart';
 import 'invite_sheet.dart';
+import 'member_join_pill.dart';
 import 'session_nature.dart';
 
 /// `/session/:id`: the waiting room while `status = draft` (plan 07);
@@ -652,12 +653,24 @@ class _TeamsSection extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Text(
-                          room.playerFor(member)?.name ?? '',
-                          style: member.userId == currentUserId
-                              ? Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(fontWeight: FontWeight.w700)
-                              : null,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                room.playerFor(member)?.name ?? '',
+                                style: member.userId == currentUserId
+                                    ? Theme.of(context).textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          )
+                                    : null,
+                              ),
+                              const SizedBox(height: 4),
+                              MemberJoinPill(member: member),
+                            ],
+                          ),
                         ),
                       ),
                       if (isOwner && member.role != MemberRole.owner)
@@ -724,9 +737,7 @@ class _PoolSection extends StatelessWidget {
       children: [
         NuniSectionHeader(
           title: l10n.sessionsRoomPoolTitle,
-          trailing: pool.isEmpty
-              ? null
-              : NuniStatusPill(label: '${pool.length}', tone: NuniTone.neutral),
+          trailing: pool.isEmpty ? null : JoinedCountPill(members: pool),
         ),
         if (pool.isEmpty)
           SizedBox(
@@ -833,6 +844,7 @@ class _PoolRow extends StatelessWidget {
           ],
         ),
         title: Text(label),
+        subtitle: MemberJoinPill(member: member),
         trailing: actions,
         onTap: busy ? null : () => onToggle(!selected),
       );
@@ -841,6 +853,7 @@ class _PoolRow extends StatelessWidget {
     return ListTile(
       leading: avatar,
       title: Text(label),
+      subtitle: MemberJoinPill(member: member),
       trailing: isOwner ? actions : null,
     );
   }

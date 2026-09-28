@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SessionMember {
 
-@JsonKey(name: 'session_id') String get sessionId;@JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'team_id') String? get teamId; MemberRole get role;
+@JsonKey(name: 'session_id') String get sessionId;@JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'team_id') String? get teamId; MemberRole get role;@JsonKey(name: 'checked_in_at') DateTime? get checkedInAt;
 /// Create a copy of SessionMember
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +30,20 @@ $SessionMemberCopyWith<SessionMember> get copyWith => _$SessionMemberCopyWithImp
 @override
 bool operator ==(Object other) {
   final _this = this as SessionMember;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionMember&&(identical(other.sessionId, _this.sessionId) || other.sessionId == _this.sessionId)&&(identical(other.userId, _this.userId) || other.userId == _this.userId)&&(identical(other.teamId, _this.teamId) || other.teamId == _this.teamId)&&(identical(other.role, _this.role) || other.role == _this.role));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionMember&&(identical(other.sessionId, _this.sessionId) || other.sessionId == _this.sessionId)&&(identical(other.userId, _this.userId) || other.userId == _this.userId)&&(identical(other.teamId, _this.teamId) || other.teamId == _this.teamId)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.checkedInAt, _this.checkedInAt) || other.checkedInAt == _this.checkedInAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as SessionMember;
-  return Object.hash(runtimeType,_this.sessionId,_this.userId,_this.teamId,_this.role);
+  return Object.hash(runtimeType,_this.sessionId,_this.userId,_this.teamId,_this.role,_this.checkedInAt);
 }
 
 @override
 String toString() {
   final _this = this as SessionMember;
-  return 'SessionMember(sessionId: ${_this.sessionId}, userId: ${_this.userId}, teamId: ${_this.teamId}, role: ${_this.role})';
+  return 'SessionMember(sessionId: ${_this.sessionId}, userId: ${_this.userId}, teamId: ${_this.teamId}, role: ${_this.role}, checkedInAt: ${_this.checkedInAt})';
 }
 
 
@@ -54,7 +54,7 @@ abstract mixin class $SessionMemberCopyWith<$Res>  {
   factory $SessionMemberCopyWith(SessionMember value, $Res Function(SessionMember) _then) = _$SessionMemberCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'session_id') String sessionId,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'team_id') String? teamId, MemberRole role
+@JsonKey(name: 'session_id') String sessionId,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'team_id') String? teamId, MemberRole role,@JsonKey(name: 'checked_in_at') DateTime? checkedInAt
 });
 
 
@@ -71,13 +71,14 @@ class _$SessionMemberCopyWithImpl<$Res>
 
 /// Create a copy of SessionMember
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? sessionId = null,Object? userId = null,Object? teamId = freezed,Object? role = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? sessionId = null,Object? userId = null,Object? teamId = freezed,Object? role = null,Object? checkedInAt = freezed,}) {
   return _then(SessionMember(
 sessionId: null == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,teamId: freezed == teamId ? _self.teamId : teamId // ignore: cast_nullable_to_non_nullable
 as String?,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
-as MemberRole,
+as MemberRole,checkedInAt: freezed == checkedInAt ? _self.checkedInAt : checkedInAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -162,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'session_id')  String sessionId, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'team_id')  String? teamId,  MemberRole role)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'session_id')  String sessionId, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'team_id')  String? teamId,  MemberRole role, @JsonKey(name: 'checked_in_at')  DateTime? checkedInAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SessionMember() when $default != null:
-return $default(_that.sessionId,_that.userId,_that.teamId,_that.role);case _:
+return $default(_that.sessionId,_that.userId,_that.teamId,_that.role,_that.checkedInAt);case _:
   return orElse();
 
 }
@@ -183,10 +184,10 @@ return $default(_that.sessionId,_that.userId,_that.teamId,_that.role);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'session_id')  String sessionId, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'team_id')  String? teamId,  MemberRole role)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'session_id')  String sessionId, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'team_id')  String? teamId,  MemberRole role, @JsonKey(name: 'checked_in_at')  DateTime? checkedInAt)  $default,) {final _that = this;
 switch (_that) {
 case _SessionMember():
-return $default(_that.sessionId,_that.userId,_that.teamId,_that.role);case _:
+return $default(_that.sessionId,_that.userId,_that.teamId,_that.role,_that.checkedInAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +204,10 @@ return $default(_that.sessionId,_that.userId,_that.teamId,_that.role);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'session_id')  String sessionId, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'team_id')  String? teamId,  MemberRole role)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'session_id')  String sessionId, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'team_id')  String? teamId,  MemberRole role, @JsonKey(name: 'checked_in_at')  DateTime? checkedInAt)?  $default,) {final _that = this;
 switch (_that) {
 case _SessionMember() when $default != null:
-return $default(_that.sessionId,_that.userId,_that.teamId,_that.role);case _:
+return $default(_that.sessionId,_that.userId,_that.teamId,_that.role,_that.checkedInAt);case _:
   return null;
 
 }
@@ -217,14 +218,15 @@ return $default(_that.sessionId,_that.userId,_that.teamId,_that.role);case _:
 /// @nodoc
 @JsonSerializable()
 
-class _SessionMember implements SessionMember {
-  const _SessionMember({@JsonKey(name: 'session_id') required this.sessionId, @JsonKey(name: 'user_id') required this.userId, @JsonKey(name: 'team_id') this.teamId, required this.role});
+class _SessionMember extends SessionMember {
+  const _SessionMember({@JsonKey(name: 'session_id') required this.sessionId, @JsonKey(name: 'user_id') required this.userId, @JsonKey(name: 'team_id') this.teamId, required this.role, @JsonKey(name: 'checked_in_at') this.checkedInAt}): super._();
   factory _SessionMember.fromJson(Map<String, dynamic> json) => _$SessionMemberFromJson(json);
 
 @override@JsonKey(name: 'session_id') final  String sessionId;
 @override@JsonKey(name: 'user_id') final  String userId;
 @override@JsonKey(name: 'team_id') final  String? teamId;
 @override final  MemberRole role;
+@override@JsonKey(name: 'checked_in_at') final  DateTime? checkedInAt;
 
 /// Create a copy of SessionMember
 /// with the given fields replaced by the non-null parameter values.
@@ -239,18 +241,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SessionMember&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.teamId, teamId) || other.teamId == teamId)&&(identical(other.role, role) || other.role == role));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SessionMember&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.teamId, teamId) || other.teamId == teamId)&&(identical(other.role, role) || other.role == role)&&(identical(other.checkedInAt, checkedInAt) || other.checkedInAt == checkedInAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,sessionId,userId,teamId,role);
+    return Object.hash(runtimeType,sessionId,userId,teamId,role,checkedInAt);
 }
 
 @override
 String toString() {
-    return 'SessionMember(sessionId: $sessionId, userId: $userId, teamId: $teamId, role: $role)';
+    return 'SessionMember(sessionId: $sessionId, userId: $userId, teamId: $teamId, role: $role, checkedInAt: $checkedInAt)';
 }
 
 
@@ -261,7 +263,7 @@ abstract mixin class _$SessionMemberCopyWith<$Res> implements $SessionMemberCopy
   factory _$SessionMemberCopyWith(_SessionMember value, $Res Function(_SessionMember) _then) = __$SessionMemberCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'session_id') String sessionId,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'team_id') String? teamId, MemberRole role
+@JsonKey(name: 'session_id') String sessionId,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'team_id') String? teamId, MemberRole role,@JsonKey(name: 'checked_in_at') DateTime? checkedInAt
 });
 
 
@@ -278,13 +280,14 @@ class __$SessionMemberCopyWithImpl<$Res>
 
 /// Create a copy of SessionMember
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? sessionId = null,Object? userId = null,Object? teamId = freezed,Object? role = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? sessionId = null,Object? userId = null,Object? teamId = freezed,Object? role = null,Object? checkedInAt = freezed,}) {
   return _then(_SessionMember(
 sessionId: null == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,teamId: freezed == teamId ? _self.teamId : teamId // ignore: cast_nullable_to_non_nullable
 as String?,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
-as MemberRole,
+as MemberRole,checkedInAt: freezed == checkedInAt ? _self.checkedInAt : checkedInAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

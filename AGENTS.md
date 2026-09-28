@@ -240,7 +240,12 @@ GitHub Actions (Q17).
   (`lib/core/supabase/photo_storage.dart`), qui traite la miniature avec la photo ; les listes
   affichent `NuniPhotoThumbnail`, qui retombe sur la photo entière si la miniature manque.
 - Temps réel : abonnements Supabase filtrés par session (ou par événement pour les
-  commentaires du planning), jamais sur une table entière.
+  commentaires du planning), jamais sur une table entière. Les écrans de session s'abonnent par
+  `ChangeSignal` (`lib/core/supabase/change_signal.dart`), qui rouvre seul un abonnement coupé
+  (app en arrière-plan) au lieu d'afficher une erreur ; `ResumeRefresher` (monté dans
+  `app.dart`) relit l'accueil et les écrans de session quand l'app redevient visible.
+- Participants d'une session : `session_members.checked_in_at` non nul = a rejoint lui-même
+  (code, QR code, créateur) ; nul = ajouté par l'organisateur ou depuis un événement (Q217).
 
 ## Interdits
 
