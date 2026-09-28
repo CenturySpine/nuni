@@ -2397,3 +2397,34 @@ Constat : seule la visionneuse de la galerie de session agrandissait une photo ;
 la fiche trou ne réagissaient pas au toucher.
 Suggestion retenue : réutiliser la visionneuse de la galerie, pour que le zoom sur le départ ou
 l'arrivée aide à repérer l'emplacement exact sur le terrain. Le plan 30 applique cette décision.
+
+## Météo des événements (plan 32, 2026-09-28)
+
+**Q211 ☑ — Météo : quel service de prévision ?**
+Réponse PO (2026-09-28) : le même que celui déjà utilisé. C'est Open-Meteo
+(`weather_client.dart`, météo des sessions depuis le plan 07) : le plan 32 lui ajoute la
+prévision, sans nouveau service.
+
+**Q212 ☑ — Météo : quelle heure prévoir, alors qu'un événement n'a pas d'heure de fin ?**
+Réponse PO (2026-09-28) : l'heure de début seulement. La suggestion d'une fenêtre de trois
+heures est écartée.
+
+**Q213 ☑ — Météo : que montrer pour un événement sans point sur la carte ?**
+Réponse PO (2026-09-28) : suggestion retenue, rien.
+
+**Q214 ☑ — Météo : quels chiffres dans la prévision détaillée ?**
+Réponse PO (2026-09-28) : pas de détail heure par heure. La page de l'événement montre la
+prévision de l'heure de début : icône, température, risque de pluie, vent (la demande
+initiale du PO), sans rafales ni quantité de pluie.
+
+**Q215 ☑ — Météo : prévenir que la prévision d'un événement lointain est moins sûre ?**
+Réponse PO (2026-09-28) : la limite reste 7 jours : l'indicateur s'affiche pour tout événement
+qui commence entre maintenant (le moment où l'on regarde l'app) et 7 jours plus tard, sans
+avertissement de fiabilité. L'alternative (à partir de 3 jours avant seulement) est écartée.
+Rappel : il s'agit toujours de la prévision de l'heure de début de l'événement, pas d'une
+prévision sur 7 jours.
+
+**Q216 ☑ — Météo : mentionner le service dans la page de confidentialité ?**
+Réponse PO (2026-09-28) : oui, si ce n'est pas déjà fait. Open-Meteo y figure déjà pour la
+météo des sessions : la mention est étendue aux événements. Photon (adresses des spots), absent,
+y est ajouté.
