@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_theme.dart';
 
 /// A small tinted label ("En direct", "En préparation", "Championnat", a
-/// count...). [dot] adds a leading coloured dot, used for live states.
+/// count...). [dot] adds a leading coloured dot, used for live states. An
+/// empty [label] with an [icon] draws the icon alone.
 class NuniStatusPill extends StatelessWidget {
   const NuniStatusPill({
     super.key,
@@ -43,19 +44,20 @@ class NuniStatusPill extends StatelessWidget {
           ],
           if (icon != null) ...[
             Icon(icon, size: 14, color: colors.onContainer),
-            const SizedBox(width: 4),
+            if (label.isNotEmpty) const SizedBox(width: 4),
           ],
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: colors.onContainer,
-                fontWeight: FontWeight.w700,
+          if (label.isNotEmpty)
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: colors.onContainer,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

@@ -108,6 +108,10 @@ abstract final class PhosphorIcons {
   static const cloudRain = IconData(0xe1b4, fontFamily: _regular);
   static const cloudLightning = IconData(0xe1b2, fontFamily: _regular);
   static const cloudSnow = IconData(0xe1b8, fontFamily: _regular);
+  // An event's forecast (plan 32).
+  static const thermometerSimple = IconData(0xe5cc, fontFamily: _regular);
+  static const drop = IconData(0xe210, fontFamily: _regular);
+  static const wind = IconData(0xe5d2, fontFamily: _regular);
 
   static const download = IconData(0xe20a, fontFamily: _regular);
   static const fileImage = IconData(0xea24, fontFamily: _regular);

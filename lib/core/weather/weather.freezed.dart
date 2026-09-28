@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Weather {
 
-@JsonKey(name: 'temperature_c') double get temperatureC;@JsonKey(name: 'wind_kph') double get windKph; int get code;
+@JsonKey(name: 'temperature_c') double get temperatureC;@JsonKey(name: 'wind_kph') double get windKph; int get code;@JsonKey(name: 'rain_chance', includeIfNull: false) int? get rainChance;
 /// Create a copy of Weather
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +30,20 @@ $WeatherCopyWith<Weather> get copyWith => _$WeatherCopyWithImpl<Weather>(this as
 @override
 bool operator ==(Object other) {
   final _this = this as Weather;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Weather&&(identical(other.temperatureC, _this.temperatureC) || other.temperatureC == _this.temperatureC)&&(identical(other.windKph, _this.windKph) || other.windKph == _this.windKph)&&(identical(other.code, _this.code) || other.code == _this.code));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Weather&&(identical(other.temperatureC, _this.temperatureC) || other.temperatureC == _this.temperatureC)&&(identical(other.windKph, _this.windKph) || other.windKph == _this.windKph)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.rainChance, _this.rainChance) || other.rainChance == _this.rainChance));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Weather;
-  return Object.hash(runtimeType,_this.temperatureC,_this.windKph,_this.code);
+  return Object.hash(runtimeType,_this.temperatureC,_this.windKph,_this.code,_this.rainChance);
 }
 
 @override
 String toString() {
   final _this = this as Weather;
-  return 'Weather(temperatureC: ${_this.temperatureC}, windKph: ${_this.windKph}, code: ${_this.code})';
+  return 'Weather(temperatureC: ${_this.temperatureC}, windKph: ${_this.windKph}, code: ${_this.code}, rainChance: ${_this.rainChance})';
 }
 
 
@@ -54,7 +54,7 @@ abstract mixin class $WeatherCopyWith<$Res>  {
   factory $WeatherCopyWith(Weather value, $Res Function(Weather) _then) = _$WeatherCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'temperature_c') double temperatureC,@JsonKey(name: 'wind_kph') double windKph, int code
+@JsonKey(name: 'temperature_c') double temperatureC,@JsonKey(name: 'wind_kph') double windKph, int code,@JsonKey(name: 'rain_chance', includeIfNull: false) int? rainChance
 });
 
 
@@ -71,12 +71,13 @@ class _$WeatherCopyWithImpl<$Res>
 
 /// Create a copy of Weather
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? temperatureC = null,Object? windKph = null,Object? code = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? temperatureC = null,Object? windKph = null,Object? code = null,Object? rainChance = freezed,}) {
   return _then(Weather(
 temperatureC: null == temperatureC ? _self.temperatureC : temperatureC // ignore: cast_nullable_to_non_nullable
 as double,windKph: null == windKph ? _self.windKph : windKph // ignore: cast_nullable_to_non_nullable
 as double,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
-as int,
+as int,rainChance: freezed == rainChance ? _self.rainChance : rainChance // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
@@ -161,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'temperature_c')  double temperatureC, @JsonKey(name: 'wind_kph')  double windKph,  int code)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'temperature_c')  double temperatureC, @JsonKey(name: 'wind_kph')  double windKph,  int code, @JsonKey(name: 'rain_chance', includeIfNull: false)  int? rainChance)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Weather() when $default != null:
-return $default(_that.temperatureC,_that.windKph,_that.code);case _:
+return $default(_that.temperatureC,_that.windKph,_that.code,_that.rainChance);case _:
   return orElse();
 
 }
@@ -182,10 +183,10 @@ return $default(_that.temperatureC,_that.windKph,_that.code);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'temperature_c')  double temperatureC, @JsonKey(name: 'wind_kph')  double windKph,  int code)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'temperature_c')  double temperatureC, @JsonKey(name: 'wind_kph')  double windKph,  int code, @JsonKey(name: 'rain_chance', includeIfNull: false)  int? rainChance)  $default,) {final _that = this;
 switch (_that) {
 case _Weather():
-return $default(_that.temperatureC,_that.windKph,_that.code);case _:
+return $default(_that.temperatureC,_that.windKph,_that.code,_that.rainChance);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +203,10 @@ return $default(_that.temperatureC,_that.windKph,_that.code);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'temperature_c')  double temperatureC, @JsonKey(name: 'wind_kph')  double windKph,  int code)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'temperature_c')  double temperatureC, @JsonKey(name: 'wind_kph')  double windKph,  int code, @JsonKey(name: 'rain_chance', includeIfNull: false)  int? rainChance)?  $default,) {final _that = this;
 switch (_that) {
 case _Weather() when $default != null:
-return $default(_that.temperatureC,_that.windKph,_that.code);case _:
+return $default(_that.temperatureC,_that.windKph,_that.code,_that.rainChance);case _:
   return null;
 
 }
@@ -217,12 +218,13 @@ return $default(_that.temperatureC,_that.windKph,_that.code);case _:
 @JsonSerializable()
 
 class _Weather implements Weather {
-  const _Weather({@JsonKey(name: 'temperature_c') required this.temperatureC, @JsonKey(name: 'wind_kph') required this.windKph, required this.code});
+  const _Weather({@JsonKey(name: 'temperature_c') required this.temperatureC, @JsonKey(name: 'wind_kph') required this.windKph, required this.code, @JsonKey(name: 'rain_chance', includeIfNull: false) this.rainChance});
   factory _Weather.fromJson(Map<String, dynamic> json) => _$WeatherFromJson(json);
 
 @override@JsonKey(name: 'temperature_c') final  double temperatureC;
 @override@JsonKey(name: 'wind_kph') final  double windKph;
 @override final  int code;
+@override@JsonKey(name: 'rain_chance', includeIfNull: false) final  int? rainChance;
 
 /// Create a copy of Weather
 /// with the given fields replaced by the non-null parameter values.
@@ -237,18 +239,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Weather&&(identical(other.temperatureC, temperatureC) || other.temperatureC == temperatureC)&&(identical(other.windKph, windKph) || other.windKph == windKph)&&(identical(other.code, code) || other.code == code));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Weather&&(identical(other.temperatureC, temperatureC) || other.temperatureC == temperatureC)&&(identical(other.windKph, windKph) || other.windKph == windKph)&&(identical(other.code, code) || other.code == code)&&(identical(other.rainChance, rainChance) || other.rainChance == rainChance));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,temperatureC,windKph,code);
+    return Object.hash(runtimeType,temperatureC,windKph,code,rainChance);
 }
 
 @override
 String toString() {
-    return 'Weather(temperatureC: $temperatureC, windKph: $windKph, code: $code)';
+    return 'Weather(temperatureC: $temperatureC, windKph: $windKph, code: $code, rainChance: $rainChance)';
 }
 
 
@@ -259,7 +261,7 @@ abstract mixin class _$WeatherCopyWith<$Res> implements $WeatherCopyWith<$Res> {
   factory _$WeatherCopyWith(_Weather value, $Res Function(_Weather) _then) = __$WeatherCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'temperature_c') double temperatureC,@JsonKey(name: 'wind_kph') double windKph, int code
+@JsonKey(name: 'temperature_c') double temperatureC,@JsonKey(name: 'wind_kph') double windKph, int code,@JsonKey(name: 'rain_chance', includeIfNull: false) int? rainChance
 });
 
 
@@ -276,12 +278,13 @@ class __$WeatherCopyWithImpl<$Res>
 
 /// Create a copy of Weather
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? temperatureC = null,Object? windKph = null,Object? code = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? temperatureC = null,Object? windKph = null,Object? code = null,Object? rainChance = freezed,}) {
   return _then(_Weather(
 temperatureC: null == temperatureC ? _self.temperatureC : temperatureC // ignore: cast_nullable_to_non_nullable
 as double,windKph: null == windKph ? _self.windKph : windKph // ignore: cast_nullable_to_non_nullable
 as double,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
-as int,
+as int,rainChance: freezed == rainChance ? _self.rainChance : rainChance // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 

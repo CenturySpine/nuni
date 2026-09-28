@@ -8,6 +8,12 @@ heure), Q213 et Q216 retenues, Q215 tranchée (limite de 7 jours, sans avertisse
 questions sont tranchées.
 **Plan validé par le PO le 2026-09-28**, implémentation demandée le même jour.
 
+**Implémenté le 2026-09-28**, poussé sur `main` à la demande du PO le même jour, qui l'essaie
+sur l'app déployée. `flutter analyze` et
+tests verts (tests unitaires du client et de la règle des 7 jours, tests de widgets de la
+pastille et du bloc). Essai dans le navigateur **non fait** : la session de l'assistant n'a
+ni les clés Supabase (`env/dev.json`) ni accès à Open-Meteo (réseau filtré).
+
 Vérification non faite : l'API de prévision d'Open-Meteo n'a pas pu être appelée depuis le
 terminal de l'assistant (réseau filtré de la session). Elle sera vérifiée dans le navigateur
 à l'implémentation.
@@ -64,11 +70,13 @@ carte, la météo prévue **à son heure de début** :
 ### Fichiers
 
 - `lib/core/weather/weather.dart`, `weather_client.dart` : `rainChance`, `fetchForecast`.
-- `lib/features/planning/domain/planning.dart` : `forecastWindow` (Dart pur, testé) : un
-  événement est-il à prévoir (point, entre maintenant et 7 jours) ?
-- `lib/features/planning/data/event_forecast_provider.dart` : fournisseur par événement.
-- `lib/features/planning/ui/event_widgets.dart` : pastille météo dans `EventCard`.
-- `lib/features/planning/ui/event_detail_page.dart` : ligne « Météo prévue ».
+- `lib/features/planning/domain/planning.dart` : `showsForecast` (Dart pur, testé) : un
+  événement est-il à prévoir (point, jour pas terminé, début dans les 7 jours) ?
+- `lib/features/planning/data/event_forecast.dart` : fournisseur par lieu et heure, gardé une
+  heure.
+- `lib/features/planning/ui/event_forecast_widgets.dart` : `EventForecastPill` (carte, dans
+  `event_widgets.dart`) et `EventForecastBlock` (page, dans `event_detail_page.dart`).
+- `lib/shared/nuni_status_pill.dart` : un libellé vide avec une icône dessine l'icône seule.
 - `lib/core/theme/phosphor_icons.dart`, ARB EN et FR (textes et confidentialité).
 
 ## Hors périmètre

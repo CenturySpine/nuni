@@ -223,6 +223,11 @@ GitHub Actions (Q17).
   répétition. Liste de libellés déduite de l'existant, sans table ; lieux : les spots (plan 28). Couleurs :
   `eventHues` de `palettes.dart`. Une session démarrée depuis un événement porte
   `sessions.event_id` (`create_session` y ajoute les « présents »).
+- Météo (plans 07, 10, 32) : un seul client, `WeatherClient` (Open-Meteo, sans clé, tout échec
+  rend `null` en silence) ; une seule table d'icônes, `weatherIcon`. Une session garde sa météo
+  en base (`sessions.weather`) ; la prévision d'un événement (heure de début, événement avec un
+  point et commençant dans les 7 jours, `showsForecast`) n'est jamais stockée, seulement gardée
+  une heure en mémoire (`eventForecastProvider`).
 - Images réseau : jamais `Image.network` ni `NetworkImage` nus ; toujours passer le fournisseur
   par `displaySizedImage` (`lib/shared/display_sized_image.dart`), qui le décode à sa taille
   d'affichage. Une photo décodée en pleine résolution fait planter Safari sur iPhone dès

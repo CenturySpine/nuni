@@ -10,10 +10,12 @@ _Weather _$WeatherFromJson(Map<String, dynamic> json) => _Weather(
   temperatureC: (json['temperature_c'] as num).toDouble(),
   windKph: (json['wind_kph'] as num).toDouble(),
   code: (json['code'] as num).toInt(),
+  rainChance: (json['rain_chance'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$WeatherToJson(_Weather instance) => <String, dynamic>{
   'temperature_c': instance.temperatureC,
   'wind_kph': instance.windKph,
   'code': instance.code,
+  'rain_chance': ?instance.rainChance,
 };

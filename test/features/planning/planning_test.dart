@@ -7,6 +7,8 @@ Event _event(
   DateTime startsAt, {
   String label = 'Session',
   List<EventAnswer> answers = const [],
+  double? lat,
+  double? lng,
 }) => Event(
   id: id,
   associationId: 'a',
@@ -14,11 +16,45 @@ Event _event(
   startsAt: startsAt,
   label: label,
   answers: answers,
+  locationLat: lat,
+  locationLng: lng,
 );
 
 void main() {
   // Local times throughout: the rules follow the device's calendar day.
   final now = DateTime(2026, 10, 1, 20);
+
+  group('showsForecast', () {
+    Event at(DateTime startsAt, {bool located = true}) => _event(
+      'e',
+      startsAt,
+      lat: located ? 45.76 : null,
+      lng: located ? 4.83 : null,
+    );
+
+    test('within 7 days of now, with a point', () {
+      expect(showsForecast(at(DateTime(2026, 10, 2, 14)), now), isTrue);
+      expect(showsForecast(at(DateTime(2026, 10, 8, 19)), now), isTrue);
+    });
+
+    test('never beyond 7 days from now', () {
+      expect(showsForecast(at(DateTime(2026, 10, 8, 20)), now), isFalse);
+      expect(showsForecast(at(DateTime(2026, 10, 20)), now), isFalse);
+    });
+
+    test('never without a point (Q213)', () {
+      expect(
+        showsForecast(at(DateTime(2026, 10, 2), located: false), now),
+        isFalse,
+      );
+    });
+
+    test('until the end of the event day, never after', () {
+      final today = at(DateTime(2026, 10, 1, 14));
+      expect(showsForecast(today, now), isTrue);
+      expect(showsForecast(today, DateTime(2026, 10, 2, 0, 1)), isFalse);
+    });
+  });
 
   group('nextEvent', () {
     test('keeps an event of today until the end of its day', () {

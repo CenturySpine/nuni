@@ -27,11 +27,13 @@ import '../../profile/data/profile_repository.dart';
 import '../../profile/domain/player.dart';
 import '../../sessions/domain/session.dart';
 import '../../sessions/ui/session_nature.dart';
+import '../data/event_forecast.dart';
 import '../data/events_repository.dart';
 import '../data/planning_rights.dart';
 import '../domain/event.dart';
 import '../domain/planning.dart';
 import 'event_comments_section.dart';
+import 'event_forecast_widgets.dart';
 import 'event_widgets.dart';
 
 /// The link that opens [eventId]'s detail (Q168), built on the running
@@ -86,7 +88,8 @@ class _EventDetail extends ConsumerWidget {
   void _refresh(WidgetRef ref) {
     ref
       ..invalidate(eventByIdProvider(event.id))
-      ..invalidate(myPlanningProvider);
+      ..invalidate(myPlanningProvider)
+      ..invalidate(eventForecastProvider);
   }
 
   /// Copies the event's link, nothing else, on every device (PO,
@@ -229,6 +232,7 @@ class _EventDetail extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             _PlaceBlock(event: event),
+            EventForecastBlock(event: event),
             if (event.managerPlayerId != null) ...[
               const SizedBox(height: 16),
               _ManagerTile(playerId: event.managerPlayerId!),

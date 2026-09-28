@@ -29,6 +29,18 @@ bool isEventToday(Event event, DateTime now) {
 /// the base enforces too.
 bool acceptsAnswers(Event event, DateTime now) => now.isBefore(event.startsAt);
 
+/// How far ahead an event shows its weather forecast (plan 32, Q215),
+/// counted from the moment one looks at the app.
+const forecastHorizon = Duration(days: 7);
+
+/// Whether [event] shows its forecast at [now] (plan 32): it has a point
+/// on the map (Q213), its day isn't over, and it starts within
+/// [forecastHorizon].
+bool showsForecast(Event event, DateTime now) =>
+    event.hasLocation &&
+    !isEventPast(event, now) &&
+    event.startsAt.isBefore(now.add(forecastHorizon));
+
 /// The first event whose day isn't over at [now] (Q158), or null.
 Event? nextEvent(Iterable<Event> events, DateTime now) {
   Event? next;

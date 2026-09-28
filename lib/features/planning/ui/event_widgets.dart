@@ -14,6 +14,7 @@ import '../../../shared/nuni_chip.dart';
 import '../../../shared/nuni_status_pill.dart';
 import '../../players/data/players_repository.dart';
 import '../domain/event.dart';
+import 'event_forecast_widgets.dart';
 
 /// The colour an event is drawn in (Q149), or null without one.
 Color? eventHue(EventColor? color) =>
@@ -236,6 +237,7 @@ class EventCard extends StatelessWidget {
                                     ),
                                   ),
                                   EventCommentCount(count: event.commentCount),
+                                  EventForecastPill(event: event),
                                 ],
                               ),
                             ],
