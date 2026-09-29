@@ -8,15 +8,11 @@ heure), Q213 et Q216 retenues, Q215 tranchée (limite de 7 jours, sans avertisse
 questions sont tranchées.
 **Plan validé par le PO le 2026-09-28**, implémentation demandée le même jour.
 
-**Implémenté le 2026-09-28**, poussé sur `main` à la demande du PO le même jour, qui l'essaie
-sur l'app déployée. `flutter analyze` et
-tests verts (tests unitaires du client et de la règle des 7 jours, tests de widgets de la
-pastille et du bloc). Essai dans le navigateur **non fait** : la session de l'assistant n'a
-ni les clés Supabase (`env/dev.json`) ni accès à Open-Meteo (réseau filtré).
-
-Vérification non faite : l'API de prévision d'Open-Meteo n'a pas pu être appelée depuis le
-terminal de l'assistant (réseau filtré de la session). Elle sera vérifiée dans le navigateur
-à l'implémentation.
+**Implémenté le 2026-09-28**, poussé sur `main` à la demande du PO le même jour. `flutter
+analyze` et tests verts (tests unitaires du client et de la règle des 7 jours, tests de widgets
+de la pastille et du bloc). L'assistant n'a pas pu l'essayer dans son navigateur (ni clés
+Supabase, ni accès à Open-Meteo depuis sa session) ; le PO l'a essayé sur l'app déployée.
+**Essayé et validé par le PO, clôturé le 2026-09-29.**
 
 ## Demande du PO (reformulée)
 
@@ -86,12 +82,12 @@ carte, la météo prévue **à son heure de début** :
 
 ## Critères d'acceptation
 
-- [ ] Un événement avec un point, dans les 7 jours, montre l'icône météo sur sa carte,
+- [x] Un événement avec un point, dans les 7 jours, montre l'icône météo sur sa carte,
       à l'accueil et dans le planning.
-- [ ] Sa page montre à l'heure de début : icône, température, risque de pluie, vent.
-- [ ] Sans point, au-delà de 7 jours, passé, ou service injoignable : ni pastille, ni ligne,
+- [x] Sa page montre à l'heure de début : icône, température, risque de pluie, vent.
+- [x] Sans point, au-delà de 7 jours, passé, ou service injoignable : ni pastille, ni ligne,
       ni message.
-- [ ] Les météos de session (historique, exports, badges) sont inchangées.
-- [ ] Tests unitaires : fenêtre des 7 jours, lecture de la prévision (heure la plus proche,
+- [x] Les météos de session (historique, exports, badges) sont inchangées.
+- [x] Tests unitaires : fenêtre des 7 jours, lecture de la prévision (heure la plus proche,
       réponse incomplète).
-- [ ] Confidentialité à jour, chaînes EN et FR, `flutter analyze` et tests verts.
+- [x] Confidentialité à jour, chaînes EN et FR, `flutter analyze` et tests verts.

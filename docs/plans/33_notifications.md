@@ -6,7 +6,7 @@ Plan rédigé le 2026-09-29 à la demande du PO du même jour. Toutes les questi
 sont tranchées le même jour. **Plan validé par le PO le 2026-09-29**, implémentation demandée
 le même jour.
 
-**Implémenté le 2026-09-29, non commité.** `flutter analyze` et tests verts (règles de
+**Implémenté le 2026-09-29**, poussé sur `main` à la demande du PO le même jour. `flutter analyze` et tests verts (règles de
 permission testées). Clés mises en place par le PO le 2026-09-29 (étapes 1 à 5 de `docs/DEV.md`), migration
 poussée par le PO, `notifications_smoke.sql` et `rls_smoke.sql` joués par le PO : tous les
 tests passent. **Non vérifié** : aucune notification réelle n'a pu être envoyée ni reçue. Vérifié dans le navigateur
@@ -14,6 +14,12 @@ intégré, sur une compilation de production servie en local : l'app démarre, `
 installé, actif et contrôle tout le site, sans erreur dans la console. Le réglage lui-même n'a
 pas pu être affiché : il faut être connecté, et la session de l'assistant n'a pas les clés
 Supabase.
+
+**Essayé et validé par le PO sur Android le 2026-09-29** (notifications reçues ; badge « N » de
+la barre d'état corrigé dans la foulée). **Clôturé par le PO le 2026-09-29** sans essai sur iPhone :
+sur iPhone, les notifications d'une PWA dépendent d'Apple et restent au mieux, sans levier
+supplémentaire côté NUNI ; elles seront observées en usage réel la semaine suivante, et les
+défauts éventuels traités au fil de l'eau.
 
 ## Demande du PO (reformulée)
 
@@ -190,15 +196,17 @@ Procédure complète et commandes exactes : `docs/DEV.md`, section « Notificati
 
 ## Critères d'acceptation
 
-- [ ] Après la connexion sur un appareil, le premier toucher dans l'app affiche la fenêtre du
+- [x] Après la connexion sur un appareil, le premier toucher dans l'app affiche la fenêtre du
       téléphone ; « Autoriser » abonne l'appareil sans autre geste.
-- [ ] Réglages : l'interrupteur, allumé par défaut, abonne ou désabonne l'appareil, et affiche le bon
+- [x] Réglages : l'interrupteur, allumé par défaut, abonne ou désabonne l'appareil, et affiche le bon
       message pour navigateur incompatible, iPhone sans installation, permission refusée.
-- [ ] Éteindre l'interrupteur ou se déconnecter : l'appareil ne reçoit plus rien.
-- [ ] Les quatre règles notifient les bons destinataires, jamais l'auteur, une seule fois
+- [x] Éteindre l'interrupteur ou se déconnecter : l'appareil ne reçoit plus rien.
+- [x] Les quatre règles notifient les bons destinataires, jamais l'auteur, une seule fois
       chacun (test SQL).
-- [ ] Import d'un agenda (un ou plusieurs événements) : aucune notification.
-- [ ] Toucher une notification ouvre la page de l'événement.
-- [ ] Un envoi en échec n'empêche ni la réponse, ni le commentaire, ni le démarrage.
-- [ ] Essai réel par le PO sur Android et sur iPhone (app installée).
-- [ ] Confidentialité à jour, chaînes EN et FR, `flutter analyze` et tests verts.
+- [x] Import d'un agenda (un ou plusieurs événements) : aucune notification.
+- [x] Toucher une notification ouvre la page de l'événement.
+- [x] Un envoi en échec n'empêche ni la réponse, ni le commentaire, ni le démarrage.
+- [x] Essai réel par le PO sur Android.
+- [x] Essai réel par le PO sur iPhone (app installée) : levé par le PO le 2026-09-29, observé
+      en usage réel après la clôture (notifications d'une PWA au mieux sur iPhone).
+- [x] Confidentialité à jour, chaînes EN et FR, `flutter analyze` et tests verts.
