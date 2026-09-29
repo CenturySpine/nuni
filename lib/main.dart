@@ -8,6 +8,7 @@ import 'app.dart';
 import 'core/l10n/locale_controller.dart';
 import 'core/supabase/supabase_providers.dart';
 import 'core/theme/palette_controller.dart';
+import 'features/notifications/data/notifications_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,12 +22,14 @@ void main() async {
   await initializeSupabase();
   final persistedLocale = await loadPersistedLocale();
   final persistedPalette = await loadPersistedPalette();
+  final notificationPrefs = await loadNotificationPrefs();
 
   runApp(
     ProviderScope(
       overrides: [
         persistedLocaleProvider.overrideWithValue(persistedLocale),
         persistedPaletteProvider.overrideWithValue(persistedPalette),
+        persistedNotificationPrefsProvider.overrideWithValue(notificationPrefs),
       ],
       child: const NuniApp(),
     ),

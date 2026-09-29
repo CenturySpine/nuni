@@ -2502,3 +2502,171 @@ une phrase l'explique. Mis en œuvre (migration `20260929110000`) : refus `event
 dans `sessions_guard_event`, index unique `sessions_event_id_key`, RPC `event_session` (état de
 la session et « j'en fais partie », pour les seuls membres de l'association) qui remplace
 `event_has_joinable_session`.
+
+## Notifications du planning (plan 33, 2026-09-29)
+
+**Q224 ☑ — Faut-il un prestataire supplémentaire pour envoyer les notifications ?**
+(reformulée le 2026-09-29 : première formulation trop technique)
+Le constat : une notification n'arrive jamais directement de NUNI au téléphone. Elle passe
+obligatoirement par le service du fabricant du navigateur : Google pour Chrome et Android, Apple
+pour l'iPhone, Mozilla pour Firefox. Ces services sont gratuits et ne demandent aucun compte.
+Il y a deux façons de s'y brancher :
+- **en direct** : NUNI (sa base Supabase) remet la notification elle-même au service du
+  navigateur. Il n'y a rien à créer, sauf une paire de clés générée une fois (Q237), qui
+  identifie NUNI auprès de ces services ;
+- **par un intermédiaire** (Firebase de Google, OneSignal) : NUNI remet la notification à cette
+  société, qui la transmet au même service. Il faut alors ouvrir un compte chez elle, ajouter
+  son code dans l'app et la déclarer dans la page de confidentialité. En échange, elle offre un
+  tableau de bord (statistiques d'envoi, envois manuels).
+Ce que j'attends de toi : choisir entre ces deux voies. Ce choix décide si tu dois créer et
+gérer un compte de plus.
+Suggestion : **en direct**. Pour une app web, l'intermédiaire passe de toute façon par le même
+service du navigateur : il n'apporte ni meilleure réception ni iPhone en plus, seulement un
+compte, du code et un prestataire de plus. Son tableau de bord ne sert pas à une association.
+Question du PO (2026-09-29) : pourquoi ces services existent-ils, s'ils n'apportent rien ?
+Réponse : ils apportent beaucoup, mais à d'autres besoins que ceux de NUNI :
+- **apps installées depuis les stores** (Android, iPhone) : là, Firebase est le passage
+  obligé sur Android, et ces services réunissent Android, iPhone et web en un seul outil.
+  NUNI n'est qu'une app web ;
+- **marketing** : envois manuels depuis un tableau de bord par des non-développeurs, campagnes
+  programmées, ciblage par segments, statistiques d'ouverture, tests A/B, e-mails et SMS dans
+  le même outil (OneSignal). NUNI n'envoie que des notifications déclenchées par l'app ;
+- **ne pas écrire de code d'envoi** : ils chiffrent, réessaient et nettoient les abonnements
+  expirés, pour des millions d'envois. Pour NUNI, ce code tient en une petite fonction
+  (une centaine de lignes) appuyée sur une bibliothèque standard ; et il faudrait de toute façon
+  écrire le calcul des destinataires dans la base.
+Le seul gain réel pour NUNI serait d'éviter cette petite fonction ; le prix serait un compte,
+leur code dans l'app (OneSignal impose son propre service worker) et un prestataire de plus
+dans la page de confidentialité. Si NUNI devenait un jour une app des stores, la question
+serait à reposer.
+Réponse PO (2026-09-29) : en direct.
+
+**Q225 ☑ — Où et comment se règle la permission globale ?**
+Suggestion : un interrupteur « Notifications » dans les réglages, **éteint par défaut**, valable
+**pour l'appareil** (chaque téléphone s'abonne séparément), sans demande automatique au
+lancement. Raisons : une notification s'adresse à un navigateur précis, pas à un compte ; les
+navigateurs exigent que la demande suive un geste de l'utilisateur, et iOS la refuse sinon ; une
+demande au lancement est souvent refusée par réflexe, et un refus ne peut plus être redemandé
+par l'app. Une invitation ailleurs (carte sur l'accueil) pourra venir plus tard si l'usage est
+faible.
+Réponse PO (2026-09-29) : notifications **activées par défaut**. Contrainte technique : aucun
+navigateur n'accorde la permission sans un toucher de l'utilisateur (iOS refuse toute demande
+faite sans geste). « Activées par défaut » se traduit donc ainsi : le réglage est allumé
+d'office, et l'app demande elle-même la permission par une invitation, sans attendre que
+l'utilisateur aille dans les réglages (forme de l'invitation : Q235). Le réglage reste propre
+à chaque appareil.
+
+**Q226 ☑ — Prévenir le responsable quand un joueur retire sa réponse (retour à « aucune ») ?**
+Suggestion : oui (« Paul a retiré sa réponse »). Pour le responsable, un présent qui retire sa
+réponse est un changement aussi utile qu'un passage à absent.
+Réponse PO (2026-09-29) : oui.
+
+**Q227 ☑ — Événement sans responsable : qui prévenir des réponses et commentaires ?**
+Suggestion : personne (pour ces deux règles ; les présents et « peut-être » restent prévenus des
+commentaires). Le responsable est facultatif et posé par défaut au créateur ; s'il a été retiré,
+retomber sur le créateur ou le staff enverrait des notifications à quelqu'un qui a choisi de ne
+pas être responsable.
+Réponse PO (2026-09-29) : suggestion retenue (personne).
+
+**Q228 ☑ — Commentaires modifiés ou supprimés : notifier ?**
+Suggestion : non, seulement les nouveaux commentaires. Une correction de faute notifierait tout
+le monde une seconde fois.
+Réponse PO (2026-09-29, confirmée le même jour) : suggestion retenue, aucune notification pour
+un commentaire modifié ou supprimé.
+
+**Q229 ☑ — Nouvel événement : un clone notifie-t-il ? Et un événement créé dans le passé ?**
+Suggestion : un clone, oui (c'est un événement publié, un seul, comme une saisie) ; un événement
+dont la date est déjà passée, non (rien à préparer). L'import n'est jamais notifié : il est
+reconnu à son origine « importé », quel que soit le nombre d'événements.
+Réponse PO (2026-09-29) : seul l'enregistrement d'un événement le notifie. Un clone ne fait
+qu'ouvrir le formulaire prérempli ; c'est l'enregistrement qui crée l'événement, comme une
+saisie. Il n'y a donc aucune distinction à faire entre un clone et un événement saisi. Le cas
+d'un événement enregistré avec une date passée n'a pas été tranché : la suggestion (pas de
+notification) est appliquée en attendant la réponse (Q236).
+
+**Q230 ☑ — Dans quelle langue sont écrites les notifications ?**
+Suggestion : la langue de l'app sur l'appareil qui reçoit, enregistrée avec son abonnement et
+mise à jour quand elle change. Les notifications sont écrites par le serveur, app fermée : il
+doit connaître la langue de chaque appareil.
+Réponse PO (2026-09-29) : oui, la langue choisie dans l'app, pas celle du système.
+
+**Q231 ☑ — Contenu des notifications de commentaire et de nouvel événement.**
+Suggestion : commentaire = nom de l'auteur, libellé de l'événement et les 100 premiers
+caractères du commentaire ; nouvel événement = libellé, date, heure et lieu. Le contenu est
+chiffré de bout en bout jusqu'au téléphone ; en contrepartie il peut s'afficher sur l'écran
+verrouillé (réglable par l'utilisateur dans son téléphone).
+Réponse PO (2026-09-29) : oui.
+
+**Q232 ☑ — Réponses changées plusieurs fois de suite : une notification par changement ?**
+Suggestion : non, la nouvelle notification d'un même joueur sur un même événement **remplace**
+la précédente sur le téléphone du responsable (même principe pour les commentaires d'un même
+événement, regroupés en une notification mise à jour). Évite une pile de notifications quand
+quelqu'un hésite.
+Réponse PO (2026-09-29) : oui.
+
+**Q233 ☑ — Que ouvre le toucher d'une notification ?**
+Suggestion : toujours la page de l'événement, y compris pour « la session a démarré ». Cette page
+montre déjà « Rejoindre la session » (Q221, Q223) ; ouvrir directement la session ne marcherait
+pas pour un présent qui ne l'a pas encore rejointe.
+Réponse PO (2026-09-29) : oui.
+
+**Q234 ☑ — Page de confidentialité : mentionner les services de notification ?**
+Suggestion : oui : « Google, Apple ou Mozilla, selon votre navigateur, acheminent les
+notifications, chiffrées, sans pouvoir les lire ». Ce sont de nouveaux destinataires techniques
+des données de l'app, à déclarer comme Supabase et Vercel.
+Réponse PO (2026-09-29) : oui, si c'est la bonne pratique. C'en est une : le RGPD (article 13)
+impose d'indiquer les destinataires des données, et ces services en reçoivent (chiffrées).
+
+**Q235 ☑ — Quand et comment NUNI demande-t-elle à l'utilisateur d'autoriser les notifications ?**
+(reformulée le 2026-09-29 : première formulation pas claire)
+Le constat : même « activées par défaut » (Q225), NUNI ne peut rien envoyer tant que
+l'utilisateur n'a pas répondu « Autoriser » dans la fenêtre du téléphone : « NUNI souhaite vous
+envoyer des notifications — Autoriser / Ne pas autoriser ». Deux contraintes, imposées par
+Android et iPhone et non contournables :
+1. cette fenêtre n'apparaît que juste après un toucher de l'utilisateur sur un bouton de
+   l'app, jamais toute seule à l'ouverture ;
+2. si l'utilisateur répond « Ne pas autoriser », l'app ne peut plus jamais la réafficher ; pour
+   revenir en arrière, il doit aller lui-même dans les réglages de son téléphone.
+Il faut donc un bouton dans NUNI qui fait apparaître cette fenêtre. Ce que j'attends de toi :
+dire où et quand ce bouton apparaît.
+Suggestion : une fois par téléphone, juste après la connexion, NUNI affiche son propre écran :
+« NUNI peut te prévenir des réponses et des commentaires de tes événements, du démarrage des
+sessions et des nouveaux événements de ton association », avec deux boutons :
+- « Activer » : fait apparaître la fenêtre du téléphone ;
+- « Plus tard » : ferme l'écran sans rien demander. On pourra activer plus tard depuis les
+  Réglages, où un bouton « Activer » attend.
+Raisons : quelqu'un qui sait pourquoi on lui demande répond plus souvent « Autoriser » (c'est la
+pratique recommandée par Apple et Google), et « Plus tard » évite le « Ne pas autoriser »
+définitif donné par réflexe. Sur iPhone, si NUNI n'est pas installée sur l'écran d'accueil,
+cet écran explique d'abord comment l'installer : sans installation, l'iPhone ne permet aucune
+notification.
+Précision (2026-09-29, à la suite d'une question du PO) : « Plus tard » est un bouton de
+l'écran de NUNI, pas un refus du téléphone ; la fenêtre du téléphone n'a alors jamais été
+affichée et peut l'être plus tard. Le bouton « Activer » de la page Réglages de NUNI (menu →
+Réglages, celle de la langue et des couleurs) ne sert que dans ce cas. Si l'utilisateur a
+répondu « Ne pas autoriser » dans la fenêtre du téléphone, ce bouton n'apparaît pas : la page
+Réglages affiche à la place comment réautoriser NUNI dans les réglages du téléphone.
+Réponse PO (2026-09-29) : non, pas d'écran supplémentaire : trop compliqué. Conséquence
+appliquée comme hypothèse, à confirmer : la fenêtre du téléphone s'affiche directement au
+**premier toucher dans l'app** après la connexion (n'importe quel bouton, une fois par
+appareil). Un « Ne pas autoriser » y est définitif pour l'app ; la page Réglages de NUNI dit
+alors comment réautoriser dans les réglages du téléphone.
+Réponse PO (2026-09-29) : ok, confirmé.
+
+**Q236 ☑ — Un événement enregistré avec une date déjà passée notifie-t-il l'association ?**
+Suggestion : non. Il n'y a rien à préparer, et c'est en général une saisie après coup pour
+garder une trace.
+Réponse PO (2026-09-29) : oui, c'est correct (pas de notification).
+
+**Q237 ☑ — Accepter de générer la paire de clés d'envoi (si Q224 = en direct) ?**
+Ce que c'est : deux longues chaînes de caractères, une publique et une privée. Elles prouvent
+aux services de Google, Apple et Mozilla que les notifications viennent bien de NUNI. La
+publique est mise dans l'app ; la privée doit rester secrète, dans Supabase uniquement, jamais
+dans le dépôt public.
+Ce que j'attendrai de toi à l'implémentation : lancer une commande sur ton poste
+(`npx web-push generate-vapid-keys`), puis copier les deux clés à trois endroits (tes fichiers
+`env/dev.json` et `env/prod.json`, les variables Vercel, les secrets Supabase). Je te donnerai
+les commandes exactes. Sans ces clés, aucune notification ne peut partir.
+Suggestion : que tu le fasses toi-même plutôt que moi. La clé privée ne passe alors jamais par
+mon terminal ni par cette conversation.
+Réponse PO (2026-09-29) : oui ; l'assistant lui indique comment les générer.

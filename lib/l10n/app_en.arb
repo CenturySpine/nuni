@@ -292,6 +292,12 @@
   "errorAccessDenied": "You don't have access to this.",
 
   "settingsSignOut": "Sign out",
+  "settingsNotifications": "Notifications",
+  "settingsNotificationsThisDevice": "Answers and comments on your events, sessions starting, new events. On this device only.",
+  "settingsNotificationsToAsk": "Tap to allow notifications on this device.",
+  "settingsNotificationsDenied": "Blocked on this device. To get them, allow NUNI in your browser or phone settings.",
+  "settingsNotificationsNeedsInstall": "On iPhone and iPad, first add NUNI to your home screen (Share, then “Add to Home Screen”), then open it from its icon.",
+  "settingsNotificationsUnsupported": "This browser does not support notifications.",
 
   "notFoundTitle": "Page not found",
   "notFoundMessage": "This page does not exist or has moved.",
@@ -337,7 +343,7 @@
   "privacyPurposeHeading": "Why, and on what basis",
   "privacyPurposeBody": "Only to run collaborative scoring: sharing sessions, computing rankings and the championship, showing holes near you. Legal basis: performing the service you ask for by creating your account. Your position is only read with your permission, which you can withdraw at any time in your browser or phone settings.",
   "privacyRecipientsHeading": "Who sees or receives your data",
-  "privacyRecipientsBody": "Your public profile is visible to every signed-in user, notably from sessions and each club's page: it shows your display name, your photo and your statistics. The statistics are computed from your completed sessions; for that, the history of those sessions (teams, holes and scores, without comments or photos) is readable by every signed-in user. The “Public statistics” switch in your profile removes them from your public profile, without hiding those sessions and scores: anyone could redo the calculations. Once started, a session and its scores are visible to its players and to every member of the club it was created in; public holes, clubs and their local manager's name are visible to every user. Technical providers: Supabase (database and photos), Vercel (website hosting), Google (sign-in). Services called with an approximate position, without your identity: BigDataCloud (city name), Photon (spot addresses), Open-Meteo (weather of sessions and events), OpenStreetMap (map tiles). No data is sold or shared for any other purpose.",
+  "privacyRecipientsBody": "Your public profile is visible to every signed-in user, notably from sessions and each club's page: it shows your display name, your photo and your statistics. The statistics are computed from your completed sessions; for that, the history of those sessions (teams, holes and scores, without comments or photos) is readable by every signed-in user. The “Public statistics” switch in your profile removes them from your public profile, without hiding those sessions and scores: anyone could redo the calculations. Once started, a session and its scores are visible to its players and to every member of the club it was created in; public holes, clubs and their local manager's name are visible to every user. Technical providers: Supabase (database and photos), Vercel (website hosting), Google (sign-in). Notifications: carried, encrypted, by your browser’s push service (Google, Apple or Mozilla), which cannot read them. Services called with an approximate position, without your identity: BigDataCloud (city name), Photon (spot addresses), Open-Meteo (weather of sessions and events), OpenStreetMap (map tiles). No data is sold or shared for any other purpose.",
   "privacyTransfersHeading": "Transfers outside the European Union",
   "privacyTransfersBody": "Vercel and Google are based in the United States, Supabase in Singapore. These transfers are covered by the European Commission's standard contractual clauses (Vercel, Supabase) and the EU–U.S. Data Privacy Framework (Google).",
   "privacyRetentionHeading": "How long",
@@ -349,7 +355,7 @@
   "privacyTrackingHeading": "No tracking",
   "privacyTrackingBody": "No analytics, no advertising, no trackers. Your browser keeps your sign-in, language and colours locally; none of it is used to follow you.",
   "privacyUpdatedHeading": "Last updated",
-  "privacyUpdatedBody": "28 September 2026.",
+  "privacyUpdatedBody": "29 September 2026.",
 
   "aboutTitle": "About",
   "aboutVersionLabel": "Version {version}",

@@ -64,6 +64,43 @@ fvm dart run tool/backfill_photo_thumbnails.dart --dry-run   # compte sans rien 
 fvm dart run tool/backfill_photo_thumbnails.dart
 ```
 
+## Notifications (plan 33)
+
+Web Push standard, sans prestataire (Q224). Chaîne complète : déclencheurs de la base
+(migration `20260929120000_push_notifications`) → fonction serveur `send-push`
+(`supabase/functions/send-push/index.ts`, textes FR/EN) → service de notification du navigateur
+→ `web/nuni_sw.js` sur le téléphone. Mise en place, une seule fois (tout est sur le poste du PO,
+aucun secret dans le dépôt) :
+
+```powershell
+# 1. Paire de clés VAPID : identifie NUNI auprès des services de Google, Apple et Mozilla.
+#    Affiche "Public Key" et "Private Key".
+npx web-push generate-vapid-keys
+
+# 2. Clé PUBLIQUE dans l'app : ajouter "VAPID_PUBLIC_KEY": "<Public Key>" dans env/dev.json et
+#    env/prod.json, et la variable d'environnement VAPID_PUBLIC_KEY (même valeur) dans le projet
+#    Vercel (Settings > Environment Variables), puis redéployer. Sans elle, les Réglages disent
+#    que le navigateur ne permet pas les notifications.
+
+# 3. Secret d'appel de la fonction (une valeur au hasard, gardée pour l'étape 5) :
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# 4. Secrets de la fonction serveur (clé PRIVÉE comprise ; mailto = contact des services push).
+npx supabase secrets set VAPID_PUBLIC_KEY=<Public Key> VAPID_PRIVATE_KEY=<Private Key> VAPID_SUBJECT=mailto:<e-mail> PUSH_FUNCTION_SECRET=<secret de l'étape 3>
+
+# 5. Adresse et secret dans le coffre de la base (tableau de bord Supabase > SQL Editor) :
+#    select vault.create_secret('https://<project-ref>.supabase.co/functions/v1/send-push', 'push_function_url');
+#    select vault.create_secret('<secret de l''étape 3>', 'push_function_secret');
+
+# 6. Déployer la fonction (à refaire après chaque modification de index.ts).
+npx supabase functions deploy send-push
+```
+
+Tant que l'étape 5 n'est pas faite, la base n'envoie rien, sans erreur. Vérification des
+destinataires (même procédure que `rls_smoke.sql`) :
+`npx supabase db query --linked -f supabase/tests/notifications_smoke.sql`. Journal des envois :
+tableau de bord Supabase > Edge Functions > send-push > Logs.
+
 ## Supabase : modifier le schéma (migrations additives, depuis la version 1.0.0)
 
 Depuis le 2026-09-27 (version 1.0.0, décision du PO), la base de production contient des

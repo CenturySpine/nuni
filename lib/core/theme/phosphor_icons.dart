@@ -15,6 +15,9 @@ abstract final class PhosphorIcons {
   static const _regular = 'PhosphorRegular';
   static const _fill = 'PhosphorFill';
 
+  // Notifications (plan 33).
+  static const bell = IconData(0xe0ce, fontFamily: _regular);
+
   // Association planning (plan 23).
   static const calendarDots = IconData(0xe7b4, fontFamily: _regular);
   static const calendarDotsFill = IconData(0xe7b4, fontFamily: _fill);

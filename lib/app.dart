@@ -8,6 +8,7 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/palette_controller.dart';
 import 'features/badges/ui/badge_announcer.dart';
+import 'features/notifications/ui/notifications_gate.dart';
 import 'l10n/generated/app_localizations.dart';
 
 class NuniApp extends ConsumerWidget {
@@ -25,10 +26,14 @@ class NuniApp extends ConsumerWidget {
       routerConfig: router,
       // New badges are announced above any page (plan 21).
       // Coming back from the background reloads the sessions.
+      // Notifications: permission, subscription, touched ones (plan 33).
       builder: (context, child) => ResumeRefresher(
-        child: BadgeAnnouncer(
-          navigatorKey: router.routerDelegate.navigatorKey,
-          child: child ?? const SizedBox.shrink(),
+        child: NotificationsGate(
+          router: router,
+          child: BadgeAnnouncer(
+            navigatorKey: router.routerDelegate.navigatorKey,
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
       ),
       locale: locale,

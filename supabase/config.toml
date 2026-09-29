@@ -413,3 +413,8 @@ enabled = true
 # formatted with uppercase keywords, indent 2, max width 180, trailing commas,
 # and column/key alignment. Set to "null" to emit raw, unformatted SQL.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
+
+# Planning notifications (plan 33): called by the database with its own secret header
+# (x-push-secret), not by a signed-in user, so no JWT to verify.
+[functions.send-push]
+verify_jwt = false

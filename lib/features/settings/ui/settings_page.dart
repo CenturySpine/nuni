@@ -18,6 +18,8 @@ import '../../../shared/nuni_legal_footer.dart';
 import '../../../shared/nuni_section_header.dart';
 import '../../associations/data/associations_repository.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../notifications/data/notifications_controller.dart';
+import '../../notifications/ui/notifications_tile.dart';
 import '../../profile/data/profile_repository.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -144,6 +146,9 @@ class SettingsPage extends ConsumerWidget {
             ),
           ],
           const SizedBox(height: 28),
+          NuniSectionHeader(title: l10n.settingsNotifications),
+          const NotificationsTile(),
+          const SizedBox(height: 28),
           NuniGroupedList(
             children: [
               ListTile(
@@ -200,7 +205,14 @@ class SettingsPage extends ConsumerWidget {
                   l10n.settingsSignOut,
                   style: TextStyle(color: danger.onContainer),
                 ),
-                onTap: () => ref.read(authRepositoryProvider).signOut(),
+                onTap: () async {
+                  // First, while still signed in: the next account on this
+                  // phone must not get this one's notifications (plan 33).
+                  await ref
+                      .read(notificationsControllerProvider.notifier)
+                      .forgetDevice();
+                  await ref.read(authRepositoryProvider).signOut();
+                },
               ),
             ],
           ),

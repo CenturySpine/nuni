@@ -21,7 +21,9 @@ flutter --disable-analytics >/dev/null
 flutter --version
 
 # Runtime configuration comes from Vercel environment variables (empty until they are set).
-printf '{"SUPABASE_URL":"%s","SUPABASE_ANON_KEY":"%s"}\n' "${SUPABASE_URL:-}" "${SUPABASE_ANON_KEY:-}" > env/prod.json
+# VAPID_PUBLIC_KEY (plan 33): the public half of the notification keys; empty = no notifications.
+printf '{"SUPABASE_URL":"%s","SUPABASE_ANON_KEY":"%s","VAPID_PUBLIC_KEY":"%s"}\n' \
+  "${SUPABASE_URL:-}" "${SUPABASE_ANON_KEY:-}" "${VAPID_PUBLIC_KEY:-}" > env/prod.json
 
 flutter pub get
 flutter analyze --fatal-infos

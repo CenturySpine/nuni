@@ -108,10 +108,11 @@ fvm flutter test
 fvm flutter build web --release --no-web-resources-cdn --dart-define-from-file=env/prod.json
 npx supabase db push                              # migrations vers le projet nuni
 npx supabase db diff -f <nom>                     # nouvelle migration depuis les changements
+npx supabase functions deploy send-push           # fonction d'envoi des notifications (plan 33)
 ```
 
-Environnement : `env/dev.json` et `env/prod.json` (ignorés par git) contiennent `SUPABASE_URL`
-et `SUPABASE_ANON_KEY` ; `env/example.json` est le gabarit committé. À chaque push, Vercel
+Environnement : `env/dev.json` et `env/prod.json` (ignorés par git) contiennent `SUPABASE_URL`,
+`SUPABASE_ANON_KEY` et `VAPID_PUBLIC_KEY` (notifications, plan 33) ; `env/example.json` est le gabarit committé. À chaque push, Vercel
 exécute `tool/vercel_build.sh` (installe Flutter, `pub get`, analyze, test, build web) ; pas de
 GitHub Actions (Q17).
 
@@ -234,6 +235,19 @@ GitHub Actions (Q17).
   en base (`sessions.weather`) ; la prévision d'un événement (heure de début, événement avec un
   point et commençant dans les 7 jours, `showsForecast`) n'est jamais stockée, seulement gardée
   une heure en mémoire (`eventForecastProvider`).
+- Notifications (plan 33) : Web Push standard, sans prestataire (Q224). Destinataires calculés
+  en base, une fonction SQL par règle (`_…_notification_recipients`), appelées par des
+  déclencheurs sur `event_responses`, `event_comments`, `events` (seulement `origin = 'manual'`,
+  à venir : un import ne notifie jamais) et `sessions` (`draft` → `live`) ; l'auteur de l'action
+  n'est jamais prévenu. `_notify` passe par `pg_net` à la fonction serveur `send-push`
+  (`supabase/functions/`), adresse et secret dans Supabase Vault. **Seule exception à la règle
+  des ARB** : les textes des notifications vivent dans `send-push` (FR et EN), écrits côté
+  serveur, app fermée. Abonnements : `push_subscriptions`, une ligne par appareil, fermée à
+  l'app, écrite par `save_push_subscription` / `delete_push_subscription`. Côté app :
+  `lib/features/notifications/` (réglage par appareil, allumé par défaut ; fenêtre du téléphone
+  au premier toucher, `NotificationsGate` monté dans `app.dart`). Service worker :
+  `web/nuni_sw.js`, enregistré par `web/flutter_bootstrap.js`, qui ne charge plus celui de
+  Flutter (il se désinstallait lui-même). Mise en place et clés : `docs/DEV.md`.
 - Images réseau : jamais `Image.network` ni `NetworkImage` nus ; toujours passer le fournisseur
   par `displaySizedImage` (`lib/shared/display_sized_image.dart`), qui le décode à sa taille
   d'affichage. Une photo décodée en pleine résolution fait planter Safari sur iPhone dès
