@@ -2436,9 +2436,10 @@ Demande PO (2026-09-28) : l'organisateur doit voir clairement qui a été ajout�
 depuis un événement) et qui a réellement rejoint par le code ou le QR code. Mis en œuvre :
 colonne `session_members.checked_in_at` (migration `20260928100000`), posée quand un membre
 s'inscrit lui-même (création, code, QR code, « je suis présent » de l'organisateur) et quand un
-participant déjà ajouté passe par le code. Chaque participant porte une pastille « A rejoint »
-(vert) ou « Ajouté · pas encore rejoint » (jaune), et l'en-tête de la liste compte « 3 sur 5 ont
-rejoint ». Sessions existantes : seul leur créateur est marqué comme ayant rejoint.
+participant déjà ajouté passe par le code. Chaque participant porte, après son nom, une icône
+seule (PO, 2026-09-29) : coche verte (a rejoint) ou sablier orange (ajouté, pas encore rejoint),
+le texte restant en infobulle et pour les lecteurs d'écran ; l'en-tête de la liste compte « 3 sur
+5 ont rejoint ». Sessions existantes : seul leur créateur est marqué comme ayant rejoint.
 
 **Q218 ☑ — Un participant ajouté qui ouvre la session depuis son accueil a-t-il « rejoint » ?**
 Réponse PO (2026-09-28) : oui, suggestion retenue. Ouvrir la session (salle d'attente, salle des

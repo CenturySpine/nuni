@@ -39,7 +39,7 @@ import 'add_participant_sheet.dart';
 import 'attendance_room_view.dart';
 import 'championship_toggle.dart';
 import 'invite_sheet.dart';
-import 'member_join_pill.dart';
+import 'member_join_indicator.dart';
 import 'session_nature.dart';
 
 /// `/session/:id`: the waiting room while `status = draft` (plan 07);
@@ -665,24 +665,13 @@ class _TeamsSection extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                room.playerFor(member)?.name ?? '',
-                                style: member.userId == currentUserId
-                                    ? Theme.of(context).textTheme.bodyMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                          )
-                                    : null,
-                              ),
-                              const SizedBox(height: 4),
-                              MemberJoinPill(member: member),
-                            ],
-                          ),
+                        child: MemberNameWithJoin(
+                          name: room.playerFor(member)?.name ?? '',
+                          member: member,
+                          style: member.userId == currentUserId
+                              ? Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700)
+                              : null,
                         ),
                       ),
                       if (isOwner && member.role != MemberRole.owner)
@@ -855,8 +844,7 @@ class _PoolRow extends StatelessWidget {
             avatar,
           ],
         ),
-        title: Text(label),
-        subtitle: MemberJoinPill(member: member),
+        title: MemberNameWithJoin(name: label, member: member),
         trailing: actions,
         onTap: busy ? null : () => onToggle(!selected),
       );
@@ -864,8 +852,7 @@ class _PoolRow extends StatelessWidget {
 
     return ListTile(
       leading: avatar,
-      title: Text(label),
-      subtitle: MemberJoinPill(member: member),
+      title: MemberNameWithJoin(name: label, member: member),
       trailing: isOwner ? actions : null,
     );
   }

@@ -29,7 +29,7 @@ import '../domain/session_member.dart';
 import '../domain/session_room.dart';
 import 'add_participant_sheet.dart';
 import 'invite_sheet.dart';
-import 'member_join_pill.dart';
+import 'member_join_indicator.dart';
 import 'session_nature.dart';
 import 'session_nature_rules.dart';
 
@@ -334,13 +334,13 @@ class _AttendanceRoomViewState extends ConsumerState<AttendanceRoomView> {
                       imageUrl: room.playerFor(member)?.avatarUrl,
                       size: 36,
                     ),
-                    title: Text(
-                      member.userId == myId
+                    title: MemberNameWithJoin(
+                      name: member.userId == myId
                           ? '${room.playerFor(member)?.name ?? ''} '
                                 '(${l10n.sessionsRoomYou})'
                           : room.playerFor(member)?.name ?? '',
+                      member: member,
                     ),
-                    subtitle: MemberJoinPill(member: member),
                     trailing: isOwner
                         ? IconButton(
                             icon: const Icon(PhosphorIcons.xCircle, size: 18),
