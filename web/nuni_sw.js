@@ -17,6 +17,9 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(data.title || 'NUNI', {
       body: data.body || '',
       icon: 'icons/Icon-192.png',
+      // Status bar icon on Android: only its silhouette shows (a white "N" on transparent);
+      // without it, Chrome shows a bell.
+      badge: 'icons/notification-badge.png',
       // Same tag = replaces the previous notification of that kind (Q232), with a sound again.
       tag: data.tag,
       renotify: Boolean(data.tag),

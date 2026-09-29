@@ -410,7 +410,7 @@ class _ManagerTile extends ConsumerWidget {
     final player = ref.watch(playerByIdProvider(playerId)).value;
     return NuniListCard(
       leading: NuniAvatar(name: player?.name, imageUrl: player?.avatarUrl),
-      title: player?.name ?? 'â€¦',
+      title: player?.name ?? '…',
       subtitle: l10n.planningManager,
       onTap: () => context.push('/players/$playerId'),
     );
@@ -526,7 +526,7 @@ class _AnswersBlock extends StatelessWidget {
                   children: [
                     NuniStatusPill(
                       label:
-                          '${responseLabel(l10n, response)} Â· ${players.length}',
+                          '${responseLabel(l10n, response)} · ${players.length}',
                       tone: responseTone(response),
                     ),
                     const SizedBox(height: 8),
@@ -545,7 +545,7 @@ class _AnswersBlock extends StatelessWidget {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                player?.name ?? 'â€¦',
+                                player?.name ?? '…',
                                 style: textTheme.bodyMedium,
                               ),
                             ],
