@@ -2440,13 +2440,12 @@ participant déjà ajouté passe par le code. Chaque participant porte une pasti
 (vert) ou « Ajouté · pas encore rejoint » (jaune), et l'en-tête de la liste compte « 3 sur 5 ont
 rejoint ». Sessions existantes : seul leur créateur est marqué comme ayant rejoint.
 
-**Q218 ☐ — Un participant ajouté qui ouvre la session depuis son accueil a-t-il « rejoint » ?**
-Un participant ajouté voit la session sur son accueil et peut l'ouvrir sans passer par le code.
-Aujourd'hui, il reste « pas encore rejoint » tant qu'il n'a pas utilisé le code ou le QR code
-(lecture littérale de la demande). Suggestion : le compter comme « rejoint » dès qu'il ouvre la
-salle d'attente, car c'est la même preuve (il a l'app, il est connecté, il a vu la session) et
-cela évite à l'organisateur de demander à quelqu'un déjà présent de scanner un code pour rien.
-Hypothèse appliquée tant que la question est ouverte : code ou QR code seulement.
+**Q218 ☑ — Un participant ajouté qui ouvre la session depuis son accueil a-t-il « rejoint » ?**
+Réponse PO (2026-09-28) : oui, suggestion retenue. Ouvrir la session (salle d'attente, salle des
+présents ou partie en cours, tant qu'elle n'est pas terminée) marque le participant comme ayant
+rejoint, comme le code ou le QR code : c'est la même preuve (il a l'app, il est connecté, il a vu
+la session). Mis en œuvre par la RPC `check_in_session` (migration `20260928110000`), qui ne
+touche que la ligne de celui qui l'appelle.
 
 **Q219 ☑ — Session « perdue » après un passage en arrière-plan.**
 Constat PO (2026-09-28) : un participant a perdu la session qu'il avait rejointe après un long

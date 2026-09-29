@@ -56,6 +56,18 @@ class SessionRoomPage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final roomAsync = ref.watch(sessionRoomProvider(sessionId));
 
+    // Opening the session is joining it (Q218): a participant only added
+    // by the organizer or from an event shows as "joined" from then on.
+    final myId = ref.read(supabaseClientProvider).auth.currentUser?.id;
+    final room = roomAsync.value;
+    if (room != null && room.session.status != SessionStatus.completed) {
+      for (final member in room.members) {
+        if (member.userId == myId && !member.hasJoined) {
+          unawaited(ref.read(sessionsRepositoryProvider).checkIn(sessionId));
+        }
+      }
+    }
+
     return roomAsync.when(
       loading: () => Scaffold(
         appBar: AppBar(title: Text(l10n.sessionsRoomTitle)),

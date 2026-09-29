@@ -266,6 +266,29 @@ class SessionsRepository {
     return Session.fromJson(row);
   }
 
+  /// Sessions this repository already asked `check_in_session` for, so a
+  /// room refreshing again before realtime reports the check-in doesn't
+  /// call it twice.
+  final _checkingIn = <String>{};
+
+  /// Marks the caller as having joined [sessionId] (Q218): a participant
+  /// added by the organizer or from an event who opens the session. The
+  /// `check_in_session` RPC only touches the caller's own row, and does
+  /// nothing once they have joined or the session is completed. Best
+  /// effort: a failure only leaves them shown as "added", so it is
+  /// forgotten and retried on the next refresh.
+  Future<void> checkIn(String sessionId) async {
+    if (!_checkingIn.add(sessionId)) return;
+    try {
+      await _client.rpc<void>(
+        'check_in_session',
+        params: {'p_session_id': sessionId},
+      );
+    } catch (_) {
+      _checkingIn.remove(sessionId);
+    }
+  }
+
   /// Deletes a session outright (owner-only -- RLS `sessions_delete_owner`,
   /// no status restriction). Cascades to teams, team_players,
   /// session_members, played_holes, scores and session_photos.

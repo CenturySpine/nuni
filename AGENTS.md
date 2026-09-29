@@ -245,7 +245,9 @@ GitHub Actions (Q17).
   (app en arrière-plan) au lieu d'afficher une erreur ; `ResumeRefresher` (monté dans
   `app.dart`) relit l'accueil et les écrans de session quand l'app redevient visible.
 - Participants d'une session : `session_members.checked_in_at` non nul = a rejoint lui-même
-  (code, QR code, créateur) ; nul = ajouté par l'organisateur ou depuis un événement (Q217).
+  (code, QR code, créateur, ou ouverture de la session par un participant ajouté : RPC
+  `check_in_session`, Q218) ; nul = ajouté par l'organisateur ou depuis un événement, pas encore
+  venu (Q217).
 
 ## Interdits
 

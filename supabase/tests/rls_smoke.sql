@@ -1274,6 +1274,24 @@ select 'no_scores_attendees_on_single_team',
       and user_id = 'a0000000-0000-0000-0000-000000000001' and role = 'owner' and team_id is null
   );
 
+-- A participant added by the organizer hasn't joined yet; opening the session checks them in
+-- (check_in_session, Q218).
+insert into test_results (test, passed)
+select 'added_member_not_checked_in',
+  (select checked_in_at is null from session_members
+   where session_id = (select training from test_p29)
+     and user_id = 'a0000000-0000-0000-0000-000000000002');
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000002","role":"authenticated"}';
+select check_in_session((select training from test_p29));
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'check_in_session_checks_self_in',
+  (select checked_in_at is not null from session_members
+   where session_id = (select training from test_p29)
+     and user_id = 'a0000000-0000-0000-0000-000000000002');
+
 -- Completed straight from the draft; its tags stay free for the organizer, never all removed.
 set role authenticated;
 set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
