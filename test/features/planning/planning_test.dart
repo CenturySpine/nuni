@@ -72,12 +72,10 @@ void main() {
     });
   });
 
-  test('isEventToday and acceptsAnswers', () {
+  test('isEventToday', () {
     final tonight = _event('tonight', DateTime(2026, 10, 1, 21));
     expect(isEventToday(tonight, now), isTrue);
     expect(isEventToday(tonight, DateTime(2026, 10, 2, 9)), isFalse);
-    expect(acceptsAnswers(tonight, now), isTrue);
-    expect(acceptsAnswers(tonight, DateTime(2026, 10, 1, 21)), isFalse);
   });
 
   test('groupByMonth sorts and groups by local year and month', () {

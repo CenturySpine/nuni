@@ -22,6 +22,7 @@ import '../../../shared/nuni_map_attribution.dart';
 import '../../../shared/nuni_section_header.dart';
 import '../../../shared/nuni_share.dart';
 import '../../../shared/nuni_status_pill.dart';
+import '../../join/ui/join_by_code_sheet.dart';
 import '../../players/data/players_repository.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../profile/domain/player.dart';
@@ -31,7 +32,6 @@ import '../data/event_forecast.dart';
 import '../data/events_repository.dart';
 import '../data/planning_rights.dart';
 import '../domain/event.dart';
-import '../domain/planning.dart';
 import 'event_comments_section.dart';
 import 'event_forecast_widgets.dart';
 import 'event_widgets.dart';
@@ -89,7 +89,9 @@ class _EventDetail extends ConsumerWidget {
     ref
       ..invalidate(eventByIdProvider(event.id))
       ..invalidate(myPlanningProvider)
-      ..invalidate(eventForecastProvider);
+      ..invalidate(eventForecastProvider)
+      ..invalidate(eventSessionsProvider(event.id))
+      ..invalidate(eventHasJoinableSessionProvider(event.id));
   }
 
   /// Copies the event's link, nothing else, on every device (PO,
@@ -154,7 +156,6 @@ class _EventDetail extends ConsumerWidget {
     final members =
         ref.watch(associationPlayersProvider(event.associationId)).value ??
         const <Player>[];
-    final open = acceptsAnswers(event, DateTime.now());
     final hue = eventHue(event.color);
 
     return Scaffold(
@@ -249,6 +250,8 @@ class _EventDetail extends ConsumerWidget {
             _SessionsBlock(
               event: event,
               canStart: rights?.canStartSession ?? false,
+              attending:
+                  me != null && event.responseOf(me.id) == EventResponse.yes,
             ),
             const SizedBox(height: 24),
             NuniSectionHeader(title: l10n.planningAnswers),
@@ -257,19 +260,8 @@ class _EventDetail extends ConsumerWidget {
               const SizedBox(height: 8),
               EventResponseButtons(
                 current: event.responseOf(me.id),
-                onChanged: open
-                    ? (response) => _answer(context, ref, me.id, response)
-                    : null,
+                onChanged: (response) => _answer(context, ref, me.id, response),
               ),
-              if (!open) ...[
-                const SizedBox(height: 8),
-                Text(
-                  l10n.planningAnswersClosed,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
               const SizedBox(height: 16),
             ],
             _AnswersBlock(event: event, members: members),
@@ -417,7 +409,7 @@ class _ManagerTile extends ConsumerWidget {
     final player = ref.watch(playerByIdProvider(playerId)).value;
     return NuniListCard(
       leading: NuniAvatar(name: player?.name, imageUrl: player?.avatarUrl),
-      title: player?.name ?? '…',
+      title: player?.name ?? 'â€¦',
       subtitle: l10n.planningManager,
       onTap: () => context.push('/players/$playerId'),
     );
@@ -426,25 +418,50 @@ class _ManagerTile extends ConsumerWidget {
 
 /// "Start the session" on the event's day for who may (Q164), and the
 /// sessions already started from it -- so a second person doesn't start one
-/// twice without knowing.
+/// twice without knowing. An attendee outside a session already started is
+/// offered to join it (PO, 2026-09-29), by its code or QR code like from
+/// home -- never joined without asking.
 class _SessionsBlock extends ConsumerWidget {
-  const _SessionsBlock({required this.event, required this.canStart});
+  const _SessionsBlock({
+    required this.event,
+    required this.canStart,
+    required this.attending,
+  });
 
   final Event event;
   final bool canStart;
+
+  /// I answered "Present".
+  final bool attending;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final sessions =
         ref.watch(eventSessionsProvider(event.id)).value ?? const <Session>[];
-    if (!canStart && sessions.isEmpty) return const SizedBox.shrink();
+    final canJoin =
+        attending &&
+        (ref.watch(eventHasJoinableSessionProvider(event.id)).value ?? false);
+    if (!canStart && !canJoin && sessions.isEmpty) {
+      return const SizedBox.shrink();
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 16),
+        if (canJoin) ...[
+          NuniButton(
+            icon: PhosphorIcons.signIn,
+            label: l10n.planningJoinSession,
+            onPressed: () => promptJoinSession(context),
+          ),
+          if (canStart) const SizedBox(height: 8),
+        ],
         if (canStart)
           NuniButton(
+            variant: canJoin
+                ? NuniButtonVariant.secondary
+                : NuniButtonVariant.primary,
             icon: PhosphorIcons.play,
             label: l10n.planningStartSession,
             onPressed: () => context.push('/session/new?event=${event.id}'),
@@ -504,7 +521,7 @@ class _AnswersBlock extends StatelessWidget {
                   children: [
                     NuniStatusPill(
                       label:
-                          '${responseLabel(l10n, response)} · ${players.length}',
+                          '${responseLabel(l10n, response)} Â· ${players.length}',
                       tone: responseTone(response),
                     ),
                     const SizedBox(height: 8),
@@ -523,7 +540,7 @@ class _AnswersBlock extends StatelessWidget {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                player?.name ?? '…',
+                                player?.name ?? 'â€¦',
                                 style: textTheme.bodyMedium,
                               ),
                             ],

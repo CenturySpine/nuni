@@ -25,10 +25,6 @@ bool isEventToday(Event event, DateTime now) {
       local.day == today.day;
 }
 
-/// Whether answers are still open: until the event starts (Q157), the rule
-/// the base enforces too.
-bool acceptsAnswers(Event event, DateTime now) => now.isBefore(event.startsAt);
-
 /// How far ahead an event shows its weather forecast (plan 32, Q215),
 /// counted from the moment one looks at the app.
 const forecastHorizon = Duration(days: 7);

@@ -173,6 +173,15 @@ class EventsRepository {
     return rows.map(Session.fromJson).toList();
   }
 
+  /// Whether [eventId] has a session, not completed, I haven't joined
+  /// (PO, 2026-09-29): its attendees are then offered "Join the session".
+  /// Asked of the base, since a session still in its waiting room is
+  /// invisible to non-members.
+  Future<bool> hasJoinableSession(String eventId) => _client.rpc<bool>(
+    'event_has_joinable_session',
+    params: {'p_event_id': eventId},
+  );
+
   /// What importing into my association would erase. An import always
   /// targets the importer's own association (PO, 2026-09-25): the base
   /// finds it, the app never sends one.
@@ -237,6 +246,10 @@ Stream<List<EventComment>> eventComments(Ref ref, String eventId) =>
 @riverpod
 Future<List<Session>> eventSessions(Ref ref, String eventId) =>
     ref.watch(eventsRepositoryProvider).fetchSessions(eventId);
+
+@riverpod
+Future<bool> eventHasJoinableSession(Ref ref, String eventId) =>
+    ref.watch(eventsRepositoryProvider).hasJoinableSession(eventId);
 
 @riverpod
 Future<List<String>> eventLabelSuggestions(Ref ref, String associationId) =>

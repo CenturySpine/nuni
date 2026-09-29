@@ -273,6 +273,77 @@ final class EventSessionsFamily extends $Family
   String toString() => r'eventSessionsProvider';
 }
 
+@ProviderFor(eventHasJoinableSession)
+final eventHasJoinableSessionProvider = EventHasJoinableSessionFamily._();
+
+final class EventHasJoinableSessionProvider
+    extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
+    with $FutureModifier<bool>, $FutureProvider<bool> {
+  EventHasJoinableSessionProvider._({
+    required EventHasJoinableSessionFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'eventHasJoinableSessionProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$eventHasJoinableSessionHash();
+
+  @override
+  String toString() {
+    return r'eventHasJoinableSessionProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<bool> create(Ref ref) {
+    final argument = this.argument as String;
+    return eventHasJoinableSession(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is EventHasJoinableSessionProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$eventHasJoinableSessionHash() =>
+    r'cfc3f216b0e1f3eb4f3c14680082b97338cc233b';
+
+final class EventHasJoinableSessionFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<bool>, String> {
+  EventHasJoinableSessionFamily._()
+    : super(
+        retry: null,
+        name: r'eventHasJoinableSessionProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  EventHasJoinableSessionProvider call(String eventId) =>
+      EventHasJoinableSessionProvider._(argument: eventId, from: this);
+
+  @override
+  String toString() => r'eventHasJoinableSessionProvider';
+}
+
 @ProviderFor(eventLabelSuggestions)
 final eventLabelSuggestionsProvider = EventLabelSuggestionsFamily._();
 

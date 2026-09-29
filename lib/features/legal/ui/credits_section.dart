@@ -47,6 +47,8 @@ final _libraries = [
   _Credit('pdf', 'Apache-2.0', _pub('pdf')),
   _Credit('printing', 'Apache-2.0', _pub('printing')),
   _Credit('qr_flutter', 'BSD-3-Clause', _pub('qr_flutter')),
+  _Credit('mobile_scanner', 'BSD-3-Clause', _pub('mobile_scanner')),
+  const _Credit('zxing-wasm', 'MIT', 'https://github.com/Sec-ant/zxing-wasm'),
   _Credit('crop_your_image', 'Apache-2.0', _pub('crop_your_image')),
   _Credit('image', 'MIT', _pub('image')),
   _Credit('image_picker', 'BSD-3-Clause', _pub('image_picker')),

@@ -48,8 +48,7 @@ class NextEventHomeSection extends ConsumerWidget {
     if (me == null || me.associationId == null || events == null) {
       return const SizedBox.shrink();
     }
-    final now = DateTime.now();
-    final event = nextEvent(events, now);
+    final event = nextEvent(events, DateTime.now());
     if (event == null) return const SizedBox.shrink();
 
     return Padding(
@@ -68,13 +67,11 @@ class NextEventHomeSection extends ConsumerWidget {
             event: event,
             myResponse: event.responseOf(me.id),
             onTap: () => context.push('/planning/${event.id}'),
-            footer: acceptsAnswers(event, now)
-                ? EventResponseButtons(
-                    current: event.responseOf(me.id),
-                    onChanged: (response) =>
-                        _answer(context, ref, event, me.id, response),
-                  )
-                : null,
+            footer: EventResponseButtons(
+              current: event.responseOf(me.id),
+              onChanged: (response) =>
+                  _answer(context, ref, event, me.id, response),
+            ),
           ),
         ],
       ),

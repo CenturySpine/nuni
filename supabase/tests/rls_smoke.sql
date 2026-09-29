@@ -722,18 +722,15 @@ insert into test_results (test, passed)
 select 'author_edits_comment',
   (select body = 'See you there' and edited_at is not null
    from event_comments where event_id = (select id from test_events where name = 'future'));
--- An event already started takes no more answers.
+-- An event already started still takes answers (PO, 2026-09-29).
 insert into events (starts_at, label) values (now() - interval '1 hour', 'Smoke past');
 insert into test_events select 'past', id from events where label = 'Smoke past';
-do $$
-begin
-  insert into event_responses (event_id, player_id, response)
-  select (select id from test_events where name = 'past'),
-    (select id from players where user_id = 'a0000000-0000-0000-0000-000000000007'), 'yes';
-  insert into test_results (test, passed) values ('no_answer_after_start', false);
-exception when others then
-  insert into test_results (test, passed) values ('no_answer_after_start', sqlerrm = 'event_started');
-end $$;
+insert into event_responses (event_id, player_id, response)
+select (select id from test_events where name = 'past'),
+  (select id from players where user_id = 'a0000000-0000-0000-0000-000000000007'), 'yes';
+insert into test_results (test, passed)
+select 'answer_after_start', exists (
+  select 1 from event_responses where event_id = (select id from test_events where name = 'past'));
 -- An event happening today, "fan" in charge, to start a session from.
 insert into events (starts_at, label, manager_player_id)
 select now() + interval '1 hour', 'Smoke today', id
@@ -825,6 +822,23 @@ select 'person_in_charge_starts_session_from_event',
     where s.event_id = (select id from test_events where name = 'today')
       and sm.user_id = 'a0000000-0000-0000-0000-000000000001'
   );
+-- "Join the session" (PO, 2026-09-29): offered to a member of the association outside the
+-- session, not to one already in it, nor to a foreigner.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'joinable_session_not_for_member',
+  not event_has_joinable_session((select id from test_events where name = 'today'));
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000010","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'joinable_session_for_other_member',
+  event_has_joinable_session((select id from test_events where name = 'today'));
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000008","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'joinable_session_not_for_foreigner',
+  not event_has_joinable_session((select id from test_events where name = 'today'));
+reset role;
+reset request.jwt.claims;
 
 -- ===== Plan 27: local admins and partners =====
 -- Association 1: manager (9) names deputy (10); owner (1) is a plain member, fan (7) a second

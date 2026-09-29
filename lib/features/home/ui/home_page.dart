@@ -33,13 +33,6 @@ import '../../sessions/ui/session_nature.dart';
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
-  Future<void> _join(BuildContext context) async {
-    final code = await showJoinByCodeSheet(context);
-    if (code != null && context.mounted) {
-      context.push('/join/${code.toUpperCase()}');
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
@@ -61,7 +54,7 @@ class HomePage extends ConsumerWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          _HeroBanner(onJoin: () => _join(context)),
+          _HeroBanner(onJoin: () => promptJoinSession(context)),
           const SizedBox(height: 28),
           const NextEventHomeSection(),
           const ChampionshipHomeSection(),

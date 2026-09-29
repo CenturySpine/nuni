@@ -50,8 +50,6 @@ NuniTone responseTone(EventResponse response) => switch (response) {
 String describePlanningError(Object error, AppLocalizations l10n) {
   if (error is PostgrestException) {
     switch (error.message) {
-      case 'event_started':
-        return l10n.planningAnswersClosed;
       case 'event_not_startable':
         return l10n.planningErrorNotStartable;
       case 'manager_not_member':
@@ -88,7 +86,7 @@ class EventCommentCount extends StatelessWidget {
 }
 
 /// My three answer buttons (Q157): tapping my current answer withdraws it.
-/// Disabled once the event has started.
+/// Open at any time, even once the event has started (PO, 2026-09-29).
 class EventResponseButtons extends StatelessWidget {
   const EventResponseButtons({
     super.key,
@@ -98,8 +96,7 @@ class EventResponseButtons extends StatelessWidget {
 
   final EventResponse? current;
 
-  /// Null once answers are closed.
-  final ValueChanged<EventResponse?>? onChanged;
+  final ValueChanged<EventResponse?> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -112,9 +109,7 @@ class EventResponseButtons extends StatelessWidget {
           NuniChip(
             label: responseLabel(l10n, response),
             selected: current == response,
-            onTap: onChanged == null
-                ? null
-                : () => onChanged!(current == response ? null : response),
+            onTap: () => onChanged(current == response ? null : response),
           ),
       ],
     );

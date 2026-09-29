@@ -1825,7 +1825,7 @@ fréquent, qui mérite un accès direct ; cinq onglets restent dans les recomman
 (3 à 5). Le ranger dans l'onglet Associations le cacherait derrière la page de toutes les
 associations, pensée pour autre chose.
 
-**Q157 ☑ — Planning : quelles règles pour les réponses ?**
+**Q157 ☑ — Planning : quelles règles pour les réponses ?** (heure limite supprimée par Q220)
 Réponse PO (2026-09-25) : oui.
 Suggestion : chacun répond pour lui-même seulement, modifie sa réponse jusqu'à l'heure de
 début, et voit la liste nominative des réponses de tous les membres (présents, peut-être,
@@ -2459,3 +2459,33 @@ affichait alors une erreur, ou restait figé sans plus recevoir aucun changement
 au retour au premier plan, l'app relit les listes de l'accueil et rouvre le temps réel des
 écrans de session (`ResumeRefresher`) ; une connexion temps réel coupée est rouverte seule
 après 3 secondes au lieu d'afficher une erreur (`ChangeSignal`).
+
+## Rejoindre depuis un événement et scan intégré (2026-09-29)
+
+**Q220 ☑ — Les réponses à un événement restent-elles ouvertes après son début ?**
+Demande PO (2026-09-29) : oui, la fermeture ne sert à rien ; elle remplace la règle « jusqu'à
+l'heure de début » de Q157. On peut répondre, changer ou retirer sa réponse à tout moment, y
+compris sur l'accueil et une fois la sortie commencée. Mis en œuvre : le déclencheur
+`event_responses_guard` ne refuse plus rien (migration `20260929100000`), l'app retire la
+mention « Les réponses sont closes ».
+
+**Q221 ☑ — Rejoindre la session démarrée depuis un événement.**
+Demande PO (2026-09-29) : quand une session a déjà été démarrée depuis un événement, un membre
+qui a répondu « Présent » et n'est pas dans cette session voit « Rejoindre la session » sur la
+fiche de l'événement. Le bouton ouvre le même panneau que celui de l'accueil (code ou QR code) :
+personne n'est ajouté sans le demander. Une session encore en salle d'attente est invisible pour
+qui n'y participe pas ; la fiche le demande donc à la base par la RPC
+`event_has_joinable_session`, qui ne dit que « oui ou non », et seulement aux membres de
+l'association de l'événement. Limite connue, inchangée : dans un parcours dont les équipes sont
+déjà formées, rejoindre par le code reste refusé à qui n'est dans aucune équipe (« Demandez à
+l'organisateur de vous ajouter »).
+
+**Q222 ☑ — Scanner le QR code depuis l'app.**
+Demande PO (2026-09-29) : le panneau « Rejoindre une session » propose « Scanner un QR code »,
+qui ouvre la caméra dans l'app ; le scan par l'appareil photo du téléphone reste possible, mais
+il ouvre le lien hors de l'app installée. Le scanner lit le lien d'invitation (quelle que soit
+l'adresse du site) ou un code seul ; tout autre QR code est signalé et le scan continue.
+Paquet `mobile_scanner` (le plus utilisé pour Flutter, compatible web). Sur le web, il charge au
+premier scan le module de lecture ZXing (zxing-wasm) depuis le CDN public cdn.jsdelivr.net ; sans réseau ou si
+ce CDN est bloqué, la caméra affiche « Impossible d'ouvrir la caméra » et le code reste à
+saisir.
