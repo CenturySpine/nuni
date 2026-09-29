@@ -32,6 +32,7 @@ import '../data/event_forecast.dart';
 import '../data/events_repository.dart';
 import '../data/planning_rights.dart';
 import '../domain/event.dart';
+import '../domain/planning.dart';
 import 'event_comments_section.dart';
 import 'event_forecast_widgets.dart';
 import 'event_widgets.dart';
@@ -91,7 +92,7 @@ class _EventDetail extends ConsumerWidget {
       ..invalidate(myPlanningProvider)
       ..invalidate(eventForecastProvider)
       ..invalidate(eventSessionsProvider(event.id))
-      ..invalidate(eventHasJoinableSessionProvider(event.id));
+      ..invalidate(eventSessionStateProvider(event.id));
   }
 
   /// Copies the event's link, nothing else, on every device (PO,
@@ -416,11 +417,11 @@ class _ManagerTile extends ConsumerWidget {
   }
 }
 
-/// "Start the session" on the event's day for who may (Q164), and the
-/// sessions already started from it -- so a second person doesn't start one
-/// twice without knowing. An attendee outside a session already started is
-/// offered to join it (PO, 2026-09-29), by its code or QR code like from
-/// home -- never joined without asking.
+/// The event's one session (PO, 2026-09-29): "Start the session" on the
+/// event's day for who may (Q164) while there's none; once started, one
+/// path for all, managers included -- its members open it, the others who
+/// answered "Present" join it by its code or QR code like from home, never
+/// directly. Over, it opens for all.
 class _SessionsBlock extends ConsumerWidget {
   const _SessionsBlock({
     required this.event,
@@ -437,38 +438,42 @@ class _SessionsBlock extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final sessions =
-        ref.watch(eventSessionsProvider(event.id)).value ?? const <Session>[];
-    final canJoin =
-        attending &&
-        (ref.watch(eventHasJoinableSessionProvider(event.id)).value ?? false);
-    if (!canStart && !canJoin && sessions.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    final state = ref.watch(eventSessionStateProvider(event.id));
+    // Nothing while unknown: never offer "Start" over an existing session.
+    if (!state.hasValue) return const SizedBox.shrink();
+    final offer = eventSessionOffer(
+      session: state.value,
+      canStart: canStart,
+      attending: attending,
+    );
+    final sessions = offer == EventSessionOffer.open
+        ? ref.watch(eventSessionsProvider(event.id)).value ?? const <Session>[]
+        : const <Session>[];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 16),
-        if (canJoin) ...[
+        if (offer != EventSessionOffer.none) const SizedBox(height: 16),
+        if (offer == EventSessionOffer.start)
+          NuniButton(
+            icon: PhosphorIcons.play,
+            label: l10n.planningStartSession,
+            onPressed: () => context.push('/session/new?event=${event.id}'),
+          ),
+        if (offer == EventSessionOffer.join)
           NuniButton(
             icon: PhosphorIcons.signIn,
             label: l10n.planningJoinSession,
             onPressed: () => promptJoinSession(context),
           ),
-          if (canStart) const SizedBox(height: 8),
-        ],
-        if (canStart)
-          NuniButton(
-            variant: canJoin
-                ? NuniButtonVariant.secondary
-                : NuniButtonVariant.primary,
-            icon: PhosphorIcons.play,
-            label: l10n.planningStartSession,
-            onPressed: () => context.push('/session/new?event=${event.id}'),
+        if (offer == EventSessionOffer.attendToJoin)
+          NuniCard(
+            child: Text(
+              l10n.planningSessionAttendToJoin,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
           ),
         if (sessions.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          NuniSectionHeader(title: l10n.planningSessionsFromEvent),
+          NuniSectionHeader(title: l10n.planningSessionFromEvent),
           for (final session in sessions) ...[
             NuniListCard(
               leading: const Icon(PhosphorIcons.golf),

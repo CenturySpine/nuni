@@ -222,9 +222,11 @@ GitHub Actions (Q17).
   transforme toute répétition en événements indépendants : NUNI n'a aucune notion de
   répétition. Liste de libellés déduite de l'existant, sans table ; lieux : les spots (plan 28). Couleurs :
   `eventHues` de `palettes.dart`. Une session démarrée depuis un événement porte
-  `sessions.event_id` (`create_session` y ajoute les « présents »). Les réponses restent
-  ouvertes après le début de l'événement (Q220). Un « présent » hors d'une session en cours
-  de l'événement voit « Rejoindre la session » (RPC `event_has_joinable_session`, Q221), qui
+  `sessions.event_id` (`create_session` y ajoute les « présents ») ; un événement a au plus
+  une session, terminée comprise (index unique, Q223), et seule sa suppression permet d'en
+  démarrer une autre. Ce que la fiche propose se décide dans `eventSessionOffer`
+  (`planning.dart`). Les réponses restent ouvertes après le début de l'événement (Q220).
+  Un « présent » hors de la session de l'événement, responsable compris, voit « Rejoindre la session » (RPC `event_session`, Q221, Q223), qui
   ouvre le panneau de l'accueil (`promptJoinSession`) : code saisi ou QR code scanné dans l'app
   (`QrScanPage`, `mobile_scanner`, Q222), jamais d'ajout automatique.
 - Météo (plans 07, 10, 32) : un seul client, `WeatherClient` (Open-Meteo, sans clé, tout échec

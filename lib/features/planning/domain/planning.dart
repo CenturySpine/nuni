@@ -107,3 +107,45 @@ List<String> labelSuggestions(Iterable<String> labels) {
         label.trim(),
   ];
 }
+
+/// An event's one session (PO, 2026-09-29) as I may know it: completed or
+/// not, and whether I'm in it -- even while it's in its waiting room,
+/// where I can't read it.
+class EventSessionState {
+  const EventSessionState({required this.completed, required this.isMember});
+
+  final bool completed;
+  final bool isMember;
+}
+
+/// What an event's page offers about its session (PO, 2026-09-29).
+enum EventSessionOffer {
+  /// Nothing: no session, and I may not start one.
+  none,
+
+  /// "Start the session": none yet, and I may start it.
+  start,
+
+  /// "Join the session", by its code or QR code: I answered "Present".
+  join,
+
+  /// A session is on, and answering "Present" offers to join it.
+  attendToJoin,
+
+  /// The session itself: I'm in it, or it's over.
+  open,
+}
+
+/// One path for all once the session exists, managers included: whoever
+/// isn't in it joins by the code, never directly (PO, 2026-09-29).
+EventSessionOffer eventSessionOffer({
+  required EventSessionState? session,
+  required bool canStart,
+  required bool attending,
+}) {
+  if (session == null) {
+    return canStart ? EventSessionOffer.start : EventSessionOffer.none;
+  }
+  if (session.completed || session.isMember) return EventSessionOffer.open;
+  return attending ? EventSessionOffer.join : EventSessionOffer.attendToJoin;
+}

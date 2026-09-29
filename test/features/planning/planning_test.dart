@@ -72,6 +72,51 @@ void main() {
     });
   });
 
+  group('eventSessionOffer', () {
+    const live = EventSessionState(completed: false, isMember: false);
+
+    test('offers to start only without a session', () {
+      expect(
+        eventSessionOffer(session: null, canStart: true, attending: true),
+        EventSessionOffer.start,
+      );
+      expect(
+        eventSessionOffer(session: null, canStart: false, attending: true),
+        EventSessionOffer.none,
+      );
+    });
+
+    test('once started, a manager outside it joins like anyone', () {
+      expect(
+        eventSessionOffer(session: live, canStart: true, attending: true),
+        EventSessionOffer.join,
+      );
+      expect(
+        eventSessionOffer(session: live, canStart: true, attending: false),
+        EventSessionOffer.attendToJoin,
+      );
+    });
+
+    test('opens it for its members, and for all once over', () {
+      expect(
+        eventSessionOffer(
+          session: const EventSessionState(completed: false, isMember: true),
+          canStart: true,
+          attending: true,
+        ),
+        EventSessionOffer.open,
+      );
+      expect(
+        eventSessionOffer(
+          session: const EventSessionState(completed: true, isMember: false),
+          canStart: true,
+          attending: false,
+        ),
+        EventSessionOffer.open,
+      );
+    });
+  });
+
   test('isEventToday', () {
     final tonight = _event('tonight', DateTime(2026, 10, 1, 21));
     expect(isEventToday(tonight, now), isTrue);

@@ -822,21 +822,32 @@ select 'person_in_charge_starts_session_from_event',
     where s.event_id = (select id from test_events where name = 'today')
       and sm.user_id = 'a0000000-0000-0000-0000-000000000001'
   );
--- "Join the session" (PO, 2026-09-29): offered to a member of the association outside the
--- session, not to one already in it, nor to a foreigner.
+-- One session per event (PO, 2026-09-29): its person in charge can't start a second one; the
+-- event tells its members whether they're in it, and tells a foreigner nothing.
 set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000007","role":"authenticated"}';
+do $$
+begin
+  perform create_session(jsonb_build_object('kind', 'individual', 'scoring_mode', 'stroke_play',
+    'ranking_direction', 'asc', 'spot_id', 'd0000000-0000-0000-0000-000000000001',
+    'event_id', (select id from test_events where name = 'today')));
+  insert into test_results (test, passed) values ('one_session_per_event', false);
+exception when others then
+  insert into test_results (test, passed) values ('one_session_per_event', sqlerrm = 'event_has_session');
+end $$;
 set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
 insert into test_results (test, passed)
-select 'joinable_session_not_for_member',
-  not event_has_joinable_session((select id from test_events where name = 'today'));
+select 'event_session_member',
+  (select is_member and status = 'draft'
+   from event_session((select id from test_events where name = 'today')));
 set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000010","role":"authenticated"}';
 insert into test_results (test, passed)
-select 'joinable_session_for_other_member',
-  event_has_joinable_session((select id from test_events where name = 'today'));
+select 'event_session_other_member',
+  (select not is_member from event_session((select id from test_events where name = 'today')));
 set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000008","role":"authenticated"}';
 insert into test_results (test, passed)
-select 'joinable_session_not_for_foreigner',
-  not event_has_joinable_session((select id from test_events where name = 'today'));
+select 'event_session_not_for_foreigner',
+  not exists (select 1 from event_session((select id from test_events where name = 'today')));
 reset role;
 reset request.jwt.claims;
 
@@ -947,7 +958,8 @@ reset role;
 reset request.jwt.claims;
 
 -- The admin has the manager's day-to-day rights: championship, any event, moderation, import,
--- "start the session"...
+-- "start the session" (the event's first session deleted: it may then be started again)...
+delete from sessions where event_id = (select id from test_events where name = 'today');
 insert into event_comments (event_id, author_player_id, body)
 values ((select id from test_events where name = 'future'), (select fan_player from test_plan27), 'Fan comment');
 set role authenticated;

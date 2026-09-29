@@ -344,6 +344,8 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
               'association_required' => l10n.sessionsCreateNeedsAssociation,
               // Plan 23, Q164: no longer the event's day, or in charge of it.
               'event_not_startable' => l10n.planningErrorNotStartable,
+              // PO, 2026-09-29: one session per event, started meanwhile.
+              'event_has_session' => l10n.planningErrorHasSession,
               // Plan 28: the spot was deleted, or belongs elsewhere.
               'spot_required' ||
               'spot_not_in_association' => l10n.spotsFieldRequired,
@@ -428,7 +430,9 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
       endedAt: _afterwards ? _at(_endTime) : null,
     );
     if (widget.eventId != null) {
-      ref.invalidate(eventSessionsProvider(widget.eventId!));
+      ref
+        ..invalidate(eventSessionsProvider(widget.eventId!))
+        ..invalidate(eventSessionStateProvider(widget.eventId!));
     }
     // A session already held: its weather from the archives (Q206).
     if (_afterwards) unawaited(_captureArchiveWeather(session));

@@ -2489,3 +2489,16 @@ Paquet `mobile_scanner` (le plus utilisé pour Flutter, compatible web). Sur le 
 premier scan le module de lecture ZXing (zxing-wasm) depuis le CDN public cdn.jsdelivr.net ; sans réseau ou si
 ce CDN est bloqué, la caméra affiche « Impossible d'ouvrir la caméra » et le code reste à
 saisir.
+
+**Q223 ☑ — Une seule session par événement, un seul chemin pour la rejoindre.**
+Demande PO (2026-09-29) : un événement a au plus une session (relation 1:1). Tant qu'il n'en a
+pas, qui en a le droit voit « Démarrer la session » ; dès qu'elle existe, plus personne ne le
+voit, et tous ceux qui ont répondu « Présent » sans être dans la session, responsables et
+administrateurs compris, voient « Rejoindre la session » (code ou QR code, Q221), jamais d'accès
+direct. Les participants de la session gardent le lien qui l'ouvre. Réponses PO : une session
+terminée reste la session de l'événement (on n'en démarre pas une autre) ; seule sa suppression
+libère l'événement. Il faut avoir répondu « Présent » pour voir « Rejoindre la session » ; sinon
+une phrase l'explique. Mis en œuvre (migration `20260929110000`) : refus `event_has_session`
+dans `sessions_guard_event`, index unique `sessions_event_id_key`, RPC `event_session` (état de
+la session et « j'en fais partie », pour les seuls membres de l'association) qui remplace
+`event_has_joinable_session`.
