@@ -2670,3 +2670,86 @@ les commandes exactes. Sans ces clés, aucune notification ne peut partir.
 Suggestion : que tu le fasses toi-même plutôt que moi. La clé privée ne passe alors jamais par
 mon terminal ni par cette conversation.
 Réponse PO (2026-09-29) : oui ; l'assistant lui indique comment les générer.
+
+## Audit Supabase (2026-09-29)
+
+Audit par `npx supabase db advisors --linked` : 80 alertes. Décisions du PO le même jour :
+- 22 clés étrangères sans index : index ajoutés (migration `20260929130100`).
+- `spatial_ref_sys` modifiable par l'API : retrait des droits tenté (migration `20260929130000`),
+  sans effet, les droits venant de `supabase_admin`. Cause : PostGIS installé dans `public` par
+  la première migration. Corrigé par le plan 35 (réinstallation dans `extensions`), plutôt que
+  par le support Supabase (choix du PO).
+- Laissées en l'état : fonctions `security definer` ouvertes aux comptes connectés (ce sont nos
+  RPC, voulues), tables fermées sans politique (`legacy_player_emails`, `push_subscriptions`,
+  voulues), protection des mots de passe divulgués (connexion Google uniquement), politiques
+  de lecture multiples (surcoût négligeable, réécrire des règles testées coûterait plus).
+
+## Performances du chargement (plan 34, 2026-09-29)
+
+**Q238 ☑ — Que montre l'écran affiché pendant le chargement de l'app ?**
+Le constat : aujourd'hui, l'écran reste blanc jusqu'à ce que 3,5 à 4 Mo soient arrivés, soit
+jusqu'à une minute sur un mauvais réseau.
+Première suggestion : « le logo NUNI animé », sans texte.
+Remarque du PO (2026-09-30) : le logo NUNI n'est pas animé.
+Suggestion reformulée : le logo NUNI **tel quel, fixe**, centré sur le fond de la palette par
+défaut, avec **sous lui un petit indicateur qui bouge** (trois points qui clignotent l'un après
+l'autre, dessinés en CSS, sans image). L'indicateur dit que le chargement avance ; sans
+mouvement, un écran fixe d'une minute ressemble à un blocage. Toujours **sans texte** : l'écran
+s'affiche avant que l'app sache quelle langue l'utilisateur a choisie, et une phrase
+obligerait à deviner la langue hors des fichiers de traduction.
+Réponse PO (2026-09-30) : ok, suggestion reformulée retenue.
+
+**Q239 ☑ — Le téléphone peut-il garder le moteur d'affichage d'une visite à l'autre ?**
+Le constat : le moteur d'affichage (1,5 à 2,3 Mo) est redemandé au serveur à chaque ouverture,
+même quand il n'a pas changé ; sur un mauvais réseau, chaque question coûte du temps.
+Suggestion : oui, gardé un an, dans un dossier qui porte le numéro de version de Flutter. Il
+ne change qu'avec une mise à jour de Flutter, qui change alors le nom du dossier : le téléphone
+télécharge le nouveau moteur et ne peut pas mélanger ancien et nouveau. C'est la façon standard
+de mettre en cache un fichier qui ne change jamais sous le même nom. Le code de l'app, lui,
+reste vérifié à chaque ouverture, pour que chaque mise en ligne arrive tout de suite.
+Réponse PO (2026-09-30) : oui, **un mois** suffit.
+
+**Q240 ☑ — Télécharger l'export PDF, la carte, le scan de QR code et l'import d'agenda
+seulement à leur première utilisation ?**
+Conséquence d'usage : la page de connexion et l'accueil arrivent plus vite. En contrepartie, la
+première utilisation de chacune de ces fonctions, sur un appareil, demande un court
+téléchargement (indicateur affiché) et du réseau ; sans réseau, un message le dit.
+Suggestion : oui, seulement pour les parties dont le retrait allège le premier chargement d'au
+moins 100 Ko (mesuré à l'implémentation). C'est le « chargement différé » recommandé par
+Flutter pour les apps web.
+Réponse PO (2026-09-30) : oui pour l'export PDF et l'import d'agenda ; **non pour le scan de
+QR code**, qui est la fonction la plus utilisée et doit être disponible tout de suite. La carte
+n'est pas tranchée : Q243.
+
+**Q243 ☑ — La carte (choix d'un point pour un trou, un spot, un lieu d'événement) peut-elle se
+télécharger à sa première utilisation ?**
+Conséquence d'usage : la première carte ouverte sur un appareil demande un court
+téléchargement (indicateur affiché). Les tuiles de la carte (le fond, qui vient
+d'OpenStreetMap) exigent de toute façon du réseau : une carte n'est jamais utilisable sans lui.
+Suggestion : oui, si la mesure montre au moins 100 Ko de gagnés. La carte ne sert qu'à la
+création ou la modification d'un trou, d'un spot ou d'un événement, jamais pour rejoindre une
+session ni saisir un score, et elle attend déjà le réseau pour son fond.
+Réponse PO (2026-09-30) : ok, suggestion retenue.
+
+## PostGIS dans le bon schéma (plan 35, 2026-09-29)
+
+**Q241 ☑ — Quand faire l'opération ?**
+Pendant quelques secondes, les tables des trous, spots, événements, sessions et associations
+sont verrouillées : une action faite à ce moment dans l'app échoue et doit être refaite.
+Suggestion : un soir de semaine sans session prévue, à un moment que tu fixes ; je vérifie
+juste avant qu'aucune session n'est en cours.
+Réponse PO (2026-09-30) : le moment importe peu ; le PO le fixera au lancement de
+l'implémentation. La vérification qu'aucune session n'est en cours est maintenue.
+
+**Q242 ☑ — Répéter l'opération sur la base de production, dans une transaction annulée, avant
+de la faire pour de bon ?**
+Ce que c'est : jouer tout le script sur les vraies données, vérifier le résultat, puis tout
+annuler (`rollback`) : la base revient exactement à son état d'avant. Cela prouve que Supabase
+nous autorise à supprimer et réinstaller PostGIS, et que chaque point est restauré à
+l'identique, avant de rien garder.
+Suggestion : oui, plutôt qu'une répétition sur une base locale (Docker), qui n'a ni nos données
+ni exactement les droits de Supabase. Coût : les mêmes quelques secondes de verrouillage que
+l'opération réelle, donc au même genre de moment (Q241).
+Réponse PO (2026-09-30) : oui, si c'est faisable rapidement. Ça l'est : la répétition est le
+script de la migration lui-même, encadré par `begin;` et `rollback;` et suivi de quelques
+requêtes de contrôle, soit une commande et quelques secondes d'exécution.
