@@ -2753,3 +2753,43 @@ l'opération réelle, donc au même genre de moment (Q241).
 Réponse PO (2026-09-30) : oui, si c'est faisable rapidement. Ça l'est : la répétition est le
 script de la migration lui-même, encadré par `begin;` et `rollback;` et suivi de quelques
 requêtes de contrôle, soit une commande et quelques secondes d'exécution.
+
+## Archive des sessions terminées supprimées (plan 36, 2026-10-05)
+
+**Q244 ☑ — Suppression d'une session : quel filet de sécurité ?**
+Contexte : des administrateurs et responsables locaux commencent à manipuler l'app et à créer
+des sessions de test ; le PO veut éviter qu'un accident efface une session pour de bon.
+Trois besoins distincts ont été séparés : (a) un bouton « restaurer » dans l'app, (b) une copie
+de secours restaurable à la main, (c) une restriction de qui peut supprimer.
+Suggestion : pour (b), une table d'archive privée remplie par un déclencheur juste avant la
+suppression, plutôt qu'une suppression logique (session masquée mais gardée dans les tables).
+La suppression logique oblige toutes les lectures de sessions, présentes et futures, à ignorer
+les sessions masquées (dont huit fonctions serveur qui passent outre les règles d'accès) ; un
+seul oubli fait réapparaître une session supprimée dans les statistiques, le championnat ou les
+badges. L'archive ne touche aucune lecture et aucun écran.
+Réponse PO (2026-10-05) : le besoin est (b), uniquement un filet de sécurité ; archive retenue.
+
+**Q245 ☑ — Quelles sessions archiver ?**
+Réponse PO (2026-10-05) : seulement les sessions **terminées** (« validée » et « terminée » sont
+la même chose). La suppression d'une session brouillon ou en cours reste définitive : plus
+fréquente (tests, mauvais paramétrage) et sans conséquence, puisque statistiques, records,
+badges et championnat ne lisent que des sessions terminées. Conséquence acceptée : une session
+jouée mais jamais terminée, puis supprimée, est perdue.
+
+**Q246 ☑ — Restauration : écrite et testée maintenant, ou à la main le jour où il le faut ?**
+Suggestion : écrite et testée dans le plan 36 (suppression puis restauration vérifiées par
+`rls_smoke.sql`) ; une restauration jamais essayée se ferait dans l'urgence, sur des données
+réelles. Quelques conflits possibles sont traités (code de session réattribué, événement qui a
+déjà une autre session, spot supprimé) ; un trou ou un compte disparu entre-temps fait échouer la
+restauration sans rien modifier.
+Réponse PO (2026-10-05) : d'accord. La restauration se fera dans les heures qui suivent un
+accident : la disparition d'un trou ou d'un compte entre-temps n'est pas un risque réel.
+
+**Q247 ☑ — Garder les fichiers photo d'une session terminée supprimée ?**
+Suggestion : oui. Les scores peuvent se ressaisir de mémoire, pas les photos ; une archive sans
+elles ne restaure qu'une partie de la session. Coût : l'espace de stockage des photos gardées.
+Réponse PO (2026-10-05) : d'accord.
+
+**Q248 ☑ — Combien de temps garder les archives ?**
+Suggestion : indéfiniment, sans purge automatique ; une archive pèse quelques Ko hors photos.
+Réponse PO (2026-10-05) : d'accord.
