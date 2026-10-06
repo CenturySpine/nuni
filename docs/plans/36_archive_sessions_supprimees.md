@@ -23,10 +23,20 @@ Le même jour, sur accord du PO : l'export sauvegarde aussi `checked_in_at` (Q24
 `rls_smoke.sql` affiche son verdict avec la commande documentée (Q250) ; relancé ainsi : 150 sur
 150, aucun reste.
 
-**Restent** : l'étape 6 avec le Flutter épinglé (le terminal de l'assistant n'a que Flutter
-3.41.7, trop ancien pour le projet ; analyse partielle sans remarque sur les fichiers
-modifiés), la mise en ligne de l'app (commit sur demande du PO), le premier export chiffré
-contenant `session_archives`, et l'essai du PO.
+Commit `eef5573` poussé sur demande du PO : build Vercel vert (analyse et tests avec le Flutter
+épinglé, que le terminal de l'assistant n'a pas), app en ligne.
+
+Essai du PO le 2026-10-06 : « Training test » (session terminée, Training, 4 équipes,
+4 participants, 1 photo) supprimée dans l'app, puis restaurée par l'assistant avec
+`restore_session_archive` : même code, rien à régler ; chaque ligne comparée à l'archive,
+toutes identiques ; archive retirée. Vue par le PO, terminée, sur l'accueil ; absente de
+l'onglet « Historique » ouvert avant la restauration, que l'app ne relit pas d'elle-même (la base
+la renvoie bien, en première position : défaut de rafraîchissement hors plan 36, Q252).
+
+Le PO l'a vue dans l'historique après rechargement de l'app ; l'historique se relit désormais
+seul au retour dans l'app et en tirant vers le bas (Q252).
+
+**Reste** : le premier export chiffré contenant `session_archives` (critère ci-dessous).
 
 ## Demande du PO (reformulée)
 
@@ -207,9 +217,9 @@ Choix techniques faits en implémentant, dans le cadre des décisions ci-dessus 
 ## Critères d'acceptation
 
 - [x] Supprimer une session brouillon ou en cours : comportement inchangé, rien d'archivé.
-- [ ] Supprimer une session terminée, depuis n'importe quel écran : archive complète, fichiers
-      photo gardés dans le stockage. (Archive : vérifiée par `rls_smoke.sql`. Fichiers : attend
-      la mise en ligne de la fiche d'historique modifiée.)
+- [x] Supprimer une session terminée, depuis n'importe quel écran : archive complète, fichiers
+      photo gardés dans le stockage. (`rls_smoke.sql`, et essai réel du PO le 2026-10-06 :
+      « Training test » supprimée dans l'app, photo et miniature restées dans le stockage.)
 - [x] L'archive est illisible depuis l'app, pour tout compte.
 - [x] La restauration remet la session à l'identique, photos comprises, pour tous ses
       participants ; l'archive est retirée.
@@ -217,11 +227,13 @@ Choix techniques faits en implémentant, dans le cadre des décisions ci-dessus 
       manquant fait échouer la restauration sans rien modifier.
 - [ ] La sauvegarde chiffrée contient les archives. (Code écrit ; au premier export, fait par le
       PO, qui a `env/migration.json` et `env/seed.json`.)
-- [ ] `flutter analyze` sans avertissement, tests verts, `rls_smoke.sql` entièrement vert,
-      build Vercel vert. (`rls_smoke.sql` : vert, 150 sur 150 ; le reste attend.)
+- [x] `flutter analyze` sans avertissement, tests verts, `rls_smoke.sql` entièrement vert,
+      build Vercel vert. (`rls_smoke.sql` : 150 sur 150 ; analyse, tests et build : Vercel,
+      commit `eef5573`, le 2026-10-06.)
 - [x] `docs/DEV.md` documente la restauration ; `AGENTS.md` relu et mis à jour.
-- [ ] Essai par le PO : supprimer une session terminée de test, demander sa restauration,
-      vérifier qu'elle revient avec ses scores et ses photos.
+- [x] Essai par le PO : supprimer une session terminée de test, demander sa restauration,
+      vérifier qu'elle revient avec ses scores et ses photos. (2026-10-06, « Training test » :
+      revenue terminée, vue dans l'historique après rechargement de l'app, Q252.)
 
 ## Hors périmètre
 

@@ -263,7 +263,9 @@ GitHub Actions (Q17).
   commentaires du planning), jamais sur une table entière. Les écrans de session s'abonnent par
   `ChangeSignal` (`lib/core/supabase/change_signal.dart`), qui rouvre seul un abonnement coupé
   (app en arrière-plan) au lieu d'afficher une erreur ; `ResumeRefresher` (monté dans
-  `app.dart`) relit l'accueil et les écrans de session quand l'app redevient visible.
+  `app.dart`) relit l'accueil, l'historique (Q252) et les écrans de session quand l'app
+  redevient visible. Les listes gardées par les onglets se rafraîchissent aussi en tirant vers le
+  bas (accueil, historique, planning, spots).
 - Archive des sessions supprimées (plan 36) : supprimer une session **terminée** la copie
   d'abord, avec les lignes de ses six tables, dans `session_archives` (déclencheur
   `sessions_archive_completed`, en base, donc pour tout chemin de suppression) ; table privée,

@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/history/data/history_repository.dart';
 import '../../features/live/data/live_repository.dart';
 import '../../features/sessions/data/sessions_repository.dart';
 
@@ -10,8 +11,10 @@ import '../../features/sessions/data/sessions_repository.dart';
 /// phone kills the realtime connection of an app left in the background:
 /// a participant coming back could find neither the session they joined on
 /// home nor a working session screen. Showing the app again reloads home's
-/// session lists and re-opens every session screen's realtime feed from
-/// scratch; the screens keep their current content while it reloads.
+/// session lists and the history (Q252: kept just the same, it missed
+/// sessions completed, changed or restored meanwhile), and re-opens every
+/// session screen's realtime feed from scratch; the screens keep their
+/// current content while it reloads.
 class ResumeRefresher extends ConsumerStatefulWidget {
   const ResumeRefresher({super.key, required this.child});
 
@@ -41,6 +44,7 @@ class _ResumeRefresherState extends ConsumerState<ResumeRefresher> {
       ..invalidate(myOngoingSessionsProvider)
       ..invalidate(myRecentSessionsProvider)
       ..invalidate(associationLiveSessionsProvider)
+      ..invalidate(historyEntriesProvider)
       ..invalidate(sessionRoomProvider)
       ..invalidate(liveSessionProvider);
   }

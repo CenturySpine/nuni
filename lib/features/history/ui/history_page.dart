@@ -79,101 +79,127 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     final entriesAsync = ref.watch(historyEntriesProvider);
     final myPlayerId = ref.watch(myPlayerProvider).value?.id;
 
-    return entriesAsync.when(
-      loading: () => const NuniLoading(),
-      error: (error, _) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: NuniErrorBanner(
-          message: describeError(error, l10n),
-          onRetry: () => ref.invalidate(historyEntriesProvider),
+    // Pull to refresh (Q252), like home: the list is kept while the tab
+    // stays open, and sessions complete, change or come back (plan 36)
+    // without any action of mine.
+    return RefreshIndicator(
+      onRefresh: () => ref.refresh(historyEntriesProvider.future),
+      child: entriesAsync.when(
+        loading: () => const NuniLoading(),
+        error: (error, _) => Padding(
+          padding: const EdgeInsets.all(16),
+          child: NuniErrorBanner(
+            message: describeError(error, l10n),
+            onRetry: () => ref.invalidate(historyEntriesProvider),
+          ),
         ),
-      ),
-      data: (entries) {
-        if (entries.isEmpty) {
-          return NuniEmptyState(
-            icon: PhosphorIcons.clockCounterClockwise,
-            message: l10n.historyEmpty,
-          );
-        }
+        data: (entries) {
+          if (entries.isEmpty) {
+            return _Pullable(
+              child: NuniEmptyState(
+                icon: PhosphorIcons.clockCounterClockwise,
+                message: l10n.historyEmpty,
+              ),
+            );
+          }
 
-        final cities = <String>{
-          for (final e in entries)
-            if (e.snapshot.session.city case final city? when city.isNotEmpty)
-              city,
-        }.toList()..sort();
-        final visible = [
-          for (final e in entries)
-            if ((_cityFilter == null ||
-                    e.snapshot.session.city == _cityFilter) &&
-                (!_mineOnly || e.playedBy(myPlayerId)) &&
-                (_natureFilter == null ||
-                    _hasNature(e.snapshot.session, _natureFilter!)))
-              e,
-        ];
+          final cities = <String>{
+            for (final e in entries)
+              if (e.snapshot.session.city case final city? when city.isNotEmpty)
+                city,
+          }.toList()..sort();
+          final visible = [
+            for (final e in entries)
+              if ((_cityFilter == null ||
+                      e.snapshot.session.city == _cityFilter) &&
+                  (!_mineOnly || e.playedBy(myPlayerId)) &&
+                  (_natureFilter == null ||
+                      _hasNature(e.snapshot.session, _natureFilter!)))
+                e,
+          ];
 
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
-          children: [
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                NuniChip(
-                  label: l10n.historyFilterMine,
-                  selected: _mineOnly,
-                  onTap: () => setState(() => _mineOnly = !_mineOnly),
-                ),
-                // One pill at a time; tapping it again shows everything.
-                for (final filter in _NatureFilter.values)
-                  NuniChip(
-                    label: _natureLabel(l10n, filter),
-                    selected: _natureFilter == filter,
-                    onTap: () => setState(
-                      () => _natureFilter = _natureFilter == filter
-                          ? null
-                          : filter,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            if (cities.length > 1) ...[
+          return ListView(
+            // Pullable even when the list is shorter than the screen.
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+            children: [
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
                   NuniChip(
-                    label: l10n.historyFilterAllCities,
-                    selected: _cityFilter == null,
-                    onTap: () => setState(() => _cityFilter = null),
+                    label: l10n.historyFilterMine,
+                    selected: _mineOnly,
+                    onTap: () => setState(() => _mineOnly = !_mineOnly),
                   ),
-                  for (final city in cities)
+                  // One pill at a time; tapping it again shows everything.
+                  for (final filter in _NatureFilter.values)
                     NuniChip(
-                      label: city,
-                      selected: _cityFilter == city,
-                      onTap: () => setState(() => _cityFilter = city),
+                      label: _natureLabel(l10n, filter),
+                      selected: _natureFilter == filter,
+                      onTap: () => setState(
+                        () => _natureFilter = _natureFilter == filter
+                            ? null
+                            : filter,
+                      ),
                     ),
                 ],
               ),
-              const SizedBox(height: 16),
-            ],
-            if (visible.isEmpty)
-              NuniEmptyState(
-                icon: PhosphorIcons.clockCounterClockwise,
-                message: l10n.historyEmptyMine,
-              ),
-            for (final entry in visible) ...[
-              _HistoryCard(
-                entry: entry,
-                playedByMe: entry.playedBy(myPlayerId),
-              ),
               const SizedBox(height: 10),
+              if (cities.length > 1) ...[
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    NuniChip(
+                      label: l10n.historyFilterAllCities,
+                      selected: _cityFilter == null,
+                      onTap: () => setState(() => _cityFilter = null),
+                    ),
+                    for (final city in cities)
+                      NuniChip(
+                        label: city,
+                        selected: _cityFilter == city,
+                        onTap: () => setState(() => _cityFilter = city),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (visible.isEmpty)
+                NuniEmptyState(
+                  icon: PhosphorIcons.clockCounterClockwise,
+                  message: l10n.historyEmptyMine,
+                ),
+              for (final entry in visible) ...[
+                _HistoryCard(
+                  entry: entry,
+                  playedByMe: entry.playedBy(myPlayerId),
+                ),
+                const SizedBox(height: 10),
+              ],
             ],
-          ],
-        );
-      },
+          );
+        },
+      ),
     );
   }
+}
+
+/// A screen-filling [child] that doesn't scroll by itself (the empty
+/// history), made scrollable so the refresh gesture still works on it.
+class _Pullable extends StatelessWidget {
+  const _Pullable({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) => ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [SizedBox(height: constraints.maxHeight, child: child)],
+    ),
+  );
 }
 
 class _HistoryCard extends ConsumerWidget {

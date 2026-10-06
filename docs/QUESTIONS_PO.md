@@ -2827,3 +2827,17 @@ Q250 : il se termine par la suppression de ses tables, donc la commande document
 pas ses résultats.
 Suggestion : oui, la même transformation (tables temporaires, verdict en dernière ligne),
 essayée avec la commande documentée avant d'être gardée.
+
+**Q252 ☑ — Rafraîchir l'onglet « Historique » comme l'accueil ?**
+Constat (2026-10-06, essai du plan 36) : « Training test », restaurée en base, apparaissait sur
+l'accueil mais pas dans l'onglet « Historique ». La base la renvoie bien (vérifié en interrogeant
+l'historique comme le compte du PO : en première position). La liste de l'historique est lue
+une fois puis gardée tant que l'app reste ouverte : contrairement à l'accueil, elle n'est relue
+ni quand l'app revient au premier plan (`ResumeRefresher`), ni par un geste de l'utilisateur.
+Le défaut n'est pas propre à la restauration : une session terminée par un autre organisateur, ou
+modifiée par le staff, n'y apparaît pas non plus avant un rechargement complet de l'app.
+Suggestion : oui, les deux mécanismes déjà en place ailleurs : relire l'historique au retour
+dans l'app (une ligne dans `ResumeRefresher`) et « tirer vers le bas pour rafraîchir », comme
+l'accueil, le planning et les spots.
+Réponse PO (2026-10-06) : ok. Fait : `ResumeRefresher` relit l'historique, et la page
+« Historique » se rafraîchit en tirant vers le bas, même vide.
