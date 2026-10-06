@@ -151,10 +151,12 @@ class _DetailView extends ConsumerWidget {
     );
     if (!confirmed || !context.mounted) return;
     try {
-      final photos = await ref.read(sessionPhotosProvider(sessionId).future);
       await ref
           .read(historyRepositoryProvider)
-          .deleteSessionWithPhotos(sessionId: sessionId, photos: photos);
+          .deleteSession(
+            sessionId: sessionId,
+            status: entry.snapshot.session.status,
+          );
       ref.invalidate(historyEntriesProvider);
       // Home's "en cours" / "dernières sessions" lists are separate
       // providers (PO, 2026-09-18: a session deleted from history kept

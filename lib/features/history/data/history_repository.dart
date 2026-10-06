@@ -10,6 +10,7 @@ import '../../../core/supabase/supabase_providers.dart';
 import '../../../shared/photo_bytes.dart';
 import '../../live/data/live_repository.dart';
 import '../../live/domain/live_session_snapshot.dart';
+import '../../sessions/domain/session.dart';
 import '../domain/history_entry.dart';
 import '../domain/session_photo.dart';
 
@@ -95,24 +96,30 @@ class HistoryRepository {
       .update({'cover_photo_id': photoId})
       .eq('id', sessionId);
 
-  /// "Supprimer la session" from the history detail (plan 10): purges every
-  /// photo's storage object first (best-effort per file, a partial bucket
-  /// failure shouldn't block deleting the session itself -- unlike a single
-  /// photo delete, there's no row left afterwards to retry against), then
-  /// deletes the session row, which cascades everything else in the
-  /// database (teams, played_holes, scores, session_photos rows).
-  Future<void> deleteSessionWithPhotos({
+  /// "Supprimer la session" from the history detail (plan 10): deletes the
+  /// session row, which cascades everything else in the database (teams,
+  /// played_holes, scores, session_photos rows). A completed session keeps
+  /// its photo files (plan 36, Q247): the database archives it on delete
+  /// (`sessions_archive_completed`), and a restore finds them where they
+  /// were. Any other one -- only reachable here through a typed address --
+  /// loses them first, best-effort per file: a partial bucket failure
+  /// shouldn't block deleting the session itself (unlike a single photo
+  /// delete, there's no row left afterwards to retry against).
+  Future<void> deleteSession({
     required String sessionId,
-    required List<SessionPhoto> photos,
+    required SessionStatus status,
   }) async {
-    if (photos.isNotEmpty) {
-      try {
-        await _client.storage.from('session-photos').removePhotos([
-          for (final p in photos) p.storagePath,
-        ]);
-      } catch (_) {
-        // Best-effort: an orphaned file is a smaller problem than being
-        // unable to delete the session at all.
+    if (status != SessionStatus.completed) {
+      final photos = await fetchPhotos(sessionId);
+      if (photos.isNotEmpty) {
+        try {
+          await _client.storage.from('session-photos').removePhotos([
+            for (final p in photos) p.storagePath,
+          ]);
+        } catch (_) {
+          // Best-effort: an orphaned file is a smaller problem than being
+          // unable to delete the session at all.
+        }
       }
     }
     await _client.from('sessions').delete().eq('id', sessionId);

@@ -11,7 +11,8 @@
 //    18: requests, edits of the initial ones), their local managers and
 //    their contact details, players, sessions, teams, members, played holes,
 //    scores, session photo rows, the spots (plan 28), the planning (plan 23: events, answers,
-//    comments) and the sign-up linking e-mails (Q64) --
+//    comments), the sign-up linking e-mails (Q64) and the archives of deleted
+//    completed sessions (plan 36) --
 //    names, e-mails, phones and photo paths of real people, so never
 //    committed in clear (the repo is public). The initial associations
 //    themselves are supabase/associations_seed.sql, replayed before. Encrypted with
@@ -315,11 +316,9 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
     'team_id, player_id',
     'team_id',
   );
-  final members = await all(
-    'session_members',
-    'session_id, user_id, team_id, role, joined_at',
-    'joined_at',
-  );
+  // Every column (Q249): `checked_in_at` (2026-09-28) was missing from a
+  // fixed list, and a later column is saved without touching this tool.
+  final members = await all('session_members', '*', 'joined_at');
   // Every column (plan 26), same reason as the holes above: `par` and
   // `comment` don't exist yet on a base still on the previous schema. Replayed
   // without a par, a played hole gets its hole's par, or 3 for a free hole
@@ -385,6 +384,12 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
         .select('id, event_id')
         .not('event_id', 'is', null)
         .limit(100000),
+  );
+  // Plan 36: the archives of deleted completed sessions, absent from a base
+  // still on the previous schema. Personal data (accounts, scores, reports):
+  // in this encrypted seed only, never in clear.
+  final archives = await optional(
+    () => all('session_archives', '*', 'deleted_at'),
   );
 
   final eventRows = [
@@ -476,6 +481,7 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
   _insert(buffer, 'played_holes', playedHoles);
   _insert(buffer, 'scores', scores);
   _insert(buffer, 'session_photos', photos);
+  _insert(buffer, 'session_archives', archives);
   for (final s in sessionEvents) {
     buffer.writeln(
       'update sessions set event_id = ${_sql(s['event_id'])} '
@@ -506,7 +512,7 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
         '${scores.length} scores, ${photos.length} session photos, '
         '${emails.length} pending e-mails, ${admins.length} local admins, ${events.length} events, '
         '${responses.length} event answers, ${comments.length} event comments, '
-        '${spots.length} spots',
+        '${spots.length} spots, ${archives.length} session archives',
   );
 }
 

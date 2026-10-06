@@ -291,7 +291,8 @@ class SessionsRepository {
 
   /// Deletes a session outright (owner-only -- RLS `sessions_delete_owner`,
   /// no status restriction). Cascades to teams, team_players,
-  /// session_members, played_holes, scores and session_photos.
+  /// session_members, played_holes, scores and session_photos. A completed
+  /// one is archived first by the database, out of the app's reach (plan 36).
   Future<void> deleteSession(String sessionId) =>
       _client.from('sessions').delete().eq('id', sessionId);
 

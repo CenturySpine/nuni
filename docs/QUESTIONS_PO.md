@@ -2793,3 +2793,37 @@ Réponse PO (2026-10-05) : d'accord.
 **Q248 ☑ — Combien de temps garder les archives ?**
 Suggestion : indéfiniment, sans purge automatique ; une archive pèse quelques Ko hors photos.
 Réponse PO (2026-10-05) : d'accord.
+
+**Q249 ☑ — Sauvegarder aussi la présence des participants (`checked_in_at`) ?**
+Constat (2026-10-06, en ajoutant les archives à l'export) : la sauvegarde chiffrée
+(`tool/export_remote_seed.dart`) n'exporte pas `session_members.checked_in_at`, ajoutée le
+2026-09-28 (Q217, Q218). Conséquence d'usage : après une relecture de la sauvegarde, tous les
+participants apparaîtraient « pas encore venus » dans la salle d'attente des sessions non
+terminées ; l'historique, les statistiques et les badges ne sont pas touchés. Les archives du
+plan 36, elles, gardent cette colonne.
+Suggestion : oui, en exportant toutes les colonnes de `session_members` (`*`), comme c'est déjà
+fait pour les joueurs et les trous joués : une colonne ajoutée plus tard sera sauvegardée sans
+retoucher l'outil. Une ligne à changer.
+Réponse PO (2026-10-06) : ok. Fait : `session_members` exportée avec toutes ses colonnes.
+
+**Q250 ☑ — Faire afficher le verdict de `rls_smoke.sql` par la commande documentée ?**
+Constat (2026-10-06, CLI Supabase 2.119.0) : `npx supabase db query --linked -f
+supabase/tests/rls_smoke.sql` n'affiche que le résultat de la dernière instruction du fichier,
+qui est la suppression de la table des résultats : on ne voit donc pas les `passed`. Pour le plan
+36, l'assistant a lancé une copie du fichier terminée par le verdict, puis a supprimé la table à
+part. Conséquence d'usage : tel que documenté dans `docs/DEV.md`, le test peut sembler réussi
+sans que personne ait lu son résultat.
+Suggestion : terminer le fichier par une ligne de verdict (nombre de tests, tests en échec,
+restes de données de test), et rendre les tables de travail du test temporaires (elles
+disparaissent seules à la fin de la connexion, plus besoin de les supprimer). Changement limité au
+fichier de test, essayé avec la même commande avant d'être gardé.
+Réponse PO (2026-10-06) : ok. Fait : tables de travail temporaires (vérifié au préalable :
+`authenticated` y écrit, et elles disparaissent à la fin de la commande), nettoyage puis une
+ligne de verdict (`tests`, `passed`, `not_passed`, `leftovers`) ; `docs/DEV.md` à jour.
+
+**Q251 ☐ — Même traitement pour `notifications_smoke.sql` ?**
+Constat (2026-10-06) : le test des destinataires de notifications (plan 33) a le même défaut que
+Q250 : il se termine par la suppression de ses tables, donc la commande documentée n'affiche
+pas ses résultats.
+Suggestion : oui, la même transformation (tables temporaires, verdict en dernière ligne),
+essayée avec la commande documentée avant d'être gardée.

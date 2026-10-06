@@ -4,10 +4,11 @@
 --   npx supabase db query --linked -f supabase/tests/rls_smoke.sql
 -- Creates disposable fixture data (auth.users, a session, a hole), exercises policies and
 -- RPCs by impersonating each user via SET ROLE authenticated + request.jwt.claims, records
--- pass/fail into test_results, prints it, then deletes everything it created. Every row in the
--- final SELECT must have passed = true.
+-- pass/fail into test_results, deletes everything it created, then prints a one-line verdict
+-- (the command only shows the last statement's rows, Q250): not_passed must be empty and
+-- leftovers 0. The work tables (test_*) are temporary: they go away with the connection.
 
-create table if not exists test_results (n int generated always as identity, test text, passed boolean);
+create temp table test_results (n int generated always as identity, test text, passed boolean);
 grant select, insert on test_results to authenticated;
 
 -- ===== Fixture (as the invoking privileged role: bypasses RLS) =====
@@ -57,7 +58,7 @@ insert into holes (id, owner_id, name, par, start)
 values ('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'Smoke hole', 4,
         st_setsrid(st_makepoint(2.35, 48.85), 4326)::geography);
 
-create table test_ids as
+create temp table test_ids as
 select
   'a0000000-0000-0000-0000-000000000001'::uuid as owner_user,
   'a0000000-0000-0000-0000-000000000002'::uuid as member1_user,
@@ -624,7 +625,7 @@ select 'stats_snapshot_not_callable',
 -- ===== Plan 23: association planning (events, answers, comments, import, start a session) =====
 -- Association 1: owner (1), fan (7), manager (9, local manager since test 7); "foreign" (8) is in
 -- association 2; "admin" (6) is a super_admin.
-create table test_events (name text primary key, id uuid);
+create temp table test_events (name text primary key, id uuid);
 grant select, insert on test_events to authenticated;
 
 -- A member creates an event: the base sets its association, creator and origin, whatever is sent.
@@ -854,7 +855,7 @@ reset request.jwt.claims;
 -- ===== Plan 27: local admins and partners =====
 -- Association 1: manager (9) names deputy (10); owner (1) is a plain member, fan (7) a second
 -- admin who renounces; foreign (8) belongs to association 2.
-create table test_plan27 as
+create temp table test_plan27 as
 select
   (select id from players where user_id = 'a0000000-0000-0000-0000-000000000010') as deputy_player,
   (select id from players where user_id = 'a0000000-0000-0000-0000-000000000007') as fan_player,
@@ -1258,7 +1259,7 @@ select create_session(jsonb_build_object('kind', 'individual', 'scoring_mode', '
 reset role;
 reset request.jwt.claims;
 
-create table test_p29 as
+create temp table test_p29 as
 select
   (select id from sessions where comment = 'plan29 training') as training,
   (select code from sessions where comment = 'plan29 training') as training_code,
@@ -1499,16 +1500,279 @@ reset role;
 reset request.jwt.claims;
 drop table test_p29;
 
--- ===== Verdict =====
-select * from test_results order by n;
+-- ===== Plan 36: archive of deleted completed sessions =====
+-- A completed game session carrying everything an archive must keep, written like a seed replay
+-- (no signed-in caller: the values given are kept): an event, two teams, a participant who never
+-- joined, a directory hole with its own par and a free hole, scores, two photos and a cover,
+-- championship, tags, title, report and weather. Its spot and hole are its own, deleted later to
+-- test the restore's conflicts.
+insert into spots (id, association_id, name, city, location)
+values ('d0000000-0000-0000-0000-000000000036', 'c0000000-0000-0000-0000-000000000001', 'P36 Park',
+        'P36 City', st_setsrid(st_makepoint(2.37, 48.87), 4326)::geography);
+insert into holes (id, owner_id, name, par, start)
+values ('b0000000-0000-0000-0000-000000000036', 'a0000000-0000-0000-0000-000000000001', 'P36 hole', 4,
+        st_setsrid(st_makepoint(2.37, 48.87), 4326)::geography);
+insert into events (association_id, created_by, starts_at, label)
+values ('c0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001',
+        now() - interval '3 hours', 'Smoke p36');
+insert into test_events select 'p36', id from events where label = 'Smoke p36';
+insert into sessions (id, owner_id, status, kind, scoring_mode, ranking_direction, tags, title,
+  spot_id, location, started_at, ended_at, weather, comment, association_id, is_championship, event_id)
+values ('36000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'completed',
+  'team', 'stroke_play', 'asc', '{association_life}', 'P36 cup', 'd0000000-0000-0000-0000-000000000036',
+  st_setsrid(st_makepoint(2.371, 48.871), 4326)::geography, now() - interval '2 hours',
+  now() - interval '1 hour', '{"code": 2, "temperature": 18.5}', 'P36 report',
+  'c0000000-0000-0000-0000-000000000001', true, (select id from test_events where name = 'p36'));
+insert into teams (id, session_id, position)
+values ('36000000-0000-0000-0001-000000000001', '36000000-0000-0000-0000-000000000001', 1),
+       ('36000000-0000-0000-0001-000000000002', '36000000-0000-0000-0000-000000000001', 2);
+insert into team_players (team_id, player_id)
+select '36000000-0000-0000-0001-000000000001'::uuid, id from players
+where user_id in ('a0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000002')
+union all
+select '36000000-0000-0000-0001-000000000002'::uuid, id from players
+where user_id = 'a0000000-0000-0000-0000-000000000003';
+insert into session_members (session_id, user_id, team_id, role, checked_in_at)
+values ('36000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001',
+        '36000000-0000-0000-0001-000000000001', 'owner', now() - interval '2 hours'),
+       ('36000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000002',
+        '36000000-0000-0000-0001-000000000001', 'player', now() - interval '2 hours'),
+       ('36000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000003',
+        '36000000-0000-0000-0001-000000000002', 'player', null);
+insert into played_holes (id, session_id, hole_id, label, par, comment, game_mode, position)
+values ('36000000-0000-0000-0002-000000000001', '36000000-0000-0000-0000-000000000001',
+        'b0000000-0000-0000-0000-000000000036', null, 5, 'P36 windy', 'scramble', 1),
+       ('36000000-0000-0000-0002-000000000002', '36000000-0000-0000-0000-000000000001',
+        null, 'P36 free', 3, null, 'best_ball', 2);
+insert into scores (played_hole_id, team_id, value, updated_by)
+select ph::uuid, t::uuid, v, 'a0000000-0000-0000-0000-000000000001'::uuid
+from (values
+  ('36000000-0000-0000-0002-000000000001', '36000000-0000-0000-0001-000000000001', 4),
+  ('36000000-0000-0000-0002-000000000001', '36000000-0000-0000-0001-000000000002', 6),
+  ('36000000-0000-0000-0002-000000000002', '36000000-0000-0000-0001-000000000001', 3),
+  ('36000000-0000-0000-0002-000000000002', '36000000-0000-0000-0001-000000000002', 2)
+) s(ph, t, v);
+insert into session_photos (id, session_id, storage_path, uploaded_by)
+values ('36000000-0000-0000-0003-000000000001', '36000000-0000-0000-0000-000000000001',
+        '36000000-0000-0000-0000-000000000001/p36-a.jpg', 'a0000000-0000-0000-0000-000000000001'),
+       ('36000000-0000-0000-0003-000000000002', '36000000-0000-0000-0000-000000000001',
+        '36000000-0000-0000-0000-000000000001/p36-b.jpg', 'a0000000-0000-0000-0000-000000000002');
+update sessions set cover_photo_id = '36000000-0000-0000-0003-000000000002'
+where id = '36000000-0000-0000-0000-000000000001';
+-- A draft and a live session of the same organizer (no spot: plan 28's tests deleted Smoke Park).
+insert into sessions (id, owner_id, status, kind, scoring_mode, ranking_direction, association_id)
+values ('36000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000001', 'draft',
+        'individual', 'stroke_play', 'asc', 'c0000000-0000-0000-0000-000000000001'),
+       ('36000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-000000000001', 'live',
+        'individual', 'stroke_play', 'asc', 'c0000000-0000-0000-0000-000000000001');
+insert into session_members (session_id, user_id, role)
+values ('36000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000001', 'owner'),
+       ('36000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-000000000001', 'owner');
+
+-- Every row of a session, table by table, to compare before and after.
+create function pg_temp.test_p36_rows(p_session uuid)
+returns table (t text, row_data jsonb)
+language sql
+as $$
+  select 'sessions', (select jsonb_agg(to_jsonb(r)) from sessions r where r.id = p_session)
+  union all select 'teams', (select jsonb_agg(to_jsonb(r) order by r.position)
+    from teams r where r.session_id = p_session)
+  union all select 'team_players', (select jsonb_agg(to_jsonb(r) order by r.team_id, r.player_id)
+    from team_players r where r.session_id = p_session)
+  union all select 'session_members', (select jsonb_agg(to_jsonb(r) order by r.user_id)
+    from session_members r where r.session_id = p_session)
+  union all select 'played_holes', (select jsonb_agg(to_jsonb(r) order by r.position)
+    from played_holes r where r.session_id = p_session)
+  union all select 'scores', (select jsonb_agg(to_jsonb(r) order by r.played_hole_id, r.team_id)
+    from scores r where r.session_id = p_session)
+  union all select 'session_photos', (select jsonb_agg(to_jsonb(r) order by r.id)
+    from session_photos r where r.session_id = p_session);
+$$;
+-- "full": the session above; "training": plan 29's session without scores, completed, with two
+-- attendees on its single team and its organizer off it.
+create temp table test_p36 as
+select 'full' as s, '36000000-0000-0000-0000-000000000001'::uuid as session_id, r.t, r.row_data
+from pg_temp.test_p36_rows('36000000-0000-0000-0000-000000000001') r
+union all
+select 'training', s.id, r.t, r.row_data
+from sessions s, pg_temp.test_p36_rows(s.id) r
+where s.title = 'Putting clinic';
+grant select on test_p36 to authenticated;
+
+-- The organizer deletes all three: only the completed one is archived, with every row.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+delete from sessions
+where id in ('36000000-0000-0000-0000-000000000001', '36000000-0000-0000-0000-000000000002',
+             '36000000-0000-0000-0000-000000000003');
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'draft_and_live_deleted_for_good',
+  not exists (select 1 from sessions
+              where id in ('36000000-0000-0000-0000-000000000002', '36000000-0000-0000-0000-000000000003'))
+  and not exists (select 1 from session_archives
+                  where session_id in ('36000000-0000-0000-0000-000000000002',
+                                       '36000000-0000-0000-0000-000000000003'));
+insert into test_results (test, passed)
+select 'completed_session_archived_on_delete',
+  not exists (select 1 from sessions where id = '36000000-0000-0000-0000-000000000001')
+  and not exists (select 1 from teams where session_id = '36000000-0000-0000-0000-000000000001')
+  and (select count(*) from session_archives where session_id = '36000000-0000-0000-0000-000000000001') = 1
+  and (select deleted_by from session_archives where session_id = '36000000-0000-0000-0000-000000000001')
+    = 'a0000000-0000-0000-0000-000000000001'
+  and (select bool_and(jsonb_array_length(a.data -> b.t) = jsonb_array_length(b.row_data))
+       from test_p36 b
+       join session_archives a on a.session_id = b.session_id
+       where b.s = 'full' and b.t <> 'sessions')
+  and (select data -> 'session' ->> 'comment' from session_archives
+       where session_id = '36000000-0000-0000-0000-000000000001') = 'P36 report';
+
+-- No account reads the archive nor restores, whatever its role.
+set role authenticated;
+do $$
+declare
+  v_user record;
+begin
+  for v_user in
+    select * from (values
+      ('organizer', 'a0000000-0000-0000-0000-000000000001'),
+      ('member', 'a0000000-0000-0000-0000-000000000002'),
+      ('super_admin', 'a0000000-0000-0000-0000-000000000006')
+    ) u(label, id)
+  loop
+    perform set_config('request.jwt.claims',
+      jsonb_build_object('sub', v_user.id, 'role', 'authenticated')::text, false);
+    begin
+      perform count(*) from session_archives;
+      insert into test_results (test, passed) values (v_user.label || '_cannot_read_archives', false);
+    exception when insufficient_privilege then
+      insert into test_results (test, passed) values (v_user.label || '_cannot_read_archives', true);
+    end;
+    begin
+      perform restore_session_archive('36000000-0000-0000-0000-000000000001');
+      insert into test_results (test, passed) values (v_user.label || '_cannot_restore', false);
+    exception when insufficient_privilege then
+      insert into test_results (test, passed) values (v_user.label || '_cannot_restore', true);
+    end;
+  end loop;
+end $$;
+reset role;
+reset request.jwt.claims;
+
+-- Restored with nothing changed meanwhile: every row back as it was (check-ins, cover photo,
+-- championship, tags and report included), the event and spot kept, the archive gone.
+do $$
+begin
+  insert into test_results (test, passed)
+  select 'restore_settles_nothing_unchanged',
+    r @> '{"new_code": false, "event_unlinked": false, "spot_unlinked": false}'
+  from restore_session_archive('36000000-0000-0000-0000-000000000001') r;
+exception when others then
+  insert into test_results (test, passed) values ('restore_settles_nothing_unchanged: ' || sqlerrm, false);
+end $$;
+insert into test_results (test, passed)
+select 'restore_puts_every_row_back',
+  (select bool_and(a.row_data is not distinct from b.row_data) and count(*) = 7
+   from test_p36 b
+   join pg_temp.test_p36_rows('36000000-0000-0000-0000-000000000001') a using (t)
+   where b.s = 'full')
+  and not exists (select 1 from session_archives where session_id = '36000000-0000-0000-0000-000000000001');
+
+-- Deleted again; meanwhile its code goes to another session, which is also linked to its event,
+-- and its spot is deleted: it comes back with a new code, without event nor spot, its place kept.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+delete from sessions where id = '36000000-0000-0000-0000-000000000001';
+reset role;
+reset request.jwt.claims;
+insert into sessions (id, code, owner_id, status, kind, scoring_mode, ranking_direction,
+  association_id, event_id)
+values ('36000000-0000-0000-0000-000000000004',
+        (select row_data -> 0 ->> 'code' from test_p36 where s = 'full' and t = 'sessions'),
+        'a0000000-0000-0000-0000-000000000001', 'draft', 'individual', 'stroke_play', 'asc',
+        'c0000000-0000-0000-0000-000000000001', (select id from test_events where name = 'p36'));
+delete from spots where id = 'd0000000-0000-0000-0000-000000000036';
+do $$
+begin
+  insert into test_results (test, passed)
+  select 'restore_settles_code_event_spot',
+    r @> '{"new_code": true, "event_unlinked": true, "spot_unlinked": true}'
+    and r ->> 'code' <> (select row_data -> 0 ->> 'code' from test_p36 where s = 'full' and t = 'sessions')
+  from restore_session_archive('36000000-0000-0000-0000-000000000001') r;
+exception when others then
+  insert into test_results (test, passed) values ('restore_settles_code_event_spot: ' || sqlerrm, false);
+end $$;
+insert into test_results (test, passed)
+select 'restore_after_conflicts_keeps_the_rest',
+  (select bool_and(case when t = 'sessions'
+                     then (a.row_data -> 0) - 'code' - 'event_id' - 'spot_id'
+                          = (b.row_data -> 0) - 'code' - 'event_id' - 'spot_id'
+                     else a.row_data is not distinct from b.row_data end)
+   from test_p36 b
+   join pg_temp.test_p36_rows('36000000-0000-0000-0000-000000000001') a using (t)
+   where b.s = 'full')
+  and (select event_id is null and spot_id is null and zone = 'P36 Park' and city = 'P36 City'
+       from sessions where id = '36000000-0000-0000-0000-000000000001');
+
+-- Deleted again, then its hole is deleted: the restore is refused, naming the hole, and changes
+-- nothing.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+delete from sessions where id = '36000000-0000-0000-0000-000000000001';
+reset role;
+reset request.jwt.claims;
+delete from holes where id = 'b0000000-0000-0000-0000-000000000036';
+do $$
+begin
+  perform restore_session_archive('36000000-0000-0000-0000-000000000001');
+  insert into test_results (test, passed) values ('restore_refused_hole_gone', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('restore_refused_hole_gone', sqlerrm like 'restore_refused:%"holes"%');
+end $$;
+insert into test_results (test, passed)
+select 'refused_restore_changes_nothing',
+  not exists (select 1 from sessions where id = '36000000-0000-0000-0000-000000000001')
+  and not exists (select 1 from teams where session_id = '36000000-0000-0000-0000-000000000001')
+  and not exists (select 1 from session_members where session_id = '36000000-0000-0000-0000-000000000001')
+  and (select count(*) from session_archives where session_id = '36000000-0000-0000-0000-000000000001') = 1;
+
+-- A session without scores: its attendees' team rows, recreated by the base from its members,
+-- come back once, not twice.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+delete from sessions where id = (select distinct session_id from test_p36 where s = 'training');
+reset role;
+reset request.jwt.claims;
+do $$
+begin
+  perform restore_session_archive((select distinct session_id from test_p36 where s = 'training'));
+exception when others then
+  insert into test_results (test, passed) values ('no_scores_restore: ' || sqlerrm, false);
+end $$;
+insert into test_results (test, passed)
+select 'no_scores_session_restored_without_duplicates',
+  (select bool_and(a.row_data is not distinct from b.row_data) and count(*) = 7
+   from test_p36 b
+   join pg_temp.test_p36_rows(b.session_id) a using (t)
+   where b.s = 'training')
+  and (select jsonb_array_length(row_data) from test_p36 where s = 'training' and t = 'team_players') = 2;
+drop table test_p36;
+drop function pg_temp.test_p36_rows(uuid);
 
 -- ===== Cleanup =====
 delete from sessions where event_id in (select id from test_events);
 delete from events where association_id in ('c0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000002');
 delete from sessions where id in (select session_id from test_ids);
 delete from sessions where association_id in ('c0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000002');
+-- The completed ones deleted above, and by plan 36's tests, were archived (plan 36).
+delete from session_archives
+where data -> 'session' ->> 'association_id'
+  in ('c0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000002');
 delete from holes where cloned_from in (select private_hole from test_ids);
-delete from holes where id in (select private_hole from test_ids);
+delete from holes where id in (select private_hole from test_ids)
+  or id = 'b0000000-0000-0000-0000-000000000036';
 delete from association_managers where association_id = 'c0000000-0000-0000-0000-000000000001';
 delete from players where user_id in (
   select owner_user from test_ids union select member1_user from test_ids union select member2_user from test_ids
@@ -1530,6 +1794,19 @@ delete from auth.users where id in (
   union select 'a0000000-0000-0000-0000-000000000009'::uuid
   union select 'a0000000-0000-0000-0000-000000000010'::uuid
 );
-drop table test_ids;
-drop table test_events;
-drop table test_results;
+
+-- ===== Verdict =====
+-- The last statement, the only one whose rows the command shows (Q250): not_passed must be empty
+-- and leftovers 0 (fixture data the cleanup above missed).
+select count(*) as tests,
+       count(*) filter (where passed) as passed,
+       coalesce(jsonb_agg(test order by n) filter (where passed is not true), '[]'::jsonb) as not_passed,
+       (select count(*) from auth.users where email like '%@smoke.nuni')
+         + (select count(*) from associations
+            where id in ('c0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000002')
+               or name = 'Smoke Pending')
+         + (select count(*) from session_archives
+            where data -> 'session' ->> 'association_id'
+              in ('c0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000002'))
+         as leftovers
+from test_results;

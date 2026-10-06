@@ -4,7 +4,29 @@
 
 Plan rédigé le 2026-10-05 à la demande du PO du même jour. Q244 à Q248 tranchées le même jour
 (le PO a accepté toutes les suggestions). **Plan validé par le PO le 2026-10-05** (« on fera
-l'implémentation demain ») ; implémentation prévue le 2026-10-06.
+l'implémentation demain »).
+
+**Implémenté le 2026-10-06** (étapes 1 à 5) : migration
+`20261006081739_session_archives.sql`, fiche d'historique, export, tests `rls_smoke.sql`,
+`docs/DEV.md`, `AGENTS.md`.
+
+**Étape 7 faite le 2026-10-06, sur accord du PO**, par l'assistant :
+- répétition sur la base de production (migration et `rls_smoke.sql` dans une transaction
+  toujours annulée, Q242) : 150 tests sur 150 réussis, après correction d'une erreur des
+  nouveaux tests (ils utilisaient un spot que la section du plan 28 supprime) ;
+- `npx supabase db push` : migration appliquée ;
+- `rls_smoke.sql` : 150 tests sur 150 réussis ; aucune archive, aucun compte ni aucune table de
+  test restants ; droits relus en base (`session_archives` lisible par `service_role` seul,
+  les trois fonctions exécutables par aucun des rôles `anon`, `authenticated`, `service_role`).
+
+Le même jour, sur accord du PO : l'export sauvegarde aussi `checked_in_at` (Q249), et
+`rls_smoke.sql` affiche son verdict avec la commande documentée (Q250) ; relancé ainsi : 150 sur
+150, aucun reste.
+
+**Restent** : l'étape 6 avec le Flutter épinglé (le terminal de l'assistant n'a que Flutter
+3.41.7, trop ancien pour le projet ; analyse partielle sans remarque sur les fichiers
+modifiés), la mise en ligne de l'app (commit sur demande du PO), le premier export chiffré
+contenant `session_archives`, et l'essai du PO.
 
 ## Demande du PO (reformulée)
 
@@ -126,6 +148,28 @@ restauration n'envoie aucune notification.
    la requête qui liste les archives (date, auteur de la suppression, nom ou lieu, date de la
    session) et la commande de restauration.
 
+## Notes d'implémentation (2026-10-06)
+
+Choix techniques faits en implémentant, dans le cadre des décisions ci-dessus :
+
+- **Colonnes lues dans la table, pas listées dans le code.** L'archive garde toutes les colonnes
+  de chaque ligne (`to_jsonb`) ; la restauration (`_restore_archived_rows`) réinsère les colonnes
+  que l'archive contient et que la table a encore, sauf celles que la base calcule. Une archive
+  prise avant une future migration se restaure donc dans le nouveau schéma (une colonne ajoutée
+  entre-temps prend sa valeur par défaut), sans retoucher ces fonctions. Le point de la session
+  est archivé en texte, que le type `geography` relit tel quel.
+- **Refus par les clés étrangères.** Plutôt qu'une liste de contrôles (trou, compte, joueur,
+  association), la restauration laisse la base refuser toute référence disparue et reformule
+  l'erreur : `restore_refused: Key (hole_id)=(…) is not present in table "holes".` Cela couvre
+  aussi les références secondaires (auteur d'un score, d'une photo) et toute référence future.
+- **Résultat de la restauration** : un objet qui dit ce qui a dû changer (`new_code`,
+  `event_unlinked`, `spot_unlinked`) et le code de la session.
+- **Droit d'exécution** de `restore_session_archive` retiré aussi à `service_role` (la clé des
+  scripts), en plus de `public`, `anon` et `authenticated` : seul l'administrateur de la base
+  restaure. `service_role` garde la seule lecture de `session_archives`, pour l'export.
+- **Fiche d'historique** : `deleteSessionWithPhotos` devient `deleteSession(sessionId, status)`,
+  qui ne lit et n'efface les fichiers photo que d'une session non terminée.
+
 ## Étapes
 
 1. Migration `<horodatage>_session_archives.sql` (`npx supabase migration new
@@ -162,18 +206,20 @@ restauration n'envoie aucune notification.
 
 ## Critères d'acceptation
 
-- [ ] Supprimer une session brouillon ou en cours : comportement inchangé, rien d'archivé.
+- [x] Supprimer une session brouillon ou en cours : comportement inchangé, rien d'archivé.
 - [ ] Supprimer une session terminée, depuis n'importe quel écran : archive complète, fichiers
-      photo gardés dans le stockage.
-- [ ] L'archive est illisible depuis l'app, pour tout compte.
-- [ ] La restauration remet la session à l'identique, photos comprises, pour tous ses
+      photo gardés dans le stockage. (Archive : vérifiée par `rls_smoke.sql`. Fichiers : attend
+      la mise en ligne de la fiche d'historique modifiée.)
+- [x] L'archive est illisible depuis l'app, pour tout compte.
+- [x] La restauration remet la session à l'identique, photos comprises, pour tous ses
       participants ; l'archive est retirée.
-- [ ] Code réattribué, événement déjà pris et spot supprimé sont gérés ; un trou ou un compte
+- [x] Code réattribué, événement déjà pris et spot supprimé sont gérés ; un trou ou un compte
       manquant fait échouer la restauration sans rien modifier.
-- [ ] La sauvegarde chiffrée contient les archives.
+- [ ] La sauvegarde chiffrée contient les archives. (Code écrit ; au premier export, fait par le
+      PO, qui a `env/migration.json` et `env/seed.json`.)
 - [ ] `flutter analyze` sans avertissement, tests verts, `rls_smoke.sql` entièrement vert,
-      build Vercel vert.
-- [ ] `docs/DEV.md` documente la restauration ; `AGENTS.md` relu et mis à jour.
+      build Vercel vert. (`rls_smoke.sql` : vert, 150 sur 150 ; le reste attend.)
+- [x] `docs/DEV.md` documente la restauration ; `AGENTS.md` relu et mis à jour.
 - [ ] Essai par le PO : supprimer une session terminée de test, demander sa restauration,
       vérifier qu'elle revient avec ses scores et ses photos.
 

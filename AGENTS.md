@@ -264,6 +264,14 @@ GitHub Actions (Q17).
   `ChangeSignal` (`lib/core/supabase/change_signal.dart`), qui rouvre seul un abonnement coupé
   (app en arrière-plan) au lieu d'afficher une erreur ; `ResumeRefresher` (monté dans
   `app.dart`) relit l'accueil et les écrans de session quand l'app redevient visible.
+- Archive des sessions supprimées (plan 36) : supprimer une session **terminée** la copie
+  d'abord, avec les lignes de ses six tables, dans `session_archives` (déclencheur
+  `sessions_archive_completed`, en base, donc pour tout chemin de suppression) ; table privée,
+  aucun droit pour l'app, `super_admin` compris. Une session brouillon ou en cours est supprimée
+  pour de bon. Les fichiers photo d'une session terminée supprimée restent dans le stockage.
+  Restauration à la main par `restore_session_archive`, réservée à l'administrateur de la base
+  (`docs/DEV.md`). Jamais de suppression logique (session masquée) : aucune lecture de sessions
+  n'a à se soucier de l'archive (Q244).
 - Participants d'une session : `session_members.checked_in_at` non nul = a rejoint lui-même
   (code, QR code, créateur, ou ouverture de la session par un participant ajouté : RPC
   `check_in_session`, Q218) ; nul = ajouté par l'organisateur ou depuis un événement, pas encore

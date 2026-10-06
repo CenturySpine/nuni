@@ -126,8 +126,9 @@ fvm dart run tool/export_remote_seed.dart
 # 4. Appliquer : le CLI ne pousse que les migrations pas encore appliquées.
 npx supabase db push
 
-# 5. Vérifier les droits : crée des données de test jetables, les supprime à la fin ; chaque
-#    ligne du résultat doit avoir passed = true.
+# 5. Vérifier les droits : crée des données de test jetables, les supprime à la fin, puis
+#    affiche une ligne de verdict (Q250) : "not_passed" doit être vide ([]) et "leftovers" à 0
+#    (données de test que le nettoyage aurait oubliées).
 npx supabase db query --linked -f supabase/tests/rls_smoke.sql
 ```
 
@@ -137,3 +138,53 @@ public.<nom>(<paramètres>)`). Les commentaires restent en anglais, comme le cod
 
 L'ancienne procédure de reconstruction complète (avant 1.0.0) figure dans l'historique git de ce
 fichier ; elle ne doit plus être utilisée.
+
+## Restaurer une session supprimée (plan 36)
+
+Supprimer une session **terminée**, depuis l'app ou ailleurs, en garde une copie complète dans la
+table privée `session_archives` (illisible depuis l'app, `super_admin` compris) ; ses photos
+restent dans le stockage. Une session brouillon ou en cours n'est jamais archivée : sa
+suppression est définitive. Les archives sont gardées indéfiniment et sauvegardées dans le seed
+chiffré (`tool/export_remote_seed.dart`).
+
+Restauration à la main, par le PO ou l'assistant, depuis le tableau de bord Supabase > SQL Editor :
+
+```sql
+-- 1. Retrouver la session : les archives, la plus récente en premier.
+select a.session_id,
+       a.deleted_at,
+       coalesce(p.name, 'hors app') as supprimee_par,
+       coalesce(a.data -> 'session' ->> 'title', a.data -> 'session' ->> 'zone') as session,
+       a.data -> 'session' ->> 'started_at' as jouee_le
+from session_archives a
+left join players p on p.user_id = a.deleted_by
+order by a.deleted_at desc;
+
+-- 2. La restaurer (une seule transaction : en cas d'échec, rien n'est modifié).
+select restore_session_archive('<session_id>');
+```
+
+Ou depuis la ligne de commande :
+
+```powershell
+npx supabase db query --linked "select restore_session_archive('<session_id>')"
+```
+
+La session revient à l'identique pour tous ses participants (équipes, présence, trous joués et
+leur par, scores, photos et couverture, natures, championnat, compte rendu, météo) et réapparaît
+dans l'historique, les statistiques, les badges et le championnat au prochain affichage. Aucune
+notification n'est envoyée. L'archive est alors supprimée ; une nouvelle suppression en créera
+une autre.
+
+Le résultat dit ce qui a dû changer :
+
+- `new_code: true` : son code avait été attribué à une autre session, un nouveau a été tiré ;
+- `event_unlinked: true` : son événement a été supprimé ou a déjà une autre session (une seule
+  par événement, Q223), elle revient sans lien avec lui ;
+- `spot_unlinked: true` : son spot a été supprimé, elle revient sans lien avec lui (le nom du
+  lieu et la ville restent).
+
+Refus : si un trou, un compte, un joueur ou l'association de la session a été supprimé
+entre-temps, la restauration échoue sans rien modifier et l'archive reste ; le message nomme
+l'élément manquant, par exemple
+`restore_refused: Key (hole_id)=(…) is not present in table "holes".`
