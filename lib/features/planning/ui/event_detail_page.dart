@@ -28,6 +28,7 @@ import '../../profile/data/profile_repository.dart';
 import '../../profile/domain/player.dart';
 import '../../sessions/domain/session.dart';
 import '../../sessions/ui/session_nature.dart';
+import '../../sessions/ui/start_new_session.dart';
 import '../data/event_forecast.dart';
 import '../data/events_repository.dart';
 import '../data/planning_rights.dart';
@@ -457,7 +458,7 @@ class _SessionsBlock extends ConsumerWidget {
           NuniButton(
             icon: PhosphorIcons.play,
             label: l10n.planningStartSession,
-            onPressed: () => context.push('/session/new?event=${event.id}'),
+            onPressed: () => startNewSession(context, ref, event: event),
           ),
         if (offer == EventSessionOffer.join)
           NuniButton(

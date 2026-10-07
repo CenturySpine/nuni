@@ -91,6 +91,25 @@ void main() {
     );
   });
 
+  testWidgets('a draft refuses politely whoever is not its organizer', (
+    tester,
+  ) async {
+    when(() => repository.joinByCode('ABC123')).thenThrow(
+      const PostgrestException(message: 'draft_session', code: 'P0001'),
+    );
+
+    await pumpJoinPage(tester);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'This session is a draft: only its organizers can join it for now.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Back to home'), findsOneWidget);
+  });
+
   testWidgets('cases 1/2 (join succeeds) navigate to the session', (
     tester,
   ) async {

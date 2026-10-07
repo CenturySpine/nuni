@@ -194,6 +194,36 @@ void main() {
     ).called(1);
   });
 
+  testWidgets('the Draft switch, off by default, creates a draft (plan 37)', (
+    tester,
+  ) async {
+    await pumpForm(tester);
+    await tester.pumpAndSettle();
+
+    final draftSwitch = find.widgetWithText(SwitchListTile, 'Draft');
+    expect(tester.widget<SwitchListTile>(draftSwitch).value, isFalse);
+    await tester.ensureVisible(draftSwitch);
+    await tester.tap(draftSwitch);
+    await tester.pumpAndSettle();
+    await chooseSpot(tester);
+    await tester.tap(find.text('Create the session'));
+    await tester.pumpAndSettle();
+
+    verify(
+      () => repository.create(
+        kind: any(named: 'kind'),
+        scoringMode: any(named: 'scoringMode'),
+        rankingDirection: any(named: 'rankingDirection'),
+        spotId: any(named: 'spotId'),
+        city: any(named: 'city'),
+        lat: any(named: 'lat'),
+        lng: any(named: 'lng'),
+        eventId: any(named: 'eventId'),
+        draft: true,
+      ),
+    ).called(1);
+  });
+
   testWidgets('shows the session\'s association, read-only (plan 18)', (
     tester,
   ) async {

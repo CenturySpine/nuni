@@ -1761,6 +1761,545 @@ select 'no_scores_session_restored_without_duplicates',
 drop table test_p36;
 drop function pg_temp.test_p36_rows(uuid);
 
+-- ===== Plan 37: draft sessions, and a super_admin's rights in any session =====
+-- The owner (A) prepares a draft; member1 (B) is added and named co-organizer before coming,
+-- member2 (C) is added as a plain participant. "fan" is a plain member of the association,
+-- "manager" its local manager, "admin" a super_admin. Today's "Smoke p37" event is the owner's.
+-- Its own spot: plan 28's section deletes the fixture's.
+create temp table test_p37 (name text primary key, id uuid, code text);
+grant select, insert on test_p37 to authenticated;
+insert into spots (id, association_id, name, city, location)
+values ('d0000000-0000-0000-0000-000000000037', 'c0000000-0000-0000-0000-000000000001', 'P37 Park',
+        'P37 City', st_setsrid(st_makepoint(2.38, 48.88), 4326)::geography);
+insert into events (association_id, created_by, starts_at, label, manager_player_id)
+values ('c0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001',
+        now() - interval '1 hour', 'Smoke p37',
+        (select id from players where user_id = 'a0000000-0000-0000-0000-000000000001'));
+insert into test_p37 (name, id) select 'event', id from events where label = 'Smoke p37';
+insert into event_responses (event_id, player_id, response)
+select (select id from test_p37 where name = 'event'), id, 'yes'
+from players where user_id = 'a0000000-0000-0000-0000-000000000007';
+
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+insert into test_p37 (name, id)
+select 'draft', (create_session(jsonb_build_object('kind', 'individual',
+  'scoring_mode', 'stroke_play', 'ranking_direction', 'asc',
+  'spot_id', 'd0000000-0000-0000-0000-000000000037', 'draft', true))).id;
+insert into test_p37 (name, id)
+select 'draft2', (create_session(jsonb_build_object('kind', 'individual',
+  'scoring_mode', 'stroke_play', 'ranking_direction', 'asc',
+  'spot_id', 'd0000000-0000-0000-0000-000000000037', 'draft', true))).id;
+insert into session_members (session_id, user_id, role)
+select id, u.user_id, 'player'
+from test_p37,
+  (values ('a0000000-0000-0000-0000-000000000002'::uuid),
+          ('a0000000-0000-0000-0000-000000000003'::uuid)) u(user_id)
+where name = 'draft';
+insert into session_members (session_id, user_id, role)
+select id, 'a0000000-0000-0000-0000-000000000002', 'player' from test_p37 where name = 'draft2';
+update session_members set role = 'owner'
+where session_id in (select id from test_p37 where name in ('draft', 'draft2'))
+  and user_id = 'a0000000-0000-0000-0000-000000000002';
+insert into test_results (test, passed)
+select 'draft_created_unpublished_in_waiting_room',
+  (select not published and status = 'draft' from sessions
+   where id = (select id from test_p37 where name = 'draft'));
+-- Never from an event (Q257).
+do $$
+begin
+  perform create_session(jsonb_build_object('kind', 'individual', 'scoring_mode', 'stroke_play',
+    'ranking_direction', 'asc', 'spot_id', 'd0000000-0000-0000-0000-000000000037',
+    'draft', true, 'event_id', (select id from test_p37 where name = 'event')));
+  insert into test_results (test, passed) values ('draft_with_event_refused', false);
+exception when others then
+  insert into test_results (test, passed) values ('draft_with_event_refused', sqlerrm = 'draft_with_event');
+end $$;
+-- Its game can't be started, nor its status moved by hand (Q261).
+do $$
+begin
+  perform start_session((select id from test_p37 where name = 'draft'));
+  insert into test_results (test, passed) values ('draft_cannot_start', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('draft_cannot_start', sqlerrm like '%sessions_draft_not_started%');
+end $$;
+do $$
+begin
+  update sessions set status = 'completed' where id = (select id from test_p37 where name = 'draft');
+  insert into test_results (test, passed) values ('draft_cannot_be_completed', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('draft_cannot_be_completed', sqlerrm like '%sessions_draft_not_started%');
+end $$;
+reset role;
+reset request.jwt.claims;
+update test_p37 set code = (select code from sessions where id = test_p37.id)
+where name in ('draft', 'draft2');
+
+-- Seen by its organizers only (Q254): creator, co-organizer named before coming, super_admin.
+set role authenticated;
+do $$
+declare
+  v_user record;
+  v_sessions int;
+  v_members int;
+begin
+  for v_user in
+    select * from (values
+      ('creator', 'a0000000-0000-0000-0000-000000000001', true),
+      ('named_coorganizer', 'a0000000-0000-0000-0000-000000000002', true),
+      ('super_admin', 'a0000000-0000-0000-0000-000000000006', true),
+      ('added_participant', 'a0000000-0000-0000-0000-000000000003', false),
+      ('association_member', 'a0000000-0000-0000-0000-000000000007', false),
+      ('local_manager', 'a0000000-0000-0000-0000-000000000009', false)
+    ) u(label, id, sees)
+  loop
+    perform set_config('request.jwt.claims',
+      jsonb_build_object('sub', v_user.id, 'role', 'authenticated')::text, false);
+    select count(*) into v_sessions from sessions where id = (select id from test_p37 where name = 'draft');
+    select count(*) into v_members from session_members
+    where session_id = (select id from test_p37 where name = 'draft');
+    insert into test_results (test, passed)
+    values ('draft_read_' || v_user.label,
+      case when v_user.sees then v_sessions = 1 and v_members = 3
+           else v_sessions = 0 and v_members = 0 end);
+  end loop;
+end $$;
+reset role;
+reset request.jwt.claims;
+
+-- Joining it by the code (Q260): its named co-organizer gets in; anyone else, the added
+-- participant and the super_admin included, is refused and nothing is written.
+set role authenticated;
+do $$
+declare
+  v_user record;
+begin
+  for v_user in
+    select * from (values
+      ('added_participant', 'a0000000-0000-0000-0000-000000000003'),
+      ('association_member', 'a0000000-0000-0000-0000-000000000007'),
+      ('super_admin', 'a0000000-0000-0000-0000-000000000006')
+    ) u(label, id)
+  loop
+    perform set_config('request.jwt.claims',
+      jsonb_build_object('sub', v_user.id, 'role', 'authenticated')::text, false);
+    begin
+      perform join_session((select code from test_p37 where name = 'draft'));
+      insert into test_results (test, passed) values ('draft_join_refused_' || v_user.label, false);
+    exception when others then
+      insert into test_results (test, passed)
+      values ('draft_join_refused_' || v_user.label, sqlerrm = 'draft_session');
+    end;
+  end loop;
+  perform set_config('request.jwt.claims',
+    '{"sub":"a0000000-0000-0000-0000-000000000002","role":"authenticated"}', false);
+  perform join_session((select code from test_p37 where name = 'draft'));
+exception when others then
+  insert into test_results (test, passed) values ('draft_join: ' || sqlerrm, false);
+end $$;
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'draft_refused_joins_write_nothing',
+  (select count(*) from session_members where session_id = (select id from test_p37 where name = 'draft')) = 3
+  and (select checked_in_at is null from session_members
+       where session_id = (select id from test_p37 where name = 'draft')
+         and user_id = 'a0000000-0000-0000-0000-000000000003');
+insert into test_results (test, passed)
+select 'named_coorganizer_joins_draft',
+  (select role = 'owner' and checked_in_at is not null from session_members
+   where session_id = (select id from test_p37 where name = 'draft')
+     and user_id = 'a0000000-0000-0000-0000-000000000002');
+
+-- Publishing (Q256, Q259): its organizers only; with an event, only by who may start it.
+set role authenticated;
+do $$
+declare
+  v_user record;
+begin
+  for v_user in
+    select * from (values
+      ('added_participant', 'a0000000-0000-0000-0000-000000000003', 'not_owner'),
+      ('local_manager', 'a0000000-0000-0000-0000-000000000009', 'not_owner'),
+      ('coorganizer_not_in_charge_of_event', 'a0000000-0000-0000-0000-000000000002', 'event_not_startable')
+    ) u(label, id, error)
+  loop
+    perform set_config('request.jwt.claims',
+      jsonb_build_object('sub', v_user.id, 'role', 'authenticated')::text, false);
+    begin
+      perform publish_session((select id from test_p37 where name = 'draft'),
+                              (select id from test_p37 where name = 'event'));
+      insert into test_results (test, passed) values ('publish_refused_' || v_user.label, false);
+    exception when others then
+      insert into test_results (test, passed)
+      values ('publish_refused_' || v_user.label, sqlerrm = v_user.error);
+    end;
+  end loop;
+end $$;
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'refused_publishes_change_nothing',
+  (select not published and event_id is null from sessions
+   where id = (select id from test_p37 where name = 'draft'));
+
+-- Picked by its creator for today's event: published, linked, the "present" member added.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+do $$
+begin
+  perform publish_session((select id from test_p37 where name = 'draft'),
+                          (select id from test_p37 where name = 'event'));
+exception when others then
+  insert into test_results (test, passed) values ('publish_with_event: ' || sqlerrm, false);
+end $$;
+insert into test_results (test, passed)
+select 'publish_links_event_and_adds_attendees',
+  (select published and event_id = (select id from test_p37 where name = 'event') from sessions
+   where id = (select id from test_p37 where name = 'draft'))
+  and exists (select 1 from session_members
+              where session_id = (select id from test_p37 where name = 'draft')
+                and user_id = 'a0000000-0000-0000-0000-000000000007' and role = 'player');
+do $$
+begin
+  perform publish_session((select id from test_p37 where name = 'draft'));
+  insert into test_results (test, passed) values ('second_publish_refused', false);
+exception when others then
+  insert into test_results (test, passed) values ('second_publish_refused', sqlerrm = 'already_published');
+end $$;
+-- Linked to an event, it never becomes a draft again, even in its waiting room (Q257, Q270).
+do $$
+begin
+  update sessions set published = false where id = (select id from test_p37 where name = 'draft');
+  insert into test_results (test, passed) values ('event_session_cannot_become_draft', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('event_session_cannot_become_draft', sqlerrm = 'cannot_unpublish');
+end $$;
+-- The event has its session now: another draft can't be picked for it.
+do $$
+begin
+  perform publish_session((select id from test_p37 where name = 'draft2'),
+                          (select id from test_p37 where name = 'event'));
+  insert into test_results (test, passed) values ('publish_refused_event_has_session', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('publish_refused_event_has_session', sqlerrm = 'event_has_session');
+end $$;
+reset role;
+reset request.jwt.claims;
+
+-- A co-organizer picks the other draft from home, without event.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000002","role":"authenticated"}';
+do $$
+begin
+  perform publish_session((select id from test_p37 where name = 'draft2'));
+exception when others then
+  insert into test_results (test, passed) values ('coorganizer_publish: ' || sqlerrm, false);
+end $$;
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'coorganizer_publishes_without_event',
+  (select published and event_id is null from sessions
+   where id = (select id from test_p37 where name = 'draft2'));
+
+-- Published, it is an ordinary session: its participant reads it, the code makes a participant,
+-- and it starts.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000003","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'published_draft_readable_by_participant',
+  (select count(*) from sessions where id = (select id from test_p37 where name = 'draft')) = 1;
+reset role;
+reset request.jwt.claims;
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000005","role":"authenticated"}';
+do $$
+begin
+  perform join_session((select code from test_p37 where name = 'draft'));
+exception when others then
+  insert into test_results (test, passed) values ('published_join: ' || sqlerrm, false);
+end $$;
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'published_join_makes_participant',
+  (select role = 'player' from session_members
+   where session_id = (select id from test_p37 where name = 'draft')
+     and user_id = 'a0000000-0000-0000-0000-000000000005');
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+do $$
+begin
+  perform start_session((select id from test_p37 where name = 'draft'));
+exception when others then
+  insert into test_results (test, passed) values ('published_start: ' || sqlerrm, false);
+end $$;
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'published_draft_starts',
+  (select status = 'live' from sessions where id = (select id from test_p37 where name = 'draft'));
+
+-- A super_admin changes anything in a session they are not a member of (Q262): its name, a hole,
+-- a score, and deletes it.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000006","role":"authenticated"}';
+do $$
+declare
+  v_session uuid := (select id from test_p37 where name = 'draft');
+  v_hole uuid;
+begin
+  perform update_session(v_session, '{"title": "P37 by admin"}'::jsonb);
+  v_hole := (add_played_hole(v_session, null, 'individual', 'P37', 3)).id;
+  insert into scores (played_hole_id, team_id, value)
+  values (v_hole, (select id from teams where session_id = v_session order by position limit 1), 4);
+  insert into test_results (test, passed)
+  select 'super_admin_edits_any_session',
+    (select title = 'P37 by admin' from sessions where id = v_session)
+    and (select count(*) from scores where played_hole_id = v_hole) = 1;
+  delete from sessions where id = v_session;
+  insert into test_results (test, passed)
+  select 'super_admin_deletes_any_session', not exists (select 1 from sessions where id = v_session);
+exception when others then
+  insert into test_results (test, passed) values ('super_admin_any_session: ' || sqlerrm, false);
+end $$;
+reset role;
+reset request.jwt.claims;
+drop table test_p37;
+
+-- ===== Plan 37, avenant: holes prepared and ordered before the game =====
+-- In a waiting room, the owner prepares four free holes H1 to H4; member2 is a plain
+-- participant, "fan" a plain member of the association, "admin" a super_admin.
+create temp table test_p37h (name text primary key, id uuid);
+grant select, insert on test_p37h to authenticated;
+
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+insert into test_p37h (name, id)
+select 'session', (create_session(jsonb_build_object('kind', 'individual',
+  'scoring_mode', 'stroke_play', 'ranking_direction', 'asc',
+  'spot_id', 'd0000000-0000-0000-0000-000000000037'))).id;
+insert into session_members (session_id, user_id, role)
+select id, 'a0000000-0000-0000-0000-000000000003', 'player' from test_p37h where name = 'session';
+insert into test_p37h (name, id)
+select 'H1', (add_played_hole((select id from test_p37h where name = 'session'), null, 'individual', 'H1', 3)).id;
+insert into test_p37h (name, id)
+select 'H2', (add_played_hole((select id from test_p37h where name = 'session'), null, 'individual', 'H2', 3)).id;
+insert into test_p37h (name, id)
+select 'H3', (add_played_hole((select id from test_p37h where name = 'session'), null, 'individual', 'H3', 3)).id;
+insert into test_p37h (name, id)
+select 'H4', (add_played_hole((select id from test_p37h where name = 'session'), null, 'individual', 'H4', 3)).id;
+reset role;
+reset request.jwt.claims;
+
+-- The course as "label,label,..." in place order, and whether the places are 1..n.
+create function pg_temp.test_p37h_course() returns text language sql as $$
+  select string_agg(label, ',' order by position)
+    || case when min(position) = 1 and max(position) = count(*) then '' else ' (gaps)' end
+  from played_holes where session_id = (select id from test_p37h where name = 'session');
+$$;
+grant execute on function pg_temp.test_p37h_course() to authenticated;
+
+insert into test_results (test, passed)
+select 'holes_prepared_in_waiting_room', pg_temp.test_p37h_course() = 'H1,H2,H3,H4';
+
+-- Moving (Q265): to the first place, past the end (last), between two others.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+select move_played_hole((select id from test_p37h where name = 'H4'), 1);
+insert into test_results (test, passed)
+select 'move_hole_to_first_place', pg_temp.test_p37h_course() = 'H4,H1,H2,H3';
+select move_played_hole((select id from test_p37h where name = 'H4'), 99);
+insert into test_results (test, passed)
+select 'move_hole_past_the_end_goes_last', pg_temp.test_p37h_course() = 'H1,H2,H3,H4';
+select move_played_hole((select id from test_p37h where name = 'H1'), 3);
+insert into test_results (test, passed)
+select 'move_hole_between_two', pg_temp.test_p37h_course() = 'H2,H3,H1,H4';
+-- The display direction, for everyone (Q267): the organizer changes it.
+update sessions set holes_ascending = true where id = (select id from test_p37h where name = 'session');
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'organizer_sets_holes_ascending',
+  (select holes_ascending from sessions where id = (select id from test_p37h where name = 'session'));
+
+-- Neither a participant nor a member of the association moves a hole or changes the direction.
+set role authenticated;
+do $$
+declare
+  v_user record;
+begin
+  for v_user in
+    select * from (values
+      ('participant', 'a0000000-0000-0000-0000-000000000003'),
+      ('association_member', 'a0000000-0000-0000-0000-000000000007')
+    ) u(label, id)
+  loop
+    perform set_config('request.jwt.claims',
+      jsonb_build_object('sub', v_user.id, 'role', 'authenticated')::text, false);
+    begin
+      perform move_played_hole((select id from test_p37h where name = 'H4'), 1);
+      insert into test_results (test, passed) values ('move_hole_refused_' || v_user.label, false);
+    exception when others then
+      insert into test_results (test, passed)
+      values ('move_hole_refused_' || v_user.label, sqlerrm = 'not_owner');
+    end;
+    update sessions set holes_ascending = false
+    where id = (select id from test_p37h where name = 'session');
+  end loop;
+end $$;
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'holes_order_unchanged_by_others',
+  pg_temp.test_p37h_course() = 'H2,H3,H1,H4'
+  and (select holes_ascending from sessions where id = (select id from test_p37h where name = 'session'));
+
+-- A super_admin outside the session reorders it (Q262).
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000006","role":"authenticated"}';
+select move_played_hole((select id from test_p37h where name = 'H1'), 1);
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'super_admin_moves_hole', pg_temp.test_p37h_course() = 'H1,H2,H3,H4';
+
+-- Played: H1 scored by both, H3 by one team, H2 and H4 never. Completing the session removes H2
+-- and H4 and renumbers H1 and H3 1, 2 (Q266, Q269); afterwards, no more moving (Q269).
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+select start_session((select id from test_p37h where name = 'session'));
+insert into scores (played_hole_id, team_id, value)
+select (select id from test_p37h where name = 'H1'), t.id, 3
+from teams t where t.session_id = (select id from test_p37h where name = 'session');
+insert into scores (played_hole_id, team_id, value)
+select (select id from test_p37h where name = 'H3'), t.id, 4
+from teams t where t.session_id = (select id from test_p37h where name = 'session')
+order by t.position limit 1;
+update sessions set status = 'completed', ended_at = now()
+where id = (select id from test_p37h where name = 'session');
+do $$
+begin
+  perform move_played_hole((select id from test_p37h where name = 'H3'), 1);
+  insert into test_results (test, passed) values ('move_hole_refused_after_completion', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('move_hole_refused_after_completion', sqlerrm = 'session_completed');
+end $$;
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'completion_drops_unplayed_holes_and_renumbers',
+  pg_temp.test_p37h_course() = 'H1,H3'
+  and (select count(*) from scores where session_id = (select id from test_p37h where name = 'session')) = 3;
+drop function pg_temp.test_p37h_course();
+drop table test_p37h;
+
+-- ===== Plan 37, Q270 and Q271: a draft after creation; co-organizers named and withdrawn =====
+-- The owner (A) creates an ordinary session and adds member1 (B) and member2 (C), neither has
+-- joined.
+create temp table test_p37q (name text primary key, id uuid);
+grant select, insert on test_p37q to authenticated;
+
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+insert into test_p37q (name, id)
+select 'session', (create_session(jsonb_build_object('kind', 'individual',
+  'scoring_mode', 'stroke_play', 'ranking_direction', 'asc',
+  'spot_id', 'd0000000-0000-0000-0000-000000000037'))).id;
+insert into session_members (session_id, user_id, role)
+select id, u.user_id, 'player'
+from test_p37q,
+  (values ('a0000000-0000-0000-0000-000000000002'::uuid),
+          ('a0000000-0000-0000-0000-000000000003'::uuid)) u(user_id)
+where name = 'session';
+-- Q271: B named co-organizer, the role taken back, then named again -- B never joined.
+update session_members set role = 'owner'
+where session_id = (select id from test_p37q where name = 'session')
+  and user_id = 'a0000000-0000-0000-0000-000000000002';
+update session_members set role = 'player'
+where session_id = (select id from test_p37q where name = 'session')
+  and user_id = 'a0000000-0000-0000-0000-000000000002';
+insert into test_results (test, passed)
+select 'coorganizer_role_taken_back_before_joining',
+  (select role = 'player' and checked_in_at is null from session_members
+   where session_id = (select id from test_p37q where name = 'session')
+     and user_id = 'a0000000-0000-0000-0000-000000000002');
+update session_members set role = 'owner'
+where session_id = (select id from test_p37q where name = 'session')
+  and user_id = 'a0000000-0000-0000-0000-000000000002';
+reset role;
+reset request.jwt.claims;
+
+-- The creator always stays an organizer, even for a co-organizer.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000002","role":"authenticated"}';
+do $$
+begin
+  update session_members set role = 'player'
+  where session_id = (select id from test_p37q where name = 'session')
+    and user_id = 'a0000000-0000-0000-0000-000000000001';
+  insert into test_results (test, passed) values ('creator_stays_organizer', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('creator_stays_organizer', sqlerrm = 'creator_stays_organizer');
+end $$;
+reset role;
+reset request.jwt.claims;
+
+-- Q270: in its waiting room, without event, it becomes a draft: C no longer sees it, B does.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+update sessions set published = false where id = (select id from test_p37q where name = 'session');
+reset role;
+reset request.jwt.claims;
+insert into test_results (test, passed)
+select 'waiting_room_becomes_draft',
+  (select not published from sessions where id = (select id from test_p37q where name = 'session'));
+set role authenticated;
+do $$
+declare
+  v_user record;
+  v_count int;
+begin
+  for v_user in
+    select * from (values
+      ('coorganizer', 'a0000000-0000-0000-0000-000000000002', 1),
+      ('participant', 'a0000000-0000-0000-0000-000000000003', 0)
+    ) u(label, id, expected)
+  loop
+    perform set_config('request.jwt.claims',
+      jsonb_build_object('sub', v_user.id, 'role', 'authenticated')::text, false);
+    select count(*) into v_count from sessions where id = (select id from test_p37q where name = 'session');
+    insert into test_results (test, passed)
+    values ('later_draft_read_' || v_user.label, v_count = v_user.expected);
+  end loop;
+end $$;
+reset role;
+reset request.jwt.claims;
+
+-- Picked again, then started: a started session never becomes a draft.
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+select publish_session((select id from test_p37q where name = 'session'));
+select start_session((select id from test_p37q where name = 'session'));
+do $$
+begin
+  update sessions set published = false where id = (select id from test_p37q where name = 'session');
+  insert into test_results (test, passed) values ('started_session_cannot_become_draft', false);
+exception when others then
+  insert into test_results (test, passed)
+  values ('started_session_cannot_become_draft', sqlerrm = 'cannot_unpublish');
+end $$;
+reset role;
+reset request.jwt.claims;
+drop table test_p37q;
+
 -- ===== Cleanup =====
 delete from sessions where event_id in (select id from test_events);
 delete from events where association_id in ('c0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000002');

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/authorization/authorization_repository.dart';
 import '../../../core/errors/app_error_message.dart';
 import '../../../core/router/app_bottom_nav.dart';
 import '../../../core/supabase/supabase_providers.dart';
@@ -25,6 +26,12 @@ import '../../../shared/nuni_section_header.dart';
 import '../../../shared/nuni_status_pill.dart';
 import '../../associations/data/associations_repository.dart';
 import '../../championship/data/championship_rights.dart';
+import '../../live/data/live_repository.dart';
+import '../../live/domain/played_hole.dart';
+import '../../live/ui/add_played_hole_sheet.dart';
+import '../../live/ui/played_hole_card.dart';
+import '../../live/ui/played_hole_settings_sheet.dart';
+import '../../live/ui/played_holes_list.dart';
 import '../../live/ui/session_live_page.dart';
 import '../../profile/domain/player.dart';
 import '../data/sessions_repository.dart';
@@ -32,12 +39,15 @@ import '../domain/session.dart';
 import '../domain/session_kind.dart';
 import '../domain/session_member.dart';
 import '../domain/session_room.dart';
+import '../domain/session_tag.dart';
 import '../domain/team.dart';
 import '../domain/team_composition.dart';
 import '../../stats/domain/eligible_session.dart';
 import 'add_participant_sheet.dart';
 import 'attendance_room_view.dart';
 import 'championship_toggle.dart';
+import 'co_organizer_crown.dart';
+import 'draft_session_notice.dart';
 import 'invite_sheet.dart';
 import 'member_join_indicator.dart';
 import 'session_nature.dart';
@@ -157,6 +167,56 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
         .showSnackBar(SnackBar(content: Text(message)));
   }
 
+  /// The course prepared before the game (plan 37, avenant): the same sheets
+  /// as during the game.
+  Future<void> _addHole() => showAddPlayedHoleSheet(
+    context,
+    sessionId: widget.sessionId,
+    kind: widget.room.session.kind!,
+    // A simulator session plays free holes only (plan 29, Q189).
+    freeHolesOnly: widget.room.session.hasTag(SessionTag.simulator),
+  );
+
+  Future<void> _deleteHole(String playedHoleId) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await NuniConfirmDialog.show(
+      context,
+      title: l10n.sessionsLiveDeleteHoleConfirmTitle,
+      message: l10n.sessionsLiveDeleteHoleConfirmMessage,
+      confirmLabel: l10n.commonDelete,
+      danger: true,
+    );
+    if (!confirmed || !mounted) return;
+    await _run(
+      () => ref.read(liveRepositoryProvider).deletePlayedHole(playedHoleId),
+    );
+  }
+
+  /// A hole dropped at [place] of the course (Q265); false when the move
+  /// failed, which puts the list back.
+  Future<bool> _moveHole(String playedHoleId, int place) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ref
+          .read(liveRepositoryProvider)
+          .movePlayedHole(playedHoleId: playedHoleId, place: place);
+      return true;
+    } catch (error) {
+      _showSnack(describeError(error, l10n));
+      return false;
+    }
+  }
+
+  /// Flips how the holes are shown, for everyone (Q267).
+  Future<void> _invertHoles() => _run(
+    () => ref
+        .read(liveRepositoryProvider)
+        .setHolesAscending(
+          sessionId: widget.sessionId,
+          ascending: !widget.room.session.holesAscending,
+        ),
+  );
+
   Future<void> _run(Future<void> Function() action) async {
     setState(() => _busy = true);
     final l10n = AppLocalizations.of(context)!;
@@ -249,10 +309,15 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
   Future<void> _deleteTeam(Team team) =>
       _run(() => ref.read(sessionsRepositoryProvider).deleteTeam(team.id));
 
+  /// Names a co-organizer, or takes the role back (plan 37, Q271).
   Future<void> _promote(SessionMember member) => _run(
     () => ref
         .read(sessionsRepositoryProvider)
-        .promoteToOwner(sessionId: widget.sessionId, userId: member.userId),
+        .setCoOrganizer(
+          sessionId: widget.sessionId,
+          userId: member.userId,
+          organizer: member.role != MemberRole.owner,
+        ),
   );
 
   Future<void> _leave() async {
@@ -378,7 +443,11 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
     final l10n = AppLocalizations.of(context)!;
     final room = widget.room;
     final myMember = _findMember(room, _currentUserId);
-    final isOwner = myMember?.role == MemberRole.owner;
+    final isOwner = canOrganizeSession(
+      myMember?.role,
+      isSuperAdmin: ref.watch(isSuperAdminProvider).value ?? false,
+    );
+    final isDraft = !room.session.published;
     final associationId = room.session.associationId;
     final canTagChampionship =
         associationId != null &&
@@ -390,189 +459,277 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
       members: room.members,
       teamCount: room.teams.length,
     );
+    // The holes prepared so far (plan 37), from the same snapshot as the
+    // game's.
+    final holes =
+        ref.watch(liveSessionProvider(widget.sessionId)).value?.playedHoles ??
+        const <PlayedHole>[];
 
     return Scaffold(
       appBar: AppBar(
         // Inviting lives on the code banner below.
         title: Text(l10n.sessionsRoomTitle),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-        children: [
-          NuniHero(
-            child: Row(
+      // Slivers (plan 37): the prepared holes' list is reorderable, and a
+      // dragged hole scrolls the whole page.
+      body: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            sliver: SliverList.list(
               children: [
-                Expanded(
-                  child: Text(
-                    l10n.sessionsRoomCodeLabel(room.session.code),
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1,
-                    ),
+                NuniHero(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.sessionsRoomCodeLabel(room.session.code),
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.onPrimary,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1,
+                              ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      NuniButton(
+                        variant: NuniButtonVariant.onHero,
+                        icon: PhosphorIcons.shareNetwork,
+                        label: l10n.sessionsInviteTitle,
+                        onPressed: () =>
+                            InviteSheet.show(context, room.session.code),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                NuniButton(
-                  variant: NuniButtonVariant.onHero,
-                  icon: PhosphorIcons.shareNetwork,
-                  label: l10n.sessionsInviteTitle,
-                  onPressed: () => InviteSheet.show(context, room.session.code),
+                if (isDraft) ...[
+                  const SizedBox(height: 16),
+                  const DraftSessionNotice(),
+                ],
+                if (!isOwner) ...[
+                  const SizedBox(height: 16),
+                  NuniCard(
+                    color: context.nuni.highlight.container,
+                    borderColor: context.nuni.highlight.container,
+                    child: Row(
+                      children: [
+                        Icon(
+                          PhosphorIcons.clockCounterClockwise,
+                          color: context.nuni.highlight.onContainer,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            l10n.sessionsRoomWaitingForOwner(
+                              room
+                                      .playersByUserId[room.session.ownerId]
+                                      ?.name ??
+                                  '',
+                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: context.nuni.highlight.onContainer,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (myMember != null) ...[
+                    const SizedBox(height: 12),
+                    NuniButton(
+                      variant: NuniButtonVariant.secondary,
+                      icon: PhosphorIcons.signOut,
+                      label: l10n.sessionsRoomLeave,
+                      onPressed: _busy ? null : _leave,
+                    ),
+                  ],
+                ],
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(child: SessionNaturePills(session: room.session)),
+                    if (isOwner || canTagChampionship)
+                      IconButton(
+                        icon: const Icon(PhosphorIcons.pencilSimple, size: 20),
+                        tooltip: l10n.historyEditTitle,
+                        visualDensity: VisualDensity.compact,
+                        // The session form (plan 31); it refreshes this room.
+                        onPressed: _busy
+                            ? null
+                            : () => unawaited(
+                                context.push(
+                                  '/session/${widget.sessionId}/edit',
+                                ),
+                              ),
+                      ),
+                  ],
                 ),
+                const SizedBox(height: 24),
+                if (kind == SessionKind.team)
+                  _TeamsSection(
+                    room: room,
+                    isOwner: isOwner,
+                    selected: _selected,
+                    busy: _busy,
+                    currentUserId: _currentUserId,
+                    onDeleteTeam: _deleteTeam,
+                    onUnassign: _unassign,
+                    onPromote: _promote,
+                  ),
+                if (kind == SessionKind.team) const SizedBox(height: 24),
+                _PoolSection(
+                  room: room,
+                  isOwner: isOwner,
+                  selected: _selected,
+                  busy: _busy,
+                  currentUserId: _currentUserId,
+                  showSelection: kind == SessionKind.team,
+                  onToggle: (userId, value) => setState(() {
+                    if (value) {
+                      _selected.add(userId);
+                    } else {
+                      _selected.remove(userId);
+                    }
+                  }),
+                  onRemove: _removeMember,
+                  onPromote: _promote,
+                ),
+                if (isOwner) ...[
+                  const SizedBox(height: 16),
+                  NuniButton(
+                    variant: NuniButtonVariant.secondary,
+                    icon: PhosphorIcons.userPlus,
+                    label: l10n.sessionsRoomAddParticipant,
+                    onPressed: _busy ? null : _addParticipant,
+                  ),
+                  if (kind == SessionKind.team) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: NuniButton(
+                            variant: NuniButtonVariant.secondary,
+                            icon: PhosphorIcons.users,
+                            label: l10n.sessionsRoomFormTeam,
+                            onPressed:
+                                (!_busy && _selected.length == kind.teamSize)
+                                ? _formTeam
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: NuniButton(
+                            variant: NuniButtonVariant.secondary,
+                            icon: PhosphorIcons.shuffle,
+                            label: l10n.sessionsRoomRandomDraw,
+                            onPressed: _busy || _selected.length < 4
+                                ? null
+                                : _drawRandom,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+                // The course, prepared before the game (plan 37, Q263): managed by
+                // the organizers, shown to the participants once there is one.
+                if (isOwner || holes.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  HolesOrderHeader(
+                    ascending: room.session.holesAscending,
+                    onInvert: isOwner && holes.length > 1 && !_busy
+                        ? _invertHoles
+                        : null,
+                  ),
+                  if (holes.isEmpty) ...[
+                    NuniCard(
+                      child: Text(
+                        l10n.sessionsHolesPrepareHint,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ],
               ],
             ),
           ),
-          if (!isOwner) ...[
-            const SizedBox(height: 16),
-            NuniCard(
-              color: context.nuni.highlight.container,
-              borderColor: context.nuni.highlight.container,
-              child: Row(
-                children: [
-                  Icon(
-                    PhosphorIcons.clockCounterClockwise,
-                    color: context.nuni.highlight.onContainer,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      l10n.sessionsRoomWaitingForOwner(
-                        room.playersByUserId[room.session.ownerId]?.name ?? '',
-                      ),
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: context.nuni.highlight.onContainer,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            sliver: PlayedHolesSliver(
+              holes: holes,
+              ascending: room.session.holesAscending,
+              canReorder: isOwner,
+              onMove: _moveHole,
+              // No score before "Start" (Q264): no team rows.
+              itemBuilder: (context, hole, dragHandle) => PlayedHoleCard(
+                playedHole: hole,
+                teams: const [],
+                scoringMode: room.session.scoringMode!,
+                canEditTeam: (_) => false,
+                onScoreSubmit: (_, _, _) async {},
+                onDelete: isOwner
+                    ? (_busy ? null : () => _deleteHole(hole.id))
+                    : null,
+                onEdit: isOwner
+                    ? () => showPlayedHoleSettingsSheet(context, hole)
+                    : null,
+                dragHandle: dragHandle,
               ),
             ),
-            if (myMember != null) ...[
-              const SizedBox(height: 12),
-              NuniButton(
-                variant: NuniButtonVariant.secondary,
-                icon: PhosphorIcons.signOut,
-                label: l10n.sessionsRoomLeave,
-                onPressed: _busy ? null : _leave,
-              ),
-            ],
-          ],
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(child: SessionNaturePills(session: room.session)),
-              if (isOwner || canTagChampionship)
-                IconButton(
-                  icon: const Icon(PhosphorIcons.pencilSimple, size: 20),
-                  tooltip: l10n.historyEditTitle,
-                  visualDensity: VisualDensity.compact,
-                  // The session form (plan 31); it refreshes this room.
-                  onPressed: _busy
-                      ? null
-                      : () => unawaited(
-                          context.push('/session/${widget.sessionId}/edit'),
-                        ),
-                ),
-            ],
           ),
-          const SizedBox(height: 24),
-          if (kind == SessionKind.team)
-            _TeamsSection(
-              room: room,
-              isOwner: isOwner,
-              selected: _selected,
-              busy: _busy,
-              currentUserId: _currentUserId,
-              onDeleteTeam: _deleteTeam,
-              onUnassign: _unassign,
-              onPromote: _promote,
-            ),
-          if (kind == SessionKind.team) const SizedBox(height: 24),
-          _PoolSection(
-            room: room,
-            isOwner: isOwner,
-            selected: _selected,
-            busy: _busy,
-            currentUserId: _currentUserId,
-            showSelection: kind == SessionKind.team,
-            onToggle: (userId, value) => setState(() {
-              if (value) {
-                _selected.add(userId);
-              } else {
-                _selected.remove(userId);
-              }
-            }),
-            onRemove: _removeMember,
-            onPromote: _promote,
-          ),
-          if (isOwner) ...[
-            const SizedBox(height: 16),
-            NuniButton(
-              variant: NuniButtonVariant.secondary,
-              icon: PhosphorIcons.userPlus,
-              label: l10n.sessionsRoomAddParticipant,
-              onPressed: _busy ? null : _addParticipant,
-            ),
-            if (kind == SessionKind.team) ...[
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: NuniButton(
-                      variant: NuniButtonVariant.secondary,
-                      icon: PhosphorIcons.users,
-                      label: l10n.sessionsRoomFormTeam,
-                      onPressed: (!_busy && _selected.length == kind.teamSize)
-                          ? _formTeam
-                          : null,
-                    ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+            sliver: SliverList.list(
+              children: [
+                if (isOwner) ...[
+                  NuniButton(
+                    variant: NuniButtonVariant.secondary,
+                    icon: PhosphorIcons.plus,
+                    label: l10n.sessionsLiveAddHoleTitle,
+                    onPressed: _busy ? null : _addHole,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: NuniButton(
-                      variant: NuniButtonVariant.secondary,
-                      icon: PhosphorIcons.shuffle,
-                      label: l10n.sessionsRoomRandomDraw,
-                      onPressed: _busy || _selected.length < 4
+                  // Local manager or super_admin only (plan 26, decision 11).
+                  if (canTagChampionship) ...[
+                    const SizedBox(height: 16),
+                    ChampionshipToggle(
+                      value: room.session.isChampionship,
+                      // Only a game counts (plan 29).
+                      onChanged:
+                          _busy ||
+                              (!isGameSession(room.session) &&
+                                  !room.session.isChampionship)
                           ? null
-                          : _drawRandom,
+                          : _toggleChampionship,
+                      subtitle: isGameSession(room.session)
+                          ? null
+                          : l10n.sessionsChampionshipGameOnly,
                     ),
+                  ],
+                  const SizedBox(height: 8),
+                  NuniButton(
+                    variant: NuniButtonVariant.danger,
+                    icon: PhosphorIcons.trash,
+                    label: l10n.sessionsRoomDeleteSession,
+                    onPressed: _busy ? null : _delete,
                   ),
                 ],
-              ),
-            ],
-            // Local manager or super_admin only (plan 26, decision 11).
-            if (canTagChampionship) ...[
-              const SizedBox(height: 16),
-              ChampionshipToggle(
-                value: room.session.isChampionship,
-                // Only a game counts (plan 29).
-                onChanged:
-                    _busy ||
-                        (!isGameSession(room.session) &&
-                            !room.session.isChampionship)
-                    ? null
-                    : _toggleChampionship,
-                subtitle: isGameSession(room.session)
-                    ? null
-                    : l10n.sessionsChampionshipGameOnly,
-              ),
-            ],
-            const SizedBox(height: 8),
-            NuniButton(
-              variant: NuniButtonVariant.danger,
-              icon: PhosphorIcons.trash,
-              label: l10n.sessionsRoomDeleteSession,
-              onPressed: _busy ? null : _delete,
+              ],
             ),
-          ],
+          ),
         ],
       ),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (isOwner)
+          // A draft isn't played until picked to create a session (Q261).
+          if (isOwner && !isDraft)
             SafeArea(
               bottom: false,
               child: Padding(
@@ -674,11 +831,13 @@ class _TeamsSection extends StatelessWidget {
                               : null,
                         ),
                       ),
-                      if (isOwner && member.role != MemberRole.owner)
-                        IconButton(
-                          icon: const Icon(PhosphorIcons.crown, size: 18),
-                          tooltip: l10n.sessionsRoomPromote,
-                          onPressed: busy ? null : () => onPromote(member),
+                      if (isOwner)
+                        CoOrganizerCrown(
+                          role: member.role,
+                          locked:
+                              member.userId == room.session.ownerId ||
+                              member.userId == currentUserId,
+                          onToggle: busy ? null : () => onPromote(member),
                         ),
                       if (isOwner)
                         IconButton(
@@ -762,6 +921,7 @@ class _PoolSection extends StatelessWidget {
                   isOwner: isOwner,
                   busy: busy,
                   isCurrentUser: member.userId == currentUserId,
+                  isCreator: member.userId == room.session.ownerId,
                   showSelection: showSelection,
                   selected: selected.contains(member.userId),
                   onToggle: (value) => onToggle(member.userId, value),
@@ -782,6 +942,7 @@ class _PoolRow extends StatelessWidget {
     required this.isOwner,
     required this.busy,
     required this.isCurrentUser,
+    required this.isCreator,
     required this.showSelection,
     required this.selected,
     required this.onToggle,
@@ -794,6 +955,7 @@ class _PoolRow extends StatelessWidget {
   final bool isOwner;
   final bool busy;
   final bool isCurrentUser;
+  final bool isCreator;
   final bool showSelection;
   final bool selected;
   final ValueChanged<bool> onToggle;
@@ -805,16 +967,14 @@ class _PoolRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final name = player?.name ?? '';
     final label = isCurrentUser ? '$name (${l10n.sessionsRoomYou})' : name;
-    final canPromote = isOwner && member.role != MemberRole.owner;
-
     final actions = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (canPromote)
-          IconButton(
-            icon: const Icon(PhosphorIcons.crown, size: 18),
-            tooltip: l10n.sessionsRoomPromote,
-            onPressed: busy ? null : onPromote,
+        if (isOwner)
+          CoOrganizerCrown(
+            role: member.role,
+            locked: isCreator || isCurrentUser,
+            onToggle: busy ? null : onPromote,
           ),
         if (isOwner)
           IconButton(

@@ -72,6 +72,9 @@ abstract final class PhosphorIcons {
   static const navigationArrow = IconData(0xeade, fontFamily: _regular);
   static const pencilSimple = IconData(0xe3b4, fontFamily: _regular);
   static const list = IconData(0xe2f0, fontFamily: _regular);
+  // A played hole's drag handle and the holes' order inversion (plan 37).
+  static const dotsSixVertical = IconData(0xeae2, fontFamily: _regular);
+  static const arrowsDownUp = IconData(0xe098, fontFamily: _regular);
   static const mapTrifold = IconData(0xe31a, fontFamily: _regular);
 
   static const check = IconData(0xe182, fontFamily: _regular);

@@ -49,6 +49,7 @@ class SessionsRepository {
     String? comment,
     DateTime? startedAt,
     DateTime? endedAt,
+    bool draft = false,
   }) async {
     final payload = <String, Object?>{
       if (scoringMode != null) ...{
@@ -74,6 +75,9 @@ class SessionsRepository {
       'comment': ?comment,
       'started_at': ?startedAt?.toUtc().toIso8601String(),
       'ended_at': ?endedAt?.toUtc().toIso8601String(),
+      // Plan 37: seen by its organizers only until picked; never from an
+      // event (`draft_with_event`).
+      if (draft) 'draft': true,
     };
     final row = await _client.rpc<Map<String, dynamic>>(
       'create_session',
@@ -307,14 +311,17 @@ class SessionsRepository {
         .eq('user_id', userId);
   }
 
-  /// Promotes a member to co-organizer (owner-only, any status but
-  /// completed -- RLS `session_members_owner_update`).
-  Future<void> promoteToOwner({
+  /// Names a member co-organizer, or takes the role back (plan 37, Q271),
+  /// joined or not: organizers only, any status but completed -- RLS
+  /// `session_members_owner_update`. The creator always stays an organizer
+  /// (`session_members_guard_creator`).
+  Future<void> setCoOrganizer({
     required String sessionId,
     required String userId,
+    required bool organizer,
   }) => _client
       .from('session_members')
-      .update({'role': 'owner'})
+      .update({'role': organizer ? 'owner' : 'player'})
       .eq('session_id', sessionId)
       .eq('user_id', userId);
 
@@ -329,6 +336,47 @@ class SessionsRepository {
   /// applied as a hypothesis).
   Future<List<MySessionEntry>> myRecentSessions({int limit = 5}) =>
       _mySessionsByStatus(const ['completed'], limit: limit);
+
+  /// The drafts the caller organizes (plan 37, Q258): creator or named
+  /// co-organizer -- a super_admin's own only, not every draft they may
+  /// read. Most recent first; which ones are offered is [offerableDrafts]'s
+  /// call.
+  Future<List<Session>> myDrafts() async {
+    final memberRows = await _client
+        .from('session_members')
+        .select('session_id')
+        .eq('user_id', _client.auth.currentUser!.id)
+        .eq('role', 'owner');
+    final ids = [for (final row in memberRows) row['session_id'] as String];
+    if (ids.isEmpty) return const [];
+    final rows = await _client
+        .from('sessions')
+        .select()
+        .inFilter('id', ids)
+        .eq('published', false)
+        .order('created_at', ascending: false);
+    return [for (final row in rows) Session.fromJson(row)];
+  }
+
+  /// Makes a session created without "Draft" one after all (plan 37, Q270):
+  /// organizers only (`sessions_update_owner`), while it is in its waiting
+  /// room and linked to no event -- `sessions_guard_published` refuses
+  /// anything else (`cannot_unpublish`).
+  Future<void> makeDraft(String sessionId) =>
+      _client.from('sessions').update({'published': false}).eq('id', sessionId);
+
+  /// Publishes a draft picked when creating a session (plan 37, Q259), the
+  /// only way: from an event ([eventId]), it is also linked to it and the
+  /// event's "present" members join its waiting room, as for a new session.
+  /// The base refuses `event_not_startable` and `event_has_session` like a
+  /// creation.
+  Future<Session> publishSession(String sessionId, {String? eventId}) async {
+    final row = await _client.rpc<Map<String, dynamic>>(
+      'publish_session',
+      params: {'p_session_id': sessionId, 'p_event_id': eventId},
+    );
+    return Session.fromJson(row);
+  }
 
   /// Live sessions of the caller's association they don't take part in
   /// (plan 26, Q132), most recent first: shown on home after the caller's

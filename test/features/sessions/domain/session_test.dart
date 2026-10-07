@@ -76,5 +76,21 @@ void main() {
     });
     expect(session.hasScoring, isTrue);
     expect(session.tags, isEmpty);
+    // A row without the column (a `session_snapshot`) is published.
+    expect(session.published, isTrue);
+  });
+
+  test('a draft reads published = false (plan 37)', () {
+    final session = Session.fromJson({
+      'id': 's4',
+      'code': 'DRF123',
+      'owner_id': 'u1',
+      'status': 'draft',
+      'published': false,
+      'created_at': '2026-10-07T10:00:00Z',
+      'tags': ['training'],
+    });
+    expect(session.published, isFalse);
+    expect(session.status, SessionStatus.draft);
   });
 }

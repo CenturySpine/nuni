@@ -62,6 +62,17 @@ abstract class Session with _$Session {
     // client ever writes -- `championshipSeason` is trigger-owned.
     @JsonKey(name: 'is_championship') @Default(false) bool isChampionship,
     @JsonKey(name: 'championship_season') String? championshipSeason,
+    // False for a draft (plan 37): seen by its organizers only, never
+    // started, until picked when creating a session. Not to be mixed up
+    // with [SessionStatus.draft], the waiting room. Absent from a
+    // `session_snapshot` row, which only shows published sessions.
+    @Default(true) bool published,
+    // The planning event it was started from (plan 23), if any: such a
+    // session never becomes a draft (plan 37, Q257, Q270).
+    @JsonKey(name: 'event_id') String? eventId,
+    // How its holes are shown, the same for everyone (plan 37, Q267):
+    // hole 1 on top when true, else the most recent on top (the default).
+    @JsonKey(name: 'holes_ascending') @Default(false) bool holesAscending,
     @JsonKey(name: 'created_at') required DateTime createdAt,
     @JsonKey(name: 'started_at') DateTime? startedAt,
     @JsonKey(name: 'ended_at') DateTime? endedAt,

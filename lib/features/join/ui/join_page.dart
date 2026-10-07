@@ -57,6 +57,8 @@ class _JoinPageState extends ConsumerState<JoinPage> {
         _error = switch (error.message) {
           'session_unavailable' => l10n.joinErrorUnavailable,
           'not_in_team' => l10n.joinErrorNotInTeam,
+          // Plan 37, Q260: a draft lets in its co-organizers only.
+          'draft_session' => l10n.joinErrorDraft,
           _ => describeError(error, l10n),
         };
       });

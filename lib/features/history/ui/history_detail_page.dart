@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/authorization/authorization_repository.dart';
 import '../../../core/errors/app_error_message.dart';
 import '../../../core/router/app_bottom_nav.dart';
 import '../../../core/supabase/supabase_providers.dart';
@@ -34,6 +35,7 @@ import '../../live/ui/played_hole_card.dart';
 import '../../live/ui/played_hole_settings_sheet.dart';
 import '../../live/ui/ranking_card.dart';
 import '../../sessions/data/sessions_repository.dart';
+import '../../sessions/domain/session_member.dart';
 import '../../sessions/ui/championship_toggle.dart';
 import '../../sessions/ui/scoring_mode_label.dart';
 import '../../sessions/ui/session_nature.dart';
@@ -184,7 +186,10 @@ class _DetailView extends ConsumerWidget {
         .auth
         .currentUser
         ?.id;
-    final isOwner = entry.snapshot.isOwner(currentUserId);
+    final isOwner = canOrganizeSession(
+      entry.snapshot.memberFor(currentUserId)?.role,
+      isSuperAdmin: ref.watch(isSuperAdminProvider).value ?? false,
+    );
     final playedHoles = entry.snapshot.playedHoles;
     final associationId = session.associationId;
     final canTagChampionship =

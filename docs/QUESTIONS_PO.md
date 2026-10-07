@@ -2985,3 +2985,127 @@ Réponse PO (2026-10-07) : **oui, le `super_admin` peut tout modifier dans toute
 changement jugé mineur, fait dans le plan 37, sans plan à part. Il a sur toute session les
 droits d'un organisateur, sans en devenir participant. Seule réserve, technique : le panneau de
 création ne lui propose que ses propres brouillons, pas ceux de toute l'app.
+
+**Q263 ☑ — Préparer les trous : seulement dans un brouillon, ou dans toute salle d'attente ?**
+Contexte : demande du PO du 2026-10-07 (avenant au plan 37). Aujourd'hui, les trous ne
+s'ajoutent que pendant la partie ; la base permet déjà de les ajouter avant.
+Suggestion : dans toute salle d'attente (« En préparation »), brouillon ou non. C'est le même
+écran : un brouillon choisi à la création redevient une salle d'attente ordinaire, qui doit de
+toute façon montrer, et laisser corriger, les trous préparés jusqu'à « Démarrer ». Un
+organisateur d'une session ordinaire peut aussi préparer son parcours avant l'arrivée des
+joueurs. Les organisateurs gèrent les trous ; les participants voient la liste.
+Réponse PO (2026-10-07) : d'accord.
+
+**Q264 ☑ — Que peut-on faire sur les trous avant « Démarrer » ?**
+Suggestion : exactement ce que permet la partie en cours, avec les mêmes panneaux : ajouter un
+trou (proche, de l'annuaire, créé sur place, ou trou libre ; par, commentaire, mode de jeu),
+modifier son par et son commentaire, le retirer. Aucun score avant « Démarrer ». Pas de
+changement d'ordre : l'ordre du parcours est celui de l'ajout, comme pendant la partie ; pour
+le changer, on retire puis on rajoute.
+Réponse PO (2026-10-07) : d'accord, **sauf pour l'ordre**, qui devient modifiable (voir Q265).
+
+**Q265 ☑ — Pendant la partie, comment présenter les trous préparés ?**
+Constat : la liste montre aujourd'hui le trou le plus récent en haut, mis en avant, parce
+qu'on ajoute chaque trou au moment de le jouer. Avec un parcours préparé, le trou du haut
+serait le dernier du parcours.
+Suggestion : en haut, un groupe « À jouer » : les trous sans aucun score, dans l'ordre du
+parcours, le premier mis en avant ; dessous, les trous joués, comme aujourd'hui (le plus
+récent en haut). Dès qu'un score est saisi sur un trou, il passe dans les trous joués. Sans
+trou préparé, rien ne change pour l'utilisateur : un trou ajouté en cours de partie arrive en
+haut, mis en avant, comme aujourd'hui. Avec des trous préparés, un trou ajouté en cours de
+partie se place après eux, à la fin du parcours.
+Réponse PO (2026-10-07) : **non, pas de groupe « À jouer »**. À la place, une seule liste dont
+l'ordre se règle :
+- chaque trou a une petite icône de déplacement : on le glisse et on le dépose entre deux
+  autres. Réservé aux organisateurs (créateur, co-organisateurs ; et `super_admin`, Q262) ;
+- en haut de la liste, une inversion globale de l'ordre : pour un parcours préparé dans
+  l'ordre, affiché avec le plus récent en haut alors que le premier ajouté est le trou n° 1,
+  un toucher remet tout dans l'autre sens ; les déplacements ajustent ensuite au besoin ;
+- par défaut, rien ne change : une session dont les trous sont ajoutés pendant la partie
+  montre toujours le plus récent en haut. « On n'enlève rien à l'existant, on ajoute de la
+  fonctionnalité. »
+Suites : Q267 à Q269.
+
+**Q266 ☑ — Que deviennent les trous préparés jamais joués ?**
+Constat : un trou sans aucun score compte aujourd'hui comme joué : dans le nombre de trous de la
+session (il en faut au moins 3 pour les statistiques et les badges), dans l'historique du trou
+(la session y apparaît comme jouée sur ce trou) et dans le « x / y trous » du classement.
+Jusqu'ici, ce cas n'arrivait pas, puisqu'on n'ajoutait un trou qu'au moment de le jouer.
+Suggestion : quand la session se termine, les trous restés sans aucun score sont retirés
+automatiquement, et la confirmation de fin le dit (« les trous sans score seront retirés »).
+La règle vit en base, donc vaut pour tout chemin de fin de session. Un trou où au moins une
+équipe a un score est gardé. Les données ne contiennent ainsi que les trous réellement joués,
+comme aujourd'hui, sans retoucher les statistiques, les badges ni l'historique des trous.
+Réponse PO (2026-10-07) : d'accord.
+
+**Q267 ☑ — L'inversion de l'ordre : commune à tous, ou propre à chaque téléphone ?**
+Constat : le numéro d'un trou (« Trou 3 ») est sa place dans le parcours ; il s'affiche sur les
+cartes de la partie, dans l'historique (trou 1 en premier) et dans l'export PDF. Déplacer un
+trou change donc son numéro et celui des trous entre son ancienne et sa nouvelle place, pour
+tout le monde. L'inversion, elle, ne fait que retourner l'affichage : le trou n° 1 reste le
+trou n° 1, il passe juste en haut au lieu d'en bas.
+Suggestion : commune à tous, enregistrée avec la session et réglée par les organisateurs,
+comme les déplacements. Tous les joueurs voient alors la même liste, dans le même sens, que
+celle préparée par l'organisateur. Par défaut, le plus récent en haut, comme aujourd'hui.
+Réponse PO (2026-10-07) : oui, commun à tous. L'idée est de fixer l'ordre sur un brouillon,
+avant le démarrage ; il y a peu de raisons de le changer ensuite, mais cela reste possible,
+par les organisateurs seulement.
+
+**Q268 ☑ — Pendant la partie, quel trou mettre en avant ?**
+Constat : aujourd'hui, la carte du haut est mise en avant (cadre de couleur) : c'est le dernier
+trou ajouté, donc celui qu'on joue. Si la liste est retournée (trou n° 1 en haut), la carte du
+haut resterait le trou n° 1 toute la partie.
+Suggestion : mettre en avant le prochain trou à jouer, c'est-à-dire le premier trou du parcours
+où une équipe n'a pas encore de score ; quand tout est saisi, le dernier trou du parcours.
+Pour une session jouée comme aujourd'hui (trous ajoutés au fil de la partie), c'est le même
+trou qu'aujourd'hui : le dernier ajouté.
+Réponse PO (2026-10-07) : d'accord, mettre en avant le trou courant ; à juger à l'usage.
+
+**Q269 ☑ — Où peut-on déplacer les trous et inverser l'ordre ?**
+Suggestion : dans la salle d'attente et pendant la partie, là où les organisateurs gèrent déjà
+les trous. Pas après la fin de la session : l'historique et l'export montrent le parcours
+joué, trou n° 1 en premier, et le changer après coup modifierait la carte de score de tout le
+monde sans raison de jeu. Retirer les trous jamais joués à la fin (Q266) renumérote les trous
+restants (1, 2, 3… sans trou manquant).
+Réponse PO (2026-10-07) : d'accord ; pas de réordonnancement après la clôture de la session.
+
+**Q270 ☑ — Passer une session en brouillon après sa création ?**
+Contexte (PO, 2026-10-07) : une session de test créée sans cocher « Brouillon » ne peut plus le
+devenir. La règle actuelle vient d'une conséquence de Q256 (« rien ne permet de remettre une
+session en brouillon »), posée pour qu'une session déjà vue ou jouée ne disparaisse pas.
+Constat technique : peu de travail. La base empêche aujourd'hui tout passage en brouillon par
+un seul déclencheur ; ses deux autres règles (un brouillon n'est jamais démarré, n'a jamais
+d'événement) suffisent à protéger le reste. Côté app, l'interrupteur « Brouillon » du
+formulaire de création réapparaîtrait dans « Modifier ».
+Suggestion : autoriser le passage en brouillon par les organisateurs (créateur,
+co-organisateurs, `super_admin`), depuis « Modifier », tant que la session est en préparation
+(pas démarrée) et n'est pas liée à un événement (Q257 : la session d'un événement doit rester
+visible de ses présents). Une confirmation dit la conséquence : les participants qui ne sont
+pas co-organisateurs ne la voient plus, et ne peuvent plus la rejoindre par le code, jusqu'à ce
+qu'elle soit choisie dans « Créer une session » ; rien n'est perdu (participants, équipes,
+trous restent). Le sens inverse ne change pas (Q256) : on ne publie toujours qu'en choisissant
+le brouillon à la création. Une session démarrée ne peut plus devenir un brouillon.
+Réponse PO (2026-10-07) : d'accord, et seulement tant que la session est en préparation :
+jamais une fois démarrée ou terminée. C'est le cas courant d'une session créée en oubliant de
+cocher « Brouillon ». (La suggestion le prévoyait déjà ; l'exception des sessions liées à un
+événement est gardée, Q257.)
+
+**Q271 ☑ — Retirer le rôle de co-organisateur : comment ?**
+Contexte (PO, 2026-10-07) : la couronne « Nommer co-organisateur » disparaît une fois le rôle
+donné ; on ne peut plus le retirer. Le PO demande qu'elle change d'état (couronne remplie)
+plutôt que de disparaître, pour pouvoir dé-nommer.
+Constat technique : la base permet déjà de rendre au rôle « participant » (même règle que la
+nomination) ; l'icône de couronne remplie existe. Trois endroits : les listes des équipes et des
+participants de la salle d'attente, et le panneau « Participants » de la partie en cours.
+Suggestion : couronne vide sur un participant (toucher = nommer), couronne remplie sur un
+co-organisateur (toucher = retirer le rôle), pour les organisateurs, jusqu'à la fin de la
+session, comme aujourd'hui. Deux exceptions, où la couronne remplie s'affiche sans pouvoir
+être touchée : le créateur (toujours organisateur ; la base le protège aussi, ce qu'elle ne
+fait pas aujourd'hui) et soi-même (pour ne pas se retirer ses propres droits par erreur ; dans
+un brouillon, on ne le verrait plus). Pas de confirmation : un second toucher annule.
+Réponse PO (2026-10-07) : la question n'était pas claire. Constat vérifié en base sur sa session
+de test (VQ35QT) : Christophe est bien co-organisateur et n'est pas encore venu ; la couronne
+disparaît pour tout co-organisateur, venu ou non, faute de bouton pour retirer le rôle. Le PO
+veut pouvoir nommer et retirer un co-organisateur, qu'il ait rejoint la session ou non :
+couronne qui bascule, retenue. Les deux exceptions (créateur, soi-même) sont appliquées comme
+dit dans la suggestion, à corriger à l'essai si besoin.

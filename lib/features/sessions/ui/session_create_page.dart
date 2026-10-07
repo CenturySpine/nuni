@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide Session;
 
+import '../../../core/authorization/authorization_repository.dart';
 import '../../../core/errors/app_error_message.dart';
 import '../../../core/geocoding/reverse_geocoding_client.dart';
 import '../../../core/location/location_service.dart';
@@ -17,6 +18,7 @@ import '../../../core/weather/weather_client.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_card.dart';
+import '../../../shared/nuni_confirm_dialog.dart';
 import '../../../shared/nuni_chip.dart';
 import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
@@ -84,6 +86,10 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
   SessionKind _kind = SessionKind.individual;
   ScoringMode _scoringMode = ScoringMode.strokePlay;
   bool _isChampionship = false;
+
+  /// Plan 37: seen by its organizers only until picked to create a session;
+  /// off by default, and never from an event (Q257).
+  bool _draft = false;
   Spot? _spot;
 
   final _title = TextEditingController();
@@ -153,6 +159,7 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
       final repo = ref.read(sessionsRepositoryProvider);
       final session = await repo.fetchSession(widget.sessionId!);
       final role = await repo.myRole(session.id);
+      final isSuperAdmin = await ref.read(isSuperAdminProvider.future);
       final associationId = session.associationId;
       final isStaff =
           associationId != null &&
@@ -167,7 +174,7 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
       if (!mounted) return;
       setState(() {
         _original = session;
-        _isOwner = role == MemberRole.owner;
+        _isOwner = canOrganizeSession(role, isSuperAdmin: isSuperAdmin);
         _isStaff = isStaff;
         _title.text = session.title ?? '';
         _report.text = session.comment ?? '';
@@ -235,6 +242,18 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
   /// What the caller may change in edit mode (Q209); everything when
   /// creating.
   bool get _canEditAll => !_editing || _isOwner;
+
+  /// Plan 37 (Q270): a session created without "Draft" becomes one later
+  /// only while in its waiting room, and never an event's (Q257).
+  bool get _canBecomeDraft {
+    final original = _original;
+    return original != null &&
+        _isOwner &&
+        original.published &&
+        original.status == SessionStatus.draft &&
+        original.eventId == null;
+  }
+
   bool get _canEditTagsAndReport => !_editing || _isOwner || _isStaff;
 
   /// Whether the session as it would be saved is a game: only a game counts
@@ -327,6 +346,16 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context)!;
     if (!_validate(l10n)) return;
+    // Plan 37 (Q270): who no longer sees it, before it happens.
+    if (_draft && _canBecomeDraft) {
+      final confirmed = await NuniConfirmDialog.show(
+        context,
+        title: l10n.sessionsDraftMakeConfirmTitle,
+        message: l10n.sessionsDraftMakeConfirmMessage,
+        confirmLabel: l10n.sessionsDraftMakeConfirm,
+      );
+      if (!confirmed || !mounted) return;
+    }
     setState(() => _saving = true);
     try {
       if (_editing) {
@@ -428,6 +457,7 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
       comment: _reportValue,
       startedAt: _afterwards ? _at(_startTime) : null,
       endedAt: _afterwards ? _at(_endTime) : null,
+      draft: _draft,
     );
     if (widget.eventId != null) {
       ref
@@ -501,6 +531,9 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
       );
       if (championship) await _confirmChampionship(saved);
     }
+
+    // Plan 37 (Q270): last, once everything else is saved.
+    if (_draft && _canBecomeDraft) await repo.makeDraft(original.id);
 
     ref
       ..invalidate(sessionRoomProvider(original.id))
@@ -862,6 +895,21 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
               ),
             ],
           ),
+          // Plan 37: chosen at creation, never from an event (Q257); or
+          // later, while the session is still in its waiting room (Q270).
+          if ((!_editing && widget.eventId == null) || _canBecomeDraft) ...[
+            const SizedBox(height: 16),
+            NuniCard(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.sessionsDraftLabel),
+                subtitle: Text(l10n.sessionsDraftToggleHint),
+                value: _draft,
+                onChanged: (value) => setState(() => _draft = value),
+              ),
+            ),
+          ],
           if (canTagChampionship) ...[
             const SizedBox(height: 16),
             NuniCard(

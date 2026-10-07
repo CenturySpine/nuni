@@ -18,6 +18,13 @@ enum MemberRole {
 MemberRole memberRoleFromPostgresValue(String value) =>
     value == 'owner' ? MemberRole.owner : MemberRole.player;
 
+/// Whether the caller, with [role] in a session (null when not a member),
+/// organizes it: its creator or a co-organizer, or a super_admin in any
+/// session (plan 37, Q262) -- the base's `is_session_owner`. Every session
+/// screen shows its organizer actions on this alone.
+bool canOrganizeSession(MemberRole? role, {required bool isSuperAdmin}) =>
+    role == MemberRole.owner || isSuperAdmin;
+
 /// Mirrors the `session_members` table (plan 03): the waiting-room pool.
 /// `teamId == null` means "not assigned to a team yet" (Q25).
 /// `checkedInAt == null` means added by the organizer or from an event, not

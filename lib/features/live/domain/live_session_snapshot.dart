@@ -1,5 +1,4 @@
 import '../../sessions/domain/session.dart';
-import '../../sessions/domain/session_member.dart';
 import 'live_member.dart';
 import 'live_team.dart';
 import 'played_hole.dart';
@@ -46,14 +45,9 @@ class LiveSessionSnapshot {
     return null;
   }
 
-  bool isOwner(String? userId) => memberFor(userId)?.role == MemberRole.owner;
-
   /// Q8: a member scores only their own team; the owner (and any
   /// co-organizer) scores every team. `null` when the caller isn't a
   /// member -- but they never reach this screen without RLS letting them
   /// read the session in the first place.
   String? myTeamId(String? userId) => memberFor(userId)?.teamId;
-
-  /// Played holes, most recently added first ("dernier en tête", plan 08).
-  List<PlayedHole> get playedHolesRecentFirst => playedHoles.reversed.toList();
 }

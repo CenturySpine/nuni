@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/authorization/authorization_repository.dart';
 import '../../../core/errors/app_error_message.dart';
 import '../../../core/router/app_bottom_nav.dart';
 import '../../../core/supabase/supabase_providers.dart';
@@ -20,6 +21,7 @@ import '../../sessions/data/sessions_repository.dart';
 import '../../sessions/domain/ranking_direction.dart';
 import '../../sessions/domain/scoring_mode.dart';
 import '../../sessions/domain/session.dart';
+import '../../sessions/domain/session_member.dart';
 import '../../sessions/domain/session_tag.dart';
 import '../../sessions/ui/invite_sheet.dart';
 import '../../sessions/ui/session_nature.dart';
@@ -28,11 +30,13 @@ import '../../sessions/ui/scoring_mode_label.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../stats/data/stats_repository.dart';
 import '../data/live_repository.dart';
+import '../domain/hole_order.dart';
 import '../domain/live_session_snapshot.dart';
 import 'add_played_hole_sheet.dart';
 import 'members_sheet.dart';
 import 'played_hole_card.dart';
 import 'played_hole_settings_sheet.dart';
+import 'played_holes_list.dart';
 import 'ranking_card.dart';
 
 /// The live screen (plan 08): shown by `SessionRoomPage` once `status` has
@@ -190,12 +194,44 @@ class _LiveViewState extends ConsumerState<_LiveView> {
         .setChampionship(sessionId: widget.sessionId, isChampionship: value),
   );
 
+  /// Plan 37 (Q265): a hole dropped at [place] of the course; false when the
+  /// move failed, which puts the list back.
+  Future<bool> _moveHole(String playedHoleId, int place) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ref
+          .read(liveRepositoryProvider)
+          .movePlayedHole(playedHoleId: playedHoleId, place: place);
+      return true;
+    } catch (error) {
+      _showSnack(describeError(error, l10n));
+      return false;
+    }
+  }
+
+  /// Plan 37 (Q267): flips how the holes are shown, for everyone.
+  Future<void> _invertHoles() => _run(
+    () => ref
+        .read(liveRepositoryProvider)
+        .setHolesAscending(
+          sessionId: widget.sessionId,
+          ascending: !widget.snapshot.session.holesAscending,
+        ),
+  );
+
   Future<void> _endSession() async {
     final l10n = AppLocalizations.of(context)!;
+    // Plan 37 (Q266): the base removes the holes nobody scored.
+    final dropsHoles = widget.snapshot.playedHoles.any(
+      (hole) => hole.scores.isEmpty,
+    );
     final confirmed = await NuniConfirmDialog.show(
       context,
       title: l10n.sessionsLiveEndConfirmTitle,
-      message: l10n.sessionsLiveEndConfirmMessage,
+      message: dropsHoles
+          ? '${l10n.sessionsLiveEndConfirmMessage}\n\n'
+                '${l10n.sessionsLiveEndDropsUnplayed}'
+          : l10n.sessionsLiveEndConfirmMessage,
       confirmLabel: l10n.sessionsLiveEndSession,
     );
     if (!confirmed || !mounted) return;
@@ -250,11 +286,18 @@ class _LiveViewState extends ConsumerState<_LiveView> {
         .auth
         .currentUser
         ?.id;
-    final isOwner = snapshot.isOwner(currentUserId);
+    final isOwner = canOrganizeSession(
+      snapshot.memberFor(currentUserId)?.role,
+      isSuperAdmin: ref.watch(isSuperAdminProvider).value ?? false,
+    );
     final myTeamId = snapshot.myTeamId(currentUserId);
     // A member of the session's association who doesn't take part follows it
-    // read-only (plan 26, decision 13): no scoring, no invitation.
-    final isSpectator = snapshot.memberFor(currentUserId) == null;
+    // read-only (plan 26, decision 13): no scoring, no invitation. A
+    // super_admin outside it organizes it instead (plan 37, Q262).
+    final isSpectator = snapshot.memberFor(currentUserId) == null && !isOwner;
+    // Plan 37: organizers order the holes until the end (Q269).
+    final canOrder = isOwner && session.status != SessionStatus.completed;
+    final current = currentHole(snapshot.playedHoles, snapshot.teams);
     final associationId = session.associationId;
     final canTagChampionship =
         associationId != null &&
@@ -296,6 +339,7 @@ class _LiveViewState extends ConsumerState<_LiveView> {
                 _MenuAction.members => showMembersSheet(
                   context,
                   sessionId: widget.sessionId,
+                  creatorId: session.ownerId,
                   members: snapshot.members,
                 ),
                 // The session form (plan 31); the realtime snapshot follows.
@@ -339,71 +383,95 @@ class _LiveViewState extends ConsumerState<_LiveView> {
             ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-        children: [
-          if (isSpectator) ...[
-            NuniCard(
-              child: Row(
-                children: [
-                  const Icon(PhosphorIcons.eye, size: 18),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text(l10n.sessionsLiveSpectatorNotice)),
+      // Slivers (plan 37): the holes' list is reorderable, and a dragged hole
+      // scrolls the whole page.
+      body: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            sliver: SliverList.list(
+              children: [
+                if (isSpectator) ...[
+                  NuniCard(
+                    child: Row(
+                      children: [
+                        const Icon(PhosphorIcons.eye, size: 18),
+                        const SizedBox(width: 10),
+                        Expanded(child: Text(l10n.sessionsLiveSpectatorNotice)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                 ],
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          SessionNaturePills(session: session),
-          const SizedBox(height: 12),
-          if (canTagChampionship) ...[
-            NuniCard(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: ChampionshipToggle(
-                value: session.isChampionship,
-                // Only a game counts (plan 29).
-                onChanged:
-                    _busy ||
-                        (!isGameSession(session) && !session.isChampionship)
-                    ? null
-                    : _toggleChampionship,
-                subtitle: isGameSession(session)
-                    ? null
-                    : l10n.sessionsChampionshipGameOnly,
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          RankingCard(
-            session: session,
-            teams: snapshot.teams,
-            playedHoles: snapshot.playedHoles,
-          ),
-          const SizedBox(height: 16),
-          if (snapshot.playedHoles.isEmpty)
-            NuniEmptyState(
-              icon: PhosphorIcons.golf,
-              message: l10n.sessionsLiveNoHoles,
-            )
-          else
-            for (final entry in snapshot.playedHolesRecentFirst.asMap().entries)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: PlayedHoleCard(
-                  playedHole: entry.value,
+                SessionNaturePills(session: session),
+                const SizedBox(height: 12),
+                if (canTagChampionship) ...[
+                  NuniCard(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: ChampionshipToggle(
+                      value: session.isChampionship,
+                      // Only a game counts (plan 29).
+                      onChanged:
+                          _busy ||
+                              (!isGameSession(session) &&
+                                  !session.isChampionship)
+                          ? null
+                          : _toggleChampionship,
+                      subtitle: isGameSession(session)
+                          ? null
+                          : l10n.sessionsChampionshipGameOnly,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                RankingCard(
+                  session: session,
                   teams: snapshot.teams,
-                  scoringMode: session.scoringMode!,
-                  canEditTeam: (teamId) => isOwner || myTeamId == teamId,
-                  onScoreSubmit: _submitScore,
-                  highlighted: entry.key == 0,
-                  onDelete: isOwner
-                      ? (_busy ? null : () => _deleteHole(entry.value.id))
-                      : null,
-                  onEdit: isOwner
-                      ? () => showPlayedHoleSettingsSheet(context, entry.value)
-                      : null,
+                  playedHoles: snapshot.playedHoles,
                 ),
+                const SizedBox(height: 16),
+                // The order switch (plan 37, Q267, Q269): organizers, until the end.
+                if (canOrder && snapshot.playedHoles.length > 1)
+                  HolesOrderHeader(
+                    ascending: session.holesAscending,
+                    onInvert: _busy ? null : _invertHoles,
+                  ),
+                if (snapshot.playedHoles.isEmpty)
+                  NuniEmptyState(
+                    icon: PhosphorIcons.golf,
+                    message: l10n.sessionsLiveNoHoles,
+                  ),
+              ],
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+            sliver: PlayedHolesSliver(
+              holes: snapshot.playedHoles,
+              ascending: session.holesAscending,
+              canReorder: canOrder,
+              onMove: _moveHole,
+              itemBuilder: (context, hole, dragHandle) => PlayedHoleCard(
+                playedHole: hole,
+                teams: snapshot.teams,
+                scoringMode: session.scoringMode!,
+                canEditTeam: (teamId) => isOwner || myTeamId == teamId,
+                onScoreSubmit: _submitScore,
+                // The hole to play now (plan 37, Q268).
+                highlighted: hole.id == current?.id,
+                onDelete: isOwner
+                    ? (_busy ? null : () => _deleteHole(hole.id))
+                    : null,
+                onEdit: isOwner
+                    ? () => showPlayedHoleSettingsSheet(context, hole)
+                    : null,
+                dragHandle: dragHandle,
               ),
+            ),
+          ),
         ],
       ),
       floatingActionButton: isOwner

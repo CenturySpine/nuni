@@ -170,7 +170,8 @@ GitHub Actions (Q17).
   l'ajout, modifiable par l'organisateur, obligatoire pour un trou libre) : tout calcul le lit,
   jamais `holes.par`.
 - Sessions (plan 26) : lisibles par leurs participants et, une fois démarrées, par tous les
-  membres de leur association (`can_read_session`), en lecture seule pour ces derniers. Le
+  membres de leur association (`can_read_session`), en lecture seule pour ces derniers ; un
+  brouillon, par ses seuls organisateurs (plan 37). Le
   marquage « championnat » est réservé au responsable local et au `super_admin`
   (`set_session_championship`) ; l'organisateur ne peut plus le changer.
 - Natures de session (plan 29) : « Parcours » = `sessions.scoring_mode` non nul (avec `kind` et
@@ -278,6 +279,36 @@ GitHub Actions (Q17).
   (code, QR code, créateur, ou ouverture de la session par un participant ajouté : RPC
   `check_in_session`, Q218) ; nul = ajouté par l'organisateur ou depuis un événement, pas encore
   venu (Q217).
+- Sessions brouillon (plan 37) : `sessions.published` faux = **brouillon** (« Brouillon » dans
+  l'app), à ne pas confondre avec `status = 'draft'`, la salle d'attente (« En préparation »).
+  Un brouillon n'est lisible que de ses organisateurs (`can_read_session` →
+  `is_session_owner`, `super_admin` compris) ; il ne démarre jamais (contrainte
+  `sessions_draft_not_started`), donc n'est jamais terminé : statistiques, badges et championnat
+  n'ont pas à le filtrer ; il n'a jamais d'événement (`sessions_draft_without_event`). Seul un
+  co-organisateur déjà nommé le rejoint par code (`join_session` refuse `draft_session`). Il ne
+  se publie qu'en le choisissant à la création d'une session (`startNewSession`, unique point
+  d'entrée de « Créer une session » et « Démarrer la session » ; RPC `publish_session`, qui le
+  lie à l'événement et y ajoute les présents), jamais depuis la session. Une session publiée ne
+  redevient brouillon que depuis « Modifier », tant qu'elle est en salle d'attente et sans
+  événement (Q270, `sessions_guard_published`).
+- Co-organisateurs (plan 37, Q271) : nommés et retirés par les organisateurs, venus ou non, par
+  la couronne `CoOrganizerCrown` (vide = nommer, remplie = retirer ; figée sur le créateur et
+  sur soi-même). Le créateur reste toujours organisateur (`session_members_guard_creator`).
+- Trous d'une session et leur ordre (plan 37, avenant) : les organisateurs préparent les trous
+  dès la salle d'attente (« En préparation »), avec les panneaux de la partie. Un trou joué est
+  identifié par `played_holes.id` (les scores y sont rattachés) ; `played_holes.position` est sa
+  place dans le parcours et son numéro affiché (« Trou n »), modifiée seulement par la RPC
+  `move_played_hole` (glisser-déposer, renumérotation des trous enjambés ; organisateurs,
+  jusqu'à la fin). `sessions.holes_ascending` est le sens d'affichage, commun à tous (faux =
+  le plus récent en haut, l'affichage d'origine). Ordre affiché et trou mis en avant (le
+  prochain à jouer) : `hole_order.dart`, une seule fois ; liste réordonnable :
+  `PlayedHolesSliver`. À la fin d'une session, le déclencheur `sessions_drop_unplayed_holes`
+  retire les trous sans aucun score et renumérote les autres.
+- Droits du `super_admin` sur les sessions (Q262) : `is_session_owner` répond oui pour lui, donc
+  il a les droits d'un organisateur sur toute session sans en être membre ; les écrans décident
+  de leurs actions d'organisateur par `canOrganizeSession` (`session_member.dart`), jamais par
+  le seul rôle. Ce qui dépend du vrai rôle dans la session (rejoindre un brouillon, brouillons
+  proposés à la création) lit `session_members.role`.
 
 ## Interdits
 

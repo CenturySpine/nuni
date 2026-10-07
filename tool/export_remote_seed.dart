@@ -307,7 +307,9 @@ Future<({String sql, String summary})> _renderData(SupabaseClient nuni) async {
     'id, code, owner_id, status, kind, scoring_mode, ranking_direction, city, '
         'zone, location_lat, location_lng, started_at, ended_at, weather, '
         'comment, cover_photo_id, association_id, is_championship, legacy_id, '
-        'created_at',
+        // Plan 37: without it, a replayed seed would publish every draft;
+        // and how each session shows its holes.
+        'published, holes_ascending, created_at',
     'created_at',
   );
   final teams = await all('teams', 'id, session_id, position, legacy_id', 'id');

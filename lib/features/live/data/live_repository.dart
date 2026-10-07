@@ -98,6 +98,29 @@ class LiveRepository {
   Future<void> deletePlayedHole(String playedHoleId) =>
       _client.from('played_holes').delete().eq('id', playedHoleId);
 
+  /// Moves a played hole to [place] in the course, 1 being the first (plan
+  /// 37, Q265): the holes in between shift, renumbered, their scores with
+  /// them. Organizers only, until the session is completed (Q269) -- the
+  /// `move_played_hole` RPC checks both.
+  Future<void> movePlayedHole({
+    required String playedHoleId,
+    required int place,
+  }) => _client.rpc<void>(
+    'move_played_hole',
+    params: {'p_played_hole_id': playedHoleId, 'p_position': place},
+  );
+
+  /// Shows the holes hole 1 on top, or the most recent on top (plan 37,
+  /// Q267), for everyone in the session: an organizer's plain update
+  /// (`sessions_update_owner`).
+  Future<void> setHolesAscending({
+    required String sessionId,
+    required bool ascending,
+  }) => _client
+      .from('sessions')
+      .update({'holes_ascending': ascending})
+      .eq('id', sessionId);
+
   /// "Terminer la session" (owner-only, plan 08): a plain update, same RLS
   /// policy as every other owner write to `sessions` (no status
   /// restriction). `.toUtc()` matters here (found while testing plan 10's

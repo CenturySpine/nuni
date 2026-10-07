@@ -26,6 +26,7 @@ import '../../sessions/domain/session.dart';
 import '../../sessions/domain/session_kind.dart';
 import '../../sessions/domain/session_member.dart';
 import '../../sessions/ui/session_nature.dart';
+import '../../sessions/ui/start_new_session.dart';
 
 /// Home tab body (plan 09): create, join, my ongoing sessions, recent
 /// sessions. Full history (beyond the short "Dernières sessions" list)
@@ -54,7 +55,10 @@ class HomePage extends ConsumerWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          _HeroBanner(onJoin: () => promptJoinSession(context)),
+          _HeroBanner(
+            onCreate: () => startNewSession(context, ref),
+            onJoin: () => promptJoinSession(context),
+          ),
           const SizedBox(height: 28),
           const NextEventHomeSection(),
           const ChampionshipHomeSection(),
@@ -94,7 +98,9 @@ AsyncValue<List<MySessionEntry>> _withAssociationLive(
 
 /// The brand banner at the top of home, holding its two main actions.
 class _HeroBanner extends StatelessWidget {
-  const _HeroBanner({required this.onJoin});
+  const _HeroBanner({required this.onCreate, required this.onJoin});
+
+  final VoidCallback onCreate;
 
   final VoidCallback onJoin;
 
@@ -133,7 +139,7 @@ class _HeroBanner extends StatelessWidget {
               variant: NuniButtonVariant.onHero,
               icon: PhosphorIcons.plus,
               label: l10n.homeCreateSessionAction,
-              onPressed: () => context.push('/session/new'),
+              onPressed: onCreate,
             ),
           ),
           const SizedBox(height: 10),
@@ -225,6 +231,11 @@ class _SessionCard extends StatelessWidget {
     // No status for a completed session (PO, 2026-09-23): it only ever
     // appears under "recent sessions", where it can only be finished.
     final status = switch (session.status) {
+      // Plan 37: seen by its organizers only, until picked to create one.
+      SessionStatus.draft when !session.published => NuniStatusPill(
+        label: l10n.sessionsDraftLabel,
+        tone: NuniTone.neutral,
+      ),
       SessionStatus.draft => NuniStatusPill(
         label: l10n.homeSessionStatusDraft,
         tone: NuniTone.highlight,

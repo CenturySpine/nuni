@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/authorization/authorization_repository.dart';
 import '../../../core/errors/app_error_message.dart';
 import '../../../core/router/app_bottom_nav.dart';
 import '../../../core/supabase/supabase_providers.dart';
@@ -28,6 +29,7 @@ import '../domain/session.dart';
 import '../domain/session_member.dart';
 import '../domain/session_room.dart';
 import 'add_participant_sheet.dart';
+import 'draft_session_notice.dart';
 import 'invite_sheet.dart';
 import 'member_join_indicator.dart';
 import 'session_nature.dart';
@@ -225,8 +227,13 @@ class _AttendanceRoomViewState extends ConsumerState<AttendanceRoomView> {
     for (final member in room.members) {
       if (member.userId == myId) me = member;
     }
-    final isOwner = me?.role == MemberRole.owner;
+    final isOwner = canOrganizeSession(
+      me?.role,
+      isSuperAdmin: ref.watch(isSuperAdminProvider).value ?? false,
+    );
     final isDraft = session.status == SessionStatus.draft;
+    // Plan 37: not played until picked to create a session (Q261).
+    final isUnpublished = !session.published;
     final associationId = session.associationId;
     final isStaff =
         associationId != null &&
@@ -270,6 +277,10 @@ class _AttendanceRoomViewState extends ConsumerState<AttendanceRoomView> {
                 ],
               ),
             ),
+          if (isUnpublished) ...[
+            const SizedBox(height: 16),
+            const DraftSessionNotice(),
+          ],
           const SizedBox(height: 16),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -355,12 +366,14 @@ class _AttendanceRoomViewState extends ConsumerState<AttendanceRoomView> {
             ),
           if (isOwner) ...[
             const SizedBox(height: 8),
-            SwitchListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-              title: Text(l10n.sessionsAttendeesMe),
-              value: me?.teamId != null,
-              onChanged: _busy || _teamId == null ? null : _setMeAttending,
-            ),
+            // An organizer of the session; not a super_admin outside it.
+            if (me != null)
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                title: Text(l10n.sessionsAttendeesMe),
+                value: me.teamId != null,
+                onChanged: _busy || _teamId == null ? null : _setMeAttending,
+              ),
             NuniButton(
               variant: NuniButtonVariant.secondary,
               icon: PhosphorIcons.userPlus,
@@ -396,7 +409,7 @@ class _AttendanceRoomViewState extends ConsumerState<AttendanceRoomView> {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (isOwner)
+          if (isOwner && !isUnpublished)
             SafeArea(
               bottom: false,
               child: Padding(

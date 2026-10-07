@@ -19,7 +19,7 @@ import 'score_entry_sheet.dart';
 /// the note below), tap-to-score inline for the teams [canEditTeam] allows.
 /// Stroke Play shows strokes alone (there's no separate points concept for
 /// it); Free shows points alone (no strokes are collected for it, Q7b).
-/// [highlighted] (the latest hole) gets a primary outline. The par shown is
+/// [highlighted] (the hole to play now, plan 37) gets a primary outline. The par shown is
 /// the session's (plan 26), with the directory hole's own par as a hint when
 /// they differ; [onEdit] (the organizer) opens the par + comment sheet.
 class PlayedHoleCard extends StatelessWidget {
@@ -33,6 +33,7 @@ class PlayedHoleCard extends StatelessWidget {
     this.highlighted = false,
     this.onDelete,
     this.onEdit,
+    this.dragHandle,
   });
 
   final PlayedHole playedHole;
@@ -44,6 +45,10 @@ class PlayedHoleCard extends StatelessWidget {
   final bool highlighted;
   final VoidCallback? onDelete;
   final VoidCallback? onEdit;
+
+  /// The handle an organizer drags the hole by (plan 37, Q265), at the end
+  /// of its header; null when it can't be moved.
+  final Widget? dragHandle;
 
   @override
   Widget build(BuildContext context) {
@@ -144,6 +149,7 @@ class PlayedHoleCard extends StatelessWidget {
                   tooltip: l10n.sessionsLiveDeleteHole,
                   onPressed: onDelete,
                 ),
+              ?dragHandle,
             ],
           ),
           const SizedBox(height: 10),
