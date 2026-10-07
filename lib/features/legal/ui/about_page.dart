@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_logo.dart';
+import '../../../shared/nuni_powered_by.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -43,7 +44,9 @@ class AboutPage extends StatelessWidget {
                     );
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
+                const NuniPoweredBy(),
+                const SizedBox(height: 20),
                 TextButton(
                   onPressed: () => launchUrl(Uri.https('centuryspine.org')),
                   child: Text(l10n.aboutHomepageLink),

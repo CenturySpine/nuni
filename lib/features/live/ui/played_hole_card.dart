@@ -72,6 +72,7 @@ class PlayedHoleCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               NuniIconTile(
                 icon: PhosphorIcons.golf,
@@ -138,6 +139,7 @@ class PlayedHoleCard extends StatelessWidget {
                     color: scheme.onSurfaceVariant,
                   ),
                   tooltip: l10n.sessionsPlayedHoleEdit,
+                  visualDensity: VisualDensity.compact,
                   onPressed: onEdit,
                 ),
               if (onDelete != null)
@@ -148,39 +150,42 @@ class PlayedHoleCard extends StatelessWidget {
                     color: scheme.onSurfaceVariant,
                   ),
                   tooltip: l10n.sessionsLiveDeleteHole,
+                  visualDensity: VisualDensity.compact,
                   onPressed: onDelete,
                 ),
               ?dragHandle,
             ],
           ),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.only(right: 6),
-            child: Column(
-              children: [
-                for (final team in teams)
-                  _TeamScoreRow(
-                    team: team,
-                    score: playedHole.scoreFor(team.id),
-                    holePoints: points?[team.id],
-                    editable: canEditTeam(team.id),
-                    isPoints: isPoints,
-                    showPoints: needsPoints,
-                    onTap: () async {
-                      final value = await showScoreEntrySheet(
-                        context,
-                        teamLabel: team.playerNames(),
-                        isPoints: isPoints,
-                        initialValue: playedHole.scoreFor(team.id)?.value,
-                      );
-                      if (value != null) {
-                        await onScoreSubmit(playedHole.id, team.id, value);
-                      }
-                    },
-                  ),
-              ],
+          if (teams.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: Column(
+                children: [
+                  for (final team in teams)
+                    _TeamScoreRow(
+                      team: team,
+                      score: playedHole.scoreFor(team.id),
+                      holePoints: points?[team.id],
+                      editable: canEditTeam(team.id),
+                      isPoints: isPoints,
+                      showPoints: needsPoints,
+                      onTap: () async {
+                        final value = await showScoreEntrySheet(
+                          context,
+                          teamLabel: team.playerNames(),
+                          isPoints: isPoints,
+                          initialValue: playedHole.scoreFor(team.id)?.value,
+                        );
+                        if (value != null) {
+                          await onScoreSubmit(playedHole.id, team.id, value);
+                        }
+                      },
+                    ),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

@@ -333,6 +333,8 @@
   "aboutVersionLabel": "Version {version}",
   "aboutHomepageLink": "centuryspine.org",
   "aboutSourceLink": "Code source",
+  "poweredByPrefix": "Propulsé par ",
+  "poweredByAssociation": "Lyon Street Golf",
 
   "navAssociations": "Associations",
   "settingsMyAssociation": "Mon association",
