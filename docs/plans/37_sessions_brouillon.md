@@ -331,8 +331,8 @@ terminer, supprimer), sans en devenir participant. Pour les autres comptes, rien
 - [x] Choisir un brouillon le publie ; depuis un événement, il est en plus lié à l'événement et
       les présents sont ajoutés.
 - [x] Le `super_admin` a les droits et les boutons d'un organisateur sur toute session.
-- [ ] `flutter analyze` sans avertissement, tests verts, `rls_smoke.sql` entièrement vert, build
-      Vercel vert, chaînes EN et FR. (Tout vert sauf le build Vercel, vérifié après le push.)
+- [x] `flutter analyze` sans avertissement, tests verts, `rls_smoke.sql` entièrement vert, build
+      Vercel vert, chaînes EN et FR. (Build Vercel du commit `f69eef6` réussi le 2026-10-07.)
 - [x] `AGENTS.md`, ce plan, `QUESTIONS_PO.md` et le plan d'ensemble à jour.
 - [x] Essai par le PO.
 
