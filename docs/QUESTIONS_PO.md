@@ -2841,3 +2841,147 @@ dans l'app (une ligne dans `ResumeRefresher`) et « tirer vers le bas pour rafra
 l'accueil, le planning et les spots.
 Réponse PO (2026-10-06) : ok. Fait : `ResumeRefresher` relit l'historique, et la page
 « Historique » se rafraîchit en tirant vers le bas, même vide.
+
+## Sessions brouillon (plan 37, 2026-10-07)
+
+**Q253 ☑ — Quel nom afficher pour ce mode ?**
+Constat : le statut actuel d'une session pas encore démarrée s'affiche « En préparation » /
+« Preparing » ; « Brouillon » / « Draft » n'est utilisé nulle part dans l'app.
+Suggestion : « Brouillon » en français, « Draft » en anglais. En base, la colonne s'appelle
+`published` pour ne pas la confondre avec le statut `draft` existant ; sans effet sur ce que
+voit l'utilisateur.
+Réponse PO (2026-10-07) : d'accord, « Brouillon » / « Draft ».
+
+**Q254 ☑ — Qui voit un brouillon, exactement ?**
+Suggestion : son créateur et ses co-organisateurs (les « co admin » de la demande sont les
+co-organisateurs qui existent déjà, « Nommer co-organisateur » ; pas de nouveau rôle), et
+personne d'autre :
+- les participants ajoutés par un organisateur ne le voient qu'à la publication ;
+- personne ne le rejoint par code ou QR code, qui ne sont donc pas affichés dans sa salle
+  d'attente ;
+- pas d'exception pour le `super_admin`, contrairement aux autres sessions (Q130).
+
+Réponses PO (2026-10-07) :
+- **on peut rejoindre un brouillon par code ou QR code**. Un brouillon visible des
+  co-organisateurs sert à être préparé à plusieurs ; sans risque, puisqu'il faut le code, que
+  seuls le créateur ou un organisateur partagent. Code et QR code restent affichés dans sa salle
+  d'attente. Ce que devient celui qui rejoint sans avoir été nommé co-organisateur : Q260 ;
+- **le `super_admin` voit les brouillons**, comme toute session : « règle universelle ». Ses
+  droits d'écriture : Q262 ;
+- les participants qui ne sont pas co-organisateurs ne le voient pas : c'est la demande
+  initiale.
+
+**Q255 ☑ — Un brouillon compte-t-il pour les statistiques, records, badges et championnat ?**
+Suggestion : non, tant qu'il n'est pas publié ; il compte comme toute session dès sa
+publication. Deux raisons : les statistiques d'un joueur sont lisibles par tout compte connecté
+(Q133), donc les scores d'un brouillon y deviendraient visibles de tous, ce qui contredit le
+principe du brouillon ; et une session de test jouée en brouillon fausserait records et roi du
+trou. Conséquence à connaître : comme pour la suppression logique écartée en Q244, toute future
+lecture serveur des sessions devra ignorer les brouillons ; le plan l'écrit dans `AGENTS.md` et
+le teste fonction par fonction.
+Mise à jour (2026-10-07, après la réponse à Q256) : **sans objet si Q261 est acceptée**.
+Statistiques, records, badges et championnat ne lisent que des sessions terminées ; un
+brouillon dont la partie ne peut pas être lancée n'est jamais terminé, donc n'y figure jamais,
+sans filtre ni risque pour les lectures futures.
+Clôturée le 2026-10-07 : sans objet, Q261 acceptée.
+
+**Q256 ☑ — Publication : quand, par qui, et retour en brouillon possible ?**
+Suggestion : un organisateur (créateur ou co-organisateur) publie à tout stade (en préparation,
+en cours, terminée), par un bouton « Publier » dans le bandeau « Brouillon » des écrans de la
+session, après confirmation. Sens unique : une session publiée ne redevient jamais un
+brouillon, et le mode brouillon se choisit seulement à la création. Remettre en brouillon ferait
+disparaître la session de l'accueil, de l'historique et des statistiques de personnes qui l'ont
+déjà vue ou jouée, sans pouvoir retirer les notifications déjà reçues. La publication n'envoie
+pas de notification.
+Réponse PO (2026-10-07) : **pas de publication depuis la session**. Une session ne doit jamais
+apparaître d'elle-même à partir d'un brouillon : la seule façon de publier un brouillon est de
+le choisir quand on crée une session (« Créer une session » sur l'accueil, « Démarrer la
+session » sur un événement). Conséquences retenues : ni bouton « Publier » ni bandeau de
+publication sur les écrans de la session ; le mode brouillon se choisit seulement à la
+création, et rien ne permet de remettre une session en brouillon. Conséquence à trancher : la
+partie d'un brouillon peut-elle être lancée (Q261) ?
+
+**Q257 ☑ — Un brouillon peut-il être lié à un événement ?**
+Suggestion : pas tant qu'il est brouillon. Depuis « Démarrer la session » d'un événement, le
+formulaire ne propose pas le mode brouillon ; un brouillon n'est lié à un événement qu'au moment
+où on l'utilise pour cet événement, ce qui le publie. Raison : un événement n'a qu'une session
+(Q223) et ses présents la rejoignent par le code ; une session cachée bloquerait « Démarrer la
+session » pour tous et proposerait aux présents un « Rejoindre » voué à l'échec.
+Réponse PO (2026-10-07) : d'accord.
+
+**Q258 ☑ — Quels brouillons proposer au moment de créer une session ?**
+Suggestion : ceux dont je suis organisateur (créateur ou co-organisateur, qui ont les mêmes
+droits), non terminés. Depuis un événement, seulement ceux encore en préparation (pas démarrés)
+et de l'association de l'événement : une session démarrée a ses équipes figées, les présents
+ajoutés n'y trouveraient pas de place, et la notification « session démarrée » aux présents ne
+partirait jamais ; une session d'événement appartient toujours à l'association de l'événement.
+Sans brouillon proposable, le formulaire s'ouvre directement, comme aujourd'hui.
+Mise à jour (2026-10-07, après la réponse à Q256) : si Q261 est acceptée, tout brouillon est en
+préparation, et la règle se simplifie : tous les brouillons dont je suis organisateur ; depuis
+un événement, ceux de l'association de l'événement.
+Réponse PO (2026-10-07) : d'accord.
+
+**Q259 ☑ — Que fait « utiliser un brouillon » ?**
+Suggestion : le publier et l'ouvrir, en un toucher (le panneau dit qu'il devient visible des
+membres). Depuis un événement, en plus : le lier à l'événement et ajouter ses présents à la
+salle d'attente, exactement comme pour une nouvelle session. Le brouillon garde son nom, son
+lieu, sa carte de score, ses participants et ses équipes ; le lieu de l'événement ne lui est pas
+imposé (l'organisateur peut le modifier ensuite, comme aujourd'hui).
+Réponse PO (2026-10-07) : d'accord. Choisir un brouillon le publie ; depuis un événement, rien
+ne diffère d'une nouvelle session : on lie un brouillon au lieu de créer une session de zéro.
+
+**Q260 ☑ — Rejoindre un brouillon sans avoir été nommé co-organisateur : que se passe-t-il ?**
+Réponse PO à la première formulation (2026-10-07) : question pas claire ; si on rejoint une
+session après que le créateur vous a nommé co-organisateur, on y est co-organisateur, avec ses
+droits. C'est déjà le cas, et le plan ne le change pas.
+Reformulation, sur un exemple. Aujourd'hui, l'organisateur peut ajouter Marc à la session
+depuis la liste des joueurs, puis le nommer co-organisateur avant même que Marc soit venu. Marc
+voit alors le brouillon sur son accueil, sans code. Le cas à trancher est un autre : Paul reçoit
+le code du brouillon, mais personne ne l'a nommé co-organisateur. Il tape le code. Comme pour
+toute session, il devient participant ; or un participant ne voit pas un brouillon (Q254).
+Suggestion : c'est accepté. Paul est inscrit comme participant ; l'app lui dit qu'il a rejoint
+un brouillon, qui apparaîtra sur son accueil quand un organisateur le choisira pour jouer. Les
+organisateurs le voient dans la liste des participants, et peuvent le nommer co-organisateur :
+il voit alors le brouillon. Raisons : c'est exactement la règle de visibilité de la demande
+(créateur et co-organisateurs), seuls les organisateurs décident qui a leurs droits, et le
+code d'un brouillon sert aussi à inscrire des joueurs à l'avance.
+Réponse PO (2026-10-07) : cas jugé rare, mais **refuser poliment, avec un message**, celui qui
+tente de rejoindre un brouillon sans en avoir été nommé co-organisateur. Il n'est pas inscrit.
+Un co-organisateur nommé d'avance qui tape le code entre, comme aujourd'hui.
+
+**Q261 ☑ — Peut-on lancer la partie d'un brouillon (bouton « Démarrer ») ?**
+Réponse PO à la première formulation (2026-10-07) : question pas claire.
+Reformulation. Une session passe par trois étapes : « En préparation » (la salle d'attente :
+participants, équipes, co-organisateurs, code), « En direct » (après le bouton « Démarrer » de
+la salle d'attente : on ajoute les trous et on saisit les scores), « Terminée ». La question
+porte sur ce bouton « Démarrer », pas sur « Démarrer la session » d'un événement : les
+organisateurs d'un brouillon peuvent-ils lancer la partie et saisir des scores pendant qu'il
+est encore caché ?
+Suggestion : non. Un brouillon reste « En préparation » ; sa salle d'attente remplace
+« Démarrer » par une ligne qui dit comment le jouer : le choisir dans « Créer une session » ou
+dans « Démarrer la session » d'un événement. Une fois choisi, c'est une session ordinaire, et
+« Démarrer » réapparaît. Raisons : vous avez voulu (Q256) qu'un brouillon ne devienne visible
+qu'au moment d'en faire une session ; s'il pouvait être joué en caché, on choisirait ensuite à
+la création une session déjà en cours, voire finie. Et un brouillon jamais lancé n'est jamais
+terminé : il n'entre dans aucune statistique, aucun badge, aucun championnat, sans aucun
+filtre à écrire (Q255 devient sans objet). Ce que l'on perd : jouer une partie de test en privé.
+Réponse PO (2026-10-07) : d'accord ; un brouillon ne peut pas être lancé tant qu'il n'a pas été
+choisi à la création d'une session.
+
+**Q262 ☑ — Le `super_admin` doit-il pouvoir tout modifier dans toute session ?**
+Constat (2026-10-07, relevé dans le code) : votre réponse à Q254 parle d'une règle
+universelle, mais ce n'est pas l'état actuel. Sur une session qu'il n'organise pas, le
+`super_admin` peut aujourd'hui la lire, changer ses natures, son compte rendu et le marquage
+championnat (Q130, plan 29) ; il ne peut ni modifier son nom, son lieu ou ses horaires, ni gérer
+participants, équipes, trous, scores ou photos, ni la supprimer. Pour un brouillon, le plan 37
+lui donne exactement ces mêmes droits.
+Suggestion : le traiter à part, dans un plan court consacré au `super_admin`, et ne pas
+l'inclure dans le plan 37. En base, c'est simple (la fonction qui dit « organisateur de la
+session » peut répondre oui pour le `super_admin`, et toutes les règles d'écriture suivent) ;
+mais chaque écran de session décide aujourd'hui de ce qu'il affiche selon votre rôle dans la
+session, et c'est cela qu'il faut reprendre, écran par écran, pour toutes les sessions et pas
+seulement les brouillons.
+Réponse PO (2026-10-07) : **oui, le `super_admin` peut tout modifier dans toute session** ;
+changement jugé mineur, fait dans le plan 37, sans plan à part. Il a sur toute session les
+droits d'un organisateur, sans en devenir participant. Seule réserve, technique : le panneau de
+création ne lui propose que ses propres brouillons, pas ceux de toute l'app.
