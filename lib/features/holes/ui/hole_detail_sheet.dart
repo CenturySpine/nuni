@@ -12,6 +12,7 @@ import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_button.dart';
 import '../../../shared/nuni_error_banner.dart';
+import '../../../shared/nuni_linked_text.dart';
 import '../../../shared/nuni_loading.dart';
 import '../../../shared/nuni_status_pill.dart';
 import '../../stats/ui/hole_stats_section.dart';
@@ -119,7 +120,7 @@ class _HoleDetailContent extends ConsumerWidget {
         ),
         if (hole.description != null && hole.description!.isNotEmpty) ...[
           const SizedBox(height: 12),
-          Text(
+          NuniLinkedText(
             hole.description!,
             style: Theme.of(context).textTheme.bodyMedium
                 ?.copyWith(color: scheme.onSurfaceVariant),

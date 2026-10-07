@@ -11,6 +11,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_empty_state.dart';
 import '../../../shared/nuni_error_banner.dart';
 import '../../../shared/nuni_grouped_list.dart';
+import '../../../shared/nuni_linked_text.dart';
 import '../../../shared/nuni_loading.dart';
 import '../../../shared/nuni_map_attribution.dart';
 import '../../../shared/nuni_status_pill.dart';
@@ -107,7 +108,7 @@ class _SpotTile extends StatelessWidget {
           else if (spot.address != null)
             Text(spot.address!),
           if (spot.description != null)
-            Text(
+            NuniLinkedText(
               spot.description!,
               style: textTheme.bodySmall?.copyWith(
                 color: scheme.onSurfaceVariant,

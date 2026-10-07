@@ -6,6 +6,7 @@ import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/nuni_card.dart';
+import '../../../shared/nuni_linked_text.dart';
 import '../domain/session.dart';
 import '../domain/session_tag.dart';
 
@@ -92,14 +93,15 @@ class SessionReportCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          Text(
-            text.isEmpty ? l10n.sessionsReportEmpty : text,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: text.isEmpty
-                  ? Theme.of(context).colorScheme.onSurfaceVariant
-                  : null,
-            ),
-          ),
+          if (text.isEmpty)
+            Text(
+              l10n.sessionsReportEmpty,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            )
+          else
+            NuniLinkedText(text, style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
     );

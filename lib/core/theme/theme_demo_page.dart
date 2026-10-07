@@ -11,6 +11,7 @@ import '../../shared/nuni_error_banner.dart';
 import '../../shared/nuni_grouped_list.dart';
 import '../../shared/nuni_hero.dart';
 import '../../shared/nuni_icon_tile.dart';
+import '../../shared/nuni_linked_text.dart';
 import '../../shared/nuni_list_card.dart';
 import '../../shared/nuni_loading.dart';
 import '../../shared/nuni_logo.dart';
@@ -218,6 +219,12 @@ class _ThemeDemoPageState extends State<ThemeDemoPage>
           Text('Title medium', style: text.titleMedium),
           Text('Corps de texte courant, lisible.', style: text.bodyMedium),
           Text('Légende secondaire', style: text.bodySmall),
+          const SizedBox(height: 8),
+          NuniLinkedText(
+            'Texte libre avec liens : https://nuni.centuryspine.org, '
+            'www.openstreetmap.org ou contact@example.org.',
+            style: text.bodyMedium,
+          ),
           gap,
           const NuniSectionHeader(title: 'Boutons'),
           NuniButton(

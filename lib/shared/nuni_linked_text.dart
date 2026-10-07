@@ -5,9 +5,10 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../core/theme/app_theme.dart';
 
-/// Free text whose web addresses and e-mail addresses are tappable (plan 23:
-/// event descriptions and comments). A web link opens in a new tab, an
-/// e-mail address in the mail app.
+/// Free text whose web addresses and e-mail addresses are tappable: every text
+/// a user types for others to read (event descriptions and comments, hole and
+/// spot descriptions, session reports, played-hole comments). A web link opens
+/// in a new tab, an e-mail address in the mail app.
 class NuniLinkedText extends StatefulWidget {
   const NuniLinkedText(this.text, {super.key, this.style});
 

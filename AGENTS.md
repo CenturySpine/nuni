@@ -255,6 +255,9 @@ GitHub Actions (Q17).
   quelques vignettes (liste des trous, 2026-09-26). Seule exception : la vue agrandie qui
   s'ouvre quand on touche une image, toujours `NuniPhotoViewer` (galerie de session, fiche
   trou), affiche la photo d'origine, non réduite (PO, 2026-09-26, Q203).
+- Textes libres saisis pour être lus par d'autres (descriptions, commentaires, compte rendu,
+  note d'un trou joué) : toujours affichés par `NuniLinkedText` (`lib/shared/`), jamais par un
+  `Text` nu, pour que leurs adresses web et e-mail soient cliquables (Q272).
 - Photos de trou et de session (plan 30) : une miniature de 256 px vit à côté de chaque photo
   (`thumbnailPath` de `lib/shared/photo_bytes.dart`, chemin dérivé, jamais en base). Envoi,
   suppression et copie passent par l'extension `PhotoStorage`

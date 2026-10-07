@@ -5,6 +5,7 @@ import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_card.dart';
 import '../../../shared/nuni_icon_tile.dart';
+import '../../../shared/nuni_linked_text.dart';
 import '../../../shared/nuni_status_pill.dart';
 import '../../sessions/domain/scoring_mode.dart';
 import '../domain/live_team.dart';
@@ -116,7 +117,7 @@ class PlayedHoleCard extends StatelessWidget {
                     ),
                     if (comment != null && comment.isNotEmpty) ...[
                       const SizedBox(height: 6),
-                      Text(
+                      NuniLinkedText(
                         comment,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontStyle: FontStyle.italic,

@@ -3109,3 +3109,30 @@ disparaît pour tout co-organisateur, venu ou non, faute de bouton pour retirer 
 veut pouvoir nommer et retirer un co-organisateur, qu'il ait rejoint la session ou non :
 couronne qui bascule, retenue. Les deux exceptions (créateur, soi-même) sont appliquées comme
 dit dans la suggestion, à corriger à l'essai si besoin.
+
+## Liens cliquables dans les textes libres (2026-10-07)
+
+**Q272 ☑ — Rendre cliquables les liens des descriptions, commentaires et comptes rendus ?**
+Demande PO (2026-10-07) : les textes de description, commentaires, compte rendu, etc. doivent
+rendre leurs liens cliquables.
+Constat : le planning (plan 23) le faisait déjà, pour la description d'un événement et ses
+commentaires (`NuniLinkedText` : adresses `http(s)://` et `www.`, adresses e-mail). Quatre
+autres textes libres s'affichaient en texte brut : la description d'un trou (fiche trou), celle
+d'un spot (liste des spots), le compte rendu d'une session (salle des présents, détail d'une
+session de l'historique) et la note d'un trou joué (carte du trou dans la partie).
+Fait : les quatre passent par `NuniLinkedText`, même règle que le planning. Un lien web s'ouvre
+dans un nouvel onglet, une adresse e-mail dans l'application de messagerie ; le texte affiché
+reste celui saisi, et la ponctuation qui suit un lien (« voir https://…, puis ») n'en fait pas
+partie. Pas de format de lien nommé (texte différent de l'adresse, comme en Markdown) : seule
+l'adresse écrite en toutes lettres devient un lien. La galerie `/dev/theme` montre le composant.
+
+**Q273 ☐ — Liens cliquables aussi dans le compte rendu de l'export PDF ?**
+Constat : l'export PDF d'une session (plan 24) reprend son compte rendu en texte simple. Les
+lecteurs PDF courants (celui de Chrome, Adobe Acrobat, Aperçu sur Mac, l'aperçu de l'iPhone)
+repèrent eux-mêmes une adresse `https://…` écrite dans un PDF et la rendent cliquable ; ce n'est
+pas garanti partout (certaines visionneuses Android ne le font pas, et une adresse `www.` sans
+`https://` est moins souvent reconnue).
+Suggestion : ne rien changer. Le PDF sert surtout à partager une feuille de score, le compte rendu
+y est secondaire, et la plupart des lecteurs font déjà le travail ; inscrire les liens dans le
+PDF reste possible plus tard (la bibliothèque `pdf` le permet) si un lecteur utilisé par le club
+ne les reconnaît pas.
