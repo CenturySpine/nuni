@@ -11,19 +11,19 @@ l'historique ; Q278 : un seul réglage pour les deux pages). **Plan validé par 
 `20261008072303_history_snapshots_others.sql`, section « plan 38 » de `rls_smoke.sql`, app,
 tests Dart (562 réussis, analyse sans avertissement), `AGENTS.md`.
 
-**Pas encore fait, faute d'accès à la base depuis la session de l'assistant** (aucun identifiant
-Supabase dans son environnement) :
-- étape 2 : migration en production et `rls_smoke.sql` ;
-- étape 10 : essai dans le navigateur avec le compte du PO.
+**Code commité et poussé sur `main` le 2026-10-08**, à la demande du PO, avant la migration
+(la session de l'assistant qui l'a écrit n'avait pas accès à la base ; la migration n'avait été
+essayée que sur une base PostgreSQL locale réduite).
 
-La migration et la section de tests ont seulement été exécutées sur une base PostgreSQL locale
-réduite (tables et fonctions simplifiées, sans PostGIS ni Supabase) : la fonction se crée, les 7
-contrôles de la section passent. Cela vérifie la syntaxe et la règle de complément, pas
-l'exécution sur le vrai schéma.
+**Étape 2 faite le 2026-10-08**, depuis une autre session de l'assistant, qui avait accès à la
+base : seule `20261008072303_history_snapshots_others.sql` était en attente, `npx supabase db
+push` l'a appliquée, puis `rls_smoke.sql` en production : 203 tests sur 203, `not_passed` vide,
+`leftovers` à 0.
 
-**Code commité et poussé sur `main` le 2026-10-08**, à la demande du PO, avant la migration.
+**Essai du PO le 2026-10-08** : la section « Autres sessions » de l'historique s'affiche.
 
-**Reste** : étape 2 (migration en production et `rls_smoke.sql`, par le PO depuis son poste), étape 10 et essai du PO.
+**Plan clôturé par le PO le 2026-10-08**, sans l'étape 10 (essai par l'assistant dans le
+navigateur intégré), qu'il a jugée inutile. Build Vercel du commit `63800f2` réussi.
 
 ## Demande du PO (reformulée)
 
@@ -225,6 +225,10 @@ Rien. Aucune requête en plus, aucun élément visible en plus.
 
 ## Critères d'acceptation
 
+Clôture du PO le 2026-10-08 : seuls sont cochés les critères vérifiés. Les autres n'ont pas été
+essayés dans le navigateur (étape 10 abandonnée) ; la répartition des sessions et la règle du
+bandeau sont couvertes par les tests unitaires, et le PO a vu la section de l'historique.
+
 - [ ] Un compte qui n'est pas `super_admin` voit le même accueil et le même historique qu'avant,
   sans requête en plus.
 - [ ] Accueil du `super_admin` : « Autres sessions » sous ses sessions, sans aucune session
@@ -239,7 +243,7 @@ Rien. Aucune requête en plus, aucun élément visible en plus.
 - [ ] Le bandeau rouge apparaît sur les cinq écrans quand il est hors participation, et jamais
   quand il est participant.
 - [ ] Ouvrir une session d'un autre n'y écrit rien (pas de ligne dans `session_members`).
-- [ ] `rls_smoke.sql` vert en production ; chaînes EN et FR ; analyse sans avertissement ; tests
+- [x] `rls_smoke.sql` vert en production ; chaînes EN et FR ; analyse sans avertissement ; tests
   verts.
 
 ## Hors périmètre
