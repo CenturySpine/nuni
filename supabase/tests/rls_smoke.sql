@@ -2300,6 +2300,96 @@ reset role;
 reset request.jwt.claims;
 drop table test_p37q;
 
+-- ===== Plan 38: every completed session in a super_admin's history =====
+-- "foreign" (association 2) runs three sessions: "alone", completed with nobody else;
+-- "with_admin", completed with the super_admin as a plain participant; "waiting", left in its
+-- waiting room. The owner (association 1) completes "home_asso". The super_admin has no
+-- association at first, then joins association 1. Checked by session id, since the base holds
+-- real sessions too: what the super_admin gets plus history_snapshots is every completed one.
+create temp table test_p38 (name text primary key, id uuid);
+grant select, insert on test_p38 to authenticated;
+
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000008","role":"authenticated"}';
+insert into test_p38 (name, id)
+select n, (create_session(jsonb_build_object('kind', 'individual', 'scoring_mode', 'stroke_play',
+  'ranking_direction', 'asc', 'spot_id', 'd0000000-0000-0000-0000-000000000002'))).id
+from unnest(array['alone', 'with_admin', 'waiting']) n;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000001","role":"authenticated"}';
+insert into test_p38 (name, id)
+select 'home_asso', (create_session(jsonb_build_object('kind', 'individual',
+  'scoring_mode', 'stroke_play', 'ranking_direction', 'asc',
+  'spot_id', 'd0000000-0000-0000-0000-000000000037'))).id;
+reset role;
+reset request.jwt.claims;
+insert into session_members (session_id, user_id, role)
+select id, 'a0000000-0000-0000-0000-000000000006', 'player' from test_p38 where name = 'with_admin';
+update sessions set status = 'completed', started_at = now(), ended_at = now()
+where id in (select id from test_p38 where name in ('alone', 'with_admin', 'home_asso'));
+
+-- Records which fixture sessions the caller gets, and whether it fits history_snapshots.
+create temp table test_p38_seen (label text, alone boolean, with_admin boolean, waiting boolean,
+  home_asso boolean, disjoint boolean, covers boolean);
+grant select, insert on test_p38_seen to authenticated;
+create or replace function pg_temp.p38_check(p_label text)
+returns void
+language plpgsql
+as $$
+declare
+  v_others uuid[] := array(
+    select (e -> 'session' ->> 'id')::uuid from jsonb_array_elements(history_snapshots_others()) e);
+  v_history uuid[] := array(
+    select (e -> 'session' ->> 'id')::uuid from jsonb_array_elements(history_snapshots()) e);
+begin
+  insert into test_p38_seen
+  select p_label,
+    (select id from test_p38 where name = 'alone') = any(v_others),
+    (select id from test_p38 where name = 'with_admin') = any(v_others),
+    (select id from test_p38 where name = 'waiting') = any(v_others),
+    (select id from test_p38 where name = 'home_asso') = any(v_others),
+    not (v_others && v_history),
+    cardinality(v_others) + cardinality(v_history)
+      = (select count(*) from sessions where status = 'completed');
+end;
+$$;
+
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000006","role":"authenticated"}';
+select pg_temp.p38_check('admin_without_association');
+reset role;
+reset request.jwt.claims;
+update players set association_id = 'c0000000-0000-0000-0000-000000000001'
+where user_id = 'a0000000-0000-0000-0000-000000000006';
+set role authenticated;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000006","role":"authenticated"}';
+select pg_temp.p38_check('admin_in_association');
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000007","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'others_empty_for_association_member', history_snapshots_others() = '[]'::jsonb;
+set request.jwt.claims = '{"sub":"a0000000-0000-0000-0000-000000000008","role":"authenticated"}';
+insert into test_results (test, passed)
+select 'others_empty_for_session_creator', history_snapshots_others() = '[]'::jsonb;
+reset role;
+reset request.jwt.claims;
+update players set association_id = null where user_id = 'a0000000-0000-0000-0000-000000000006';
+
+insert into test_results (test, passed)
+select 'others_' || label,
+  case label
+    -- Without an association: every completed session they didn't take part in.
+    when 'admin_without_association' then alone and not with_admin and not waiting and home_asso
+    -- In association 1: its sessions stay in history_snapshots.
+    else alone and not with_admin and not waiting and not home_asso
+  end
+from test_p38_seen;
+insert into test_results (test, passed)
+select 'others_complements_history_' || label, disjoint and covers from test_p38_seen;
+insert into test_results (test, passed)
+select 'others_checked_twice', (select count(*) from test_p38_seen) = 2;
+drop function pg_temp.p38_check(text);
+drop table test_p38_seen;
+drop table test_p38;
+
 -- ===== Cleanup =====
 delete from sessions where event_id in (select id from test_events);
 delete from events where association_id in ('c0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000002');

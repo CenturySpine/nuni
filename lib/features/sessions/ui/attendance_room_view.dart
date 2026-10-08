@@ -34,6 +34,7 @@ import 'invite_sheet.dart';
 import 'member_join_indicator.dart';
 import 'session_nature.dart';
 import 'session_nature_rules.dart';
+import 'super_admin_outsider_banner.dart';
 
 /// A session without scorecard (plan 29) while it's a draft or live: its
 /// natures, place, attendees and report -- no holes, scores or ranking. The
@@ -252,6 +253,9 @@ class _AttendanceRoomViewState extends ConsumerState<AttendanceRoomView> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
         children: [
+          // Plan 38 (Q277): a super_admin outside it; what follows opens
+          // with its own spacing, the hero being a member's only.
+          SuperAdminOutsiderBanner(isMember: me != null),
           if (me != null)
             NuniHero(
               child: Row(

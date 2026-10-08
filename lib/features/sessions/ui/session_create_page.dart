@@ -52,6 +52,7 @@ import 'scoring_mode_label.dart';
 import 'session_kind_label.dart';
 import 'session_nature.dart';
 import 'session_nature_rules.dart';
+import 'super_admin_outsider_banner.dart';
 import 'scoring_mode_info_sheet.dart';
 
 /// The session form (plan 31): `/session/new` creates a session,
@@ -125,6 +126,10 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
   /// Edit mode: the session as loaded, and what the caller may change.
   Session? _original;
   bool _isOwner = true;
+
+  /// Edit mode: whether I take part in the session (plan 38: a super_admin
+  /// outside it gets the warning banner). Always true when creating one.
+  bool _isMember = true;
   bool _isStaff = false;
   Object? _loadError;
 
@@ -175,6 +180,7 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
       setState(() {
         _original = session;
         _isOwner = canOrganizeSession(role, isSuperAdmin: isSuperAdmin);
+        _isMember = role != null;
         _isStaff = isStaff;
         _title.text = session.title ?? '';
         _report.text = session.comment ?? '';
@@ -663,6 +669,11 @@ class _SessionCreatePageState extends ConsumerState<SessionCreatePage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: [
+          // Plan 38 (Q277): a super_admin editing a session outside it.
+          SuperAdminOutsiderBanner(
+            isMember: _isMember,
+            padding: const EdgeInsets.only(bottom: 20),
+          ),
           // The session belongs to its creator's association (plan 18),
           // shown read-only.
           if (association != null) ...[

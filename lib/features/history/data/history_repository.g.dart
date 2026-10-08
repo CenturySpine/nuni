@@ -50,6 +50,62 @@ final class HistoryEntriesProvider
 
 String _$historyEntriesHash() => r'd330ff3d2765909459de7766ce92ddc0b844e482';
 
+/// A super_admin's "Autres sessions" in the history (plan 38); empty for
+/// anyone else, without asking the base. Read after the history itself, so
+/// that whatever refreshes it (a session deleted, edited, its cover
+/// changed...) refreshes these too.
+
+@ProviderFor(otherHistoryEntries)
+final otherHistoryEntriesProvider = OtherHistoryEntriesProvider._();
+
+/// A super_admin's "Autres sessions" in the history (plan 38); empty for
+/// anyone else, without asking the base. Read after the history itself, so
+/// that whatever refreshes it (a session deleted, edited, its cover
+/// changed...) refreshes these too.
+
+final class OtherHistoryEntriesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<HistoryEntry>>,
+          List<HistoryEntry>,
+          FutureOr<List<HistoryEntry>>
+        >
+    with
+        $FutureModifier<List<HistoryEntry>>,
+        $FutureProvider<List<HistoryEntry>> {
+  /// A super_admin's "Autres sessions" in the history (plan 38); empty for
+  /// anyone else, without asking the base. Read after the history itself, so
+  /// that whatever refreshes it (a session deleted, edited, its cover
+  /// changed...) refreshes these too.
+  OtherHistoryEntriesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'otherHistoryEntriesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$otherHistoryEntriesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<HistoryEntry>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<HistoryEntry>> create(Ref ref) {
+    return otherHistoryEntries(ref);
+  }
+}
+
+String _$otherHistoryEntriesHash() =>
+    r'33d8999fc5e393aa1c56ce7547444dd33794383b';
+
 @ProviderFor(sessionPhotos)
 final sessionPhotosProvider = SessionPhotosFamily._();
 

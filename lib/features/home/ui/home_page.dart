@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/authorization/authorization_repository.dart';
 import '../../../core/errors/app_error_message.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
@@ -25,11 +26,13 @@ import '../../sessions/domain/my_session_entry.dart';
 import '../../sessions/domain/session.dart';
 import '../../sessions/domain/session_kind.dart';
 import '../../sessions/domain/session_member.dart';
+import '../../sessions/ui/other_sessions_section.dart';
 import '../../sessions/ui/session_nature.dart';
 import '../../sessions/ui/start_new_session.dart';
 
 /// Home tab body (plan 09): create, join, my ongoing sessions, recent
-/// sessions. Full history (beyond the short "Dernières sessions" list)
+/// sessions; for a super_admin, everyone else's ongoing sessions below
+/// (plan 38). Full history (beyond the short "Dernières sessions" list)
 /// stays the History tab's job (plan 10).
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -37,6 +40,7 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final isSuperAdmin = ref.watch(isSuperAdminProvider).value ?? false;
 
     // No own Scaffold/AppBar: AppShell already provides the shared one
     // (title, settings action) for all three bottom-nav tabs. Pull to
@@ -76,6 +80,15 @@ class HomePage extends ConsumerWidget {
             emptyMessage: l10n.homeRecentEmpty,
             entries: ref.watch(myRecentSessionsProvider),
           ),
+          // A super_admin's other sessions (plan 38), refreshed along with
+          // my ongoing ones they're built on.
+          if (isSuperAdmin) ...[
+            const SizedBox(height: 28),
+            OtherSessionsSection<MySessionEntry>(
+              entries: (ref) => ref.watch(otherOngoingSessionsProvider),
+              itemBuilder: (entry) => _SessionCard(entry: entry),
+            ),
+          ],
         ],
       ),
     );
@@ -247,10 +260,13 @@ class _SessionCard extends StatelessWidget {
       ),
       SessionStatus.completed => null,
     };
-    final roleLabel = switch (entry.role) {
-      MemberRole.owner => l10n.homeRoleOwner,
-      MemberRole.player => l10n.homeRolePlayer,
-      null => l10n.homeRoleSpectator,
+    // A super_admin's other sessions (plan 38, Q276): who created it, the
+    // role there telling nothing.
+    final roleLabel = switch ((entry.role, entry.creatorName)) {
+      (MemberRole.owner, _) => l10n.homeRoleOwner,
+      (MemberRole.player, _) => l10n.homeRolePlayer,
+      (null, final creator?) => l10n.sessionCreatedBy(creator),
+      (null, null) => l10n.homeRoleSpectator,
     };
     final isTeam = session.kind == SessionKind.team;
 

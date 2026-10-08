@@ -243,6 +243,62 @@ final class MyRecentSessionsProvider
 
 String _$myRecentSessionsHash() => r'5265b7d1470f51c0b3dea8e4d559a26b83a3a235';
 
+/// A super_admin's "Autres sessions" on home (plan 38); empty for anyone
+/// else. Built on my ongoing sessions -- the ones to leave out -- so that
+/// whatever refreshes them (a session started, ended, deleted, joined...)
+/// refreshes these too.
+
+@ProviderFor(otherOngoingSessions)
+final otherOngoingSessionsProvider = OtherOngoingSessionsProvider._();
+
+/// A super_admin's "Autres sessions" on home (plan 38); empty for anyone
+/// else. Built on my ongoing sessions -- the ones to leave out -- so that
+/// whatever refreshes them (a session started, ended, deleted, joined...)
+/// refreshes these too.
+
+final class OtherOngoingSessionsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<MySessionEntry>>,
+          List<MySessionEntry>,
+          FutureOr<List<MySessionEntry>>
+        >
+    with
+        $FutureModifier<List<MySessionEntry>>,
+        $FutureProvider<List<MySessionEntry>> {
+  /// A super_admin's "Autres sessions" on home (plan 38); empty for anyone
+  /// else. Built on my ongoing sessions -- the ones to leave out -- so that
+  /// whatever refreshes them (a session started, ended, deleted, joined...)
+  /// refreshes these too.
+  OtherOngoingSessionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'otherOngoingSessionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$otherOngoingSessionsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<MySessionEntry>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<MySessionEntry>> create(Ref ref) {
+    return otherOngoingSessions(ref);
+  }
+}
+
+String _$otherOngoingSessionsHash() =>
+    r'02c23d10d48fe573b577c5bb645e5f7f9e9b8340';
+
 /// Live sessions of my association I'm not in (plan 26, Q132), for home.
 
 @ProviderFor(associationLiveSessions)

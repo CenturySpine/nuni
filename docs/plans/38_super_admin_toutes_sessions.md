@@ -7,6 +7,24 @@ Q274 à Q278 tranchées (Q274 : pas de sessions terminées sur l'accueil, et le 
 l'historique ; Q278 : un seul réglage pour les deux pages). **Plan validé par le PO le
 2026-10-08.**
 
+**Implémenté le 2026-10-08** (étapes 1, 3 à 9 et 11) : migration
+`20261008072303_history_snapshots_others.sql`, section « plan 38 » de `rls_smoke.sql`, app,
+tests Dart (562 réussis, analyse sans avertissement), `AGENTS.md`.
+
+**Pas encore fait, faute d'accès à la base depuis la session de l'assistant** (aucun identifiant
+Supabase dans son environnement) :
+- étape 2 : migration en production et `rls_smoke.sql` ;
+- étape 10 : essai dans le navigateur avec le compte du PO.
+
+La migration et la section de tests ont seulement été exécutées sur une base PostgreSQL locale
+réduite (tables et fonctions simplifiées, sans PostGIS ni Supabase) : la fonction se crée, les 7
+contrôles de la section passent. Cela vérifie la syntaxe et la règle de complément, pas
+l'exécution sur le vrai schéma.
+
+**Code commité et poussé sur `main` le 2026-10-08**, à la demande du PO, avant la migration.
+
+**Reste** : étape 2 (migration en production et `rls_smoke.sql`, par le PO depuis son poste), étape 10 et essai du PO.
+
 ## Demande du PO (reformulée)
 
 1. **Accueil** : le `super_admin` voit, en plus de ses sessions, **toutes les sessions non
@@ -133,11 +151,18 @@ Rien. Aucune requête en plus, aucun élément visible en plus.
 ## Décisions techniques
 
 - **Accueil : aucune migration.** `SessionsRepository.otherOngoingSessions`, appelée seulement si
-  `isSuperAdmin` : une lecture de `sessions` sur les états `draft` et `live`, qui exclut en une
-  fois celles dont il est membre (jointure sur `session_members` filtrée sur lui, gardée
-  seulement si elle est vide : filtre d'absence géré par PostgREST), de la plus récente à la plus
-  ancienne (date de création). Les sessions déjà dans « Mes sessions en cours » (en direct de son
-  association) sont retirées côté app.
+  `isSuperAdmin` : une lecture de toutes les sessions `draft` et `live` (peu nombreuses par
+  nature), triées en Dart par `otherSessionsForHome` : ni celles dont il est membre, ni celles
+  en direct de son association (déjà dans « Mes sessions en cours »), de la plus récente à la
+  plus ancienne (date de création). Écart avec la première rédaction, qui prévoyait un filtre
+  d'absence côté serveur (PostgREST) : deux lectures simples, comme le reste du dépôt
+  (`_mySessionsByStatus`), sans dépendre d'une fonction de PostgREST impossible à essayer depuis
+  la session de l'assistant.
+- **Rafraîchissement par dépendance** : « Autres sessions » de l'accueil est construite sur « Mes
+  sessions en cours » (ses identifiants donnent les sessions à écarter), et celle de
+  l'historique est lue après l'historique. Tout ce qui relit déjà ces listes (session démarrée,
+  terminée, supprimée, rejointe, modifiée, tirer vers le bas, retour dans l'app) relit donc
+  aussi les autres sessions, sans invalidation à ajouter ailleurs.
 - **Historique : une migration, qui ne fait qu'ajouter une fonction** (règle 8 d'`AGENTS.md`).
   Nouvelle RPC `history_snapshots_others()`, même forme que `history_snapshots` (une liste de
   `session_snapshot`, lue par le même modèle `LiveSessionSnapshot` et le même calcul des
@@ -161,10 +186,9 @@ Rien. Aucune requête en plus, aucun élément visible en plus.
   `LibreRankingDirectionPref` (`shared_preferences`, clé `nuni.show_other_sessions`, `true` par
   défaut), lu par les deux pages : le changer sur l'une met l'autre à jour aussitôt. L'en-tête à
   interrupteur est un seul widget, partagé par les deux pages.
-- **Bandeau** : un widget partagé (`lib/shared/`), couleurs lues dans `colorScheme` (`error` /
-  `onError`), jamais en dur ; montré dans la galerie `/dev/theme`.
-- **Rafraîchissement** : les deux nouveaux fournisseurs sont invalidés par le tirer-vers-le-bas
-  de leur page, par `ResumeRefresher`, et partout où `historyEntriesProvider` l'est déjà.
+- **Bandeau** : `NuniAlertBanner` (`lib/shared/`), couleurs lues dans `colorScheme` (`error` /
+  `onError`), jamais en dur, montré dans la galerie `/dev/theme` ; posé sur les écrans par
+  `SuperAdminOutsiderBanner` (`features/sessions/ui/`), qui décide seul de s'afficher.
 - Chaînes dans `app_en.arb` et `app_fr.arb` : titre de section, interrupteur, « Créée par … »,
   texte du bandeau.
 

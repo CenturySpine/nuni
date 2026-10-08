@@ -7,12 +7,14 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 // feature's `Session` (mirroring the `sessions` table).
 import 'package:supabase_flutter/supabase_flutter.dart' hide Session;
 
+import '../../../core/authorization/authorization_repository.dart';
 import '../../../core/supabase/change_signal.dart';
 import '../../../core/supabase/supabase_providers.dart';
 import '../../../core/weather/weather.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../profile/domain/player.dart';
 import '../domain/my_session_entry.dart';
+import '../domain/other_sessions.dart';
 import '../domain/ranking_direction.dart';
 import '../domain/scoring_mode.dart';
 import '../domain/session.dart';
@@ -400,6 +402,45 @@ class SessionsRepository {
     ];
   }
 
+  /// A super_admin's "Autres sessions" on home (plan 38): every session not
+  /// completed that home doesn't show already ([otherSessionsForHome]: not
+  /// one of [memberSessionIds], nor a live one of [myAssociationId]), with
+  /// its creator's name. Readable since Q254 (`can_read_session`). Few by
+  /// nature, so read whole and sorted out in Dart -- plain queries, same
+  /// tradeoff as [_mySessionsByStatus].
+  Future<List<MySessionEntry>> otherOngoingSessions({
+    required Set<String> memberSessionIds,
+    required String? myAssociationId,
+  }) async {
+    final rows = await _client.from('sessions').select().inFilter(
+      'status',
+      const ['draft', 'live'],
+    );
+    final sessions = otherSessionsForHome(
+      [for (final row in rows) Session.fromJson(row)],
+      memberSessionIds: memberSessionIds,
+      myAssociationId: myAssociationId,
+    );
+    if (sessions.isEmpty) return const [];
+
+    final nameRows = await _client
+        .from('players')
+        .select('user_id, name')
+        .inFilter('user_id', {for (final s in sessions) s.ownerId}.toList());
+    final names = {
+      for (final row in nameRows)
+        row['user_id'] as String: row['name'] as String,
+    };
+    return [
+      for (final session in sessions)
+        MySessionEntry(
+          session: session,
+          role: null,
+          creatorName: names[session.ownerId],
+        ),
+    ];
+  }
+
   /// Two plain queries instead of a nested PostgREST embed filter, same
   /// tradeoff as `_recentPlayerIds`: `session_members` has no status column
   /// to filter on directly.
@@ -766,6 +807,24 @@ Future<List<MySessionEntry>> myOngoingSessions(Ref ref) =>
 @riverpod
 Future<List<MySessionEntry>> myRecentSessions(Ref ref) =>
     ref.watch(sessionsRepositoryProvider).myRecentSessions();
+
+/// A super_admin's "Autres sessions" on home (plan 38); empty for anyone
+/// else. Built on my ongoing sessions -- the ones to leave out -- so that
+/// whatever refreshes them (a session started, ended, deleted, joined...)
+/// refreshes these too.
+@riverpod
+Future<List<MySessionEntry>> otherOngoingSessions(Ref ref) async {
+  if (!await ref.watch(isSuperAdminProvider.future)) return const [];
+  final mine = await ref.watch(myOngoingSessionsProvider.future);
+  final associationId = (await ref.watch(myPlayerProvider.future))
+      .associationId;
+  return ref
+      .watch(sessionsRepositoryProvider)
+      .otherOngoingSessions(
+        memberSessionIds: {for (final entry in mine) entry.session.id},
+        myAssociationId: associationId,
+      );
+}
 
 /// Live sessions of my association I'm not in (plan 26, Q132), for home.
 @riverpod

@@ -40,6 +40,7 @@ import '../../sessions/ui/championship_toggle.dart';
 import '../../sessions/ui/scoring_mode_label.dart';
 import '../../sessions/ui/session_nature.dart';
 import '../../sessions/ui/session_nature_rules.dart';
+import '../../sessions/ui/super_admin_outsider_banner.dart';
 import '../../stats/domain/eligible_session.dart';
 import '../data/history_repository.dart';
 import '../domain/history_entry.dart';
@@ -199,6 +200,11 @@ class _DetailView extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
       children: [
+        // Plan 38 (Q277): a super_admin outside it.
+        SuperAdminOutsiderBanner(
+          isMember: entry.snapshot.memberFor(currentUserId) != null,
+          padding: const EdgeInsets.only(top: 8, bottom: 12),
+        ),
         Text(
           sessionHeading(session),
           style: Theme.of(context).textTheme.headlineSmall,

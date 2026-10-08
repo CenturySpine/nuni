@@ -51,6 +51,7 @@ import 'draft_session_notice.dart';
 import 'invite_sheet.dart';
 import 'member_join_indicator.dart';
 import 'session_nature.dart';
+import 'super_admin_outsider_banner.dart';
 
 /// `/session/:id`: the waiting room while `status = draft` (plan 07);
 /// `SessionLivePage` (plan 08) takes over the moment it leaves draft, via
@@ -478,6 +479,11 @@ class _WaitingRoomViewState extends ConsumerState<_WaitingRoomView> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             sliver: SliverList.list(
               children: [
+                // Plan 38 (Q277): a super_admin outside it.
+                SuperAdminOutsiderBanner(
+                  isMember: myMember != null,
+                  padding: const EdgeInsets.only(bottom: 16),
+                ),
                 NuniHero(
                   child: Row(
                     children: [

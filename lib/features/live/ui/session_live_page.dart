@@ -25,6 +25,7 @@ import '../../sessions/domain/session_member.dart';
 import '../../sessions/domain/session_tag.dart';
 import '../../sessions/ui/invite_sheet.dart';
 import '../../sessions/ui/session_nature.dart';
+import '../../sessions/ui/super_admin_outsider_banner.dart';
 import '../../stats/domain/eligible_session.dart';
 import '../../sessions/ui/scoring_mode_label.dart';
 import '../../profile/data/profile_repository.dart';
@@ -391,6 +392,11 @@ class _LiveViewState extends ConsumerState<_LiveView> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             sliver: SliverList.list(
               children: [
+                // Plan 38 (Q277): a super_admin outside it.
+                SuperAdminOutsiderBanner(
+                  isMember: snapshot.memberFor(currentUserId) != null,
+                  padding: const EdgeInsets.only(bottom: 12),
+                ),
                 if (isSpectator) ...[
                   NuniCard(
                     child: Row(

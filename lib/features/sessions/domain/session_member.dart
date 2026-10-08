@@ -25,6 +25,15 @@ MemberRole memberRoleFromPostgresValue(String value) =>
 bool canOrganizeSession(MemberRole? role, {required bool isSuperAdmin}) =>
     role == MemberRole.owner || isSuperAdmin;
 
+/// Whether a session screen shows the super_admin warning banner (plan 38,
+/// Q277): a super_admin in a session they don't take part in ([isMember]
+/// false), which they read and change through their role alone -- never
+/// when they play in it, organizer or not.
+bool isSuperAdminOutsider({
+  required bool isMember,
+  required bool isSuperAdmin,
+}) => isSuperAdmin && !isMember;
+
 /// Mirrors the `session_members` table (plan 03): the waiting-room pool.
 /// `teamId == null` means "not assigned to a team yet" (Q25).
 /// `checkedInAt == null` means added by the organizer or from an event, not

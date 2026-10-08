@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/authorization/authorization_repository.dart';
 import '../../../core/supabase/photo_storage.dart';
 import '../../../core/supabase/supabase_providers.dart';
 import '../../../shared/photo_bytes.dart';
@@ -26,6 +27,17 @@ class HistoryRepository {
   /// why this reuses `session_snapshot`'s shape instead of a slimmer one.
   Future<List<HistoryEntry>> fetchHistory() async {
     final List<dynamic> rows = await _client.rpc('history_snapshots');
+    return [
+      for (final row in rows)
+        HistoryEntry(LiveSessionSnapshot.fromJson(row as Map<String, Object?>)),
+    ];
+  }
+
+  /// Every completed session [fetchHistory] leaves out
+  /// (`history_snapshots_others` RPC, plan 38): a super_admin's "Autres
+  /// sessions", same shape, most recent first. Empty for anyone else.
+  Future<List<HistoryEntry>> fetchOtherHistory() async {
+    final List<dynamic> rows = await _client.rpc('history_snapshots_others');
     return [
       for (final row in rows)
         HistoryEntry(LiveSessionSnapshot.fromJson(row as Map<String, Object?>)),
@@ -133,6 +145,17 @@ final historyRepositoryProvider = Provider<HistoryRepository>(
 @riverpod
 Future<List<HistoryEntry>> historyEntries(Ref ref) =>
     ref.watch(historyRepositoryProvider).fetchHistory();
+
+/// A super_admin's "Autres sessions" in the history (plan 38); empty for
+/// anyone else, without asking the base. Read after the history itself, so
+/// that whatever refreshes it (a session deleted, edited, its cover
+/// changed...) refreshes these too.
+@riverpod
+Future<List<HistoryEntry>> otherHistoryEntries(Ref ref) async {
+  if (!await ref.watch(isSuperAdminProvider.future)) return const [];
+  await ref.watch(historyEntriesProvider.future);
+  return ref.watch(historyRepositoryProvider).fetchOtherHistory();
+}
 
 @riverpod
 Future<List<SessionPhoto>> sessionPhotos(Ref ref, String sessionId) =>

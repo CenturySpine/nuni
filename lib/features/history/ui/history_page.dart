@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/authorization/authorization_repository.dart';
 import '../../../core/errors/app_error_message.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/phosphor_icons.dart';
@@ -17,10 +18,12 @@ import '../../../shared/nuni_loading.dart';
 import '../../../shared/nuni_status_pill.dart';
 import '../../live/domain/live_team.dart';
 import '../../profile/data/profile_repository.dart';
+import '../../sessions/data/show_other_sessions_pref.dart';
 import '../../sessions/domain/session_kind.dart';
 import '../../sessions/ui/scoring_mode_label.dart';
 import '../../sessions/domain/session.dart';
 import '../../sessions/domain/session_tag.dart';
+import '../../sessions/ui/other_sessions_section.dart';
 import '../../sessions/ui/session_nature.dart';
 import '../../stats/domain/eligible_session.dart';
 import '../data/history_repository.dart';
@@ -32,6 +35,8 @@ import '../../../shared/nuni_photo_thumbnail.dart';
 /// elsewhere), most recent first. A discreet marker flags the ones the
 /// caller played in, a "Mes sessions" filter keeps only those, and a simple
 /// city filter remains. No session in progress here: those are on home.
+/// A super_admin also gets everyone else's below (plan 38), under the same
+/// filters.
 class HistoryPage extends ConsumerStatefulWidget {
   const HistoryPage({super.key});
 
@@ -73,11 +78,25 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
         _NatureFilter.championship => l10n.championshipTitle,
       };
 
+  bool _matches(HistoryEntry entry, String? myPlayerId) =>
+      (_cityFilter == null || entry.snapshot.session.city == _cityFilter) &&
+      (!_mineOnly || entry.playedBy(myPlayerId)) &&
+      (_natureFilter == null ||
+          _hasNature(entry.snapshot.session, _natureFilter!));
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final entriesAsync = ref.watch(historyEntriesProvider);
     final myPlayerId = ref.watch(myPlayerProvider).value?.id;
+    final isSuperAdmin = ref.watch(isSuperAdminProvider).value ?? false;
+    // Everyone else's, for the city filter (plan 38): only read while
+    // shown, like the section itself.
+    final others =
+        isSuperAdmin && (ref.watch(showOtherSessionsPrefProvider).value ?? true)
+        ? ref.watch(otherHistoryEntriesProvider).value ?? const <HistoryEntry>[]
+        : const <HistoryEntry>[];
+    final filtering = _cityFilter != null || _mineOnly || _natureFilter != null;
 
     // Pull to refresh (Q252), like home: the list is kept while the tab
     // stays open, and sessions complete, change or come back (plan 36)
@@ -94,7 +113,8 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           ),
         ),
         data: (entries) {
-          if (entries.isEmpty) {
+          // A super_admin keeps the list for "Autres sessions" (plan 38).
+          if (entries.isEmpty && !isSuperAdmin) {
             return _Pullable(
               child: NuniEmptyState(
                 icon: PhosphorIcons.clockCounterClockwise,
@@ -104,18 +124,13 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           }
 
           final cities = <String>{
-            for (final e in entries)
+            for (final e in [...entries, ...others])
               if (e.snapshot.session.city case final city? when city.isNotEmpty)
                 city,
           }.toList()..sort();
           final visible = [
             for (final e in entries)
-              if ((_cityFilter == null ||
-                      e.snapshot.session.city == _cityFilter) &&
-                  (!_mineOnly || e.playedBy(myPlayerId)) &&
-                  (_natureFilter == null ||
-                      _hasNature(e.snapshot.session, _natureFilter!)))
-                e,
+              if (_matches(e, myPlayerId)) e,
           ];
 
           return ListView(
@@ -169,7 +184,9 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
               if (visible.isEmpty)
                 NuniEmptyState(
                   icon: PhosphorIcons.clockCounterClockwise,
-                  message: l10n.historyEmptyMine,
+                  message: entries.isEmpty
+                      ? l10n.historyEmpty
+                      : l10n.historyEmptyMine,
                 ),
               for (final entry in visible) ...[
                 _HistoryCard(
@@ -177,6 +194,26 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                   playedByMe: entry.playedBy(myPlayerId),
                 ),
                 const SizedBox(height: 10),
+              ],
+              // Everyone else's (plan 38), under the same filters.
+              if (isSuperAdmin) ...[
+                const SizedBox(height: 18),
+                OtherSessionsSection<HistoryEntry>(
+                  entries: (ref) => ref
+                      .watch(otherHistoryEntriesProvider)
+                      .whenData(
+                        (list) => [
+                          for (final e in list)
+                            if (_matches(e, myPlayerId)) e,
+                        ],
+                      ),
+                  itemBuilder: (entry) => _HistoryCard(
+                    entry: entry,
+                    playedByMe: entry.playedBy(myPlayerId),
+                    creatorName: entry.creatorName,
+                  ),
+                  emptyMessage: filtering ? l10n.historyEmptyMine : null,
+                ),
               ],
             ],
           );
@@ -203,10 +240,17 @@ class _Pullable extends StatelessWidget {
 }
 
 class _HistoryCard extends ConsumerWidget {
-  const _HistoryCard({required this.entry, required this.playedByMe});
+  const _HistoryCard({
+    required this.entry,
+    required this.playedByMe,
+    this.creatorName,
+  });
 
   final HistoryEntry entry;
   final bool playedByMe;
+
+  /// Set on a super_admin's other sessions (plan 38, Q276).
+  final String? creatorName;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -295,6 +339,8 @@ class _HistoryCard extends ConsumerWidget {
                       l10n.sessionsAttendeesCount(
                         sessionPlayerCount(entry.snapshot),
                       ),
+                    if (creatorName case final creator?)
+                      l10n.sessionCreatedBy(creator),
                   ].join(' · '),
                   style: textTheme.bodySmall,
                 ),

@@ -1023,5 +1023,14 @@
   "sessionsRoomDemote": "Remove co-organizer",
   "sessionsDraftMakeConfirmTitle": "Make it a draft?",
   "sessionsDraftMakeConfirmMessage": "Participants who aren't co-organizers will no longer see it nor be able to join it, until it's picked in “Create a session”. Participants, teams and holes are kept.",
-  "sessionsDraftMakeConfirm": "Make it a draft"
+  "sessionsDraftMakeConfirm": "Make it a draft",
+  "otherSessionsTitle": "Other sessions",
+  "@otherSessionsTitle": {"description": "A super_admin's section, on home and in the history, listing the sessions of every account they don't take part in (plan 38)."},
+  "otherSessionsShowAll": "See every session",
+  "otherSessionsShowAllHelp": "Every account's, which you see as a super admin. A setting of this device, shared by home and history.",
+  "otherSessionsEmpty": "No other session for now.",
+  "sessionCreatedBy": "Created by {name}",
+  "@sessionCreatedBy": {"placeholders": {"name": {"type": "String"}}},
+  "superAdminOutsiderBanner": "You're not part of this session. You see and edit it with your super admin rights.",
+  "@superAdminOutsiderBanner": {"description": "Red banner on a session screen, for a super_admin who doesn't take part in the session (plan 38, Q277)."}
 }

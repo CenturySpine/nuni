@@ -968,5 +968,11 @@
   "sessionsRoomDemote": "Retirer le rôle de co-organisateur",
   "sessionsDraftMakeConfirmTitle": "Passer en brouillon ?",
   "sessionsDraftMakeConfirmMessage": "Les participants qui ne sont pas co-organisateurs ne la verront plus et ne pourront plus la rejoindre, jusqu'à ce qu'elle soit choisie dans « Créer une session ». Participants, équipes et trous sont gardés.",
-  "sessionsDraftMakeConfirm": "Passer en brouillon"
+  "sessionsDraftMakeConfirm": "Passer en brouillon",
+  "otherSessionsTitle": "Autres sessions",
+  "otherSessionsShowAll": "Voir toutes les sessions",
+  "otherSessionsShowAllHelp": "Celles de tous les comptes, que vous voyez en super admin. Réglage de cet appareil, commun à l'accueil et à l'historique.",
+  "otherSessionsEmpty": "Aucune autre session pour l'instant.",
+  "sessionCreatedBy": "Créée par {name}",
+  "superAdminOutsiderBanner": "Vous ne participez pas à cette session. Vous la voyez et la modifiez avec vos droits de super admin."
 }

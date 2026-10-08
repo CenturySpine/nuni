@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/nuni_alert_banner.dart';
 import '../../shared/nuni_avatar.dart';
 import '../../shared/nuni_badge_medal.dart';
 import '../../shared/nuni_button.dart';
@@ -407,6 +408,12 @@ class _ThemeDemoPageState extends State<ThemeDemoPage>
           ),
           gap,
           const NuniErrorBanner(message: 'Scores incomplets'),
+          gap,
+          const NuniAlertBanner(
+            message:
+                'Vous ne participez pas à cette session. Vous la voyez et la '
+                'modifiez avec vos droits de super admin.',
+          ),
           gap,
           const SizedBox(
             height: 160,

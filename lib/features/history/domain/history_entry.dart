@@ -42,6 +42,11 @@ class HistoryEntry {
         (team) => team.players.any((p) => p.playerId == playerId),
       );
 
+  /// The creator's name, shown on a super_admin's "Autres sessions" (plan
+  /// 38, Q276): the creator always stays an organizer, hence a member.
+  String? get creatorName =>
+      snapshot.memberFor(snapshot.session.ownerId)?.playerName;
+
   List<TeamStanding> get leaders => [
     for (final s in standings)
       if (s.position == 1) s,

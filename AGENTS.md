@@ -312,6 +312,14 @@ GitHub Actions (Q17).
   de leurs actions d'organisateur par `canOrganizeSession` (`session_member.dart`), jamais par
   le seul rôle. Ce qui dépend du vrai rôle dans la session (rejoindre un brouillon, brouillons
   proposés à la création) lit `session_members.role`.
+- Sessions des autres pour le `super_admin` (plan 38) : sous ses propres sessions, une section
+  « Autres sessions » (`OtherSessionsSection`) sur l'accueil (non terminées,
+  `otherOngoingSessionsProvider`, règle `otherSessionsForHome`) et dans l'historique
+  (terminées, RPC `history_snapshots_others`, complément exact de `history_snapshots`, vide pour
+  tout autre compte). Un seul interrupteur « Voir toutes les sessions » pour les deux pages
+  (`ShowOtherSessionsPref`, sur l'appareil, allumé par défaut). Sur tout écran de session
+  auquel il ne participe pas (aucune ligne dans `session_members`), bandeau rouge
+  `SuperAdminOutsiderBanner` (règle `isSuperAdminOutsider`) ; pas quand il y joue.
 
 ## Interdits
 
