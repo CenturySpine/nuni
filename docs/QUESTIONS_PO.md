@@ -3136,3 +3136,72 @@ Suggestion : ne rien changer. Le PDF sert surtout à partager une feuille de sco
 y est secondaire, et la plupart des lecteurs font déjà le travail ; inscrire les liens dans le
 PDF reste possible plus tard (la bibliothèque `pdf` le permet) si un lecteur utilisé par le club
 ne les reconnaît pas.
+
+## Le `super_admin` voit toutes les sessions sur son accueil (plan 38, 2026-10-08)
+
+**Q274 ☑ — Sessions terminées des autres sur l'accueil : toutes, ou les plus récentes ?**
+Constat : 12 sessions en production aujourd'hui ; chaque session jouée dans chacune des six
+associations s'y ajoute, sans fin. L'accueil charge ses listes à chaque ouverture et à chaque
+retour dans l'app : une liste qui grandit sans limite allonge ce chargement (sensible sur un
+mauvais réseau, plan 34) et le défilement.
+Suggestion : toutes les sessions non terminées des autres (brouillon, en préparation, en
+direct), qui restent peu nombreuses par nature ; et seulement les **20 dernières sessions
+terminées**, comme « Dernières sessions » se limite à 5. Les plus anciennes restent accessibles
+par leur adresse ; un historique complet de toutes les sessions (onglet Historique) serait un
+plan à part, s'il devient utile.
+Réponse PO (2026-10-08) : **aucune session terminée sur l'accueil**, ni des autres ni en plus des
+5 « Dernières sessions » : les sessions terminées sont l'affaire de l'historique. L'accueil ne
+montre donc, en plus, que les sessions non terminées des autres. Et **même mécanisme dans
+l'historique** : le `super_admin` y voit toutes les sessions terminées de tout le monde, ou
+seulement celles qui le concernent (l'historique d'aujourd'hui), avec son propre interrupteur,
+mémorisé sur l'appareil, allumé par défaut, les siennes en haut. L'historique ayant sa propre
+RPC, dont le filtre est écrit dans la fonction, cela demande une nouvelle fonction en base
+(migration qui ne fait qu'ajouter ; plan 38).
+
+**Q275 ☑ — Où placer les autres sessions et l'interrupteur ?**
+Suggestion : l'accueil d'aujourd'hui ne bouge pas (« Mes sessions en cours », « Dernières
+sessions ») ; une nouvelle section **« Autres sessions »** vient dessous, et c'est son en-tête qui
+porte l'interrupteur « Afficher ». Éteint, seul l'en-tête reste. Raisons : la séparation
+demandée est nette (mes sessions en haut, les autres dans leur section) ; l'interrupteur est à
+côté de ce qu'il cache ; placé en haut de l'accueil, il repousserait « Créer une session » et
+« Rejoindre » pour un réglage qu'on touche rarement. Alternative écartée : mêler les autres
+sessions à « en cours » et à « dernières » (mes sessions d'abord, puis les autres dans chaque
+section), qui sépare moins bien et demande deux interrupteurs ou un seul loin de l'une des deux.
+Réponse PO (2026-10-08) : d'accord. Même disposition dans l'historique (Q274).
+
+**Q276 ☑ — Que montre la carte d'une session d'un autre ?**
+Constat : la carte d'accueil affiche les natures, mon rôle et la date ; pour une session d'un
+autre, le rôle serait toujours « En spectateur », sans information. Et l'état n'est pas affiché
+pour une session terminée (inutile dans « Dernières sessions », qui ne contient qu'elles).
+Suggestion : même carte, avec **la pastille d'état toujours affichée (« Terminée » comprise)** et
+**le nom du créateur à la place du rôle** (« Créée par Bruno »), pour savoir d'un coup d'œil qui
+contacter. Pas le nom de l'association : une ligne de téléphone n'a pas la place, et le créateur
+suffit à situer la session.
+Réponse PO (2026-10-08) : d'accord. Dans l'historique, la carte reste celle de l'historique
+(photo, gagnants, météo), avec « Créée par … » en plus.
+
+**Q277 ☑ — Quand afficher le bandeau rouge, exactement ?**
+Constat : avec Q262, le `super_admin` a les boutons d'organisateur dans toute session. Trois
+cas : (a) il n'y participe pas et n'aurait normalement aucun droit (autre association, salle
+d'attente, brouillon) ; (b) il n'y participe pas mais la suivrait normalement en spectateur
+(session en direct ou terminée de son association) : lecture normale, modification non ; (c) il
+y participe comme simple joueur : lecture normale, boutons d'organisateur grâce à son rôle.
+Suggestion : bandeau dans les cas (a) et (b), **dès qu'il ne participe pas à la session**, sur
+les cinq écrans de session (salle d'attente, salle des présents, partie, détail d'une session
+terminée, formulaire de modification) ; pas dans le cas (c), où un bandeau rouge permanent
+pendant ses propres parties serait du bruit. Une seule règle, simple à comprendre : « je ne
+participe pas, donc j'agis en super admin ». Texte : « Vous ne participez pas à cette session.
+Vous la voyez et la modifiez avec vos droits de super admin. »
+Réponse PO (2026-10-08) : d'accord.
+
+**Q278 ☑ — Les interrupteurs de l'accueil et de l'historique : un seul réglage ou deux ?**
+Contexte : Q274 ajoute à l'historique le même interrupteur que sur l'accueil.
+Suggestion : **deux réglages indépendants**, un par page, chacun allumé par défaut et mémorisé
+sur l'appareil. Chaque interrupteur est dans l'en-tête de la section qu'il cache : on s'attend à
+ce qu'il n'agisse que sur la page où on le touche, comme tout filtre d'écran. Un réglage commun
+(« mode super admin ») ferait disparaître la section de l'historique en éteignant celle de
+l'accueil, sans que rien ne l'indique sur la page touchée ; il aurait sa place dans les
+réglages, pas dans une section.
+Réponse PO (2026-10-08) : **un seul réglage**, « Voir toutes les sessions », commun aux deux
+pages. L'en-tête « Autres sessions » reste visible sur chaque page avec l'interrupteur dans son
+état réel, ce qui lève l'objection : une section masquée se voit, et se rallume sur place.
