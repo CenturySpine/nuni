@@ -3219,11 +3219,11 @@ couleur principale de la palette de celui qui exporte ; marge fine et coins arro
 la photo, filet noir de 4 px ; plus de « 1 » doré. Une seule présentation, pas de choix pour
 l'utilisateur. Détail : avenant du plan 10.
 
-**Q280 ☐ — Export image sans photo : hauteur du contenu ou carré ?**
+**Q280 ☑ — Export image sans photo : hauteur du contenu ou carré ?**
 Constat : avant Q279, la carte sans photo était un carré de 1080 × 1080 sur le dégradé de la
 palette. Avec le nouveau style (fond gris clair), un carré laisserait un grand vide entre
 l'en-tête et le classement.
 Suggestion : la carte prend la hauteur de son contenu (environ 1080 × 380 pour cinq lignes),
 comme avec une photo : une seule règle de mise en page. Limite connue : une image très allongée
 peut être moins bien mise en valeur par certaines messageries.
-Hypothèse appliquée en attendant : hauteur du contenu.
+Réponse PO (2026-11-16) : d'accord pour la hauteur du contenu.

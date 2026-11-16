@@ -129,4 +129,4 @@ coloré), le PO retient une carte qui ressemble à un écran de l'app (Q279) :
 - la signature « NUNI — Never Up, Never In » en texte à la couleur principale.
 
 L'image garde 1080 px de large et prend la hauteur de son contenu : une photo ne fait que
-l'allonger. Sans photo, la carte suit le même style et n'est plus un carré (Q280, ouverte).
+l'allonger. Sans photo, la carte suit le même style et n'est plus un carré (Q280).
