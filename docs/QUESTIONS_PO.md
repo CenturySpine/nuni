@@ -3205,3 +3205,25 @@ réglages, pas dans une section.
 Réponse PO (2026-10-08) : **un seul réglage**, « Voir toutes les sessions », commun aux deux
 pages. L'en-tête « Autres sessions » reste visible sur chaque page avec l'interrupteur dans son
 état réel, ce qui lève l'objection : une section masquée se voit, et se rallume sur place.
+
+**Q279 ☑ — Export image : comment empêcher le classement de cacher la photo ?**
+Constat : sur une photo, le classement était posé sur le bas de l'image dans un panneau sombre
+de toute la largeur, qui couvrait des visages.
+Suggestion : sortir tous les textes de la photo plutôt que rendre le panneau plus transparent
+(un panneau plus clair laisse le texte sur les visages et le rend moins lisible sur une photo
+claire). La photo reste entière, l'image finale s'allonge seulement en hauteur.
+Réponse PO (2026-11-16), après essais en images : textes hors de la photo ; en-tête au-dessus,
+classement en dessous ; pas de fond entièrement coloré (« trop »), mais le fond gris clair de
+l'app, le classement dans une carte blanche, le logo de l'app et la signature en texte à la
+couleur principale de la palette de celui qui exporte ; marge fine et coins arrondis autour de
+la photo, filet noir de 4 px ; plus de « 1 » doré. Une seule présentation, pas de choix pour
+l'utilisateur. Détail : avenant du plan 10.
+
+**Q280 ☐ — Export image sans photo : hauteur du contenu ou carré ?**
+Constat : avant Q279, la carte sans photo était un carré de 1080 × 1080 sur le dégradé de la
+palette. Avec le nouveau style (fond gris clair), un carré laisserait un grand vide entre
+l'en-tête et le classement.
+Suggestion : la carte prend la hauteur de son contenu (environ 1080 × 380 pour cinq lignes),
+comme avec une photo : une seule règle de mise en page. Limite connue : une image très allongée
+peut être moins bien mise en valeur par certaines messageries.
+Hypothèse appliquée en attendant : hauteur du contenu.

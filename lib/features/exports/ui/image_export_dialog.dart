@@ -151,18 +151,15 @@ class _ImageExportDialogState extends ConsumerState<_ImageExportDialog> {
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
-                  child: AspectRatio(
-                    // Matches the card's own computed shape so the preview
-                    // never shows bars the actual export doesn't have.
-                    aspectRatio: _backgroundAspectRatio ?? 1,
-                    child: FittedBox(
-                      child: RepaintBoundary(
-                        key: _repaintKey,
-                        child: ResultsCard(
-                          entry: widget.entry,
-                          backgroundImageBytes: _backgroundPhoto,
-                          photoAspectRatio: _backgroundAspectRatio,
-                        ),
+                  // Takes the card's own shape, whatever it is, so the
+                  // preview never shows bars the actual export doesn't have.
+                  child: FittedBox(
+                    child: RepaintBoundary(
+                      key: _repaintKey,
+                      child: ResultsCard(
+                        entry: widget.entry,
+                        backgroundImageBytes: _backgroundPhoto,
+                        photoAspectRatio: _backgroundAspectRatio,
                       ),
                     ),
                   ),

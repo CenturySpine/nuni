@@ -114,3 +114,19 @@ n'a pas été testé manuellement (jugé peu prioritaire par le PO) ; le tableau
 pas de logique de pagination ou de réduction automatique de police au-delà d'une certaine taille,
 donc une session à beaucoup d'équipes/trous pourrait déborder d'une page A4 — à ajuster plus tard
 si le cas se présente réellement.
+
+## Avenant (2026-11-16) : la carte de résultats ne recouvre plus la photo
+
+Retour du PO : le panneau du classement, posé sur le bas de la photo, cachait des visages.
+Après essais en images (panneau plus transparent, bande colorée sous la photo, fond entièrement
+coloré), le PO retient une carte qui ressemble à un écran de l'app (Q279) :
+
+- fond gris clair des pages de l'app, textes sombres, dans la palette de celui qui exporte ;
+- en haut, le logo de l'app, le titre, le mode et la météo ;
+- la photo entière, à son ratio, jamais recouverte, avec une marge de 12 px, des coins arrondis
+  et un filet noir de 4 px ;
+- le classement dans une carte blanche (`NuniCard`), le rang du premier sans couleur dorée ;
+- la signature « NUNI — Never Up, Never In » en texte à la couleur principale.
+
+L'image garde 1080 px de large et prend la hauteur de son contenu : une photo ne fait que
+l'allonger. Sans photo, la carte suit le même style et n'est plus un carré (Q280, ouverte).
