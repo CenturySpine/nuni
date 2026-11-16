@@ -79,8 +79,21 @@ Documents de référence, à lire avant d'agir :
 - Une suggestion par question, argumentée par la technique et l'état de l'art.
 - Annoncer ce qui a été fait, ce qui ne l'a pas été et pourquoi, sans hedging. Si une
   vérification n'a pas pu être faite, le dire en premier.
-- Terminer chaque message par la liste des points en attente du PO, indépendants les uns des
-  autres, sans en redemander un déjà tranché.
+- Points en attente du PO : listés en fin de message **seulement quand ils sont nouveaux ou
+  qu'ils ont changé**, indépendants les uns des autres, sans en redemander un déjà tranché.
+- **Jamais de répétition (PO, 2026-11-16).** Un point en attente, une explication, un état des
+  fichiers ou un résultat déjà écrit dans la conversation n'est jamais réécrit dans un message
+  suivant tant qu'il n'a pas changé : le PO l'a lu. Un message ne contient que ce qui est
+  nouveau depuis le précédent. S'il n'y a rien de nouveau, une ligne suffit, sans titre ni liste.
+- **Messages automatiques (hooks, rappels de l'outil) : une ligne au plus.** Quand un message
+  automatique redemande une action déjà refusée ou déjà expliquée (par exemple le hook qui
+  réclame un commit ou un push), répondre en une seule ligne (« Rien à faire : … »), sans
+  réexpliquer la règle, sans relister les fichiers ni les points en attente.
+- **Ne jamais demander au PO s'il veut committer ou pousser (PO, 2026-11-16).** Ni dans les
+  points en attente, ni ailleurs, ni à la fin d'une unité de travail. La règle 7bis ne change
+  pas : pas de commit ni de push sans demande explicite ; le PO le demande de lui-même quand il
+  le veut. L'assistant signale au plus une fois, en une ligne, que des changements ne sont pas
+  commités, sans poser de question.
 - **Toute demande adressée au PO énonce son objectif.** Quand l'assistant demande au PO de faire
   quelque chose (commande, réglage, vérification, réponse), il dit toujours à quoi cela sert : ce
   que cela permet ou vérifie, et ce qui se passe si ce n'est pas fait. Une demande sans but
