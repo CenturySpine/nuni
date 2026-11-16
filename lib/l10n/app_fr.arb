@@ -173,6 +173,8 @@
   "@championshipFinalPosition": {"placeholders": {"position": {"type": "int"}, "total": {"type": "int"}}},
   "championshipSessionsPlayed": "{count, plural, one{1 session jouée} other{{count} sessions jouées}}",
   "@championshipSessionsPlayed": {"placeholders": {"count": {"type": "int"}}},
+  "championshipRulesTitle": "Comment sont comptés les points",
+  "championshipRulesBody": "À chaque session championnat :\n• Points de classement = nombre d'équipes − ta place + 1 (à 5 équipes : 1er = 5, 2e = 4… dernier = 1)\n• +1 point de présence pour tous ceux qui ont joué\n• Ex æquo : mêmes points pour les deux\n• En équipe : chaque coéquipier prend les points de son équipe\n\nLe mode de jeu ne change rien, seule la place du jour compte. Plus il y a de monde, plus la victoire rapporte.\n\nClassement de la saison (1er septembre → 31 août) : on additionne toutes les sessions. À égalité, celui qui a joué le plus de sessions passe devant.",
 
   "joinLoading": "Adhésion à la session…",
   "joinErrorUnavailable": "Cette session n'existe pas ou est terminée.",

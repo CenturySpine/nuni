@@ -56,6 +56,10 @@ void main() {
       });
     }
 
+    test('${palette.name}: info mark on surface is >= 3:1', () {
+      expect(contrastRatio(infoBlue, palette.surface), greaterThanOrEqualTo(3));
+    });
+
     // Event hues (plan 23): stripes and dots on cards and on the page.
     for (final (index, hue) in eventHues.indexed) {
       test('${palette.name}: event hue $index is >= 3:1', () {

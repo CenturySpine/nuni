@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/palettes.dart';
 import '../../../core/theme/phosphor_icons.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/nuni_card.dart';
@@ -26,6 +27,27 @@ void _openClassement(
     queryParameters: {'association': associationId, 'season': season},
   ).toString(),
 );
+
+/// Explains how championship points are counted (plan 15, decisions 3-4,
+/// Q40, Q43, Q45), on demand only.
+void _showRules(BuildContext context) {
+  final l10n = AppLocalizations.of(context)!;
+  showDialog<void>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      icon: const Icon(PhosphorIcons.info, size: 32, color: infoBlue),
+      title: Text(l10n.championshipRulesTitle),
+      content: SingleChildScrollView(child: Text(l10n.championshipRulesBody)),
+      actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(),
+          child: Text(MaterialLocalizations.of(dialogContext).closeButtonLabel),
+        ),
+      ],
+    ),
+  );
+}
 
 /// Championship section of the home tab (plan 15): provisional standing
 /// card(s) for the current season (parcours 2), then the championship
@@ -184,6 +206,16 @@ class _AssociationCard extends ConsumerWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      PhosphorIcons.info,
+                      size: 20,
+                      color: infoBlue,
+                    ),
+                    tooltip: l10n.championshipRulesTitle,
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => _showRules(context),
                   ),
                   Icon(
                     PhosphorIcons.caretRight,

@@ -193,6 +193,8 @@
   "@championshipFinalPosition": {"description": "The user's final position in a past championship classement, out of the number of players ranked.", "placeholders": {"position": {"type": "int"}, "total": {"type": "int"}}},
   "championshipSessionsPlayed": "{count, plural, one{1 session played} other{{count} sessions played}}",
   "@championshipSessionsPlayed": {"placeholders": {"count": {"type": "int"}}},
+  "championshipRulesTitle": "How points are counted",
+  "championshipRulesBody": "For each championship session:\n• Ranking points = number of teams − your place + 1 (with 5 teams: 1st = 5, 2nd = 4… last = 1)\n• +1 attendance point for everyone who played\n• Ties: both get the same points\n• Team play: each teammate gets their team's points\n\nThe game mode changes nothing, only the day's place counts. The more players, the more a win is worth.\n\nSeason standings (1 September → 31 August): all sessions add up. On a tie, whoever played the most sessions comes first.",
 
   "joinLoading": "Joining the session…",
   "joinErrorUnavailable": "This session doesn't exist or has ended.",

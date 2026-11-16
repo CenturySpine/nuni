@@ -106,6 +106,20 @@ void main() {
     expect(find.text('#2 of 3 · 42 pts'), findsOneWidget);
   });
 
+  testWidgets('the info mark opens the points rules, not the classement', (
+    tester,
+  ) async {
+    await pump(tester, [(associationId: 'z1', season: current)]);
+
+    expect(find.text('How points are counted'), findsNothing);
+    await tester.tap(find.byTooltip('How points are counted'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('How points are counted'), findsOneWidget);
+    expect(find.textContaining('+1 attendance point'), findsOneWidget);
+    expect(openedUri, isNull);
+  });
+
   testWidgets(
     'a past season alone still shows the history (Q72), opening its classement',
     (tester) async {

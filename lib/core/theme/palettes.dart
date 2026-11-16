@@ -394,6 +394,12 @@ const Color tierBronze = Color(0xFF9A5B2A);
 const Color tierSilver = Color(0xFF7A8490);
 const Color tierGold = Color(0xFFB07F0A);
 
+/// Information marks (the "i" that opens an explanation): blue in every
+/// palette, like the tiers above -- a convention, not a brand colour. Held
+/// to the 3:1 non-text minimum against every palette's surface
+/// (palette_contrast_test.dart).
+const Color infoBlue = Color(0xFF2B6CD9);
+
 /// The eight hues an event of the planning may be drawn in (plan 23, Q149),
 /// in the order of the `event_color` Postgres enum: red, orange, yellow,
 /// green, teal, blue, purple, pink. The same in every palette, like the
